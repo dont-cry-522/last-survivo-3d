@@ -1,0 +1,92 @@
+// Original procedural score and sound design. No external audio downloads.
+const midi=n=>440*2**((n-69)/12);
+const THEMES={
+  forest:{bpm:104,root:57,chords:[0,5,3,7],lead:[12,0,19,17,15,0,12,10,12,15,19,0,22,19,17,0,15,0,12,10,7,10,12,0,15,17,19,15,12,10,7,0]},
+  snow:{bpm:90,root:62,chords:[0,3,5,7],lead:[19,0,22,0,24,22,19,0,17,0,15,17,19,0,12,0,15,0,19,0,22,19,17,15,12,0,10,12,15,0,17,0]},
+  ash:{bpm:116,root:50,chords:[0,0,5,7],lead:[12,7,12,0,15,12,17,15,12,0,10,7,10,12,15,0,19,17,15,12,17,15,12,10,7,10,12,15,12,0,7,0]}
+};
+export class GameAudio{
+  constructor(context=null){
+    this.ctx=context;this.ready=false;this.muted=false;this.musicVolume=.65;this.sfxVolume=.8;
+    this.beat=0;this.next=0;this.map='forest';this.pressure=0;this.mode='menu';this.cooldowns=new Map();this.nodes=0;
+    try{const v=JSON.parse(localStorage.getItem('forest3d-audio')||'null');if(v){this.muted=!!v.muted;this.musicVolume=this.clamp(v.music,.65);this.sfxVolume=this.clamp(v.sfx,.8);}}catch{}
+  }
+  clamp(n,f){return Number.isFinite(n)?Math.max(0,Math.min(1,n)):f;}
+  save(){try{localStorage.setItem('forest3d-audio',JSON.stringify({muted:this.muted,music:this.musicVolume,sfx:this.sfxVolume}));}catch{}}
+  setup(){
+    if(this.ready)return;const c=this.ctx;
+    this.master=c.createGain();this.music=c.createGain();this.sfx=c.createGain();
+    const limiter=c.createDynamicsCompressor();limiter.threshold.value=-14;limiter.knee.value=14;limiter.ratio.value=5;limiter.attack.value=.004;limiter.release.value=.15;
+    this.music.connect(this.master);this.sfx.connect(this.master);this.master.connect(limiter);limiter.connect(c.destination);
+    // Short, quiet stereo room keeps the score from sounding like isolated beeps.
+    this.room=c.createConvolver();const impulse=c.createBuffer(2,c.sampleRate*1.25,c.sampleRate);
+    for(let ch=0;ch<2;ch++){const d=impulse.getChannelData(ch);for(let i=0;i<d.length;i++)d[i]=(Math.random()*2-1)*Math.pow(1-i/d.length,3)*.28;}
+    this.room.buffer=impulse;const wet=c.createGain();wet.gain.value=.24;this.room.connect(wet);wet.connect(this.music);
+    this.noiseBuffer=c.createBuffer(1,c.sampleRate*2,c.sampleRate);const d=this.noiseBuffer.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=Math.random()*2-1;
+    this.ready=true;this.next=c.currentTime+.04;this.applyVolumes(true);
+  }
+  async init(){try{this.ctx||=new (window.AudioContext||window.webkitAudioContext)();this.setup();if(this.ctx.state==='suspended')await this.ctx.resume();return this.ctx.state==='running';}catch{return false;}}
+  applyVolumes(immediate=false){if(!this.ready)return;const t=this.ctx.currentTime;for(const [bus,v]of [[this.master,this.muted?0:.78],[this.music,this.musicVolume],[this.sfx,this.sfxVolume]]){bus.gain.cancelScheduledValues(t);if(immediate)bus.gain.setValueAtTime(v,t);else bus.gain.setTargetAtTime(v,t,.025);}}
+  setVolume(bus,value){if(bus==='music')this.musicVolume=this.clamp(value,.65);else this.sfxVolume=this.clamp(value,.8);this.applyVolumes();this.save();}
+  setMuted(value){this.muted=value;this.applyVolumes();this.save();}
+  reset(map){this.map=map;this.beat=0;this.next=(this.ctx?.currentTime||0)+.04;this.pressure=0;this.cooldowns.clear();}
+  available(){return this.ready&&!this.muted&&this.ctx.state==='running'&&this.nodes<100;}
+  allow(key,seconds){if(!this.available())return false;const t=this.ctx.currentTime;if((this.cooldowns.get(key)||0)>t)return false;this.cooldowns.set(key,t+seconds);return true;}
+  voice(f,d,vol,type='sine',end=null,at=null,bus='sfx',attack=.005,pan=0){
+    if(!this.available())return;const c=this.ctx,t=at??c.currentTime,o=c.createOscillator(),g=c.createGain(),p=c.createStereoPanner();
+    o.type=type;o.frequency.setValueAtTime(Math.max(20,f),t);if(end)o.frequency.exponentialRampToValueAtTime(Math.max(20,end),t+d);
+    g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(Math.max(.0002,vol),t+Math.min(attack,d*.3));
+    if(bus==='music')g.gain.linearRampToValueAtTime(vol*(d>.8?.7:.3),t+d*(d>.8?.65:.45));
+    g.gain.exponentialRampToValueAtTime(.0001,t+d);
+    p.pan.value=pan;o.connect(g);g.connect(p);p.connect(this[bus]);if(bus==='music')g.connect(this.room);
+    this.nodes++;o.start(t);o.stop(t+d+.03);o.onended=()=>{o.disconnect();g.disconnect();p.disconnect();this.nodes--;};
+  }
+  noise(d,vol,frequency=1400,end=frequency,at=null,bus='sfx',type='bandpass'){
+    if(!this.available())return;const c=this.ctx,t=at??c.currentTime,s=c.createBufferSource(),filter=c.createBiquadFilter(),g=c.createGain();
+    s.buffer=this.noiseBuffer;filter.type=type;filter.Q.value=.8;filter.frequency.setValueAtTime(frequency,t);filter.frequency.exponentialRampToValueAtTime(Math.max(30,end),t+d);
+    g.gain.setValueAtTime(.0001,t);g.gain.linearRampToValueAtTime(vol,t+.003);g.gain.exponentialRampToValueAtTime(vol*.3,t+d*.35);g.gain.exponentialRampToValueAtTime(.0001,t+d);s.connect(filter);filter.connect(g);g.connect(this[bus]);this.nodes++;
+    s.start(t,Math.random()*.7);s.stop(t+d+.02);s.onended=()=>{s.disconnect();filter.disconnect();g.disconnect();this.nodes--;};
+  }
+  tone(f,d=.12,v=.06,type='sine',end=null){this.voice(f,d,v,type,end);}
+  shot(id){if(!this.allow('shot',.055))return;const t=this.ctx.currentTime;
+    if(id==='rifle'||id==='pistol'||id==='shotgun'){
+      const heavy=id==='shotgun';this.noise(heavy?.26:.1,heavy?.65:.42,heavy?1800:3400,heavy?180:600);this.voice(heavy?125:210,heavy?.24:.095,heavy?.3:.2,'sine',42);
+      this.noise(.055,.1,6200,3000,t+.035);if(id==='pistol')this.voice(1450,.045,.035,'triangle',900,t+.03);
+    }else if(id==='shuriken'){this.noise(.18,.19,5500,600);for(const f of [1850,2760])this.voice(f,.1,.025,'sine',f*.75);}
+    else if(id==='fire'){this.noise(.36,.5,900,180);this.voice(110,.25,.2,'sine',35);this.noise(.12,.1,3600,1800,t+.1);}
+    else{this.voice(80,.4,.14,'sine',220);this.voice(163,.3,.055,'triangle',330);this.noise(.3,.13,450,1700);}
+  }
+  impact(id){if(!this.allow('impact',.085))return;this.noise(.085,.15,id==='shuriken'?3200:900,250);this.voice(105,.09,.09,'sine',48);}
+  spell(kind){if(!this.allow('spell-'+kind,.11))return;const t=this.ctx.currentTime;
+    if(kind==='ice'){this.noise(.36,.24,4800,1400);[2100,3150,4100,2700].forEach((f,i)=>this.voice(f,.18,.035,'sine',f*.85,t+i*.035));}
+    else if(kind==='storm'){this.noise(.22,.45,4200,300);this.voice(64,.4,.21,'sine',26);this.noise(.045,.23,6200,1800,t+.07);}
+    else if(kind==='fire'){this.noise(.48,.55,1100,100);this.voice(92,.4,.25,'sine',25);}
+    else if(kind==='heal'){[440,660,880].forEach((f,i)=>this.voice(f,.35,.027,'sine',null,t+i*.045));}
+    else{this.noise(.3,.16,1400,200);this.voice(140,.38,.15,'sine',45);this.voice(300,.25,.025,'triangle',620);}
+  }
+  dodge(silver){if(!this.allow('dodge',.2))return;this.noise(silver?.32:.2,.24,silver?4000:650,silver?220:140);if(silver)this.voice(440,.25,.065,'sine',110);}
+  hurt(){if(!this.allow('hurt',.15))return;this.noise(.15,.3,700,140);this.voice(130,.22,.25,'sine',36);}
+  pickup(){if(!this.allow('pickup',.09))return;this.voice(780+(this.beat%4)*110,.075,.035,'sine',1100);}
+  level(){if(!this.allow('level',.35))return;[523.25,659.25,783.99,1046.5].forEach((f,i)=>this.voice(f,.5,.075,'triangle',null,this.ctx.currentTime+i*.085));}
+  update(dt,{map='forest',mode='playing',boss=false,pressure=0}={}){
+    this.mode=mode;this.map=map;if(!this.available())return;
+    const c=this.ctx,paused=mode==='paused'||mode==='lost'||mode==='won';
+    this.music.gain.setTargetAtTime(paused?0:this.musicVolume*(mode==='upgrade'?.3:mode==='menu'?.6:1),c.currentTime,.2);
+    if(paused){this.next=c.currentTime+.05;return;}
+    this.pressure+=(Math.max(boss?1:0,pressure)-this.pressure)*Math.min(1,dt*.8);
+    const theme=THEMES[map],step=60/(theme.bpm+this.pressure*18)/2;
+    // Schedule against the audio clock, with a bounded lookahead; no frame-rate jitter or catch-up burst.
+    if(this.next<c.currentTime-.2)this.next=c.currentTime+.025;
+    while(this.next<c.currentTime+.13){this.score(theme,this.beat++,this.next,step,mode==='playing'?this.pressure:0);this.next+=step;}
+  }
+  score(th,b,t,step,pressure){
+    const root=th.root,bar=Math.floor(b/8),chord=th.chords[Math.floor(bar/2)%4],n=th.lead[b%th.lead.length];
+    if(b%8===0){for(const [i,interval]of [0,3,7].entries())this.voice(midi(root+chord+interval),step*9,.028,'triangle',null,t,'music',.25,(i-1)*.45);}
+    if(n){const f=midi(root+n);this.voice(f,step*1.65,.075,th===THEMES.snow?'sine':'triangle',null,t,'music',.025,.12);this.voice(f*2,step*.8,.012,'sine',null,t,'music',.01,-.15);}
+    if(b%2===0)this.voice(midi(root-12+chord),step*1.7,.11,'sine',null,t,'music',.012);
+    if(b%4===0||pressure>.6&&b%4===3){this.voice(95,.2,.11+pressure*.06,'sine',34,t,'music');this.noise(.06,.035,1600,350,t,'music');}
+    if(b%4===2){this.noise(.13,.05+pressure*.07,1500,700,t,'music');this.voice(165,.12,.04,'triangle',90,t,'music');}
+    if(b%2===1||pressure>.45)this.noise(.055,.025+pressure*.025,7200,5500,t,'music','highpass');
+    if(pressure>.25&&b%2===0)this.voice(midi(root+chord+[0,7,12,7][b%4]),step*.7,.027*pressure,'sawtooth',null,t,'music',.02,-.25);
+  }
+}

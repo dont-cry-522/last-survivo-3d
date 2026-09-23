@@ -1,4 +1,6 @@
+import{heroesReady,createSkinnedHero,animateSkinnedHero}from'./skinned-hero.js?v=2';
 import * as T from './vendor/three.module.js';
+import{makeHero,animateHero}from'./hero-model.js?v=2';
 import{MAPS,seeded}from'./rules.js';
 const geo=new Map(),materials=new Map(),terrainMaterials=new Map();
 function geometry(kind,args){const key=kind+args.join(',');if(!geo.has(key))geo.set(key,new T[kind](...args));return geo.get(key);}
@@ -9,20 +11,8 @@ const orb=(p,c,x,y,z,r,glow=false)=>mesh('SphereGeometry',[r,10,7],c,x,y,z,p,glo
 const cone=(p,c,x,y,z,r,h)=>mesh('ConeGeometry',[r,h,7],c,x,y,z,p);
 export function actor(kind='silver',weapon='pistol'){
  const g=new T.Group(),rig=new T.Group();g.add(rig);g.userData.rig=rig;
- if(['silver','scout'].includes(kind)){
-  const silver=kind==='silver',coat=silver?0x24333d:0x4c6650,hair=silver?0xebeee4:0x714b31;
-  const torso=new T.Group();torso.position.y=1.05;rig.add(torso);g.userData.torso=torso;
-  mesh('CylinderGeometry',[.24,.31,.65,8],coat,0,.3,0,torso);box(torso,0x94754e,0,.05,.02,.53,.1,.35);
-  orb(torso,0xddb392,0,.92,0,.25);orb(torso,hair,0,1.05,-.05,.27);
-  for(let i=0;i<5;i++){const h=cone(torso,hair,(i-2)*.085,1.01,.18,.075,.3);h.rotation.z=(i-2)*.2;}
-  if(silver){box(torso,0x1b2930,0,.86,.22,.39,.15,.09);const pony=mesh('CapsuleGeometry',[.11,.44,3,6],hair,0,.73,-.3,torso);pony.rotation.x=-.25;g.userData.pony=pony;}
-  for(const side of [-1,1]){orb(torso,0xb4e6d3,side*.09,.99,.237,.023,true);const leg=new T.Group();leg.position.set(side*.15,1,0);rig.add(leg);mesh('CylinderGeometry',[.105,.085,.63,6],0x273332,0,-.31,0,leg);box(leg,0x182c2c,0,-.68,.06,.22,.2,.35);g.userData[side<0?'leftLeg':'rightLeg']=leg;const arm=new T.Group();arm.position.set(side*.31,.55,0);torso.add(arm);mesh('CapsuleGeometry',[.095,.35,3,6],coat,0,-.22,.03,arm);orb(arm,0xd5ac8b,0,-.48,.05,.09);g.userData[side<0?'leftArm':'rightArm']=arm;}
-  const cape=mesh('ConeGeometry',[.43,.82,4,1,true],silver?0x364f5b:0x73865c,0,.2,-.22,torso);cape.rotation.y=Math.PI/4;g.userData.cape=cape;
-  const gun=new T.Group();g.userData.rightArm.add(gun);gun.position.set(0,-.43,.1);g.userData.weapon=gun;
-  if(['fire','dark'].includes(weapon)){mesh('CylinderGeometry',[.035,.045,1.3,6],0x9a7958,0,.2,.04,gun);const crown=mesh('TorusGeometry',[.19,.04,5,10],weapon==='fire'?0xdca952:0x8274a8,0,.91,.04,gun);orb(gun,weapon==='fire'?0xffa04c:0xb59aff,0,.91,.04,.125,true);}
-  else if(weapon==='shuriken'){for(let i=0;i<4;i++){const blade=box(gun,0xb9ddd6,0,0,.1,.09,.04,.65);blade.rotation.y=i*Math.PI/4;}orb(gun,0x80d5cd,0,0,.1,.1,true);}
-  else{box(gun,0x263d40,0,.06,.26,.12,.17,weapon==='pistol'?.36:.65);const barrel=mesh('CylinderGeometry',[.045,.045,weapon==='pistol'?.25:.5,8],0xb2b59c,0,.07,.56,gun);barrel.rotation.x=Math.PI/2;box(gun,0x96754b,0,-.08,.18,.09,.23,.12);if(weapon==='shotgun')box(gun,0x859590,.075,.07,.48,.06,.07,.45);}
- }else if(kind==='mushroom'){
+ if(['silver','scout'].includes(kind))return heroesReady()?createSkinnedHero(kind,weapon):makeHero(kind,weapon);
+ if(kind==='mushroom'){
   mesh('CylinderGeometry',[.23,.35,.72,7],0xb7a483,0,.45,0,rig);const cap=orb(rig,0xb95e43,0,1.05,0,.66);cap.scale.y=.6;for(let i=0;i<5;i++)orb(rig,0xf2dcad,Math.cos(i*2.4)*.37,1.25,Math.sin(i*2.4)*.35,.09);for(const s of [-1,1])orb(rig,0xffdc88,s*.13,.7,.27,.04,true);
  }else if(kind==='wolf'){
   const body=mesh('CapsuleGeometry',[.29,.62,3,7],0x68758c,0,.65,0,rig);body.rotation.x=Math.PI/2;orb(rig,0x8897ab,0,.82,.5,.31);cone(rig,0x718293,-.17,1.14,.43,.13,.35);cone(rig,0x718293,.17,1.14,.43,.13,.35);box(rig,0x42556b,0,.72,.77,.23,.19,.28);for(const s of [-1,1])orb(rig,0xffd775,s*.15,.88,.71,.04,true);for(const x of [-.22,.22])for(const z of [-.28,.28])mesh('CylinderGeometry',[.08,.065,.5,5],0x536076,x,.25,z,rig);
@@ -33,7 +23,7 @@ export function actor(kind='silver',weapon='pistol'){
  }
  return g;
 }
-export function animateActor(g,t,speed=0,attack=0,hurt=0){const d=g.userData,step=Math.sin(t*11),run=Math.min(1,speed/5);d.rig.position.y=Math.abs(step)*.08*run;d.rig.rotation.z=Math.sin(t*5.5)*.04*run;if(d.leftLeg){d.leftLeg.rotation.x=step*.65*run;d.rightLeg.rotation.x=-step*.65*run;d.leftArm.rotation.x=-step*.45*run;d.rightArm.rotation.x=attack>0?-1.1:-.28+step*.2*run;d.cape.rotation.x=.15+run*.4+Math.sin(t*6)*.06;d.torso.rotation.x=run*.09;if(d.pony)d.pony.rotation.x=-.25+step*.12*run;}g.visible=!(hurt>0&&Math.floor(hurt*28)%2===0);}
+export function animateActor(g,t,speed=0,attack=0,hurt=0){const d=g.userData;if(d.skinned){animateSkinnedHero(g,t,speed,attack,hurt);return;}if(d.leftKnee)animateHero(g,t,speed,attack);else{d.rig.position.y=Math.abs(Math.sin(t*11))*.08*Math.min(1,speed/5);d.rig.rotation.z=Math.sin(t*5.5)*.04*Math.min(1,speed/5);}g.visible=!(hurt>0&&Math.floor(hurt*28)%2===0);}
 export function buildWorld(id,seed=1){const theme=MAPS[id],rnd=seeded(seed),group=new T.Group(),obstacles=[],patches=[],sites=[{x:28,z:-27,type:'altar',claimed:false},{x:-29,z:24,type:'supply',claimed:false}],spawn={x:-12,z:9};
  const ground=mesh('PlaneGeometry',[140,140],theme.ground,0,-.03,0,group);ground.rotation.x=-Math.PI/2;
  if(!terrainMaterials.has(id)){const canvas=document.createElement('canvas');canvas.width=canvas.height=256;const c=canvas.getContext('2d');c.fillStyle='#'+theme.ground.toString(16).padStart(6,'0');c.fillRect(0,0,256,256);const noise=seeded(582);for(let i=0;i<2200;i++){c.globalAlpha=.06+noise()*.12;c.fillStyle=i%2?'#c9d8ad':'#0c2924';c.fillRect(noise()*256,noise()*256,1+noise()*5,1+noise()*3);}const texture=new T.CanvasTexture(canvas);texture.wrapS=texture.wrapT=T.RepeatWrapping;texture.repeat.set(18,18);texture.colorSpace=T.SRGBColorSpace;terrainMaterials.set(id,new T.MeshStandardMaterial({map:texture,roughness:1}));}ground.material=terrainMaterials.get(id);
@@ -49,7 +39,7 @@ export function buildWorld(id,seed=1){const theme=MAPS[id],rnd=seeded(seed),grou
  for(let i=0;i<65;i++){const x=(rnd()-.5)*124,z=(rnd()-.5)*124;const rock=mesh('DodecahedronGeometry',[.3+rnd()*.5,0],id==='snow'?0xbad0ce:0x8b9376,x,.2,z,group);rock.scale.y*=.6;}
  for(const site of sites){const g=new T.Group();g.position.set(site.x,0,site.z);group.add(g);site.mesh=g;const base=mesh('CylinderGeometry',[2,2.3,.25,8],0x68796b,0,.12,0,g);if(site.type==='altar'){for(const side of [-1,1])box(g,0x8d9b88,side*1.3,1.1,0,.42,2.2,.5);box(g,0xabb398,0,2.35,0,3.2,.4,.7);const crystal=mesh('OctahedronGeometry',[.65],theme.accent,0,1.1,0,g,true);site.crystal=crystal;}else{box(g,0x99724c,0,.62,0,1.4,.8,.9);box(g,0xd6b571,0,1.04,0,1.5,.18,1);box(g,0xebd595,0,.72,.48,.18,.45,.07);}const ring=mesh('TorusGeometry',[2.6,.055,4,36],theme.accent,0,.2,0,g,true);ring.rotation.x=Math.PI/2;site.ring=ring;}
  for(let i=0;i<12;i++){const a=i*Math.PI/6;const stone=mesh('BoxGeometry',[1.1,2.8,.85],0x819586,Math.cos(a)*6.5,1.4,Math.sin(a)*6.5,group);stone.rotation.y=-a;}
- const fire=orb(group,0xffcc77,spawn.x,.9,spawn.z,.17,true);const light=new T.PointLight(0xffc386,9,9,2);light.position.set(spawn.x,1.8,spawn.z);group.add(light);for(let i=0;i<6;i++){const a=i*Math.PI/3;const log=mesh('CylinderGeometry',[.11,.15,1.1,5],0x70553d,spawn.x+Math.cos(a)*.3,.15,spawn.z+Math.sin(a)*.3,group);log.rotation.z=Math.PI/2;log.rotation.y=a;}
+ const campX=spawn.x-2.5,campZ=spawn.z+1.5;const fire=orb(group,0xffcc77,campX,.9,campZ,.17,true);const light=new T.PointLight(0xffc386,9,9,2);light.position.set(campX,1.8,campZ);group.add(light);for(let i=0;i<6;i++){const a=i*Math.PI/3;const log=mesh('CylinderGeometry',[.11,.15,1.1,5],0x70553d,campX+Math.cos(a)*.3,.15,campZ+Math.sin(a)*.3,group);log.rotation.z=Math.PI/2;log.rotation.y=a;}
  const motes=[];for(let i=0;i<18;i++){const m=orb(group,theme.accent,spawn.x+(rnd()-.5)*20,1+rnd()*3,spawn.z+(rnd()-.5)*20,.035,true);motes.push(m);}
  return{group,obstacles,patches,sites,spawn,theme,fire,light,motes};
 }
