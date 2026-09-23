@@ -4,11 +4,11 @@ const {chromium}=require(process.env.PLAYWRIGHT_MODULE||'playwright'),assert=req
  await page.addInitScript(()=>{const raf=requestAnimationFrame;window.requestAnimationFrame=cb=>raf(t=>{if(!window.freezeGame)cb(t);});});
  await page.goto(process.env.TEST_URL||'http://127.0.0.1:8897/');await page.waitForFunction(()=>window.game3d);await page.locator('#start').click();await page.evaluate(()=>window.freezeGame=true);await page.waitForTimeout(50);
  const results=await page.evaluate(async()=>{
-  const {WEAPON_PATHS,takeUpgrade}=await import('./rules.js?v=7'),g=game3d,out=[];
-  const setup=(hero,index,path)=>{g.select(hero,'forest',index);g.start();g.world.obstacles.length=0;g.world.patches.length=0;g.player.level=8;for(let i=0;i<3;i++)if(!takeUpgrade(g.player,'path:'+path))throw Error('route rejected');};
+  const {WEAPON_PATHS,takeUpgrade}=await import('./rules.js?v=8'),g=game3d,out=[];
+  const setup=(hero,index,path)=>{g.select(hero,'forest',index);g.start();g.controls.angle=0;g.controls.hasAim=true;g.world.obstacles.length=0;g.world.patches.length=0;g.player.level=8;for(let i=0;i<3;i++)if(!takeUpgrade(g.player,'path:'+path))throw Error('route rejected');};
   const target=(x,z)=>{const e=g.spawn('golem',g.player.x+x,g.player.z+z);e.hp=e.maxHp=10000;e.cool=99;e.speed=0;return e;};
   const advance=(seconds)=>{for(let i=0;i<seconds*60;i++){g.step(1/60);g.vfx.update(1/60);}};
-  const once=()=>{g.step(1/60);g.player.attack=99;};
+  const once=()=>{g.controls.held=true;g.step(1/60);g.controls.held=false;g.player.attack=99;};
   for(const [id,path]of Object.entries(WEAPON_PATHS)){
    const hero=['crossbow','shuriken','dark'].includes(path.weapon)?'silver':'scout',index=(hero==='silver'?['crossbow','shuriken','dark']:['rifle','shotgun','fire']).indexOf(path.weapon);
    setup(hero,index,id);const e=target(0,4);once();advance(.7);if(e.hp===e.maxHp)throw Error(id+' did not damage target');out.push(id);

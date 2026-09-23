@@ -64,13 +64,15 @@ export function makeHero(kind,weapon){
     block(gun,0x283845,[0,.045,.16],[.13,.12,.56]);
     block(gun,0x866e59,[0,.12,.18],[.075,.035,.42]);
     block(gun,0x171e28,[0,-.08,.01],[.10,.19,.14]).rotation.x=-.2;
+    const strings=[];
     for(const s of[-1,1]){
       const limb=block(gun,0x8b9bab,[s*.23,.11,.43],[.43,.035,.065],.55);limb.rotation.y=s*.2;
       ell(gun,0xc8e7ed,[s*.44,.11,.36],[.025,.035,.025],.6);
-      const string=part(gun,'CylinderGeometry',[.004,.004,.46,4],0xd0dee6,[s*.22,.12,.28],[1,1,1]);string.rotation.z=s*.86;
+      strings.push(part(gun,'CylinderGeometry',[.004,.004,1,4],0xd0dee6));
     }
-    const bolt=block(gun,0xdceaf0,[0,.16,.30],[.022,.023,.43],.6);bolt.castShadow=true;
-    part(gun,'ConeGeometry',[.045,.13,5],0xc8e7f0,[0,.16,.57],[1,1,1],.65).rotation.x=Math.PI/2;
+    const bolt=new T.Group();gun.add(bolt);block(bolt,0xdceaf0,[0,.16,.30],[.022,.023,.43],.6);
+    part(bolt,'ConeGeometry',[.045,.13,5],0xc8e7f0,[0,.16,.57],[1,1,1],.65).rotation.x=Math.PI/2;
+    gun.userData.crossbowStrings=strings;gun.userData.crossbowBolt=bolt;gun.userData.stringPull=0;
   }else if(weapon==='shuriken'){
     part(gun,'TorusGeometry',[.095,.022,8,20],trim,[0,0,.06],[1,1,1],.8).rotation.x=Math.PI/2;
     for(let i=0;i<4;i++){const blade=part(gun,'ConeGeometry',[.09,.32,3],0xd6e5e6,[Math.sin(i*Math.PI/2)*.21,0,.06+Math.cos(i*Math.PI/2)*.21],[1,1,.26],.85);blade.rotation.set(Math.PI/2,i*Math.PI/2,0);}

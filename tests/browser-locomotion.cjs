@@ -28,7 +28,7 @@ const assert=require('node:assert/strict');
     assert.equal(feedback.before,feedback.after,'Ordinary defeat must not create a circle');assert.equal(feedback.before,feedback.afterDash,'Teleport must not create ground rings');assert(Math.abs(feedback.dash-1.7)<.001,'No-input dash must follow visible heading');
     for(const kind of ['scout','silver']){
       const circles=await p.evaluate(kind=>{
-        const g=game3d;g.select(kind,'forest',2);g.start();g.world.obstacles.length=0;g.world.patches.length=0;
+        const g=game3d;g.select(kind,'forest',2);g.start();g.controls.held=true;g.controls.hasAim=true;g.controls.angle=0;g.world.obstacles.length=0;g.world.patches.length=0;
         const e=g.spawn('golem',g.player.x,g.player.z+4);e.cool=99;e.speed=0;const hp=e.hp;
         const count=()=>g.hero.parent.children.filter(o=>o.geometry?.type==='TorusGeometry').length,before=count();
         for(let i=0;i<30;i++)g.step(1/60);return{before,after:count(),hit:e.hp<hp};

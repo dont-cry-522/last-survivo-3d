@@ -13,7 +13,7 @@ const assert=require('node:assert/strict');
   await page.locator('#start').click();
   await page.evaluate(()=>window.freezeGame=true);
   const hit=await page.evaluate(()=>{
-   const g=game3d;g.world.obstacles.length=0;g.world.patches.length=0;
+   const g=game3d;g.controls.held=true;g.controls.hasAim=true;g.controls.angle=0;g.world.obstacles.length=0;g.world.patches.length=0;
    const e=g.spawn('golem',g.player.x,g.player.z+5);e.hp=e.maxHp=10000;e.cool=99;e.speed=0;
    const before=e.z;let frames=0;
    while(!(e.stagger>0)&&frames++<240)g.step(1/60);
@@ -23,14 +23,14 @@ const assert=require('node:assert/strict');
   assert(hit.stagger>0,'ordinary monster should stagger');
   assert(hit.push>.15,'impact should push it away from the hunter');
   const bossHit=await page.evaluate(()=>{
-   const g=game3d;g.select('silver','forest',0);g.start();g.world.obstacles.length=0;g.spawnBoss();
+   const g=game3d;g.select('silver','forest',0);g.start();g.controls.held=true;g.controls.hasAim=true;g.controls.angle=0;g.world.obstacles.length=0;g.spawnBoss();
    const b=g.boss;b.x=g.player.x;b.z=g.player.z+5;b.mesh.position.set(b.x,0,b.z);b.hp=b.maxHp=10000;b.cool=99;b.recover=99;
    const startZ=b.z;for(let i=0;i<180;i++)g.step(1/60);
    return {push:b.z-startZ,damage:b.maxHp-b.hp};
   });
   assert(Math.abs(bossHit.push)<.001&&bossHit.damage>0,'boss should take bolt damage without knockback');
   const audio=await page.evaluate(async()=>{
-   const {GameAudio}=await import('./audio.js?v=7'),out=[];
+   const {GameAudio}=await import('./audio.js?v=8'),out=[];
    for(const kind of ['crossbow','wave']){
     const context=new OfflineAudioContext(1,44100,44100),a=new GameAudio(context);a.setup();a.available=()=>a.ready&&a.nodes<100;
     if(kind==='wave')a.threat('wave');else a.shot('crossbow');
@@ -39,7 +39,7 @@ const assert=require('node:assert/strict');
   });
   assert(audio.every(rms=>rms>.001),'crossbow and wave cues should be audible');
   const heavyCue=await page.evaluate(async()=>{
-   const {GameAudio}=await import('./audio.js?v=7'),a=new GameAudio(new OfflineAudioContext(1,44100,44100));a.setup();a.available=()=>a.ready&&a.nodes<100;
+   const {GameAudio}=await import('./audio.js?v=8'),a=new GameAudio(new OfflineAudioContext(1,44100,44100));a.setup();a.available=()=>a.ready&&a.nodes<100;
    a.impact('crossbow');a.impact('crossbow',true);return a.cooldowns.has('impact-strong');
   });
   assert(heavyCue,'third-hit cue must survive another hit in the same frame');
