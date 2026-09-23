@@ -1,9 +1,9 @@
-import{SkillVFX}from'./skill-vfx.js?v=4';
-import{loadHeroAssets,disposeHero}from'./skinned-hero.js?v=4';
-import{GameAudio}from'./audio.js?v=4';
+import{SkillVFX}from'./skill-vfx.js?v=5';
+import{loadHeroAssets,disposeHero}from'./skinned-hero.js?v=5';
+import{GameAudio}from'./audio.js?v=5';
 import * as T from './vendor/three.module.js';
-import{MAPS,WEAPONS,ENEMIES,weaponFor,experienceNeeded,grantExperience,chooseUpgrades,takeUpgrade,weaponStats,WEAPON_PATHS,segmentDistance}from'./rules.js?v=4';
-import{actor,animateActor,buildWorld,clearAt,moveActor,mesh,mat}from'./world.js?v=4';
+import{MAPS,WEAPONS,ENEMIES,weaponFor,experienceNeeded,grantExperience,chooseUpgrades,takeUpgrade,weaponStats,WEAPON_PATHS,segmentDistance}from'./rules.js?v=5';
+import{actor,animateActor,animateWorld,buildWorld,clearAt,moveActor,mesh,mat}from'./world.js?v=5';
 const $=s=>document.querySelector(s),touch=matchMedia('(pointer:coarse)').matches;
 document.body.classList.toggle('touch',touch);
 const canvas=$('#world');let renderer;
@@ -75,7 +75,7 @@ function updateEnemies(dt){for(const e of enemies){if(!e.alive)continue;updateSt
  else if(e.cool<=0&&d<(e.kind==='spitter'?15:e.kind==='shaman'?12:e.kind==='wolf'?3:1.4+e.size)){e.wind=e.kind==='spitter'?.75:.6;e.tx=player.x;e.tz=player.z;effect('ring',e.x,e.z,0xffab71,e.size+1);}
  else{let tx=player.x,tz=player.z;if(['spitter','shaman'].includes(e.kind)){const tank=enemies.find(q=>q.alive&&q.kind==='golem'&&Math.hypot(q.x-e.x,q.z-e.z)<8);if(tank){const ta=Math.atan2(tank.x-player.x,tank.z-player.z);tx=tank.x+Math.sin(ta)*3;tz=tank.z+Math.cos(ta)*3;}else if(d<10){tx=e.x;tz=e.z;}}
  const ta=Math.atan2(tx-e.x,tz-e.z),speed=e.speed*(e.slow>0?.45:1)*(world.patches.some(p=>Math.hypot(p.x-e.x,p.z-e.z)<p.r)?.75:1),step=speed*dt;if(Math.hypot(tx-e.x,tz-e.z)>.4){const ox=e.x,oz=e.z;moveActor(world,e,Math.sin(ta)*step,Math.cos(ta)*step,e.size*.6);if(Math.hypot(e.x-ox,e.z-oz)<step*.2)moveActor(world,e,Math.sin(ta+1.3)*step,Math.cos(ta+1.3)*step,e.size*.6);moving=speed;}}
- e.mesh.position.set(e.x,0,e.z);animateActor(e.mesh,time+e.id,moving,e.wind,e.hurt);if(e.wind>0)e.mesh.userData.rig.scale.setScalar(1+Math.sin(e.wind*15)*.04);
+ e.mesh.position.set(e.x,0,e.z);animateActor(e.mesh,time+e.id,moving,e.wind,e.hurt);
  }enemies=enemies.filter(e=>e.alive);}
 function spawnBoss(){bossBorn=true;const m=actor('boss'),a=Math.random()*6.28;boss={x:player.x+Math.sin(a)*14,z:player.z+Math.cos(a)*14,hp:1900,maxHp:1900,size:2,alive:true,mesh:m,cool:3,wind:0,recover:0,kind:'boss',phase:1,turn:0};boss.x=Math.max(-56,Math.min(56,boss.x));boss.z=Math.max(-56,Math.min(56,boss.z));m.position.set(boss.x,0,boss.z);scene.add(m);toast('林心守卫苏醒 · 躲开蓄力，抓住破绽');burst('fire',boss.x,boss.z,4);}
 function updateBoss(dt){if(!boss?.alive)return;const b=boss;updateStatus(b,dt);if(!b.alive)return;b.slow=Math.max(0,(b.slow||0)-dt);b.hurt=Math.max(0,(b.hurt||0)-dt);b.cool-=dt;const a=Math.atan2(player.x-b.x,player.z-b.z);b.mesh.rotation.y=a;if(b.hp<b.maxHp*.5&&b.phase===1){b.phase=2;toast('守卫狂暴 · 三重裂地！');}
@@ -133,8 +133,9 @@ $('#joystick').addEventListener('pointerdown',e=>{if(state!=='playing')return;e.
 window.addEventListener('blur',()=>{keys.clear();releaseStick();if(state==='playing')pause();});document.addEventListener('visibilitychange',()=>{if(document.hidden&&state==='playing')pause();});window.addEventListener('resize',()=>{renderer.setSize(innerWidth,innerHeight,false);camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();releaseStick();});renderer.setSize(innerWidth,innerHeight,false);
 renderChoices();
 for(const b of document.querySelectorAll('#menu button'))b.disabled=true;
-try{await loadHeroAssets((n,total)=>{$('#asset-loading span').textContent='正在准备人物与动作 · '+n+' / '+total;});$('#asset-loading').hidden=true;for(const b of document.querySelectorAll('#menu button'))b.disabled=false;build();}
+try{await loadHeroAssets((n,total)=>{$('#asset-loading span').textContent=(n===total?'正在布置场景…':'正在载入人物 · '+Math.round(n/total*100)+'%');});$('#asset-loading').hidden=true;for(const b of document.querySelectorAll('#menu button'))b.disabled=false;build();}
 catch(e){$('#asset-loading span').textContent='角色资源加载失败，请检查网络后重试。';$('#asset-retry').hidden=false;$('#asset-retry').onclick=()=>location.reload();throw e;}
-function frame(now){const dt=Math.min(.04,(now-last)/1000);last=now;sound.update(dt,{map:mapId,mode:state,boss:!!boss?.alive,pressure:Math.min(1,enemies.filter(e=>e.alive&&Math.hypot(e.x-player.x,e.z-player.z)<12).length/10)});if(state==='playing'){update(dt);updateEffects(dt);}else if(state==='menu'){animateActor(hero,now/1000,.3);hero.rotation.y=.65+Math.sin(now/3000)*.2;world.light.intensity=9+Math.sin(now/100)*1.5;}for(let i=0;i<world.motes.length;i++){const m=world.motes[i];m.position.y+=Math.sin(now/1200+i)*dt*.15;m.scale.setScalar(.5+Math.sin(now/550+i)*.3);}world.fire.scale.y=1+Math.sin(now/90)*.3;
+let sceneryTime=0;
+function frame(now){const dt=Math.min(.04,(now-last)/1000);last=now;if(state==='playing'||state==='menu'){sceneryTime+=dt;animateWorld(world,sceneryTime);}sound.update(dt,{map:mapId,mode:state,boss:!!boss?.alive,pressure:Math.min(1,enemies.filter(e=>e.alive&&Math.hypot(e.x-player.x,e.z-player.z)<12).length/10)});if(state==='playing'){update(dt);updateEffects(dt);}else if(state==='menu'){animateActor(hero,now/1000,.3);hero.rotation.y=.65+Math.sin(now/3000)*.2;world.light.intensity=9+Math.sin(now/100)*1.5;}for(let i=0;i<world.motes.length;i++){const m=world.motes[i];m.position.y+=Math.sin(now/1200+i)*dt*.15;m.scale.setScalar(.5+Math.sin(now/550+i)*.3);}world.fire.scale.y=1+Math.sin(now/90)*.3;
  if(toastTimer>0){toastTimer-=dt;if(toastTimer<=0)$('#toast').style.opacity=0;}shake=Math.max(0,shake-dt);updateCamera(dt);uiTime+=dt;if(uiTime>.1&&state!=='menu'){uiTime=0;updateHUD();}renderer.render(scene,camera);requestAnimationFrame(frame);}requestAnimationFrame(frame);
 window.game3d={get audio(){return sound;},get hero(){return hero;},get state(){return state;},get player(){return player;},get enemies(){return enemies;},get boss(){return boss;},get world(){return world;},get time(){return time;},get renderer(){return renderer;},get vfx(){return vfx;},get bullets(){return bullets;},get fields(){return fields;},start,pause,resume,menu,dash,spawn,spawnBoss,step(dt){if(state==='playing')update(dt);},grant(n){collectExperience(n);upgrade();},damage:hitPlayer,hurtEnemy,select(hero,map,index){heroId=hero;mapId=map;weaponIndex=index;renderChoices();build();}};

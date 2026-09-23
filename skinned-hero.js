@@ -1,7 +1,7 @@
 import * as T from './vendor/three.module.js';
-import {GLTFLoader} from './vendor/GLTFLoader.js';
-import {clone,retargetClip} from './vendor/SkeletonUtils.js';
-import {makeHero as makePrototype} from './hero-model.js?v=4';
+import {clone} from './vendor/SkeletonUtils.js';
+import {loadCharacterData} from './character-loader.js?v=5';
+import {makeHero as makePrototype} from './hero-model.js?v=5';
 
 const templates=new Map(),clips=new Map();
 let loaded=false;
@@ -67,10 +67,8 @@ function bindParts(root,extra,onlyHead=false,kind=''){
   }
 }
 export async function loadHeroAssets(onProgress=()=>{}){
-  if(loaded)return;const manager=new T.LoadingManager();manager.onProgress=(url,n,total)=>onProgress(n,total);
-  const loader=new GLTFLoader(manager),names=['silver-outfit','scout-outfit','silver-base','scout-base','silver-hair','scout-hair','animations'];
-  const values=await Promise.all(names.map(n=>loader.loadAsync(new URL(`./assets/characters/${n}.${n==='animations'?'glb':'gltf'}`,import.meta.url).href)));
-  const assets=Object.fromEntries(names.map((n,i)=>[n,values[i]]));
+  if(loaded)return;
+  const {models:assets,clips:bakedClips}=await loadCharacterData(onProgress);
   for(const kind of ['silver','scout']){
     const root=assets[kind+'-outfit'].scene;root.skeleton=firstSkin(root).skeleton;
     root.traverse(o=>{if(o.isMesh){if(o.name.includes('Head_Hood')||kind==='silver'&&/Pauldrons|_Legs|Belt_1/.test(o.name))o.visible=false;o.material=o.material.clone();if(kind==='silver'&&o.material.name.includes('Ranger'))palette(o.material,0x526075);if(o.material.name.includes('Regular'))skinTone(o.material,kind);
@@ -88,14 +86,8 @@ export async function loadHeroAssets(onProgress=()=>{}){
     }else o.material.color.set(0x58402e);}});bindParts(root,hair);
     root.updateMatrixWorld(true);templates.set(kind,root);
   }
-  const source=assets.animations.scene;source.skeleton=firstSkin(source).skeleton;
-  const target=templates.get('silver'),namesMap=Object.fromEntries(target.skeleton.bones.map(b=>[b.name,b.name]));
-  for(const name of ['Idle_Loop','Walk_Loop','Jog_Fwd_Loop','Pistol_Idle_Loop','Pistol_Aim_Neutral','Spell_Simple_Idle_Loop','Roll']){
-    const original=assets.animations.animations.find(c=>c.name===name);if(!original)throw Error('缺少角色动作 '+name);
-    const c=retargetClip(target,source,original,{names:namesMap,hip:'pelvis',fps:24,preserveBonePositions:true});
-    c.name=name;clips.set(name,c);
-  }
-  target.skeleton.pose();loaded=true;
+  for(const c of bakedClips)clips.set(c.name,c);
+  loaded=true;
 }
 export function heroesReady(){return loaded;}
 function attachAtRest(bone,object,root){
@@ -120,7 +112,7 @@ function faceMask(){
   const geometry=new T.BufferGeometry();geometry.setAttribute('position',new T.Float32BufferAttribute(pos,3));geometry.setIndex(ix);geometry.computeVertexNormals();const m=new T.Mesh(geometry,new T.MeshStandardMaterial({color:0x11191f,roughness:.98,side:T.DoubleSide}));m.castShadow=true;return m;
 }
 export function createSkinnedHero(kind,weapon){
-  const g=new T.Group(),rig=new T.Group(),model=clone(templates.get(kind));rig.add(model);g.add(rig);rig.scale.setScalar(1.23);
+  const g=new T.Group(),rig=new T.Group(),model=clone(templates.get(kind));rig.add(model);g.add(rig);rig.scale.setScalar(1.12);
   model.skeleton=firstSkin(model).skeleton;const bones=new Map();model.traverse(o=>{if(o.isBone)bones.set(o.name,o);if(o.isMesh){o.castShadow=o.receiveShadow=true;o.frustumCulled=false;}});
   const mixer=new T.AnimationMixer(model),actions={};for(const [name,clip]of clips)actions[name]=mixer.clipAction(clip);
   let idleClip=clips.get('Idle_Loop');
@@ -145,6 +137,8 @@ export function createSkinnedHero(kind,weapon){
     cape=capeMesh();owned.push(cape);attachAtRest(bones.get('spine_03'),cape,model);
     const mask=faceMask();owned.push(mask);attachAtRest(bones.get('Head'),mask,model);
   }
+  // Slightly larger head silhouette remains legible from the elevated game camera.
+  bones.get('Head')?.scale.setScalar(1.08);
   mixer.update(0);const restCape=cape?.quaternion.clone();
   Object.assign(g.userData,{skinned:true,kind,weaponId:weapon,rig,model,mixer,actions,idle,run,walk,upperIdle,upperRun,upperWalk,backRun,backWalk,aim,gun,aimArm:bones.get('upperarm_r'),pelvis:bones.get('pelvis'),spine:bones.get('spine_01'),cape,restCape,owned,blend:0,aimBlend:0,aimHold:0,smoothedSpeed:0,backBlend:0,gaitYaw:0,gaitPhase:0});
   return g;
@@ -160,11 +154,16 @@ export function animateSkinnedHero(g,t,speed,attack,hurt){
   const jogging=T.MathUtils.smoothstep(d.smoothedSpeed,2.2,4.6),runWeight=d.blend*jogging,walkWeight=d.blend*(1-jogging),upperFree=1-d.aimBlend;
   d.run.setEffectiveWeight(runWeight*(1-d.backBlend));d.backRun.setEffectiveWeight(runWeight*d.backBlend);d.walk.setEffectiveWeight(walkWeight*(1-d.backBlend));d.backWalk.setEffectiveWeight(walkWeight*d.backBlend);d.idle.setEffectiveWeight(1-d.blend);
   d.upperRun.setEffectiveWeight(runWeight*upperFree);d.upperWalk.setEffectiveWeight(walkWeight*upperFree);d.upperIdle.setEffectiveWeight((1-d.blend)*upperFree);
-  const cadence=T.MathUtils.lerp(d.smoothedSpeed/2.5/d.walk.getClip().duration,d.smoothedSpeed/5.8/d.run.getClip().duration,jogging);d.gaitPhase=(d.gaitPhase+dt*cadence)%1;
+  const strideScale=d.rig.scale.y/1.23;
+  const cadence=T.MathUtils.lerp(d.smoothedSpeed/2.5/d.walk.getClip().duration,d.smoothedSpeed/5.8/d.run.getClip().duration,jogging)/strideScale;d.gaitPhase=(d.gaitPhase+dt*cadence)%1;
   for(const a of[d.run,d.backRun,d.upperRun,d.walk,d.backWalk,d.upperWalk]){a.paused=true;a.time=d.gaitPhase*a.getClip().duration;}d.aim.setEffectiveWeight(d.aimBlend);
   const isRoll=d.kind==='scout'&&d.dashTime>0,roll=d.actions.Roll;
   if(isRoll){roll.enabled=true;roll.play();roll.setEffectiveWeight(1);roll.paused=true;roll.time=(1-d.dashTime/.24)*roll.getClip().duration;for(const a of[d.idle,d.run,d.walk,d.backRun,d.backWalk,d.upperIdle,d.upperRun,d.upperWalk,d.aim])a.setEffectiveWeight(0);}else roll.stop();
   const bank=isRoll?0:T.MathUtils.clamp(-(d.turnRate||0)*.008,-.075,.075)*d.blend;d.rig.rotation.z+=(bank-d.rig.rotation.z)*(1-Math.exp(-dt*10));
+  const shotPhase=1-T.MathUtils.clamp(attack/.16,0,1),kick=attack>0?Math.sin(shotPhase*Math.PI)*Math.exp(-shotPhase*1.8):0;
+  const recoil={rifle:.075,shotgun:.16,pistol:.10,shuriken:-.09,fire:-.08,dark:-.08}[d.weaponId];
+  d.rig.rotation.x=isRoll?0:-kick*recoil;
+  d.rig.position.z=isRoll?0:-kick*Math.abs(recoil)*.45;
   d.mixer.update(dt);
   if(!isRoll&&Math.abs(d.gaitYaw)>.001){
     g.updateMatrixWorld(true);const chest=d.spine.getWorldQuaternion(new T.Quaternion()).normalize(),hips=d.pelvis.getWorldQuaternion(new T.Quaternion()).normalize();

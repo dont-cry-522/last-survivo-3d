@@ -8,9 +8,11 @@ The following free Standard editions were downloaded from the artist's official 
 | --- | --- | --- |
 | Universal Base Characters | Female and male base mesh, long hair, simple parted hair, textures | https://quaternius.com/packs/universalbasecharacters.html |
 | Modular Character Outfits — Fantasy | Female Ranger and Male Ranger outfits and textures | https://quaternius.com/packs/modularcharacteroutfitsfantasy.html |
-| Universal Animation Library | Standard GLB animation library; seven clips are retargeted at runtime | https://quaternius.com/packs/universalanimationlibrary.html |
+| Universal Animation Library | Standard GLB animation library; seven clips are retargeted offline by `scripts/pack-characters.mjs` | https://quaternius.com/packs/universalanimationlibrary.html |
 
 Local adaptations: mesh selection, head/neck and leg cropping, facial/waist adjustments, skin/hair/costume material changes, boots/shorts material regions, custom cloth face mask and cape, weapon attachment, animation retargeting and layered aiming. Textures were resized and encoded as WebP for delivery; duplicate textures were consolidated. The underlying character meshes and source animations are by Quaternius, not original project artwork.
+
+The hashed delivery GLBs use lossless gzip compression. Baked animation tracks preserve every retargeted Float32 sample. Original source assets and an uncompressed compatibility path are retained.
 
 The game does not contain extracted models, textures or audio from NieR, Chainsaw Man, Rozen Maiden, or other commercial reference works.
 
