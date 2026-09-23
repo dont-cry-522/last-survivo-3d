@@ -1,12 +1,18 @@
 import * as T from './vendor/three.module.js';
 import {GLTFLoader} from './vendor/GLTFLoader.js';
 import {clone,retargetClip} from './vendor/SkeletonUtils.js';
-import {makeHero as makePrototype} from './hero-model.js?v=2';
+import {makeHero as makePrototype} from './hero-model.js?v=3';
 
 const templates=new Map(),clips=new Map();
 let loaded=false;
 const upper=/^(spine_|clavicle|upperarm|lowerarm|hand|index|middle|pinky|ring|thumb)/;
 const isUpper=t=>upper.test(t.name.match(/\[([^\]]+)\]/)?.[1]||t.name.split('.')[0]);
+const angleDelta=(a,b)=>Math.atan2(Math.sin(a-b),Math.cos(a-b));
+function reverseClip(clip){
+  const reversed=clip.clone();reversed.name=clip.name+'-reverse';
+  for(const track of reversed.tracks){const times=track.times.slice(),values=track.values.slice(),size=track.getValueSize(),n=times.length;for(let i=0;i<n;i++){track.times[i]=clip.duration-times[n-1-i];for(let k=0;k<size;k++)track.values[i*size+k]=values[(n-1-i)*size+k];}}
+  return reversed;
+}
 function cutGeometry(geometry,keepTriangle){
   const g=geometry.clone(),p=g.attributes.position,ids=g.index?.array,keep=[];
   for(let i=0;i<(ids?.length||p.count);i+=3){const a=ids?ids[i]:i,b=ids?ids[i+1]:i+1,c=ids?ids[i+2]:i+2;if(keepTriangle(p,a,b,c))keep.push(a,b,c);}
@@ -84,7 +90,7 @@ export async function loadHeroAssets(onProgress=()=>{}){
   }
   const source=assets.animations.scene;source.skeleton=firstSkin(source).skeleton;
   const target=templates.get('silver'),namesMap=Object.fromEntries(target.skeleton.bones.map(b=>[b.name,b.name]));
-  for(const name of ['Idle_Loop','Jog_Fwd_Loop','Pistol_Idle_Loop','Pistol_Aim_Neutral','Spell_Simple_Idle_Loop','Roll']){
+  for(const name of ['Idle_Loop','Walk_Loop','Jog_Fwd_Loop','Pistol_Idle_Loop','Pistol_Aim_Neutral','Spell_Simple_Idle_Loop','Roll']){
     const original=assets.animations.animations.find(c=>c.name===name);if(!original)throw Error('缺少角色动作 '+name);
     const c=retargetClip(target,source,original,{names:namesMap,hip:'pelvis',fps:24,preserveBonePositions:true});
     c.name=name;clips.set(name,c);
@@ -124,6 +130,7 @@ export function createSkinnedHero(kind,weapon){
   }
   const layer=(clip,name,top)=>{const c=clip.clone();c.name=name;c.tracks=c.tracks.filter(t=>isUpper(t)===top);return mixer.clipAction(c);};
   const idle=layer(idleClip,'idle-lower',false),run=layer(clips.get('Jog_Fwd_Loop'),'run-lower',false),upperIdle=layer(idleClip,'idle-upper',true),upperRun=layer(clips.get('Jog_Fwd_Loop'),'run-upper',true);
+  const walk=layer(clips.get('Walk_Loop'),'walk-lower',false),upperWalk=layer(clips.get('Walk_Loop'),'walk-upper',true),backRun=layer(reverseClip(clips.get('Jog_Fwd_Loop')),'back-run',false),backWalk=layer(reverseClip(clips.get('Walk_Loop')),'back-walk',false);
   const aimName=['fire','dark'].includes(weapon)?'Spell_Simple_Idle_Loop':'Pistol_Aim_Neutral';
   const upperClip=clips.get(aimName).clone();upperClip.tracks=upperClip.tracks.filter(isUpper);upperClip.name='upper-aim';
   const aim=mixer.clipAction(upperClip);aim.play();aim.setEffectiveWeight(0);
@@ -131,6 +138,7 @@ export function createSkinnedHero(kind,weapon){
   const fullAim=actions[aimName];fullAim.play();mixer.update(0);model.updateMatrixWorld(true);
   const hand=bones.get('hand_r'),gun=makePrototype(kind,weapon).userData.weapon;gun.removeFromParent();gun.position.set(0,.045,0);gun.scale.setScalar(weapon==='pistol'?.5:.65);gun.quaternion.copy(hand.getWorldQuaternion(new T.Quaternion()).invert());hand.add(gun);
   fullAim.stop();idle.play();upperIdle.play();run.play().setEffectiveWeight(0);upperRun.play().setEffectiveWeight(0);mixer.update(0);
+  for(const a of[walk,upperWalk,backRun,backWalk])a.play().setEffectiveWeight(0);
   model.skeleton.pose();model.updateMatrixWorld(true);
   const owned=[];let cape;
   if(kind==='silver'){
@@ -138,22 +146,35 @@ export function createSkinnedHero(kind,weapon){
     const mask=faceMask();owned.push(mask);attachAtRest(bones.get('Head'),mask,model);
   }
   mixer.update(0);const restCape=cape?.quaternion.clone();
-  Object.assign(g.userData,{skinned:true,kind,weaponId:weapon,rig,model,mixer,actions,idle,run,upperIdle,upperRun,aim,gun,aimArm:bones.get('upperarm_r'),cape,restCape,owned,blend:0,aimBlend:0,aimHold:0});
+  Object.assign(g.userData,{skinned:true,kind,weaponId:weapon,rig,model,mixer,actions,idle,run,walk,upperIdle,upperRun,upperWalk,backRun,backWalk,aim,gun,aimArm:bones.get('upperarm_r'),pelvis:bones.get('pelvis'),spine:bones.get('spine_01'),cape,restCape,owned,blend:0,aimBlend:0,aimHold:0,smoothedSpeed:0,backBlend:0,gaitYaw:0,gaitPhase:0});
   return g;
 }
 export function animateSkinnedHero(g,t,speed,attack,hurt){
   const d=g.userData,dt=d.lastTime===undefined?1/60:Math.max(0,Math.min(.05,t-d.lastTime));d.lastTime=t;
-  d.blend+=(Math.min(1,speed/5.5)-d.blend)*(1-Math.exp(-dt*9));
-  d.aimHold=attack>0?.45:Math.max(0,d.aimHold-dt);d.aimBlend+=((d.aimHold>0?1:0)-d.aimBlend)*(1-Math.exp(-dt*20));
-  d.run.setEffectiveWeight(d.blend);d.idle.setEffectiveWeight(1-d.blend);d.upperRun.setEffectiveWeight(d.blend*(1-d.aimBlend));d.upperIdle.setEffectiveWeight((1-d.blend)*(1-d.aimBlend));
-  d.run.setEffectiveTimeScale(Math.max(.75,speed/5.5));d.upperRun.setEffectiveTimeScale(Math.max(.75,speed/5.5));d.aim.setEffectiveWeight(d.aimBlend);
+  d.smoothedSpeed+=(speed-d.smoothedSpeed)*(1-Math.exp(-dt*(speed>0?15:22)));
+  d.blend+=(Math.min(1,speed/1.6)-d.blend)*(1-Math.exp(-dt*(speed>0?14:18)));
+  d.aimHold=attack>0||d.aimActive?.45:Math.max(0,d.aimHold-dt);d.aimBlend+=((d.aimHold>0?1:0)-d.aimBlend)*(1-Math.exp(-dt*20));
+  const relative=Number.isFinite(d.travelAngle)?angleDelta(d.travelAngle,g.rotation.y):0,backward=Math.abs(relative)>Math.PI*.55;
+  d.backBlend+=((backward?1:0)-d.backBlend)*(1-Math.exp(-dt*12));
+  const gaitTarget=speed>.1?T.MathUtils.clamp(angleDelta(relative,backward?Math.PI:0),-.85,.85):0;d.gaitYaw+=(gaitTarget-d.gaitYaw)*(1-Math.exp(-dt*12));
+  const jogging=T.MathUtils.smoothstep(d.smoothedSpeed,2.2,4.6),runWeight=d.blend*jogging,walkWeight=d.blend*(1-jogging),upperFree=1-d.aimBlend;
+  d.run.setEffectiveWeight(runWeight*(1-d.backBlend));d.backRun.setEffectiveWeight(runWeight*d.backBlend);d.walk.setEffectiveWeight(walkWeight*(1-d.backBlend));d.backWalk.setEffectiveWeight(walkWeight*d.backBlend);d.idle.setEffectiveWeight(1-d.blend);
+  d.upperRun.setEffectiveWeight(runWeight*upperFree);d.upperWalk.setEffectiveWeight(walkWeight*upperFree);d.upperIdle.setEffectiveWeight((1-d.blend)*upperFree);
+  const cadence=T.MathUtils.lerp(d.smoothedSpeed/2.5/d.walk.getClip().duration,d.smoothedSpeed/5.8/d.run.getClip().duration,jogging);d.gaitPhase=(d.gaitPhase+dt*cadence)%1;
+  for(const a of[d.run,d.backRun,d.upperRun,d.walk,d.backWalk,d.upperWalk]){a.paused=true;a.time=d.gaitPhase*a.getClip().duration;}d.aim.setEffectiveWeight(d.aimBlend);
   const isRoll=d.kind==='scout'&&d.dashTime>0,roll=d.actions.Roll;
-  if(isRoll){roll.enabled=true;roll.play();roll.setEffectiveWeight(1);roll.paused=true;roll.time=(1-d.dashTime/.24)*roll.getClip().duration;for(const a of[d.idle,d.run,d.upperIdle,d.upperRun,d.aim])a.setEffectiveWeight(0);}else roll.stop();
+  if(isRoll){roll.enabled=true;roll.play();roll.setEffectiveWeight(1);roll.paused=true;roll.time=(1-d.dashTime/.24)*roll.getClip().duration;for(const a of[d.idle,d.run,d.walk,d.backRun,d.backWalk,d.upperIdle,d.upperRun,d.upperWalk,d.aim])a.setEffectiveWeight(0);}else roll.stop();
+  const bank=isRoll?0:T.MathUtils.clamp(-(d.turnRate||0)*.008,-.075,.075)*d.blend;d.rig.rotation.z+=(bank-d.rig.rotation.z)*(1-Math.exp(-dt*10));
   d.mixer.update(dt);
+  if(!isRoll&&Math.abs(d.gaitYaw)>.001){
+    g.updateMatrixWorld(true);const chest=d.spine.getWorldQuaternion(new T.Quaternion()).normalize(),hips=d.pelvis.getWorldQuaternion(new T.Quaternion()).normalize();
+    hips.premultiply(new T.Quaternion().setFromAxisAngle(new T.Vector3(0,1,0),d.gaitYaw));d.pelvis.quaternion.copy(d.pelvis.parent.getWorldQuaternion(new T.Quaternion()).normalize().invert().multiply(hips)).normalize();
+    d.pelvis.updateMatrixWorld(true);d.spine.quaternion.copy(d.spine.parent.getWorldQuaternion(new T.Quaternion()).normalize().invert().multiply(chest)).normalize();
+  }
   // Keep the firing hand aligned with the hero's target while the pelvis keeps its running sway.
   if(!isRoll&&d.aimBlend>.01&&!['fire','dark'].includes(d.weaponId)){
     g.updateMatrixWorld(true);
-    const forward=new T.Vector3(0,0,1).applyQuaternion(d.gun.getWorldQuaternion(new T.Quaternion()).normalize()).normalize(),target=new T.Vector3(0,0,1).applyQuaternion(g.getWorldQuaternion(new T.Quaternion()).normalize()).normalize();
+    const forward=new T.Vector3(0,0,1).applyQuaternion(d.gun.getWorldQuaternion(new T.Quaternion()).normalize()).normalize(),target=Number.isFinite(d.aimAngle)?new T.Vector3(Math.sin(d.aimAngle),0,Math.cos(d.aimAngle)):new T.Vector3(0,0,1).applyQuaternion(g.getWorldQuaternion(new T.Quaternion()).normalize()).normalize();
     const correction=new T.Quaternion().setFromUnitVectors(forward,target);correction.slerp(new T.Quaternion(),1-d.aimBlend);
     const world=d.aimArm.getWorldQuaternion(new T.Quaternion()).normalize().premultiply(correction),parent=d.aimArm.parent.getWorldQuaternion(new T.Quaternion()).normalize().invert();d.aimArm.quaternion.copy(parent.multiply(world)).normalize();
   }

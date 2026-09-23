@@ -1,6 +1,6 @@
-import{heroesReady,createSkinnedHero,animateSkinnedHero}from'./skinned-hero.js?v=2';
+import{heroesReady,createSkinnedHero,animateSkinnedHero}from'./skinned-hero.js?v=3';
 import * as T from './vendor/three.module.js';
-import{makeHero,animateHero}from'./hero-model.js?v=2';
+import{makeHero,animateHero}from'./hero-model.js?v=3';
 import{MAPS,seeded}from'./rules.js';
 const geo=new Map(),materials=new Map(),terrainMaterials=new Map();
 function geometry(kind,args){const key=kind+args.join(',');if(!geo.has(key))geo.set(key,new T[kind](...args));return geo.get(key);}
