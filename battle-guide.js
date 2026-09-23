@@ -11,6 +11,7 @@ export const CIRCLE_GUIDE=[
  {color:'紫',name:'毒雾圈',meaning:'吐毒怪投出的持续伤害区域，亮起后离开。'},
  {color:'青绿',name:'祭司咒圈',meaning:'短暂伤害并减速；祭司的治疗波也会发出绿色闪光。'},
  {color:'红',name:'首领裂地',meaning:'红色大圈是即将落下的裂击；一串橙圈标出冲撞方向。'},
+ {color:'橙红',name:'赤烬地脉',meaning:'荒原上固定的大圈会先亮起，再喷发灼伤圈内的人与怪物。'},
  {color:'金',name:'我方陨火',meaning:'金色落点属于自己升级的陨火，会伤害怪物。'},
  {color:'常驻',name:'补给与祭坛',meaning:'固定不消失的光环是探索目标；先清理守卫，再靠近领取。'}
 ];
