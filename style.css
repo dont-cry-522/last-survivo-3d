@@ -36,3 +36,6 @@ body.playing #toast{top:82px}body.touch.playing #toast{top:71px}
 #dialog-content:has(.guide-content)>p{display:none}
 @media(max-height:500px) and (orientation:landscape){#dialog:has(.guide-content){padding:14px 18px}.guide-content{max-height:42dvh;margin:7px 0}.guide-content h3{margin:8px 0 5px}.guide-content p{padding:5px 8px}.guide-content+.dialog-actions{margin-top:8px}}
 @media(orientation:portrait){.guide-content{max-height:36dvh}}
+.attack-modes{display:flex;align-items:center;gap:7px;margin-top:12px}.attack-modes span{font-size:11px;color:#b7d3c2;white-space:nowrap;margin-right:3px}.attack-modes button{flex:1;padding:9px 6px;font-size:12px}.attack-modes button[aria-pressed="true"]{border-color:#e7ca8b;background:#b99b543c;color:#ffe4a6}
+body.touch.auto-attack #aim-stick{display:none}
+@media(max-height:600px){.attack-modes{margin-top:7px}.attack-modes button{padding:6px 5px;font-size:11px}}
