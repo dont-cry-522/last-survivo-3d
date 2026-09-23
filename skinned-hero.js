@@ -1,7 +1,7 @@
 import * as T from './vendor/three.module.js';
 import {clone} from './vendor/SkeletonUtils.js';
-import {loadCharacterData} from './character-loader.js?v=5';
-import {makeHero as makePrototype} from './hero-model.js?v=5';
+import {loadCharacterData} from './character-loader.js?v=6';
+import {makeHero as makePrototype} from './hero-model.js?v=6';
 
 const templates=new Map(),clips=new Map();
 let loaded=false;

@@ -1,6 +1,6 @@
 import {LoadingManager,AnimationClip} from './vendor/three.module.js';
 import {GLTFLoader} from './vendor/GLTFLoader.js';
-import {CHARACTER_ASSETS as assets} from './character-assets.js?v=5';
+import {CHARACTER_ASSETS as assets} from './character-assets.js?v=6';
 
 const base=new URL('./assets/characters/',import.meta.url);
 export async function loadCharacterData(onProgress=()=>{}){

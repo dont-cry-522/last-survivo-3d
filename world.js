@@ -1,14 +1,15 @@
-import{heroesReady,createSkinnedHero,animateSkinnedHero}from'./skinned-hero.js?v=5';
+import{heroesReady,createSkinnedHero,animateSkinnedHero}from'./skinned-hero.js?v=6';
 import * as T from './vendor/three.module.js';
-import{makeHero,animateHero}from'./hero-model.js?v=5';
-import{MAPS,seeded}from'./rules.js?v=5';
-const geo=new Map(),materials=new Map(),terrainMaterials=new Map();
+import{makeHero,animateHero}from'./hero-model.js?v=6';
+import{MAPS,seeded}from'./rules.js?v=6';
+const geo=new Map(),materials=new Map(),terrainMaterials=new Map(),detailMaterials=new Map();
 function geometry(kind,args){const key=kind+args.join(',');if(!geo.has(key))geo.set(key,new T[kind](...args));return geo.get(key);}
 export function mat(color,glow=false){const key=color+':'+glow;if(!materials.has(key))materials.set(key,new T.MeshStandardMaterial({color,roughness:glow?.35:.86,metalness:glow?.25:.08,emissive:glow?color:0,emissiveIntensity:glow?.9:0,flatShading:true}));return materials.get(key);}
 export function mesh(kind,args,color,x=0,y=0,z=0,parent=null,glow=false){const dims=args.slice();let radial=1,vertical=1;if(kind==='CylinderGeometry'){vertical=dims[2];dims[2]=1;}if(['CircleGeometry','DodecahedronGeometry'].includes(kind)){radial=dims[0];dims[0]=1;}const m=new T.Mesh(geometry(kind,dims),mat(color,glow));m.scale.set(radial,kind==='CylinderGeometry'?vertical:radial,radial);m.position.set(x,y,z);m.castShadow=true;m.receiveShadow=true;parent?.add(m);return m;}
 const box=(p,c,x,y,z,w,h,d)=>mesh('BoxGeometry',[w,h,d],c,x,y,z,p);
 const orb=(p,c,x,y,z,r,glow=false)=>mesh('SphereGeometry',[r,10,7],c,x,y,z,p,glow);
 const cone=(p,c,x,y,z,r,h)=>mesh('ConeGeometry',[r,h,7],c,x,y,z,p);
+function detailMaterial(color,opacity,vertexColors=false){const key=color+':'+opacity+':'+vertexColors;if(!detailMaterials.has(key))detailMaterials.set(key,new T.MeshStandardMaterial({color,transparent:true,opacity,vertexColors,roughness:1,depthWrite:false,side:T.DoubleSide}));return detailMaterials.get(key);}
 export function actor(kind='silver',weapon='pistol'){
  const g=new T.Group(),rig=new T.Group();g.add(rig);g.userData.rig=rig;
  if(['silver','scout'].includes(kind))return heroesReady()?createSkinnedHero(kind,weapon):makeHero(kind,weapon);
@@ -59,23 +60,51 @@ export function animateActor(g,t,speed=0,attack=0,hurt=0){
  }
  g.visible=true;
 }
+function groundTexture(id,theme){
+ const canvas=document.createElement('canvas');canvas.width=canvas.height=512;const c=canvas.getContext('2d');
+ const rgb=[theme.ground>>16&255,theme.ground>>8&255,theme.ground&255];
+ if(c.createImageData){
+  const data=c.createImageData(512,512),pixels=data.data,noise=seeded(id==='forest'?913:id==='snow'?317:711),lattices=[];
+  for(const cells of [4,11,31,83])lattices.push({cells,values:Float32Array.from({length:cells*cells},()=>noise()*2-1)});
+  const sample=(layer,x,y)=>{const sx=x/512*layer.cells,sy=y/512*layer.cells,ix=Math.floor(sx),iy=Math.floor(sy),u=sx-ix,v=sy-iy,at=(a,b)=>layer.values[(b%layer.cells)*layer.cells+(a%layer.cells)];const a=at(ix,iy)+(at(ix+1,iy)-at(ix,iy))*u,b=at(ix,iy+1)+(at(ix+1,iy+1)-at(ix,iy+1))*u;return a+(b-a)*v;};
+  for(let y=0;y<512;y++)for(let x=0;x<512;x++){const n=sample(lattices[0],x,y)*.46+sample(lattices[1],x,y)*.27+sample(lattices[2],x,y)*.16+sample(lattices[3],x,y)*.11;const fleck=(noise()-.5)*5,shade=n*(id==='snow'?28:21),i=(y*512+x)*4;for(let k=0;k<3;k++)pixels[i+k]=Math.max(0,Math.min(255,rgb[k]+shade+fleck));pixels[i+3]=255;}
+  c.putImageData(data,0,0);
+ }else{c.fillStyle='#'+theme.ground.toString(16).padStart(6,'0');c.fillRect(0,0,512,512);}
+ const texture=new T.CanvasTexture(canvas);texture.wrapS=texture.wrapT=T.RepeatWrapping;texture.repeat.set(8,8);texture.colorSpace=T.SRGBColorSpace;texture.anisotropy=4;return texture;
+}
+function groundShape(cx,cz,r,rnd,color,segments=24){const points=[0,.014,0],colors=[1,1,1,.68],indices=[];for(let i=0;i<segments;i++){const a=i/segments*Math.PI*2,rad=r*(.87+rnd()*.2);points.push(Math.cos(a)*rad,.014,Math.sin(a)*rad);colors.push(1,1,1,0);if(i)indices.push(0,i,i+1);}indices.push(0,segments,1);const geo=new T.BufferGeometry();geo.setAttribute('position',new T.Float32BufferAttribute(points,3));geo.setAttribute('color',new T.Float32BufferAttribute(colors,4));geo.setIndex(indices);geo.computeVertexNormals();const g=new T.Mesh(geo,detailMaterial(color,1,true));g.userData.ownedGeometry=true;g.position.set(cx,0,cz);g.receiveShadow=true;return g;}
+function trail(group,spawn,site,id,rnd){
+ const n=30,verts=[],colors=[],indices=[],shade=id==='snow'?0xb7d0cc:id==='ash'?0x795c52:0x6b8065;
+ for(let i=0;i<=n;i++){const f=i/n,curve=Math.sin(f*Math.PI)*4,x=spawn.x+(site.x-spawn.x)*f+curve,z=spawn.z+(site.z-spawn.z)*f,dx=(site.x-spawn.x)+4*Math.PI*Math.cos(f*Math.PI),dz=site.z-spawn.z,l=Math.hypot(dx,dz),w=(1.75+Math.sin(f*19)*.15)*(i===0||i===n?.85:1);
+  const sideX=-dz/l,sideZ=dx/l;for(const [sign,alpha] of [[-1.5,0],[-.72,.24],[.72,.24],[1.5,0]]){const rag=(rnd()-.5)*.12;verts.push(x+sideX*(sign*w+rag),.008,z+sideZ*(sign*w+rag));colors.push(1,1,1,alpha);}
+  if(i<n)for(let strip=0;strip<3;strip++){const a=i*4+strip;indices.push(a,a+4,a+1,a+1,a+4,a+5);}
+ }
+ const geo=new T.BufferGeometry();geo.setAttribute('position',new T.Float32BufferAttribute(verts,3));geo.setAttribute('color',new T.Float32BufferAttribute(colors,4));geo.setIndex(indices);geo.computeVertexNormals();const path=new T.Mesh(geo,detailMaterial(shade,1,true));path.userData.ownedGeometry=true;path.receiveShadow=true;group.add(path);
+}
 export function buildWorld(id,seed=1){const theme=MAPS[id],rnd=seeded(seed),group=new T.Group(),obstacles=[],patches=[],sites=[{x:28,z:-27,type:'altar',claimed:false},{x:-29,z:24,type:'supply',claimed:false}],spawn={x:-12,z:9};
  const ground=mesh('PlaneGeometry',[140,140],theme.ground,0,-.03,0,group);ground.rotation.x=-Math.PI/2;
- if(!terrainMaterials.has(id)){const canvas=document.createElement('canvas');canvas.width=canvas.height=256;const c=canvas.getContext('2d');c.fillStyle='#'+theme.ground.toString(16).padStart(6,'0');c.fillRect(0,0,256,256);const noise=seeded(582);for(let i=0;i<2200;i++){c.globalAlpha=.06+noise()*.12;c.fillStyle=i%2?'#c9d8ad':'#0c2924';c.fillRect(noise()*256,noise()*256,1+noise()*5,1+noise()*3);}const texture=new T.CanvasTexture(canvas);texture.wrapS=texture.wrapT=T.RepeatWrapping;texture.repeat.set(18,18);texture.colorSpace=T.SRGBColorSpace;terrainMaterials.set(id,new T.MeshStandardMaterial({map:texture,roughness:1}));}ground.material=terrainMaterials.get(id);
+ if(!terrainMaterials.has(id))terrainMaterials.set(id,new T.MeshStandardMaterial({map:groundTexture(id,theme),roughness:1}));ground.material=terrainMaterials.get(id);
 
  // Soft irregular paths and terrain islands give the forest a readable floor.
- for(let i=0;i<34;i++){const f=(i%17)/16,site=sites[Math.floor(i/17)],x=spawn.x+(site.x-spawn.x)*f+Math.sin(f*Math.PI)*4,z=spawn.z+(site.z-spawn.z)*f;const p=mesh('CircleGeometry',[3.2+rnd()*1.2,9],id==='snow'?0xc5d8d8:id==='ash'?0x9a7054:0x607451,x,.012,z,group);p.rotation.x=-Math.PI/2;}
- for(let i=0;i<15;i++){const x=(rnd()-.5)*106,z=(rnd()-.5)*106,r=2+rnd()*3;if(Math.hypot(x-spawn.x,z-spawn.z)<9)continue;patches.push({x,z,r});const p=mesh('CircleGeometry',[r,10],id==='snow'?0xd3e4e8:id==='ash'?0xb45134:0x355253,x,.02,z,group);p.rotation.x=-Math.PI/2;if(id==='ash'){const seam=mesh('TorusGeometry',[1,.04,3,12],0xff8644,x,.045,z,group,true);seam.rotation.x=Math.PI/2;seam.scale.setScalar(r*.6);}}
+ for(const site of sites)trail(group,spawn,site,id,rnd);
+ for(let i=0;i<15;i++){const x=(rnd()-.5)*106,z=(rnd()-.5)*106,r=2+rnd()*3;if(Math.hypot(x-spawn.x,z-spawn.z)<9)continue;patches.push({x,z,r});group.add(groundShape(x,z,r,rnd,id==='snow'?0xc1d6d9:id==='ash'?0xa35340:0x2b4640));}
  for(let i=0;i<170;i++){const x=(rnd()-.5)*118,z=(rnd()-.5)*118;if(Math.hypot(x-spawn.x,z-spawn.z)<7||Math.hypot(x,z)<7||sites.some(s=>Math.hypot(x-s.x,z-s.z)<7)||Math.abs(x-z)<3||Math.abs(x+z)<3)continue;const tall=2.5+rnd()*3.5,tree=new T.Group();tree.position.set(x,0,z);group.add(tree);obstacles.push({x,z,r:.65,mesh:tree});
   if(id==='ash'){const stone=mesh('DodecahedronGeometry',[1.2,0],0x66565c,0,tall*.38,0,tree);stone.scale.multiply(new T.Vector3(.7,tall*.55,.8));cone(tree,0xeaa169,0,tall*.8,0,.24,.85);}
-  else{mesh('CylinderGeometry',[.18,.45,tall,6],id==='snow'?0x68767a:0x695c40,0,tall/2,0,tree);for(let j=0;j<3;j++){const leaf=mesh(id==='snow'?'ConeGeometry':'DodecahedronGeometry',id==='snow'?[1.5-j*.28,2.2,7]:[1.65-j*.16,0],id==='snow'?(j===2?0xd9e9e6:0x739b9c):[theme.leaf,0x367d5c,0x599063][j],id==='snow'?0:Math.sin(j*2.4)*.7,tall-1+j*.75,id==='snow'?0:Math.cos(j*2.4)*.6,tree);leaf.rotation.y=rnd();if(id!=='snow')leaf.scale.y*=.65;}for(let j=0;j<3;j++){const branch=mesh('CylinderGeometry',[.07,.13,1.4,4],0x71694b,Math.cos(j*2.1)*.5,tall*.55,Math.sin(j*2.1)*.5,tree);branch.rotation.z=.9;}}
+  else{const bend=(rnd()-.5)*.18,variation=.78+rnd()*.38;const trunk=mesh('CylinderGeometry',[.17,.38,tall,8],id==='snow'?0x697879:0x675a46,bend*tall*.18,tall/2,0,tree);trunk.rotation.z=-bend*.18;for(let j=0;j<3;j++){const a=j*2.27+rnd()*.55,off=id==='snow'?0:.46+j*.13,r=(1.62-j*.18)*variation,leaf=mesh(id==='snow'?'ConeGeometry':'DodecahedronGeometry',id==='snow'?[1,1,10]:[r,1],id==='snow'?[0x688c91,0x94b0ad,0xd7e4df][j]:[theme.leaf,0x37765c,0x5d9174][j],bend+Math.sin(a)*off,tall-.85+j*.65,id==='snow'?0:Math.cos(a)*off,tree);leaf.rotation.y=a;if(id==='snow')leaf.scale.set(r,2.15,r);else{leaf.scale.set(1,.62+rnd()*.13,.85+rnd()*.2);leaf.rotation.z=(rnd()-.5)*.18;}}for(let j=0;j<3;j++){const a=j*2.1+.4,branch=mesh('CylinderGeometry',[.055,.11,1.25,5],id==='snow'?0x849395:0x70634d,Math.cos(a)*.46,tall*.57,Math.sin(a)*.46,tree);branch.rotation.z=Math.cos(a)*.78;branch.rotation.x=-Math.sin(a)*.78;}}
  }
  const foliage=[];if(id!=='ash')for(const o of obstacles)for(const leaf of o.mesh.children)if(leaf.geometry?.type===(id==='snow'?'ConeGeometry':'DodecahedronGeometry'))foliage.push({leaf,x:leaf.position.x,z:leaf.position.z,phase:o.x*.17+o.z*.13});
  const grassGeo=geometry('ConeGeometry',[.1,.45,3]),grass=new T.InstancedMesh(grassGeo,mat(id==='snow'?0xe0e9db:id==='ash'?0x977566:0x85a06a),700),dummy=new T.Object3D();for(let i=0;i<700;i++){dummy.position.set((rnd()-.5)*125,.15,(rnd()-.5)*125);dummy.scale.setScalar(.6+rnd());dummy.rotation.y=rnd()*6;dummy.updateMatrix();grass.setMatrixAt(i,dummy.matrix);}group.add(grass);
+ // Small clustered floor details add texture without hundreds of draw calls.
+ const fleckGeo=geometry('PlaneGeometry',[.27,.11]),fleckMat=detailMaterial(id==='snow'?0xd8edf0:id==='ash'?0xba7760:0xa2a76d,1),flecks=new T.InstancedMesh(fleckGeo,fleckMat,1100);
+ for(let i=0;i<1100;i++){dummy.position.set((rnd()-.5)*124,.027,(rnd()-.5)*124);dummy.rotation.set(-Math.PI/2,rnd()*6.28,0);dummy.scale.setScalar(.45+rnd()*1.4);dummy.updateMatrix();flecks.setMatrixAt(i,dummy.matrix);}flecks.instanceMatrix.needsUpdate=true;group.add(flecks);
+ const shrubs=new T.InstancedMesh(geometry('DodecahedronGeometry',[1,0]),mat(0xffffff),520),shrubPalette=id==='forest'?[0x315e49,0x4a7a59,0x698663]:id==='snow'?[0xb4d0d0,0x86a9a8,0xd3e1dd]:[0x624e49,0x795951,0x8b6b59];
+ for(let i=0;i<520;i++){const x=(rnd()-.5)*120,z=(rnd()-.5)*120;dummy.position.set(x,.24,z);dummy.rotation.set(0,rnd()*6.28,0);const size=.25+rnd()*.35;dummy.scale.set(size,.24+rnd()*.22,size*(.75+rnd()*.4));dummy.updateMatrix();shrubs.setMatrixAt(i,dummy.matrix);shrubs.setColorAt(i,new T.Color(shrubPalette[Math.floor(rnd()*shrubPalette.length)]));}shrubs.instanceMatrix.needsUpdate=true;shrubs.instanceColor.needsUpdate=true;shrubs.receiveShadow=true;group.add(shrubs);
  for(let i=0;i<65;i++){const x=(rnd()-.5)*124,z=(rnd()-.5)*124;const rock=mesh('DodecahedronGeometry',[.3+rnd()*.5,0],id==='snow'?0xbad0ce:0x8b9376,x,.2,z,group);rock.scale.y*=.6;}
  for(const site of sites){const g=new T.Group();g.position.set(site.x,0,site.z);group.add(g);site.mesh=g;const base=mesh('CylinderGeometry',[2,2.3,.25,8],0x68796b,0,.12,0,g);if(site.type==='altar'){for(const side of [-1,1])box(g,0x8d9b88,side*1.3,1.1,0,.42,2.2,.5);box(g,0xabb398,0,2.35,0,3.2,.4,.7);const crystal=mesh('OctahedronGeometry',[.65],theme.accent,0,1.1,0,g,true);site.crystal=crystal;}else{box(g,0x99724c,0,.62,0,1.4,.8,.9);box(g,0xd6b571,0,1.04,0,1.5,.18,1);box(g,0xebd595,0,.72,.48,.18,.45,.07);}const ring=mesh('TorusGeometry',[2.6,.055,4,36],theme.accent,0,.2,0,g,true);ring.rotation.x=Math.PI/2;site.ring=ring;}
  for(let i=0;i<12;i++){const a=i*Math.PI/6;const stone=mesh('BoxGeometry',[1.1,2.8,.85],0x819586,Math.cos(a)*6.5,1.4,Math.sin(a)*6.5,group);stone.rotation.y=-a;}
- const campX=spawn.x-2.5,campZ=spawn.z+1.5;const fire=orb(group,0xffcc77,campX,.9,campZ,.17,true);const light=new T.PointLight(0xffc386,9,9,2);light.position.set(campX,1.8,campZ);group.add(light);for(let i=0;i<6;i++){const a=i*Math.PI/3;const log=mesh('CylinderGeometry',[.11,.15,1.1,5],0x70553d,campX+Math.cos(a)*.3,.15,campZ+Math.sin(a)*.3,group);log.rotation.z=Math.PI/2;log.rotation.y=a;}
+ const campX=spawn.x-2.5,campZ=spawn.z+1.5,fire=new T.Group();fire.position.set(campX,.18,campZ);group.add(fire);
+ const flame=cone(fire,0xff8d42,0,.41,0,.19,.85);flame.material=mat(0xff8d42,true);const core=cone(fire,0xffd188,0,.42,.01,.09,.53);core.material=mat(0xffd188,true);
+ const light=new T.PointLight(0xffa85c,6.5,9,2);light.position.set(campX,1.25,campZ);group.add(light);for(let i=0;i<6;i++){const a=i*Math.PI/3;const log=mesh('CylinderGeometry',[.09,.14,1.1,6],0x624c3d,campX+Math.cos(a)*.23,.14,campZ+Math.sin(a)*.23,group);log.rotation.z=Math.PI/2;log.rotation.y=a;}
  const motes=[];for(let i=0;i<18;i++){const m=orb(group,theme.accent,spawn.x+(rnd()-.5)*20,1+rnd()*3,spawn.z+(rnd()-.5)*20,.035,true);motes.push(m);}
  return{group,obstacles,patches,sites,spawn,theme,fire,light,motes,foliage};
 }

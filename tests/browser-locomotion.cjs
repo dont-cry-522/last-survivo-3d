@@ -23,9 +23,9 @@ const assert=require('node:assert/strict');
     const feedback=await p.evaluate(()=>{
       const g=game3d;g.world.obstacles.length=0;const count=()=>g.hero.parent.children.filter(o=>o.geometry?.type==='TorusGeometry').length;
       const before=count(),enemy=g.spawn('mushroom',g.player.x+4,g.player.z);g.hurtEnemy(enemy,1000);const after=count();
-      g.hero.rotation.y=1.7;g.player.angle=-1;g.player.dash=0;g.dash();return{before,after,dash:g.player.dashAngle};
+      g.hero.rotation.y=1.7;g.player.angle=-1;g.player.dash=0;g.dash();return{before,after,afterDash:count(),dash:g.player.dashAngle};
     });
-    assert.equal(feedback.before,feedback.after,'Ordinary defeat must not create a circle');assert(Math.abs(feedback.dash-1.7)<.001,'No-input dash must follow visible heading');
+    assert.equal(feedback.before,feedback.after,'Ordinary defeat must not create a circle');assert.equal(feedback.before,feedback.afterDash,'Teleport must not create ground rings');assert(Math.abs(feedback.dash-1.7)<.001,'No-input dash must follow visible heading');
     for(const kind of ['scout','silver']){
       const circles=await p.evaluate(kind=>{
         const g=game3d;g.select(kind,'forest',2);g.start();g.world.obstacles.length=0;g.world.patches.length=0;
