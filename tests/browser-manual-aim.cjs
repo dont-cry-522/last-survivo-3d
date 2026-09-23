@@ -37,10 +37,11 @@ const url=process.env.TEST_URL||'http://127.0.0.1:8897/';
     await page.mouse.move(point.x,point.y);await page.mouse.down();
    }
    const fired=await page.evaluate(()=>{
-    const g=game3d;g.player.attack=0;g.step(1/60);
-    const b=g.bullets[0];return {count:g.bullets.length,vx:b?.vx||0,vz:b?.vz||0};
+    const g=game3d;g.player.attack=0;let frames=0;while(!g.bullets.length&&frames++<30)g.step(1/60);
+    const b=g.bullets[0],shotAngle=b?Math.atan2(b.vx,b.vz):0,offset=Math.atan2(Math.sin(shotAngle-g.hero.rotation.y),Math.cos(shotAngle-g.hero.rotation.y));return {count:g.bullets.length,vx:b?.vx||0,vz:b?.vz||0,offset,frames};
    });
    assert(fired.count>0,'holding attack must fire');
+   assert(Math.abs(fired.offset)<.3,'crossbow shot must leave in the direction the bow visibly faces');
    assert(viewport.touch?fired.vx>0&&fired.vz<0&&Math.abs(fired.vx+fired.vz)<fired.vx*.4:fired.vx>0&&Math.abs(fired.vz)<fired.vx*.4,'shot must follow player aim to the right');
    await page.mouse.up();
    const stopped=await page.evaluate(()=>{const g=game3d;for(let i=0;i<100;i++)g.step(1/60);const before=g.bullets.length;g.player.attack=0;g.step(1/60);return {before,after:g.bullets.length};});

@@ -30,7 +30,7 @@ const assert=require('node:assert/strict');
   });
   assert(Math.abs(bossHit.push)<.001&&bossHit.damage>0,'boss should take bolt damage without knockback');
   const audio=await page.evaluate(async()=>{
-   const {GameAudio}=await import('./audio.js?v=8'),out=[];
+   const {GameAudio}=await import('./audio.js?v=9'),out=[];
    for(const kind of ['crossbow','wave']){
     const context=new OfflineAudioContext(1,44100,44100),a=new GameAudio(context);a.setup();a.available=()=>a.ready&&a.nodes<100;
     if(kind==='wave')a.threat('wave');else a.shot('crossbow');
@@ -39,7 +39,7 @@ const assert=require('node:assert/strict');
   });
   assert(audio.every(rms=>rms>.001),'crossbow and wave cues should be audible');
   const heavyCue=await page.evaluate(async()=>{
-   const {GameAudio}=await import('./audio.js?v=8'),a=new GameAudio(new OfflineAudioContext(1,44100,44100));a.setup();a.available=()=>a.ready&&a.nodes<100;
+   const {GameAudio}=await import('./audio.js?v=9'),a=new GameAudio(new OfflineAudioContext(1,44100,44100));a.setup();a.available=()=>a.ready&&a.nodes<100;
    a.impact('crossbow');a.impact('crossbow',true);return a.cooldowns.has('impact-strong');
   });
   assert(heavyCue,'third-hit cue must survive another hit in the same frame');

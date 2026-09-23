@@ -1,9 +1,9 @@
-import{SkillVFX}from'./skill-vfx.js?v=8';
-import{loadHeroAssets,disposeHero}from'./skinned-hero.js?v=8';
-import{GameAudio}from'./audio.js?v=8';
+import{SkillVFX}from'./skill-vfx.js?v=9';
+import{loadHeroAssets,disposeHero}from'./skinned-hero.js?v=9';
+import{GameAudio}from'./audio.js?v=9';
 import * as T from './vendor/three.module.js';
-import{MAPS,WEAPONS,ENEMIES,weaponFor,experienceNeeded,grantExperience,chooseUpgrades,takeUpgrade,weaponStats,WEAPON_PATHS,segmentDistance,registerCrossbowHit}from'./rules.js?v=8';
-import{actor,animateActor,animateWorld,buildWorld,clearAt,moveActor,mesh,mat}from'./world.js?v=8';
+import{MAPS,WEAPONS,ENEMIES,weaponFor,experienceNeeded,grantExperience,chooseUpgrades,takeUpgrade,weaponStats,WEAPON_PATHS,segmentDistance,registerCrossbowHit}from'./rules.js?v=9';
+import{actor,animateActor,animateWorld,buildWorld,clearAt,moveActor,mesh,mat}from'./world.js?v=9';
 const $=s=>document.querySelector(s),touch=matchMedia('(pointer:coarse)').matches;
 document.body.classList.toggle('touch',touch);
 const canvas=$('#world');let renderer;
@@ -103,7 +103,8 @@ function update(dt){time+=dt;simTimer+=dt;player.xpFlash=Math.max(0,(player.xpFl
  Object.assign(hero.userData,{dashTime:player.dashTime,travelAngle,aimActive:aimInput.held||player.aimTime>0,aimAngle:aimInput.hasAim?aimInput.angle:player.aimTime>0?player.aimAngle:undefined,turnRate:turn/Math.max(dt,.001),reloadPhase:hero.userData.reloadDuration?1-player.attack/hero.userData.reloadDuration:1});
  hero.userData.shoot=Math.max(0,(hero.userData.shoot||0)-dt);animateActor(hero,time,actualSpeed,hero.userData.shoot,player.hurt);
  if(heroId==='silver'&&player.dashTime>0)hero.scale.setScalar(.65+.35*(1-player.dashTime/.24));else hero.scale.setScalar(1);
- if(aimInput.held&&player.attack<=0&&player.dashTime===0)shoot();spawnTimer-=dt;if(spawnTimer<=0){spawnTimer=Math.max(.65,2-time*.007);const kinds=time<25?['mushroom']:time<55?['mushroom','wolf']:['mushroom','wolf','golem','spitter','shaman'];spawn(kinds[Math.floor(Math.random()*kinds.length)]);}if(time>=waveTimer){waveTimer=time+30;toast('兽群从四周接近 · 留意突围路线');sound.threat('wave');for(let i=0;i<6;i++){const a=i/6*Math.PI*1.7,r=17;spawn(i%3===0?'golem':'wolf',player.x+Math.sin(a)*r,player.z+Math.cos(a)*r);}}
+ const bowAligned=player.weaponId!=='crossbow'||Math.abs(Math.atan2(Math.sin(aimInput.angle-hero.rotation.y),Math.cos(aimInput.angle-hero.rotation.y)))<.26;
+ if(aimInput.held&&player.attack<=0&&player.dashTime===0&&bowAligned)shoot();spawnTimer-=dt;if(spawnTimer<=0){spawnTimer=Math.max(.65,2-time*.007);const kinds=time<25?['mushroom']:time<55?['mushroom','wolf']:['mushroom','wolf','golem','spitter','shaman'];spawn(kinds[Math.floor(Math.random()*kinds.length)]);}if(time>=waveTimer){waveTimer=time+30;toast('兽群从四周接近 · 留意突围路线');sound.threat('wave');for(let i=0;i<6;i++){const a=i/6*Math.PI*1.7,r=17;spawn(i%3===0?'golem':'wolf',player.x+Math.sin(a)*r,player.z+Math.cos(a)*r);}}
  updateFields(dt);updateEnemies(dt);if(state!=='playing')return;updateBoss(dt);if(state!=='playing')return;
  const targets=()=>[...enemies,...(boss?.alive?[boss]:[])];
  for(const b of bullets){b.elapsed+=dt;if(b.returnable&&!b.returning&&b.elapsed>=b.turnAt)beginReturn(b);const ox=b.x,oz=b.z;

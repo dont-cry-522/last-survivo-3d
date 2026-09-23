@@ -10,7 +10,7 @@ const assert=require('node:assert/strict');
     assert(await page.locator('#start').isEnabled());
     const result=await page.evaluate(async()=>{
       const T=await import('./vendor/three.module.js');
-      const {createSkinnedHero,animateSkinnedHero,disposeHero}=await import('./skinned-hero.js?v=8');
+      const {createSkinnedHero,animateSkinnedHero,disposeHero}=await import('./skinned-hero.js?v=9');
       const out=[];
       for(const [kind,weapons] of [['silver',['crossbow','shuriken','dark']],['scout',['rifle','shotgun','fire']]])for(const weapon of weapons){
         const hero=createSkinnedHero(kind,weapon),d=hero.userData;
