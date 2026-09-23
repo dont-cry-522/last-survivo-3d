@@ -1,0 +1,5 @@
+import{test}from'node:test';import assert from'node:assert/strict';import{buildWorld,clearAt,moveActor,actor,animateActor}from'../world.js';
+globalThis.document={createElement:()=>({width:256,height:256,getContext:()=>({fillRect(){}})})};
+test('90 generated maps keep spawn and exploration landmarks clear',()=>{for(const id of ['forest','snow','ash'])for(let seed=0;seed<30;seed++){const w=buildWorld(id,seed);assert(clearAt(w,w.spawn.x,w.spawn.z,1));for(const s of w.sites)assert(clearAt(w,s.x,s.z,3));w.group.traverse(o=>{if(o.isInstancedMesh)o.dispose();});}});
+test('solid trees and map bounds block movement',()=>{const w={obstacles:[{x:1,z:0,r:.65}]},p={x:0,z:0};moveActor(w,p,1,0,.45);assert.equal(p.x,0);assert(!clearAt(w,63,0));});
+test('all models animate without invalid transforms',()=>{for(const id of ['silver','scout','mushroom','wolf','golem','spitter','shaman','boss']){const m=actor(id);animateActor(m,3,4,.1,0);m.traverse(o=>{assert(Number.isFinite(o.position.x));assert(Number.isFinite(o.scale.y));});}});
