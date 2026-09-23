@@ -1,7 +1,7 @@
 import * as T from './vendor/three.module.js';
 import {clone} from './vendor/SkeletonUtils.js';
 import {loadCharacterData} from './character-loader.js?v=9';
-import {makeHero as makePrototype} from './hero-model.js?v=9';
+import {makeHero as makePrototype} from './hero-model.js?v=13';
 
 const templates=new Map(),clips=new Map();
 let loaded=false;
@@ -148,6 +148,7 @@ export function createSkinnedHero(kind,weapon){
   mixer.update(0);const restCape=cape?.quaternion.clone();
   Object.assign(g.userData,{skinned:true,kind,weaponId:weapon,rig,model,mixer,actions,idle,run,walk,upperIdle,upperRun,upperWalk,backRun,backWalk,aim,gun,gunRest:gun.quaternion.clone(),aimArm:bones.get('upperarm_r'),firingForearm:bones.get('lowerarm_r'),offArm:bones.get('upperarm_l'),offForearm:bones.get('lowerarm_l'),pelvis:bones.get('pelvis'),spine:bones.get('spine_01'),cape,restCape,owned,blend:0,aimBlend:0,aimHold:0,smoothedSpeed:0,backBlend:0,gaitYaw:0,gaitPhase:0,reloadPhase:1});
   if(weapon==='crossbow')g.userData.crossbowBase=[g.userData.aimArm,g.userData.firingForearm,g.userData.offArm,g.userData.offForearm].map(bone=>[bone,new T.Quaternion()]);
+  else g.userData.attackBase=[g.userData.aimArm,g.userData.firingForearm,g.userData.offArm,g.userData.offForearm].map(bone=>[bone,new T.Quaternion()]);
   return g;
 }
 export function animateSkinnedHero(g,t,speed,attack,hurt){
@@ -173,6 +174,7 @@ export function animateSkinnedHero(g,t,speed,attack,hurt){
   d.rig.position.z=isRoll?0:-kick*Math.abs(recoil)*.45;
   // Remove last frame's procedural arm offsets before the mixer blends a new pose.
   if(d.crossbowBaseReady)for(const [bone,rotation]of d.crossbowBase)bone.quaternion.copy(rotation);
+  if(d.attackBaseReady)for(const [bone,rotation]of d.attackBase)bone.quaternion.copy(rotation);
   d.mixer.update(dt);
   if(!isRoll&&Math.abs(d.gaitYaw)>.001){
     g.updateMatrixWorld(true);const chest=d.spine.getWorldQuaternion(new T.Quaternion()).normalize(),hips=d.pelvis.getWorldQuaternion(new T.Quaternion()).normalize();
@@ -186,6 +188,28 @@ export function animateSkinnedHero(g,t,speed,attack,hurt){
     const forward=new T.Vector3(0,0,1).applyQuaternion(d.gun.getWorldQuaternion(new T.Quaternion()).normalize()).normalize(),target=d.weaponId!=='crossbow'&&Number.isFinite(d.aimAngle)?new T.Vector3(Math.sin(d.aimAngle),0,Math.cos(d.aimAngle)):new T.Vector3(0,0,1).applyQuaternion(g.getWorldQuaternion(new T.Quaternion()).normalize()).normalize();
     const correction=new T.Quaternion().setFromUnitVectors(forward,target);correction.slerp(new T.Quaternion(),1-d.aimBlend);
     const world=d.aimArm.getWorldQuaternion(new T.Quaternion()).normalize().premultiply(correction),parent=d.aimArm.parent.getWorldQuaternion(new T.Quaternion()).normalize().invert();d.aimArm.quaternion.copy(parent.multiply(world)).normalize();
+  }
+  if(d.attackBase){
+    for(const [bone,rotation]of d.attackBase)rotation.copy(bone.quaternion);d.attackBaseReady=true;
+    const gesture=isRoll?0:kick,pumpPhase=T.MathUtils.clamp(d.reloadPhase??1,0,1);
+    if(d.weaponId==='rifle'){
+      d.aimArm.rotateX(-.16*gesture);d.firingForearm.rotateX(.24*gesture);
+      d.offArm.rotateX(.14*gesture);d.offForearm.rotateX(-.22*gesture);
+    }else if(d.weaponId==='shotgun'){
+      const pump=T.MathUtils.smoothstep(pumpPhase,.16,.42)*(1-T.MathUtils.smoothstep(pumpPhase,.5,.78));
+      d.aimArm.rotateX(-.25*gesture);d.firingForearm.rotateX(.32*gesture);
+      d.offArm.rotateX(.17*gesture-.25*pump);d.offForearm.rotateX(-.15*gesture+.22*pump);
+      if(d.gun.userData.pump)d.gun.userData.pump.position.z=isRoll?0:-.23*pump;
+    }else if(d.weaponId==='shuriken'){
+      d.aimArm.rotateY(-.58*gesture);d.aimArm.rotateZ(.32*gesture);
+      d.firingForearm.rotateX(-.37*gesture);d.offArm.rotateY(.16*gesture);
+    }else if(d.weaponId==='fire'){
+      d.aimArm.rotateX(-.5*gesture);d.firingForearm.rotateX(-.28*gesture);
+      d.offArm.rotateX(-.31*gesture);d.offForearm.rotateZ(-.23*gesture);
+    }else if(d.weaponId==='dark'){
+      d.aimArm.rotateY(.53*gesture);d.firingForearm.rotateX(.26*gesture);
+      d.offArm.rotateZ(.33*gesture);d.offForearm.rotateY(-.22*gesture);
+    }
   }
   if(d.weaponId==='crossbow'&&!isRoll){
     for(const [bone,rotation]of d.crossbowBase)rotation.copy(bone.quaternion);d.crossbowBaseReady=true;

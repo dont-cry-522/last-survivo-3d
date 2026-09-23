@@ -1,10 +1,10 @@
 import{SkillVFX}from'./skill-vfx.js?v=9';
-import{loadHeroAssets,disposeHero}from'./skinned-hero.js?v=9';
+import{loadHeroAssets,disposeHero}from'./skinned-hero.js?v=13';
 import{GameAudio}from'./audio.js?v=9';
 import{ENEMY_GUIDE,CIRCLE_GUIDE}from'./battle-guide.js?v=12';
 import * as T from './vendor/three.module.js';
 import{MAPS,WEAPONS,ENEMIES,weaponFor,experienceNeeded,grantExperience,chooseUpgrades,takeUpgrade,weaponStats,WEAPON_PATHS,segmentDistance,registerCrossbowHit}from'./rules.js?v=9';
-import{actor,animateActor,animateWorld,buildWorld,clearAt,moveActor,mesh,mat}from'./world.js?v=12';
+import{actor,animateActor,animateWorld,buildWorld,clearAt,moveActor,mesh,mat}from'./world.js?v=13';
 const $=s=>document.querySelector(s),touch=matchMedia('(pointer:coarse)').matches;
 document.body.classList.toggle('touch',touch);
 const canvas=$('#world');let renderer;

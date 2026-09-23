@@ -85,7 +85,7 @@ export function makeHero(kind,weapon){
     block(gun,trim,[.061,.072,.19],[.008,.032,.16],.8);block(gun,0x192831,[0,.169,.13],[.028,.044,.061]);
     block(gun,0x624f3d,[0,.03,-.24],[.115,.17,.22]);block(gun,dark,[0,-.098,.19],[.07,.18,.11]);
     if(weapon==='rifle'){tube(gun,dark,[0,.193,.21],[.045,.14,.045]).rotation.x=Math.PI/2;}
-    if(weapon==='shotgun'){const second=tube(gun,0x8c9ca6,[.075,.068,.47],[.032,.43,.032],.75);second.rotation.x=Math.PI/2;for(let i=0;i<4;i++)block(gun,0x8c6e48,[0,.025,.28+i*.037],[.14,.08,.022]);}
+    if(weapon==='shotgun'){const second=tube(gun,0x8c9ca6,[.075,.068,.47],[.032,.43,.032],.75);second.rotation.x=Math.PI/2;const pump=joint(gun,[0,0,0]);for(let i=0;i<4;i++)block(pump,0x8c6e48,[0,.025,.28+i*.037],[.14,.08,.022]);gun.userData.pump=pump;}
   }
   return g;
 }

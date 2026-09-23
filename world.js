@@ -1,6 +1,6 @@
-import{heroesReady,createSkinnedHero,animateSkinnedHero}from'./skinned-hero.js?v=9';
+import{heroesReady,createSkinnedHero,animateSkinnedHero}from'./skinned-hero.js?v=13';
 import * as T from './vendor/three.module.js';
-import{makeHero,animateHero}from'./hero-model.js?v=9';
+import{makeHero,animateHero}from'./hero-model.js?v=13';
 import{MAPS,seeded}from'./rules.js?v=9';
 const geo=new Map(),materials=new Map(),terrainMaterials=new Map(),detailMaterials=new Map();
 function geometry(kind,args){const key=kind+args.join(',');if(!geo.has(key))geo.set(key,new T[kind](...args));return geo.get(key);}
@@ -81,7 +81,27 @@ function trail(group,spawn,site,id,rnd){
  }
  const geo=new T.BufferGeometry();geo.setAttribute('position',new T.Float32BufferAttribute(verts,3));geo.setAttribute('color',new T.Float32BufferAttribute(colors,4));geo.setIndex(indices);geo.computeVertexNormals();const path=new T.Mesh(geo,detailMaterial(shade,1,true));path.userData.ownedGeometry=true;path.receiveShadow=true;group.add(path);
 }
-function makeWeather(id,rnd,group){const count=id==='snow'?72:id==='ash'?54:42,colors=id==='snow'?[0xf5ffff,0xc9eafa,0xffffff]:id==='ash'?[0xffaa60,0xf7d39a,0xcb6e51]:[0xffe9a0,0xc5ef9c,0x95dcc1],material=new T.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:id==='forest'?.72:.82,depthWrite:false,blending:id==='snow'?T.NormalBlending:T.AdditiveBlending}),cloud=new T.InstancedMesh(geometry('DodecahedronGeometry',[id==='snow'?.115:id==='forest'?.085:.075,0]),material,count),particles=[];cloud.castShadow=false;cloud.receiveShadow=false;cloud.frustumCulled=false;cloud.instanceMatrix.setUsage(T.DynamicDrawUsage);for(let i=0;i<count;i++){particles.push({x:(rnd()-.5)*36,z:(rnd()-.5)*36,y:rnd()*4,phase:rnd()*Math.PI*2,speed:.5+rnd(),scale:id==='snow'?.75+rnd()*.7:.6+rnd()*.8});cloud.setColorAt(i,new T.Color(colors[i%colors.length]));}cloud.instanceColor.needsUpdate=true;group.add(cloud);return{kind:id,mesh:cloud,particles,dummy:new T.Object3D()};}
+function placeWeatherParticle(weather,p,x,z,initial=false){
+ const random=weather.random,angle=random()*Math.PI*2,radius=Math.sqrt(random())*(initial?16:24);
+ p.x=T.MathUtils.clamp(x+Math.sin(angle)*radius,-61,61);p.z=T.MathUtils.clamp(z+Math.cos(angle)*radius,-61,61);
+ if(weather.kind==='forest')p.y=1+random()*2.6;
+ else if(weather.kind==='snow')p.y=initial?0.4+random()*3.6:3.6+random()*0.5;
+ else p.y=initial?0.3+random()*3.5:0.3+random()*0.6;
+ p.phase=random()*Math.PI*2;p.scale=weather.kind==='snow'?.75+random()*.7:.6+random()*.8;
+ p.life=(weather.kind==='ash'?2:4)+random()*(weather.kind==='forest'?7:4);
+ p.vx=weather.kind==='snow'?-1.1-random()*.8:weather.kind==='ash'?.15+random()*.55:(random()-.5)*.45;
+ p.vz=weather.kind==='snow'?(random()-.5)*.6:weather.kind==='ash'?(random()-.5)*.4:(random()-.5)*.45;
+ p.vy=weather.kind==='snow'?-1-random()*.6:weather.kind==='ash'?.65+random()*.5:(random()-.5)*.2;
+}
+function makeWeather(id,rnd,group,spawn){
+ const count=id==='snow'?72:id==='ash'?54:42,colors=id==='snow'?[0xf5ffff,0xc9eafa,0xffffff]:id==='ash'?[0xffaa60,0xf7d39a,0xcb6e51]:[0xffe9a0,0xc5ef9c,0x95dcc1];
+ const material=new T.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:id==='forest'?.72:.82,depthWrite:false,blending:id==='snow'?T.NormalBlending:T.AdditiveBlending});
+ const cloud=new T.InstancedMesh(geometry('DodecahedronGeometry',[id==='snow'?.115:id==='forest'?.085:.075,0]),material,count);
+ cloud.castShadow=false;cloud.receiveShadow=false;cloud.frustumCulled=false;cloud.instanceMatrix.setUsage(T.DynamicDrawUsage);
+ const weather={kind:id,mesh:cloud,particles:[],dummy:new T.Object3D(),random:rnd,lastTime:undefined};
+ for(let i=0;i<count;i++){const p={};placeWeatherParticle(weather,p,spawn.x,spawn.z,true);weather.particles.push(p);cloud.setColorAt(i,new T.Color(colors[i%colors.length]));}
+ cloud.instanceColor.needsUpdate=true;group.add(cloud);return weather;
+}
 export function buildWorld(id,seed=1){const theme=MAPS[id],rnd=seeded(seed),group=new T.Group(),obstacles=[],patches=[],sites=[{x:28,z:-27,type:'altar',claimed:false},{x:-29,z:24,type:'supply',claimed:false}],spawn={x:-12,z:9};
  const ground=mesh('PlaneGeometry',[140,140],theme.ground,0,-.03,0,group);ground.rotation.x=-Math.PI/2;
  if(!terrainMaterials.has(id))terrainMaterials.set(id,new T.MeshStandardMaterial({map:groundTexture(id,theme),roughness:1}));ground.material=terrainMaterials.get(id);
@@ -107,9 +127,20 @@ export function buildWorld(id,seed=1){const theme=MAPS[id],rnd=seeded(seed),grou
  const flame=cone(fire,0xff8d42,0,.41,0,.19,.85);flame.material=mat(0xff8d42,true);const core=cone(fire,0xffd188,0,.42,.01,.09,.53);core.material=mat(0xffd188,true);
  const light=new T.PointLight(0xffa85c,6.5,9,2);light.position.set(campX,1.25,campZ);group.add(light);for(let i=0;i<6;i++){const a=i*Math.PI/3;const log=mesh('CylinderGeometry',[.09,.14,1.1,6],0x624c3d,campX+Math.cos(a)*.23,.14,campZ+Math.sin(a)*.23,group);log.rotation.z=Math.PI/2;log.rotation.y=a;}
  const motes=[];for(let i=0;i<18;i++){const m=orb(group,theme.accent,spawn.x+(rnd()-.5)*20,1+rnd()*3,spawn.z+(rnd()-.5)*20,.035,true);motes.push(m);}
- const weather=makeWeather(id,rnd,group);
+ const weather=makeWeather(id,rnd,group,spawn);
  return{group,obstacles,patches,sites,spawn,theme,fire,light,motes,foliage,weather};
 }
-export function animateWorld(world,t,focusX=world.spawn.x,focusZ=world.spawn.z){for(const f of world.foliage){const sway=Math.sin(t*1.35+f.phase)*.026+Math.sin(t*2.7+f.phase)*.008;f.leaf.rotation.z=sway;f.leaf.position.x=f.x+sway*1.3;f.leaf.position.z=f.z+Math.cos(t*1.1+f.phase)*.015;}const weather=world.weather,wrap=n=>((n+18)%36+36)%36-18;weather.mesh.position.set(focusX,0,focusZ);for(let i=0;i<weather.particles.length;i++){const p=weather.particles[i],d=weather.dummy,drift=t*p.speed;d.position.set(wrap(p.x+(weather.kind==='snow'?-drift*.8:drift*.35)+Math.sin(t*.7+p.phase)*.3),weather.kind==='forest'?1.1+p.y*.65+Math.sin(t*2+p.phase)*.35:weather.kind==='snow'?.3+(((p.y-drift)%4+4)%4):.3+((p.y+drift+20)%4),wrap(p.z+Math.sin(t*.4+p.phase)*.65));d.scale.setScalar(p.scale*(weather.kind==='snow'?1:.8));d.rotation.set(0,t*.6+p.phase,0);d.updateMatrix();weather.mesh.setMatrixAt(i,d.matrix);}weather.mesh.instanceMatrix.needsUpdate=true;}
+export function animateWorld(world,t,focusX=world.spawn.x,focusZ=world.spawn.z){
+ for(const f of world.foliage){const sway=Math.sin(t*1.35+f.phase)*.026+Math.sin(t*2.7+f.phase)*.008;f.leaf.rotation.z=sway;f.leaf.position.x=f.x+sway*1.3;f.leaf.position.z=f.z+Math.cos(t*1.1+f.phase)*.015;}
+ const weather=world.weather,dt=weather.lastTime===undefined?0:Math.max(0,Math.min(.05,t-weather.lastTime));weather.lastTime=t;
+ for(let i=0;i<weather.particles.length;i++){
+  const p=weather.particles[i],d=weather.dummy;
+  p.x+=p.vx*dt;p.z+=p.vz*dt;p.y+=p.vy*dt;p.life-=dt;
+  if(p.life<=0||p.y<.3||p.y>4.3||Math.hypot(p.x-focusX,p.z-focusZ)>30)placeWeatherParticle(weather,p,focusX,focusZ);
+  d.position.set(p.x+Math.sin(t*1.3+p.phase)*.05,weather.kind==='forest'?p.y+Math.sin(t*2+p.phase)*.16:p.y,p.z);
+  d.scale.setScalar(p.scale*(weather.kind==='snow'?1:.8)*Math.min(1,p.life*1.5));d.rotation.set(0,t*.6+p.phase,0);d.updateMatrix();weather.mesh.setMatrixAt(i,d.matrix);
+ }
+ weather.mesh.instanceMatrix.needsUpdate=true;
+}
 export function clearAt(world,x,z,r=.45){return Math.abs(x)<62-r&&Math.abs(z)<62-r&&!world.obstacles.some(o=>Math.hypot(x-o.x,z-o.z)<r+o.r);}
 export function moveActor(world,p,dx,dz,r=.45){let x=p.x+dx,z=p.z+dz;if(clearAt(world,x,z,r)){p.x=x;p.z=z;return;}if(clearAt(world,x,p.z,r))p.x=x;if(clearAt(world,p.x,z,r))p.z=z;}

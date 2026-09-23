@@ -6,7 +6,7 @@ const assert=require('node:assert/strict');
   const page=await browser.newPage();
   await page.goto(process.env.TEST_URL||'http://127.0.0.1:8897/');await page.waitForFunction(()=>window.game3d);
   const poses=await page.evaluate(async()=>{
-   const {loadHeroAssets,createSkinnedHero,animateSkinnedHero,disposeHero}=await import('./skinned-hero.js?v=9');
+   const {loadHeroAssets,createSkinnedHero,animateSkinnedHero,disposeHero}=await import('./skinned-hero.js?v=13');
    await loadHeroAssets();const {Vector3}=await import('./vendor/three.module.js'),hero=createSkinnedHero('silver','crossbow'),d=hero.userData;
    let hand,rightHand;hero.traverse(o=>{if(o.isBone&&o.name==='hand_l')hand=o;if(o.isBone&&o.name==='hand_r')rightHand=o;});
    d.aimActive=true;d.reloadPhase=1;for(let i=0;i<30;i++)animateSkinnedHero(hero,(d.lastTime||0)+1/60,0,0,0);
