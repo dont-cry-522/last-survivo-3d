@@ -1,7 +1,7 @@
 import * as T from './vendor/three.module.js';
 import {GLTFLoader} from './vendor/GLTFLoader.js';
 import {clone,retargetClip} from './vendor/SkeletonUtils.js';
-import {makeHero as makePrototype} from './hero-model.js?v=3';
+import {makeHero as makePrototype} from './hero-model.js?v=4';
 
 const templates=new Map(),clips=new Map();
 let loaded=false;

@@ -1,7 +1,7 @@
-import{heroesReady,createSkinnedHero,animateSkinnedHero}from'./skinned-hero.js?v=3';
+import{heroesReady,createSkinnedHero,animateSkinnedHero}from'./skinned-hero.js?v=4';
 import * as T from './vendor/three.module.js';
-import{makeHero,animateHero}from'./hero-model.js?v=3';
-import{MAPS,seeded}from'./rules.js';
+import{makeHero,animateHero}from'./hero-model.js?v=4';
+import{MAPS,seeded}from'./rules.js?v=4';
 const geo=new Map(),materials=new Map(),terrainMaterials=new Map();
 function geometry(kind,args){const key=kind+args.join(',');if(!geo.has(key))geo.set(key,new T[kind](...args));return geo.get(key);}
 export function mat(color,glow=false){const key=color+':'+glow;if(!materials.has(key))materials.set(key,new T.MeshStandardMaterial({color,roughness:glow?.35:.86,metalness:glow?.25:.08,emissive:glow?color:0,emissiveIntensity:glow?.9:0,flatShading:true}));return materials.get(key);}
