@@ -2,7 +2,7 @@ import{heroesReady,createSkinnedHero,animateSkinnedHero}from'./skinned-hero.js?v
 import * as T from './vendor/three.module.js';
 import{makeHero,animateHero}from'./hero-model.js?v=13';
 import{MAPS,seeded}from'./rules.js?v=9';
-const geo=new Map(),materials=new Map(),terrainMaterials=new Map(),detailMaterials=new Map();
+const geo=new Map(),materials=new Map(),terrainMaterials=new Map(),detailMaterials=new Map(),weatherMaterials=new Map();
 function geometry(kind,args){const key=kind+args.join(',');if(!geo.has(key))geo.set(key,new T[kind](...args));return geo.get(key);}
 export function mat(color,glow=false){const key=color+':'+glow;if(!materials.has(key))materials.set(key,new T.MeshStandardMaterial({color,roughness:glow?.35:.86,metalness:glow?.25:.08,emissive:glow?color:0,emissiveIntensity:glow?.9:0,flatShading:true}));return materials.get(key);}
 export function mesh(kind,args,color,x=0,y=0,z=0,parent=null,glow=false){const dims=args.slice();let radial=1,vertical=1;if(kind==='CylinderGeometry'){vertical=dims[2];dims[2]=1;}if(['CircleGeometry','DodecahedronGeometry'].includes(kind)){radial=dims[0];dims[0]=1;}const m=new T.Mesh(geometry(kind,dims),mat(color,glow));m.scale.set(radial,kind==='CylinderGeometry'?vertical:radial,radial);m.position.set(x,y,z);m.castShadow=true;m.receiveShadow=true;parent?.add(m);return m;}
@@ -95,7 +95,8 @@ function placeWeatherParticle(weather,p,x,z,initial=false){
 }
 function makeWeather(id,rnd,group,spawn){
  const count=id==='snow'?72:id==='ash'?54:42,colors=id==='snow'?[0xf5ffff,0xc9eafa,0xffffff]:id==='ash'?[0xffaa60,0xf7d39a,0xcb6e51]:[0xffe9a0,0xc5ef9c,0x95dcc1];
- const material=new T.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:id==='forest'?.72:.82,depthWrite:false,blending:id==='snow'?T.NormalBlending:T.AdditiveBlending});
+ if(!weatherMaterials.has(id))weatherMaterials.set(id,new T.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:id==='forest'?.72:.82,depthWrite:false,blending:id==='snow'?T.NormalBlending:T.AdditiveBlending}));
+ const material=weatherMaterials.get(id);
  const cloud=new T.InstancedMesh(geometry('DodecahedronGeometry',[id==='snow'?.115:id==='forest'?.085:.075,0]),material,count);
  cloud.castShadow=false;cloud.receiveShadow=false;cloud.frustumCulled=false;cloud.instanceMatrix.setUsage(T.DynamicDrawUsage);
  const weather={kind:id,mesh:cloud,particles:[],dummy:new T.Object3D(),random:rnd,lastTime:undefined};
