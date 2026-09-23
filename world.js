@@ -14,13 +14,13 @@ export function actor(kind='silver',weapon='crossbow'){
  const g=new T.Group(),rig=new T.Group();g.add(rig);g.userData.rig=rig;
  if(['silver','scout'].includes(kind))return heroesReady()?createSkinnedHero(kind,weapon):makeHero(kind,weapon);
  if(kind==='mushroom'){
-  mesh('CylinderGeometry',[.23,.35,.72,7],0xb7a483,0,.45,0,rig);const cap=orb(rig,0xb95e43,0,1.05,0,.66);cap.scale.y=.6;for(let i=0;i<5;i++)orb(rig,0xf2dcad,Math.cos(i*2.4)*.37,1.25,Math.sin(i*2.4)*.35,.09);for(const s of [-1,1])orb(rig,0xffdc88,s*.13,.7,.27,.04,true);
+  mesh('CylinderGeometry',[.23,.35,.72,7],0xb7a483,0,.45,0,rig);const cap=orb(rig,0xb95e43,0,1.05,0,.66);g.userData.cap=cap;cap.scale.y=.6;for(let i=0;i<5;i++)orb(rig,0xf2dcad,Math.cos(i*2.4)*.37,1.25,Math.sin(i*2.4)*.35,.09);for(const s of [-1,1])orb(rig,0xffdc88,s*.13,.7,.27,.04,true);
  }else if(kind==='wolf'){
-  const body=mesh('CapsuleGeometry',[.29,.62,3,7],0x68758c,0,.65,0,rig);body.rotation.x=Math.PI/2;orb(rig,0x8897ab,0,.82,.5,.31);cone(rig,0x718293,-.17,1.14,.43,.13,.35);cone(rig,0x718293,.17,1.14,.43,.13,.35);box(rig,0x42556b,0,.72,.77,.23,.19,.28);for(const s of [-1,1])orb(rig,0xffd775,s*.15,.88,.71,.04,true);for(const x of [-.22,.22])for(const z of [-.28,.28])mesh('CylinderGeometry',[.08,.065,.5,5],0x536076,x,.25,z,rig);
+  const body=mesh('CapsuleGeometry',[.29,.62,3,7],0x68758c,0,.65,0,rig);body.rotation.x=Math.PI/2;const head=new T.Group();head.position.set(0,.8,.5);rig.add(head);g.userData.head=head;orb(head,0x8897ab,0,.02,0,.31);cone(head,0x718293,-.17,.34,-.07,.13,.35);cone(head,0x718293,.17,.34,-.07,.13,.35);box(head,0x42556b,0,-.08,.27,.23,.19,.28);for(const s of [-1,1])orb(head,0xffd775,s*.15,.08,.21,.04,true);for(const x of [-.22,.22])for(const z of [-.28,.28])mesh('CylinderGeometry',[.08,.065,.5,5],0x536076,x,.25,z,rig);
  }else if(kind==='golem'||kind==='boss'){
   const c=kind==='boss'?0x536575:0x68735e;mesh('DodecahedronGeometry',[.72,0],c,0,1,0,rig);mesh('DodecahedronGeometry',[.4,0],0x8c9779,0,1.82,0,rig);for(const s of [-1,1]){mesh('DodecahedronGeometry',[.4,0],c,s*.75,1,0,rig);box(rig,c,s*.3,.28,0,.4,.6,.5);cone(rig,0xc6b58c,s*.58,1.8,0,.18,.65);}orb(rig,kind==='boss'?0xffa66b:0x94e4bd,0,1.15,.64,.16,true);for(const s of [-1,1])box(rig,0xffd591,s*.14,1.85,.32,.14,.055,.06);if(kind==='boss'){g.scale.setScalar(2.3);const halo=mesh('TorusGeometry',[.64,.06,5,10],0xe2ad72,0,2.18,0,rig,true);halo.rotation.x=Math.PI/2;}
  }else{
-  const c=kind==='spitter'?0x83618e:0x417b71;cone(rig,c,0,.65,0,.48,1.2);orb(rig,0xb3bb9e,0,1.26,0,.25);cone(rig,kind==='spitter'?0xa98aae:0x4a9680,0,1.61,0,.4,.65);for(const s of [-1,1])orb(rig,0xffda9b,s*.11,1.28,.22,.034,true);mesh('CylinderGeometry',[.035,.04,1.5,5],0x897256,.48,.76,.1,rig);orb(rig,kind==='spitter'?0xe19be9:0x8be7b1,.48,1.58,.1,.16,true);
+  const c=kind==='spitter'?0x83618e:0x417b71;cone(rig,c,0,.65,0,.48,1.2);orb(rig,0xb3bb9e,0,1.26,0,.25);cone(rig,kind==='spitter'?0xa98aae:0x4a9680,0,1.61,0,.4,.65);for(const s of [-1,1])orb(rig,0xffda9b,s*.11,1.28,.22,.034,true);const staff=new T.Group();staff.position.set(.48,.76,.1);rig.add(staff);g.userData.staff=staff;mesh('CylinderGeometry',[.035,.04,1.5,5],0x897256,0,0,0,staff);orb(staff,kind==='spitter'?0xe19be9:0x8be7b1,0,.82,0,.16,true);
  }
  g.userData.kind=kind;g.userData.legs=[];g.userData.arms=[];
  // Articulate existing meshes around their actual hips/shoulders, retaining shared geometry.
@@ -39,24 +39,24 @@ export function animateActor(g,t,speed=0,attack=0,hurt=0){
  const stride=d.stride,heavy=['golem','boss'].includes(d.kind),frequency=heavy?5.2:d.kind==='wolf'?13:9;
  d.phase=(d.phase||0)+dt*frequency*(.45+Math.min(speed,8)*.16);const phase=d.phase,rig=d.rig;
  if(attack>0&&!(d.previousAttack>0))d.attackLength=attack;
- const wind=attack>0?1-T.MathUtils.clamp(attack/(d.attackLength||.6),0,1):0;
+ const wind=attack>0?1-T.MathUtils.clamp(attack/(d.attackLength||.6),0,1):0,pounce=d.pounce||0;
  if(attack<=0&&d.previousAttack>0)d.release=.2;d.previousAttack=attack;
  d.release=Math.max(0,(d.release||0)-dt);const strike=Math.sin(Math.PI*(1-d.release/.2));
  const impact=Math.sin(Math.PI*T.MathUtils.clamp(hurt/.12,0,1));
  rig.scale.set(1,1,1);rig.position.set(0,0,-impact*.13);rig.rotation.set(-wind*.16+strike*.20-impact*.18,0,0);
  if(d.kind==='mushroom'){
-  const bounce=Math.max(0,Math.sin(phase))*stride;rig.position.y=bounce*.19;
-  const squash=Math.sin(phase)*.075*stride-wind*.09-impact*.14;rig.scale.set(1-squash*.5,1+squash,1-squash*.5);rig.rotation.z=Math.sin(phase*.5)*.08*stride;
+  const bounce=Math.max(0,Math.sin(phase))*stride;rig.position.y=bounce*.19+Math.sin((1-pounce)*Math.PI)*.4*(pounce>0);
+  const squash=Math.sin(phase)*.075*stride-wind*.22+Math.sin((1-pounce)*Math.PI)*.12*(pounce>0)-impact*.14;rig.scale.set(1-squash*.5,1+squash,1-squash*.5);rig.rotation.z=Math.sin(phase*.5)*.08*stride;d.cap.rotation.x=wind*.18-pounce*.2;
  }else if(d.kind==='wolf'){
-  rig.position.y=Math.abs(Math.sin(phase))*.065*stride;rig.rotation.x+=Math.sin(phase*2)*.035*stride;
-  for(const leg of d.legs)leg.joint.rotation.x=Math.sin(phase+leg.phase)*.62*stride-wind*.25;
+  rig.position.y=Math.abs(Math.sin(phase))*.065*stride+Math.sin((1-pounce)*Math.PI)*.26*(pounce>0);rig.rotation.x+=Math.sin(phase*2)*.035*stride+wind*.18-pounce*.22;d.head.rotation.x=wind*.25-pounce*.24;
+  for(const leg of d.legs)leg.joint.rotation.x=Math.sin(phase+leg.phase)*.62*stride-wind*.35+pounce*.65*(leg.joint.position.z>0?1:-1);
  }else if(heavy){
   rig.position.y=Math.abs(Math.sin(phase))*.045*stride;rig.rotation.z=Math.sin(phase)*.055*stride;
   for(const leg of d.legs)leg.joint.rotation.x=Math.sin(phase+leg.phase)*.32*stride;
-  d.arms.forEach((arm,i)=>{arm.rotation.x=Math.sin(phase+i*Math.PI)*.26*stride-wind*1.05+strike*.7;});
+  d.arms.forEach((arm,i)=>{arm.rotation.x=Math.sin(phase+i*Math.PI)*.26*stride-wind*1.05+strike*.9;arm.rotation.z=(i?-.1:.1)*wind;});
  }else{
   rig.position.y=.09+Math.sin(t*2.5)*.055;rig.rotation.z=Math.sin(t*2)*.025;rig.rotation.x+=Math.sin(phase)*.035*stride;
-  const breathe=1+Math.sin(t*3)*.015;rig.scale.set(breathe,1,breathe);
+  const breathe=1+Math.sin(t*3)*.015;rig.scale.set(breathe,1,breathe);if(d.staff){d.staff.rotation.x=-wind*(d.attackMode==='heal'?.65:1.1)+strike*.28;d.staff.position.y=.76+wind*.23;}
  }
  g.visible=true;
 }

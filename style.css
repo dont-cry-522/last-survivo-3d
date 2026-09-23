@@ -26,3 +26,13 @@ body.touch .status{width:205px}body.touch .xp-meta{margin-top:6px;font-size:10px
 #aim-stick i{position:absolute;left:34px;top:34px;width:42px;height:42px;border-radius:50%;background:#badff0bb;pointer-events:none;box-shadow:0 0 16px #97d6ee55}
 #aim-stick small{position:absolute;left:0;right:0;bottom:-19px;font-size:10px;text-align:center;color:#b4dfe6;pointer-events:none}
 body.touch #dash{right:calc(max(24px,env(safe-area-inset-right)) + 134px);bottom:max(48px,env(safe-area-inset-bottom));width:64px;height:64px;font-size:12px}
+#battle-guide{width:38px;min-width:38px;padding:8px 0;font-weight:700;color:#f4dc9e;background:#244c46}
+#encounter{position:fixed;top:164px;right:34px;width:270px;padding:12px 15px;background:#102b2de8;border:1px solid #dec98a99;border-left:4px solid #dfb66f;border-radius:8px;box-shadow:0 10px 30px #0819178c;z-index:5;pointer-events:none}
+#encounter strong{display:block;color:#ffe5ad;font-size:13px;margin-bottom:5px}#encounter span{display:block;color:#e0eee6;font-size:11px;line-height:1.6}
+.guide-content{max-height:55dvh;overflow:auto;margin:16px 0 8px;padding-right:6px}.guide-content h3{font-size:15px;color:#f0d498;margin:17px 0 8px}.guide-content p{margin:5px 0;padding:8px 10px;border:1px solid #a7c5aa33;border-radius:8px;background:#1b403747;line-height:1.55}.guide-content strong,.guide-content b{color:#f6e3af}.guide-content small{color:#c4d5cb;font-size:11px}
+body.touch #encounter{top:122px;left:50%;right:auto;transform:translateX(-50%);width:min(280px,57vw);padding:8px 10px}body.touch #encounter strong{font-size:11px}body.touch #encounter span{font-size:10px}
+@media(max-width:560px){body.touch #encounter{top:192px;width:min(290px,76vw)}body.touch #battle-guide{width:29px;min-width:29px;padding:8px 0}}
+body.playing #toast{top:82px}body.touch.playing #toast{top:71px}
+#dialog-content:has(.guide-content)>p{display:none}
+@media(max-height:500px) and (orientation:landscape){#dialog:has(.guide-content){padding:14px 18px}.guide-content{max-height:42dvh;margin:7px 0}.guide-content h3{margin:8px 0 5px}.guide-content p{padding:5px 8px}.guide-content+.dialog-actions{margin-top:8px}}
+@media(orientation:portrait){.guide-content{max-height:36dvh}}
