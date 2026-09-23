@@ -1,7 +1,7 @@
-import{heroesReady,createSkinnedHero,animateSkinnedHero}from'./skinned-hero.js?v=6';
+import{heroesReady,createSkinnedHero,animateSkinnedHero}from'./skinned-hero.js?v=7';
 import * as T from './vendor/three.module.js';
-import{makeHero,animateHero}from'./hero-model.js?v=6';
-import{MAPS,seeded}from'./rules.js?v=6';
+import{makeHero,animateHero}from'./hero-model.js?v=7';
+import{MAPS,seeded}from'./rules.js?v=7';
 const geo=new Map(),materials=new Map(),terrainMaterials=new Map(),detailMaterials=new Map();
 function geometry(kind,args){const key=kind+args.join(',');if(!geo.has(key))geo.set(key,new T[kind](...args));return geo.get(key);}
 export function mat(color,glow=false){const key=color+':'+glow;if(!materials.has(key))materials.set(key,new T.MeshStandardMaterial({color,roughness:glow?.35:.86,metalness:glow?.25:.08,emissive:glow?color:0,emissiveIntensity:glow?.9:0,flatShading:true}));return materials.get(key);}
@@ -10,7 +10,7 @@ const box=(p,c,x,y,z,w,h,d)=>mesh('BoxGeometry',[w,h,d],c,x,y,z,p);
 const orb=(p,c,x,y,z,r,glow=false)=>mesh('SphereGeometry',[r,10,7],c,x,y,z,p,glow);
 const cone=(p,c,x,y,z,r,h)=>mesh('ConeGeometry',[r,h,7],c,x,y,z,p);
 function detailMaterial(color,opacity,vertexColors=false){const key=color+':'+opacity+':'+vertexColors;if(!detailMaterials.has(key))detailMaterials.set(key,new T.MeshStandardMaterial({color,transparent:true,opacity,vertexColors,roughness:1,depthWrite:false,side:T.DoubleSide}));return detailMaterials.get(key);}
-export function actor(kind='silver',weapon='pistol'){
+export function actor(kind='silver',weapon='crossbow'){
  const g=new T.Group(),rig=new T.Group();g.add(rig);g.userData.rig=rig;
  if(['silver','scout'].includes(kind))return heroesReady()?createSkinnedHero(kind,weapon):makeHero(kind,weapon);
  if(kind==='mushroom'){

@@ -60,17 +60,28 @@ export function makeHero(kind,weapon){
     const head=joint(gun,[0,.98,.045]);for(const s of [-1,1]){const claw=part(head,'TorusGeometry',[.16,.028,8,20,Math.PI*.8],trim,[0,0,0]);claw.rotation.z=s<0?Math.PI:.2;}
     part(head,'OctahedronGeometry',[.115,0],accent,[0,.07,0],[1,1.5,1],.35,.9);
     part(head,'TorusGeometry',[.085,.013,6,20],trim,[0,.07,0],[1,1,1],.8);
+  }else if(weapon==='crossbow'){
+    block(gun,0x283845,[0,.045,.16],[.13,.12,.56]);
+    block(gun,0x866e59,[0,.12,.18],[.075,.035,.42]);
+    block(gun,0x171e28,[0,-.08,.01],[.10,.19,.14]).rotation.x=-.2;
+    for(const s of[-1,1]){
+      const limb=block(gun,0x8b9bab,[s*.23,.11,.43],[.43,.035,.065],.55);limb.rotation.y=s*.2;
+      ell(gun,0xc8e7ed,[s*.44,.11,.36],[.025,.035,.025],.6);
+      const string=part(gun,'CylinderGeometry',[.004,.004,.46,4],0xd0dee6,[s*.22,.12,.28],[1,1,1]);string.rotation.z=s*.86;
+    }
+    const bolt=block(gun,0xdceaf0,[0,.16,.30],[.022,.023,.43],.6);bolt.castShadow=true;
+    part(gun,'ConeGeometry',[.045,.13,5],0xc8e7f0,[0,.16,.57],[1,1,1],.65).rotation.x=Math.PI/2;
   }else if(weapon==='shuriken'){
     part(gun,'TorusGeometry',[.095,.022,8,20],trim,[0,0,.06],[1,1,1],.8).rotation.x=Math.PI/2;
     for(let i=0;i<4;i++){const blade=part(gun,'ConeGeometry',[.09,.32,3],0xd6e5e6,[Math.sin(i*Math.PI/2)*.21,0,.06+Math.cos(i*Math.PI/2)*.21],[1,1,.26],.85);blade.rotation.set(Math.PI/2,i*Math.PI/2,0);}
   }else{
-    const pistol=weapon==='pistol',length=pistol?.37:.69;
+    const length=.69;
     block(gun,0x253440,[0,.058,.19],[.112,.125,length]);block(gun,0x9caeb6,[0,.133,.23],[.099,.029,length*.83],.8);
-    const barrel=tube(gun,0x435562,[0,.072,.2+length/2],[.036,pistol?.18:.31,.036],.8);barrel.rotation.x=Math.PI/2;
-    const bore=ell(gun,0x080f13,[0,.072,.21+length/2+(pistol?.09:.155)],[.027,.027,.009]);
+    const barrel=tube(gun,0x435562,[0,.072,.2+length/2],[.036,.31,.036],.8);barrel.rotation.x=Math.PI/2;
+    const bore=ell(gun,0x080f13,[0,.072,.21+length/2+.155],[.027,.027,.009]);
     const grip=block(gun,0x5c4a3e,[0,-.065,.075],[.096,.21,.13]);grip.rotation.x=-.22;
     block(gun,trim,[.061,.072,.19],[.008,.032,.16],.8);block(gun,0x192831,[0,.169,.13],[.028,.044,.061]);
-    if(!pistol){block(gun,0x624f3d,[0,.03,-.24],[.115,.17,.22]);block(gun,dark,[0,-.098,.19],[.07,.18,.11]);}
+    block(gun,0x624f3d,[0,.03,-.24],[.115,.17,.22]);block(gun,dark,[0,-.098,.19],[.07,.18,.11]);
     if(weapon==='rifle'){tube(gun,dark,[0,.193,.21],[.045,.14,.045]).rotation.x=Math.PI/2;}
     if(weapon==='shotgun'){const second=tube(gun,0x8c9ca6,[.075,.068,.47],[.032,.43,.032],.75);second.rotation.x=Math.PI/2;for(let i=0;i<4;i++)block(gun,0x8c6e48,[0,.025,.28+i*.037],[.14,.08,.022]);}
   }

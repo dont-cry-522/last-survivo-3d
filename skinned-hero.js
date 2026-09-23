@@ -1,7 +1,7 @@
 import * as T from './vendor/three.module.js';
 import {clone} from './vendor/SkeletonUtils.js';
-import {loadCharacterData} from './character-loader.js?v=6';
-import {makeHero as makePrototype} from './hero-model.js?v=6';
+import {loadCharacterData} from './character-loader.js?v=7';
+import {makeHero as makePrototype} from './hero-model.js?v=7';
 
 const templates=new Map(),clips=new Map();
 let loaded=false;
@@ -128,7 +128,7 @@ export function createSkinnedHero(kind,weapon){
   const aim=mixer.clipAction(upperClip);aim.play();aim.setEffectiveWeight(0);
   // Calibrate the authored weapon grip in the actual aiming pose, then return to idle.
   const fullAim=actions[aimName];fullAim.play();mixer.update(0);model.updateMatrixWorld(true);
-  const hand=bones.get('hand_r'),gun=makePrototype(kind,weapon).userData.weapon;gun.removeFromParent();gun.position.set(0,.045,0);gun.scale.setScalar(weapon==='pistol'?.5:.65);gun.quaternion.copy(hand.getWorldQuaternion(new T.Quaternion()).invert());hand.add(gun);
+  const hand=bones.get('hand_r'),gun=makePrototype(kind,weapon).userData.weapon;gun.removeFromParent();gun.position.set(0,.045,0);gun.scale.setScalar(weapon==='crossbow'?.72:.65);gun.quaternion.copy(hand.getWorldQuaternion(new T.Quaternion()).invert());hand.add(gun);
   fullAim.stop();idle.play();upperIdle.play();run.play().setEffectiveWeight(0);upperRun.play().setEffectiveWeight(0);mixer.update(0);
   for(const a of[walk,upperWalk,backRun,backWalk])a.play().setEffectiveWeight(0);
   model.skeleton.pose();model.updateMatrixWorld(true);
@@ -161,7 +161,7 @@ export function animateSkinnedHero(g,t,speed,attack,hurt){
   if(isRoll){roll.enabled=true;roll.play();roll.setEffectiveWeight(1);roll.paused=true;roll.time=(1-d.dashTime/.24)*roll.getClip().duration;for(const a of[d.idle,d.run,d.walk,d.backRun,d.backWalk,d.upperIdle,d.upperRun,d.upperWalk,d.aim])a.setEffectiveWeight(0);}else roll.stop();
   const bank=isRoll?0:T.MathUtils.clamp(-(d.turnRate||0)*.008,-.075,.075)*d.blend;d.rig.rotation.z+=(bank-d.rig.rotation.z)*(1-Math.exp(-dt*10));
   const shotPhase=1-T.MathUtils.clamp(attack/.16,0,1),kick=attack>0?Math.sin(shotPhase*Math.PI)*Math.exp(-shotPhase*1.8):0;
-  const recoil={rifle:.075,shotgun:.16,pistol:.10,shuriken:-.09,fire:-.08,dark:-.08}[d.weaponId];
+  const recoil={rifle:.075,shotgun:.16,crossbow:.065,shuriken:-.09,fire:-.08,dark:-.08}[d.weaponId];
   d.rig.rotation.x=isRoll?0:-kick*recoil;
   d.rig.position.z=isRoll?0:-kick*Math.abs(recoil)*.45;
   d.mixer.update(dt);

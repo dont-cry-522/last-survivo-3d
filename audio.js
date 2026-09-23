@@ -49,14 +49,17 @@ export class GameAudio{
   }
   tone(f,d=.12,v=.06,type='sine',end=null){this.voice(f,d,v,type,end);}
   shot(id){if(!this.allow('shot',.055))return;const t=this.ctx.currentTime;
-    if(id==='rifle'||id==='pistol'||id==='shotgun'){
+    if(id==='crossbow'){
+      this.noise(.045,.32,5400,1800);this.voice(730,.09,.07,'triangle',210);this.noise(.13,.16,1700,350,t+.018);this.voice(180,.13,.07,'sine',95,t+.02);
+    }else if(id==='rifle'||id==='shotgun'){
       const heavy=id==='shotgun';this.noise(heavy?.26:.1,heavy?.65:.42,heavy?1800:3400,heavy?180:600);this.voice(heavy?125:210,heavy?.24:.095,heavy?.3:.2,'sine',42);
-      this.noise(.055,.1,6200,3000,t+.035);if(id==='pistol')this.voice(1450,.045,.035,'triangle',900,t+.03);
+      this.noise(.055,.1,6200,3000,t+.035);
     }else if(id==='shuriken'){this.noise(.18,.19,5500,600);for(const f of [1850,2760])this.voice(f,.1,.025,'sine',f*.75);}
     else if(id==='fire'){this.noise(.36,.5,900,180);this.voice(110,.25,.2,'sine',35);this.noise(.12,.1,3600,1800,t+.1);}
     else{this.voice(80,.4,.14,'sine',220);this.voice(163,.3,.055,'triangle',330);this.noise(.3,.13,450,1700);}
   }
-  impact(id){if(!this.allow('impact',.085))return;this.noise(.085,.15,id==='shuriken'?3200:900,250);this.voice(105,.09,.09,'sine',48);}
+  impact(id,strong=false){if(!this.allow(strong?'impact-strong':'impact',.085))return;if(id==='crossbow'){this.noise(strong?.21:.08,strong?.26:.12,3000,strong?280:700);this.voice(strong?115:260,strong?.22:.08,strong?.14:.045,'triangle',strong?45:110);if(strong)this.noise(.18,.09,700,120,this.ctx.currentTime+.035);}else{this.noise(.085,.15,id==='shuriken'?3200:900,250);this.voice(105,.09,.09,'sine',48);}}
+  threat(kind='wave'){if(!this.allow('threat',2))return;const t=this.ctx.currentTime,deep=kind==='boss';this.voice(deep?58:82,.9,deep?.15:.105,'sawtooth',deep?35:48,t,'music',.04);this.noise(deep?.75:.42,deep?.16:.085,1400,170,t,'music');for(let i=0;i<(deep?4:3);i++)this.voice((deep?147:196)*2**(i/12),.19,.052,'triangle',null,t+i*.105,'music',.008);}
   spell(kind){if(!this.allow('spell-'+kind,.11))return;const t=this.ctx.currentTime;
     if(kind==='ice'){this.noise(.36,.24,4800,1400);[2100,3150,4100,2700].forEach((f,i)=>this.voice(f,.18,.035,'sine',f*.85,t+i*.035));}
     else if(kind==='storm'){this.noise(.22,.45,4200,300);this.voice(64,.4,.21,'sine',26);this.noise(.045,.23,6200,1800,t+.07);}
@@ -87,6 +90,7 @@ export class GameAudio{
     if(b%4===0||pressure>.6&&b%4===3){this.voice(95,.2,.11+pressure*.06,'sine',34,t,'music');this.noise(.06,.035,1600,350,t,'music');}
     if(b%4===2){this.noise(.13,.05+pressure*.07,1500,700,t,'music');this.voice(165,.12,.04,'triangle',90,t,'music');}
     if(b%2===1||pressure>.45)this.noise(.055,.025+pressure*.025,7200,5500,t,'music','highpass');
-    if(pressure>.25&&b%2===0)this.voice(midi(root+chord+[0,7,12,7][b%4]),step*.7,.027*pressure,'sawtooth',null,t,'music',.02,-.25);
+    if(pressure>.25&&b%2===0)this.voice(midi(root+chord+[0,7,12,7][b%4]),step*.7,.044*pressure,'sawtooth',null,t,'music',.02,-.25);
+    if(pressure>.5&&b%4===1){this.voice(midi(root-24),step*.65,.07*pressure,'sawtooth',midi(root-31),t,'music',.008,-.2);this.noise(.075,.045*pressure,2400,320,t,'music');}
   }
 }

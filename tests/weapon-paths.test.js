@@ -10,11 +10,11 @@ test('all six weapons offer exactly their two routes at level 3',()=>{
   }
 });
 test('routes are exclusive, gated at levels 3/5/8, and reject foreign upgrades',()=>{
-  const p=player('pistol');assert.equal(takeUpgrade(p,'path:rifle_pierce'),false);
-  assert(takeUpgrade(p,'path:pistol_ricochet'));assert.equal(takeUpgrade(p,'path:pistol_heavy'),false);
-  assert.equal(takeUpgrade(p,'path:pistol_ricochet'),false);
-  p.level=5;assert(takeUpgrade(p,'path:pistol_ricochet'));p.level=8;assert(takeUpgrade(p,'path:pistol_ricochet'));
-  assert.equal(takeUpgrade(p,'path:pistol_ricochet'),false);assert(!chooseUpgrades(p).some(c=>c.category==='weapon'));
+  const p=player('crossbow');assert.equal(takeUpgrade(p,'path:rifle_pierce'),false);
+  assert(takeUpgrade(p,'path:crossbow_hunt'));assert.equal(takeUpgrade(p,'path:crossbow_pierce'),false);
+  assert.equal(takeUpgrade(p,'path:crossbow_hunt'),false);
+  p.level=5;assert(takeUpgrade(p,'path:crossbow_hunt'));p.level=8;assert(takeUpgrade(p,'path:crossbow_hunt'));
+  assert.equal(takeUpgrade(p,'path:crossbow_hunt'),false);assert(!chooseUpgrades(p).some(c=>c.category==='weapon'));
 });
 test('every branch changes its own weapon without changing element or base definitions',()=>{
   const before=JSON.stringify(WEAPONS);
