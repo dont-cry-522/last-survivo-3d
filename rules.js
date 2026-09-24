@@ -1,3 +1,4 @@
+import{EXTRA_SKILLS,EXTRA_BY_ID}from'./skill-catalog.js?v=25';
 export const MAPS={forest:{name:'翡翠幽林',subtitle:'穿过古木与遗迹，追寻林心的回声',ground:0x284b3b,fog:0x173d39,leaf:0x287456,accent:0xecc988,slow:'泥地'},snow:{name:'霜月峡谷',subtitle:'冰晶照亮雪路，寒风掩藏猎手',ground:0x96b7bd,fog:0x769daa,leaf:0x456e7d,accent:0x9ae9ff,slow:'深雪'},ash:{name:'赤烬荒原',subtitle:'越过熔岩裂隙，唤醒沉睡的守卫',ground:0x5c4544,fog:0x382e3c,leaf:0x69545d,accent:0xffa25d,slow:'灰烬'}};
 export const WEAPONS={rifle:{id:'rifle',name:'游侠连发枪',rate:3,damage:12,count:1,speed:27,range:24,color:0xffdc91},shotgun:{id:'shotgun',name:'碎岩霰弹枪',rate:1,damage:10,count:5,speed:25,range:13,color:0xffbe69},fire:{id:'fire',name:'烬火法杖',rate:.9,damage:30,count:1,speed:14,range:22,color:0xff743b},crossbow:{id:'crossbow',name:'夜翎短弩',rate:2.05,damage:20,count:1,speed:35,range:25,color:0xd8edff},shuriken:{id:'shuriken',name:'月刃飞镖',rate:1.4,damage:13,count:3,speed:22,range:19,color:0x95fff0},dark:{id:'dark',name:'夜幕法杖',rate:1,damage:26,count:1,speed:12,range:23,color:0xc5a2ff},shade:{id:'shade',name:'噬影掌',rate:1.6,damage:18,count:1,speed:20,range:21,color:0x9679ff},shadowblade:{id:'shadowblade',name:'回魂影镰',rate:1.15,damage:26,count:1,speed:20,range:15,color:0x8d76dc},grimoire:{id:'grimoire',name:'悬影魔典',rate:.8,damage:34,count:1,speed:1,range:12,color:0x9d8cf5}};
 export function weaponFor(hero,index){return WEAPONS[(hero==='wraith'?['shade','shadowblade','grimoire']:hero==='silver'?['crossbow','shuriken','dark']:['rifle','shotgun','fire'])[index]];}
@@ -7,7 +8,8 @@ export function seeded(seed){let n=seed>>>0;return()=>{n=(Math.imul(n,1664525)+1
 export function experienceNeeded(level){return Math.floor(15+level*5+level*level*.5);}
 export function grantExperience(p,n){p.xp+=n;while(p.xp>=experienceNeeded(p.level)){p.xp-=experienceNeeded(p.level);p.level++;p.pending++;p.maxHp+=4;p.hp=Math.min(p.maxHp,p.hp+4);}}
 export const UPGRADES=[{id:'power',name:'磨砺锋芒',text:'武器伤害 +18%',icon:'✦',max:5},{id:'haste',name:'疾风节拍',text:'射速 +15%',icon:'»',max:4},{id:'fire',name:'陨火降临',text:'周期召唤陨火，轰击附近怪群',icon:'☄',max:3},{id:'ice',name:'霜华绽放',text:'周期释放冰晶环，伤害并减速',icon:'❄',max:3},{id:'storm',name:'雷霆回响',text:'周期落雷，连锁附近敌人',icon:'ϟ',max:3},{id:'veil',name:'暗幕',text:'周期展开暗幕，遮蔽并削弱逼近的敌人',icon:'◐',max:3},{id:'chain',name:'缚影',text:'周期甩出影链，束缚前方怪物',icon:'⛓',max:3},{id:'rift',name:'裂隙',text:'周期唤出影之裂隙，重创附近怪物',icon:'✺',max:3},{id:'vitality',name:'坚韧之心',text:'生命上限 +24，并恢复 24',icon:'♡',max:4},{id:'stride',name:'轻盈步伐',text:'移动速度 +8%，闪避冷却缩短',icon:'➶',max:3},{id:'magnet',name:'灵光牵引',text:'经验吸取范围增加',icon:'◎',max:3}];
-const heroSpell=(hero,id)=>hero==='wraith'?!['fire','ice','storm'].includes(id):!['veil','chain','rift'].includes(id);
+UPGRADES.push(...EXTRA_SKILLS.map(s=>({...s,text:s.describe(1),category:'skill'})));
+const heroSpell=(hero,id)=>EXTRA_BY_ID[id]?EXTRA_BY_ID[id].hero===(hero||'scout'):hero==='wraith'?!['fire','ice','storm'].includes(id):!['veil','chain','rift'].includes(id);
 const route=(weapon,name,icon,steps)=>({weapon,name,icon,steps});
 export const WEAPON_PATHS={
  rifle_pierce:route('rifle','贯穿弹道','➤',['贯穿 2 个目标，伤害 +8%，射速 -10%','贯穿 3 个目标，伤害 +16%','贯穿 4 个目标，伤害 +24%']),
@@ -39,8 +41,9 @@ export function chooseUpgrades(p,random=Math.random){const pool=UPGRADES.filter(
  if(u.id==='veil')text=`每 8 秒张开暗幕 2.5 秒，范围内敌人减速并受到 ${10*rank} 点影蚀伤害`;
  if(u.id==='chain')text=`每 7 秒缚住附近 ${2+rank} 只怪物，造成 ${15*rank} 伤害`;
  if(u.id==='rift')text=`每 9 秒打开裂隙，造成 ${30*rank} 范围伤害并短暂牵引`;
+ if(EXTRA_BY_ID[u.id])text=EXTRA_BY_ID[u.id].describe(rank);
  return{...u,text};
- }),result=routeChoices(p);while(pool.length&&result.length<3)result.push(pool.splice(Math.floor(random()*pool.length),1)[0]);return result;}
+ }),result=routeChoices(p);const fresh=pool.filter(u=>EXTRA_BY_ID[u.id]);if(fresh.length&&!EXTRA_SKILLS.some(u=>p.upgrades[u.id]>0)&&result.length<3){const choice=fresh[Math.floor(random()*fresh.length)];result.push(choice);pool.splice(pool.indexOf(choice),1);}while(pool.length&&result.length<3)result.push(pool.splice(Math.floor(random()*pool.length),1)[0]);return result;}
 export function takeUpgrade(p,id){
  if(id.startsWith('path:')){const choice=routeChoices(p).find(c=>c.id===id);if(!choice)return false;p.weaponPath={id:choice.pathId,rank:choice.rank+1};return true;}
  const u=UPGRADES.find(u=>u.id===id);if(!u||!heroSpell(p.heroId,id)||(p.upgrades[id]||0)>=u.max)return false;p.upgrades[id]=(p.upgrades[id]||0)+1;if(id==='vitality'){p.maxHp+=24;p.hp=Math.min(p.maxHp,p.hp+24);}return true;

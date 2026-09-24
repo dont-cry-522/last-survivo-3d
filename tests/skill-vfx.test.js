@@ -32,3 +32,5 @@ test('directional blade impacts and shadow spells stay bounded and expire on mob
  }
  for(let i=0;i<180;i++)vfx.update(1/60);assert.equal(scene.children.length,0);
 });
+
+test('new hero skill effects stay bounded, finite and free of hard circles',()=>{const scene=new T.Scene(),vfx=new SkillVFX(scene,{mobile:true});const kinds=['mine','mineBlast','counter','slug','slugHit','volley','rainAim','rain','trail','pursuit','echo','echoHit','soul','spikeAim','spikes'];for(let frame=0;frame<600;frame++){if(frame%15===0)for(const kind of kinds)vfx.skill({kind,x:0,z:0,x2:3,z2:4,angle:.4,armed:true});vfx.update(1/60);assert(vfx.active.length+vfx.pool.length<=110);for(const p of vfx.active){assert(p.mesh.position.toArray().every(Number.isFinite));assert(!['ring','disc'].includes(p.shape));}}for(let i=0;i<180;i++)vfx.update(1/60);assert.equal(vfx.active.length,0);assert.equal(scene.children.length,0);});

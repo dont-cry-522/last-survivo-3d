@@ -42,3 +42,10 @@ body.playing #toast{top:82px}body.touch.playing #toast{top:71px}
 .attack-modes{display:flex;align-items:center;gap:7px;margin-top:12px}.attack-modes span{font-size:11px;color:#b7d3c2;white-space:nowrap;margin-right:3px}.attack-modes button{flex:1;padding:9px 6px;font-size:12px}.attack-modes button[aria-pressed="true"]{border-color:#e7ca8b;background:#b99b543c;color:#ffe4a6}
 body.touch.auto-attack #aim-stick{display:none}
 @media(max-height:600px){.attack-modes{margin-top:7px}.attack-modes button{padding:6px 5px;font-size:11px}}
+
+/* Skill details remain reachable without covering either thumb control. */
+#skills{pointer-events:auto;max-width:calc(100vw - 240px);overflow-x:auto;overflow-y:hidden;flex-wrap:nowrap;padding:3px 2px 6px;scrollbar-width:thin;touch-action:pan-x}
+#skills .skill-chip{flex:0 0 auto;white-space:nowrap;font-size:12px;padding:9px 10px;background:#183d33ed;border-color:#b7ca9666}
+#skills .weapon-path{flex:0 0 auto;white-space:nowrap}
+body.touch #skills{max-width:calc(100vw - 325px)}body.touch #skills .skill-chip{font-size:10px;padding:8px 9px;min-height:34px}
+@media(max-width:560px){body.touch #skills{left:14px;bottom:155px;max-width:calc(100vw - 130px);flex-wrap:nowrap}}

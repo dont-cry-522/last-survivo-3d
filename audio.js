@@ -71,6 +71,13 @@ export class GameAudio{
     else if(kind==='heal'){[440,660,880].forEach((f,i)=>this.voice(f,.35,.027,'sine',null,t+i*.045));}
     else{this.noise(.3,.16,1400,200);this.voice(140,.38,.15,'sine',45);this.voice(300,.25,.025,'triangle',620);}
   }
+  skill(kind){
+    const cfg={mineSet:[520,180,.09,.07],mineBlast:[105,35,.3,.21],volley:[190,60,.12,.15],counter:[120,42,.22,.18],rainAim:[1300,1900,.18,.04],rain:[1900,700,.15,.07],trailSet:[2600,1400,.12,.025],pursuit:[900,1600,.2,.065],echo:[155,310,.28,.06],echoHit:[260,95,.18,.07],soul:[330,660,.32,.05],spikes:[100,40,.28,.14]}[kind];
+    if(!cfg||!this.allow('hero-skill-'+kind,.13))return;const [f,end,duration,volume]=cfg,t=this.ctx.currentTime;
+    this.voice(f,duration,volume,kind==='soul'?'sine':'triangle',end);
+    if(kind==='soul')this.voice(495,.28,.025,'sine',990,t+.06);
+    else this.noise(duration,volume*.9,kind.startsWith('rain')||kind==='trailSet'?4800:kind==='spikes'?1300:2600,kind==='mineBlast'?100:450,t+.012);
+  }
   dodge(silver){if(!this.allow('dodge',.2))return;this.noise(silver?.32:.2,.24,silver?4000:650,silver?220:140);if(silver)this.voice(440,.25,.065,'sine',110);}
   hurt(){if(!this.allow('hurt',.15))return;this.noise(.15,.3,700,140);this.voice(130,.22,.25,'sine',36);}
   pickup(){if(!this.allow('pickup',.09))return;this.voice(780+(this.beat%4)*110,.075,.035,'sine',1100);}
