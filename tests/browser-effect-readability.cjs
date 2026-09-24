@@ -1,0 +1,13 @@
+const {chromium}=require(process.env.PLAYWRIGHT_MODULE||'playwright'),assert=require('node:assert/strict');
+(async()=>{const b=await chromium.launch({executablePath:process.env.BROWSER_EXECUTABLE||'C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe',headless:true});try{
+ for(const viewport of [{width:1440,height:900},{width:844,height:390},{width:390,height:844}]){
+ const p=await b.newPage({viewport,hasTouch:viewport.width<1000}),errors=[];p.on('pageerror',e=>errors.push(e.message));
+ await p.addInitScript(()=>{const raf=requestAnimationFrame;window.requestAnimationFrame=cb=>raf(t=>{if(!window.freezeGame)cb(t);});});
+ await p.goto(process.env.TEST_URL||'http://127.0.0.1:8897/');await p.waitForFunction(()=>window.game3d);await p.locator('#start').click();await p.evaluate(()=>window.freezeGame=true);await p.waitForTimeout(40);
+ const result=await p.evaluate(async()=>{const g=game3d,{Vector3}=await import('./vendor/three.module.js');g.select('silver','forest',0);g.start();g.world.obstacles.length=0;g.world.patches.length=0;const e=g.spawn('golem',g.player.x,g.player.z+1.8);e.cool=0;g.step(1/60);const marker=e.marker.mesh,radius=e.marker.r;let disposed=false;marker.material.addEventListener('dispose',()=>disposed=true);const warned=g.player.hp===120&&marker.material.transparent&&marker.visible;g.hurtEnemy(e,10000);const cancelled=!marker.visible;g.start();
+ g.world.obstacles.length=0;g.spawnBoss();g.boss.cool=0;g.step(1/60);const lane=g.hero.parent.children.find(o=>o.userData.groundCue==='lane');lane.updateMatrixWorld(true);const forward=new Vector3(0,1,0).transformDirection(lane.matrixWorld),aim=new Vector3(Math.sin(g.boss.angle),0,Math.cos(g.boss.angle));
+ const aligned=forward.dot(aim)>.999,dimensions=[lane.scale.x*2,lane.scale.y*2];
+ g.start();g.vfx.ice(g.player.x,g.player.z,5);g.vfx.fire(g.player.x+3,g.player.z,2,true);g.vfx.lightning(g.player.x,g.player.z,g.player.x+2,g.player.z+2,true);g.vfx.dark(g.player.x-3,g.player.z,2,true);const clean=g.vfx.active.every(p=>!['ring','disc'].includes(p.shape));return {warned,cancelled,radius,disposed,aligned,dimensions,clean,count:g.vfx.active.length,limit:g.vfx.limit};});
+ assert(result.warned);assert(result.cancelled,'dead enemies must not leave active warnings');assert.equal(result.radius,2.4);assert(result.disposed,'restart must release cue material');assert(result.aligned,'charge arrows point along the actual dash');assert.deepEqual(result.dimensions,[4.4,12.6]);assert(result.clean);assert(result.count<=result.limit);assert.deepEqual(errors,[]);console.log('PASS soft warnings, charge direction, cleanup and ring-free combo '+viewport.width+'x'+viewport.height);await p.close();
+ }
+}finally{await b.close();}})().catch(e=>{console.error(e);process.exit(1)});

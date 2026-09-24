@@ -6,12 +6,13 @@ import{SkillVFX}from'../skill-vfx.js';
 test('elemental impacts have a readable core and distinct secondary shapes',()=>{
  const vfx=new SkillVFX(new T.Scene(),{mobile:true});
  for(const [name,cast,shapes]of [
-  ['fire',()=>vfx.fire(0,0,2,true),['flame','ring']],
-  ['ice',()=>vfx.ice(0,0,5),['crystal','ring']],
-  ['storm',()=>vfx.lightning(0,0,2,1,true),['ray','ring']],
-  ['dark',()=>vfx.dark(0,0,2,true),['ember','disc','ring']]
+  ['fire',()=>vfx.fire(0,0,2,true),['flame','veil']],
+  ['ice',()=>vfx.ice(0,0,5),['crystal','ray','veil']],
+  ['storm',()=>vfx.lightning(0,0,2,1,true),['ray','ember']],
+  ['dark',()=>vfx.dark(0,0,2,true),['crystal','veil']]
  ]){
   vfx.clear();cast();for(const shape of shapes)assert(vfx.active.some(p=>p.shape===shape),`${name} lacks ${shape}`);
+  assert(!vfx.active.some(p=>['ring','disc'].includes(p.shape)),name+' must not draw hard-edged circles');
   assert(vfx.active.length<=vfx.limit);for(const p of vfx.active){assert(p.life>0&&p.life<=1);assert(p.mesh.position.toArray().every(Number.isFinite));}
  }
  for(let i=0;i<90;i++)vfx.update(1/60);assert.equal(vfx.active.length,0);
