@@ -1,7 +1,7 @@
 import{heroesReady,createSkinnedHero,animateSkinnedHero}from'./skinned-hero.js?v=13';
 import * as T from './vendor/three.module.js';
 import{makeHero,animateHero}from'./hero-model.js?v=13';
-import{makeWraith,animateWraith}from'./wraith-model.js?v=16';
+import{makeWraith,animateWraith}from'./wraith-model.js?v=17';
 import{MAPS,seeded}from'./rules.js?v=16';
 const geo=new Map(),materials=new Map(),terrainMaterials=new Map(),detailMaterials=new Map(),weatherMaterials=new Map();
 function geometry(kind,args){const key=kind+args.join(',');if(!geo.has(key))geo.set(key,new T[kind](...args));return geo.get(key);}

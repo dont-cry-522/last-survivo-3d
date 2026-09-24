@@ -4,7 +4,7 @@ import{GameAudio}from'./audio.js?v=16';
 import{ENEMY_GUIDE,CIRCLE_GUIDE}from'./battle-guide.js?v=12';
 import * as T from './vendor/three.module.js';
 import{MAPS,WEAPONS,ENEMIES,weaponFor,experienceNeeded,grantExperience,chooseUpgrades,takeUpgrade,weaponStats,WEAPON_PATHS,segmentDistance,registerCrossbowHit,registerShadowHit}from'./rules.js?v=16';
-import{actor,animateActor,animateWorld,buildWorld,clearAt,moveActor,mesh,mat}from'./world.js?v=16';
+import{actor,animateActor,animateWorld,buildWorld,clearAt,moveActor,mesh,mat}from'./world.js?v=17';
 const $=s=>document.querySelector(s),touch=matchMedia('(pointer:coarse)').matches;
 document.body.classList.toggle('touch',touch);
 const canvas=$('#world');let renderer;
