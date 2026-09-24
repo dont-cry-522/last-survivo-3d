@@ -57,3 +57,10 @@ body.touch #skills{max-width:calc(100vw - 325px)}body.touch #skills .skill-chip{
 @media(max-height:500px) and (orientation:landscape){#dialog:has(.guide-content){max-height:94dvh;padding:12px 18px}#dialog:has(.guide-content) h2{font-size:22px;margin-bottom:4px}.guide-content{max-height:calc(94dvh - 118px)}.guide-content h3{margin:3px 0}.enemy-entry{grid-template-columns:96px minmax(0,1fr);padding:9px;gap:10px;margin:8px 0}.enemy-entry img{width:96px;height:106px}.enemy-entry h4{margin-bottom:5px;font-size:15px}.enemy-entry dl{display:grid;grid-template-columns:62px minmax(0,1fr);gap:4px;font-size:11px}.enemy-entry dt{font-size:10px}.enemy-entry dd{margin:0}.guide-content+.dialog-actions button{padding:10px}.guide-content+.dialog-actions{margin-top:6px}}
 
 .guide-biomes{display:flex;gap:6px;margin:4px 0 10px}.guide-biomes button{flex:1;padding:8px 5px;font-size:12px}.guide-biomes button[aria-pressed=true]{background:#486b55;border-color:#edce8b;color:#ffe3a3}
+
+/* A tap enters native fullscreen before requesting mobile landscape. */
+#landscape{border-color:#d9be78;color:#ffe3a3;white-space:nowrap}
+#orientation-help{position:fixed;top:60px;right:max(14px,env(safe-area-inset-right));width:min(330px,calc(100vw - 28px));padding:14px;background:#112e2bf7;border:1px solid #d9be78;border-radius:10px;z-index:9;box-shadow:0 8px 28px #071a1c99;font-size:13px;line-height:1.7}
+#orientation-help button{display:block;margin:10px 0 0 auto;padding:7px 12px;font-size:12px}
+body.touch header{top:max(10px,env(safe-area-inset-top));left:max(14px,env(safe-area-inset-left));right:max(14px,env(safe-area-inset-right))}
+@media(max-width:480px){body.touch header .brand{display:none}body.touch .top-actions{width:100%;justify-content:space-between;gap:4px}body.touch #landscape{padding:9px 8px}}
