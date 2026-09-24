@@ -1,3 +1,4 @@
+import{weaponSample}from'./weapon-audio.js?v=30';
 import{creatureSample,creatureSpatial,ENEMY_VOICES}from'./enemy-audio.js?v=29';
 // Original procedural score and sound design. No external audio downloads.
 const midi=n=>440*2**((n-69)/12);
@@ -9,7 +10,7 @@ const THEMES={
 export class GameAudio{
   constructor(context=null){
     this.ctx=context;this.ready=false;this.muted=false;this.musicVolume=.65;this.sfxVolume=.8;
-    this.beat=0;this.next=0;this.map='forest';this.pressure=0;this.mode='menu';this.cooldowns=new Map();this.nodes=0;this.creatureBuffers=new Map();this.creatureSources=new Set();
+    this.beat=0;this.next=0;this.map='forest';this.pressure=0;this.mode='menu';this.cooldowns=new Map();this.nodes=0;this.weaponBuffers=new Map();this.weaponSources=new Set();this.creatureBuffers=new Map();this.creatureSources=new Set();
     try{const v=JSON.parse(localStorage.getItem('forest3d-audio')||'null');if(v){this.muted=!!v.muted;this.musicVolume=this.clamp(v.music,.65);this.sfxVolume=this.clamp(v.sfx,.8);}}catch{}
   }
   clamp(n,f){return Number.isFinite(n)?Math.max(0,Math.min(1,n)):f;}
@@ -30,7 +31,7 @@ export class GameAudio{
   applyVolumes(immediate=false){if(!this.ready)return;const t=this.ctx.currentTime;for(const [bus,v]of [[this.master,this.muted?0:.78],[this.music,this.musicVolume],[this.sfx,this.sfxVolume]]){bus.gain.cancelScheduledValues(t);if(immediate)bus.gain.setValueAtTime(v,t);else bus.gain.setTargetAtTime(v,t,.025);}}
   setVolume(bus,value){if(bus==='music')this.musicVolume=this.clamp(value,.65);else this.sfxVolume=this.clamp(value,.8);this.applyVolumes();this.save();}
   setMuted(value){this.muted=value;this.applyVolumes();this.save();}
-  reset(map){this.stopCreatures();this.map=map;this.beat=0;this.next=(this.ctx?.currentTime||0)+.04;this.pressure=0;this.cooldowns.clear();}
+  reset(map){this.stopWeapons();this.stopCreatures();this.map=map;this.beat=0;this.next=(this.ctx?.currentTime||0)+.04;this.pressure=0;this.cooldowns.clear();}
   available(){return this.ready&&!this.muted&&this.ctx.state==='running'&&this.nodes<100;}
   allow(key,seconds){if(!this.available())return false;const t=this.ctx.currentTime;if((this.cooldowns.get(key)||0)>t)return false;this.cooldowns.set(key,t+seconds);return true;}
   voice(f,d,vol,type='sine',end=null,at=null,bus='sfx',attack=.005,pan=0){
@@ -65,20 +66,17 @@ export class GameAudio{
     source.onended=()=>{source.disconnect();volume.disconnect();panner.disconnect();this.creatureSources.delete(source);this.nodes--;};source.start();return true;
   }
   tone(f,d=.12,v=.06,type='sine',end=null){this.voice(f,d,v,type,end);}
-  shot(id){if(!this.allow('shot',.055))return;const t=this.ctx.currentTime;
-    if(id==='crossbow'){
-      this.noise(.045,.32,5400,1800);this.voice(730,.09,.07,'triangle',210);this.noise(.13,.16,1700,350,t+.018);this.voice(180,.13,.07,'sine',95,t+.02);
-    }else if(id==='rifle'||id==='shotgun'){
-      const heavy=id==='shotgun';this.noise(heavy?.26:.1,heavy?.65:.42,heavy?1800:3400,heavy?180:600);this.voice(heavy?125:210,heavy?.24:.095,heavy?.3:.2,'sine',42);
-      this.noise(.055,.1,6200,3000,t+.035);
-    }else if(id==='shuriken'){this.noise(.18,.19,5500,600);for(const f of [1850,2760])this.voice(f,.1,.025,'sine',f*.75);}
-    else if(id==='shade'){this.voice(165,.19,.08,'triangle',55);this.voice(330,.22,.04,'sine',180);this.noise(.16,.09,2400,180);}
-    else if(id==='shadowblade'){this.noise(.14,.2,4400,500);this.voice(480,.12,.055,'sawtooth',115);}
-    else if(id==='grimoire'){this.noise(.12,.11,2100,900);this.voice(110,.35,.085,'triangle',65);this.voice(220,.22,.025,'sine',330,t+.055);}
-    else if(id==='fire'){this.noise(.36,.5,900,180);this.voice(110,.25,.2,'sine',35);this.noise(.12,.1,3600,1800,t+.1);}
-    else{this.voice(80,.4,.14,'sine',220);this.voice(163,.3,.055,'triangle',330);this.noise(.3,.13,450,1700);}
+  weapon(id,event,variant=0){
+    if(!this.available()||this.weaponSources.size>=16)return false;
+    const key=id+':'+event+':'+variant;let buffer=this.weaponBuffers.get(key);
+    if(!buffer){const samples=weaponSample(id,event,this.ctx.sampleRate,variant);if(!samples)return false;buffer=this.ctx.createBuffer(1,samples.length,this.ctx.sampleRate);buffer.copyToChannel(samples,0);this.weaponBuffers.set(key,buffer);}
+    const source=this.ctx.createBufferSource(),gain=this.ctx.createGain();source.buffer=buffer;source.playbackRate.value=.98+Math.random()*.04;gain.gain.value=event==='impact'&&variant?1.2:1;
+    source.connect(gain);gain.connect(this.sfx);this.weaponSources.add(source);this.nodes++;source.onended=()=>{source.disconnect();gain.disconnect();this.weaponSources.delete(source);this.nodes--;};source.start();return true;
   }
-  impact(id,strong=false){if(!this.allow(strong?'impact-strong':'impact',.085))return;if(id==='crossbow'){this.noise(strong?.21:.08,strong?.26:.12,3000,strong?280:700);this.voice(strong?115:260,strong?.22:.08,strong?.14:.045,'triangle',strong?45:110);if(strong)this.noise(.18,.09,700,120,this.ctx.currentTime+.035);}else if(id==='shade'||id==='shadowblade'){this.noise(.13,.14,id==='shade'?1300:3800,240);this.voice(strong?90:220,.16,.075,'triangle',55);}else if(id==='grimoire'){this.noise(.27,.18,1350,180);this.voice(85,.3,.14,'triangle',38);this.voice(390,.16,.035,'sine',145,this.ctx.currentTime+.04);}else{this.noise(.085,.15,id==='shuriken'?3200:900,250);this.voice(105,.09,.09,'sine',48);}}
+  stopWeapons(){for(const s of this.weaponSources)s.stop();}
+  shot(id){if(this.allow('shot',.045))this.weapon(id,'shot');}
+  mechanism(id,stage=0){if(this.allow('mechanism',.065))this.weapon(id,'mechanism',stage);}
+  impact(id,strong=false){if(this.allow(strong?'impact-strong':'impact',.085))this.weapon(id,'impact',strong?1:0);}
   threat(kind='wave'){if(!this.allow('threat',2))return;const t=this.ctx.currentTime,deep=kind==='boss';this.voice(deep?58:82,.9,deep?.15:.105,'sawtooth',deep?35:48,t,'music',.04);this.noise(deep?.75:.42,deep?.16:.085,1400,170,t,'music');for(let i=0;i<(deep?4:3);i++)this.voice((deep?147:196)*2**(i/12),.19,.052,'triangle',null,t+i*.105,'music',.008);}
   spell(kind){if(!this.allow('spell-'+kind,.11))return;const t=this.ctx.currentTime;
     if(kind==='ice'){this.noise(.36,.24,4800,1400);[2100,3150,4100,2700].forEach((f,i)=>this.voice(f,.18,.035,'sine',f*.85,t+i*.035));}

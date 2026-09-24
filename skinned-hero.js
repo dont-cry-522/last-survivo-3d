@@ -1,8 +1,9 @@
+import{weaponGesture,shotStarted}from'./weapon-performance.js?v=30';
 import{rollProgress,rollWeight}from'./dodge-motion.js?v=24';
 import * as T from './vendor/three.module.js';
 import {clone} from './vendor/SkeletonUtils.js';
 import {loadCharacterData} from './character-loader.js?v=24';
-import {makeHero as makePrototype} from './hero-model.js?v=13';
+import {makeHero as makePrototype} from './hero-model.js?v=30';
 
 const templates=new Map(),clips=new Map();
 let loaded=false;
@@ -130,7 +131,7 @@ export function createSkinnedHero(kind,weapon){
   const layer=(clip,name,top)=>{const c=clip.clone();c.name=name;c.tracks=c.tracks.filter(t=>isUpper(t)===top);return mixer.clipAction(c);};
   const idle=layer(idleClip,'idle-lower',false),run=layer(clips.get('Jog_Fwd_Loop'),'run-lower',false),upperIdle=layer(idleClip,'idle-upper',true),upperRun=layer(clips.get('Jog_Fwd_Loop'),'run-upper',true);
   const walk=layer(clips.get('Walk_Loop'),'walk-lower',false),upperWalk=layer(clips.get('Walk_Loop'),'walk-upper',true),backRun=layer(reverseClip(clips.get('Jog_Fwd_Loop')),'back-run',false),backWalk=layer(reverseClip(clips.get('Walk_Loop')),'back-walk',false);
-  const aimName=['fire','dark'].includes(weapon)?'Spell_Simple_Idle_Loop':'Pistol_Aim_Neutral';
+  const aimName=['fire','dark','shuriken'].includes(weapon)?'Spell_Simple_Idle_Loop':'Pistol_Aim_Neutral';
   const upperClip=clips.get(aimName).clone();upperClip.tracks=upperClip.tracks.filter(isUpper);upperClip.name='upper-aim';
   const aim=mixer.clipAction(upperClip);aim.play();aim.setEffectiveWeight(0);
   // Calibrate the authored weapon grip in the actual aiming pose, then return to idle.
@@ -148,7 +149,7 @@ export function createSkinnedHero(kind,weapon){
   bones.get('Head')?.scale.setScalar(1.08);
   mixer.update(0);const restCape=cape?.quaternion.clone();
   Object.assign(g.userData,{skinned:true,kind,weaponId:weapon,rig,model,mixer,actions,idle,run,walk,upperIdle,upperRun,upperWalk,backRun,backWalk,aim,gun,gunRest:gun.quaternion.clone(),aimArm:bones.get('upperarm_r'),firingForearm:bones.get('lowerarm_r'),offArm:bones.get('upperarm_l'),offForearm:bones.get('lowerarm_l'),pelvis:bones.get('pelvis'),spine:bones.get('spine_01'),cape,restCape,owned,blend:0,aimBlend:0,aimHold:0,smoothedSpeed:0,backBlend:0,gaitYaw:0,gaitPhase:0,reloadPhase:1});
-  if(['rifle','shotgun'].includes(weapon))g.userData.support={hand:bones.get('hand_l'),rightHand:bones.get('hand_r'),elbow:new T.Vector3(),goal:new T.Vector3(),axis:new T.Vector3(),bend:new T.Vector3(),target:new T.Vector3(),origin:new T.Vector3(),from:new T.Vector3(),to:new T.Vector3(),delta:new T.Quaternion(),world:new T.Quaternion(),parent:new T.Quaternion(),start:[new T.Quaternion(),new T.Quaternion()]};
+  g.userData.support={hand:bones.get('hand_l'),rightHand:bones.get('hand_r'),elbow:new T.Vector3(),goal:new T.Vector3(),axis:new T.Vector3(),bend:new T.Vector3(),target:new T.Vector3(),origin:new T.Vector3(),from:new T.Vector3(),to:new T.Vector3(),delta:new T.Quaternion(),world:new T.Quaternion(),parent:new T.Quaternion(),start:[new T.Quaternion(),new T.Quaternion()]};
   if(weapon==='crossbow')g.userData.crossbowBase=[g.userData.aimArm,g.userData.firingForearm,g.userData.offArm,g.userData.offForearm].map(bone=>[bone,new T.Quaternion()]);
   else g.userData.attackBase=[g.userData.aimArm,g.userData.firingForearm,g.userData.offArm,g.userData.offForearm].map(bone=>[bone,new T.Quaternion()]);
   return g;
@@ -171,15 +172,14 @@ export function animateSkinnedHero(g,t,speed,attack,hurt){
   if(isRoll){roll.enabled=true;roll.setLoop(T.LoopOnce,1);roll.clampWhenFinished=true;roll.play();roll.setEffectiveWeight(weight);roll.paused=true;roll.time=rollProgress(d.dashTime)*roll.getClip().duration;for(const a of[d.idle,d.run,d.walk,d.backRun,d.backWalk,d.upperIdle,d.upperRun,d.upperWalk,d.aim])a.setEffectiveWeight(a.getEffectiveWeight()*poseBlend);}else roll.stop();
   const bank=isRoll?0:T.MathUtils.clamp(-(d.turnRate||0)*.008,-.075,.075)*d.blend;d.rig.rotation.z+=(bank-d.rig.rotation.z)*(1-Math.exp(-dt*10));
   // Recovery belongs to the animation, so it can finish after the shot timer.
-  const fired=attack>(d.previousAttack||0)+.025;d.previousAttack=attack;
+  const fired=shotStarted(d,attack,d.previousAttack||0);d.previousAttack=attack;
   d.attackAge=fired?0:(d.attackAge??2)+dt;
-  const recover=['fire','dark','shuriken'].includes(d.weaponId)?.34:.29;
-  const impulse=T.MathUtils.smoothstep(d.attackAge,0,.055)*(1-T.MathUtils.smoothstep(d.attackAge,.055,recover));
-  d.attackGesture=((d.attackGesture||0)+(impulse-(d.attackGesture||0))*(1-Math.exp(-dt*32)));
-  const kick=isRoll?0:d.attackGesture;
+  const motion=weaponGesture(d.weaponId,d.attackAge,d.reloadPhase??1,d.reloadDuration||1);
+  d.attackGesture=((d.attackGesture||0)+(motion.kick-(d.attackGesture||0))*(1-Math.exp(-dt*(d.weaponId==='shotgun'?18:32))));
+  const kick=isRoll?0:d.attackGesture,sweep=isRoll?0:motion.sweep,gather=isRoll?0:motion.gather;
   const acceleration=dt?T.MathUtils.clamp((speed-(d.previousSpeed??speed))/dt,-10,10):0;d.previousSpeed=speed;
   d.motionLean=((d.motionLean||0)+(T.MathUtils.clamp(acceleration*.006,-.045,.045)-(d.motionLean||0))*(1-Math.exp(-dt*9)));
-  const recoil={rifle:.075,shotgun:.16,crossbow:.065,shuriken:-.09,fire:-.08,dark:-.08}[d.weaponId];
+  const recoil={rifle:.075,shotgun:.22,crossbow:.075,shuriken:-.12,fire:-.15,dark:.065}[d.weaponId];
   d.rig.rotation.x=isRoll?0:-kick*recoil+d.motionLean;
   d.rig.position.z=isRoll?0:-kick*Math.abs(recoil)*.45;
   // Remove last frame's procedural arm offsets before the mixer blends a new pose.
@@ -191,36 +191,31 @@ export function animateSkinnedHero(g,t,speed,attack,hurt){
     hips.premultiply(new T.Quaternion().setFromAxisAngle(new T.Vector3(0,1,0),d.gaitYaw));d.pelvis.quaternion.copy(d.pelvis.parent.getWorldQuaternion(new T.Quaternion()).normalize().invert().multiply(hips)).normalize();
     d.pelvis.updateMatrixWorld(true);d.spine.quaternion.copy(d.spine.parent.getWorldQuaternion(new T.Quaternion()).normalize().invert().multiply(chest)).normalize();
   }
-  // Keep the firing hand aligned with the hero's target while the pelvis keeps its running sway.
-  if(d.weaponId==='crossbow'||d.support)d.gun.quaternion.copy(d.gunRest);
-  if(!isRoll&&d.aimBlend>.01&&!d.support&&!['fire','dark'].includes(d.weaponId)){
-    g.updateMatrixWorld(true);
-    const forward=new T.Vector3(0,0,1).applyQuaternion(d.gun.getWorldQuaternion(new T.Quaternion()).normalize()).normalize(),target=d.weaponId!=='crossbow'&&Number.isFinite(d.aimAngle)?new T.Vector3(Math.sin(d.aimAngle),0,Math.cos(d.aimAngle)):new T.Vector3(0,0,1).applyQuaternion(g.getWorldQuaternion(new T.Quaternion()).normalize()).normalize();
-    const correction=new T.Quaternion().setFromUnitVectors(forward,target);correction.slerp(new T.Quaternion(),1-d.aimBlend);
-    const world=d.aimArm.getWorldQuaternion(new T.Quaternion()).normalize().premultiply(correction),parent=d.aimArm.parent.getWorldQuaternion(new T.Quaternion()).normalize().invert();d.aimArm.quaternion.copy(parent.multiply(world)).normalize();
-  }
+  d.gun.quaternion.copy(d.gunRest);
   if(d.attackBase){
     for(const [bone,rotation]of d.attackBase)rotation.copy(bone.quaternion);d.attackBaseReady=true;
-    const gesture=isRoll?0:kick,pumpPhase=T.MathUtils.clamp(d.reloadPhase??1,0,1);
+    const gesture=isRoll?0:kick;
     if(d.weaponId==='rifle'){
       d.aimArm.rotateX(-.16*gesture);d.firingForearm.rotateX(.24*gesture);
       d.offArm.rotateX(.14*gesture);d.offForearm.rotateX(-.22*gesture);
     }else if(d.weaponId==='shotgun'){
-      const pump=T.MathUtils.smoothstep(pumpPhase,.16,.42)*(1-T.MathUtils.smoothstep(pumpPhase,.5,.78));
+      const pump=isRoll?0:motion.draw;
       d.aimArm.rotateX(-.25*gesture);d.firingForearm.rotateX(.32*gesture);
       d.offArm.rotateX(.17*gesture-.25*pump);d.offForearm.rotateX(-.15*gesture+.22*pump);
       if(d.gun.userData.pump)d.gun.userData.pump.position.z=isRoll?0:-.23*pump;
     }else if(d.weaponId==='shuriken'){
-      d.aimArm.rotateY(-.58*gesture);d.aimArm.rotateZ(.32*gesture);
-      d.firingForearm.rotateX(-.37*gesture);d.offArm.rotateY(.16*gesture);
+      d.aimArm.rotateY(-.95*sweep+.25*gather);d.aimArm.rotateZ(.5*sweep);
+      d.firingForearm.rotateX(-.7*gesture+.35*gather);d.firingForearm.rotateY(.4*sweep);d.offArm.rotateY(.35*sweep);d.offForearm.rotateX(-.28*gather);
+      d.gun.scale.setScalar(.65*(1-.6*gesture));
     }else if(d.weaponId==='fire'){
-      d.aimArm.rotateX(-.5*gesture);d.firingForearm.rotateX(-.28*gesture);
-      d.offArm.rotateX(-.31*gesture);d.offForearm.rotateZ(-.23*gesture);
+      d.aimArm.rotateX(-.75*gesture+.18*gather);d.firingForearm.rotateX(-.43*gesture);
+      d.offArm.rotateX(-.52*sweep);d.offForearm.rotateZ(-.38*sweep);d.aimArm.rotateZ(-.16*sweep);
     }else if(d.weaponId==='dark'){
-      d.aimArm.rotateY(.53*gesture);d.firingForearm.rotateX(.26*gesture);
-      d.offArm.rotateZ(.33*gesture);d.offForearm.rotateY(-.22*gesture);
+      d.aimArm.rotateY(.72*sweep);d.firingForearm.rotateX(.48*gesture-.25*gather);
+      d.offArm.rotateZ(.6*sweep);d.offArm.rotateX(-.32*gather);d.offForearm.rotateY(-.55*sweep);d.offForearm.rotateX(-.35*gather);
     }
   }
+  if(d.crossbowBase){for(const [bone,rotation]of d.crossbowBase)rotation.copy(bone.quaternion);d.crossbowBaseReady=true;}
   if(d.support&&poseBlend>.01&&d.aimBlend>.01){
     const s=d.support;
     const solve=(bones,hand)=>{
@@ -236,27 +231,24 @@ export function animateSkinnedHero(g,t,speed,attack,hurt){
       s.delta.setFromUnitVectors(s.from,s.to);lower.getWorldQuaternion(s.world);s.world.premultiply(s.delta);lower.parent.getWorldQuaternion(s.parent).invert();lower.quaternion.copy(s.parent.multiply(s.world)).normalize();lower.updateWorldMatrix(false,true);
       bones.forEach((bone,i)=>bone.quaternion.slerp(s.start[i],1-d.aimBlend*poseBlend));
     };
-    // Hold the trigger hand in front of the chest, then bring the other hand
-    // to the actual moving foregrip. Neither solve changes the muzzle direction.
-    d.aimArm.getWorldPosition(s.origin);d.offArm.getWorldPosition(s.target);s.target.add(s.origin).multiplyScalar(.5);g.getWorldQuaternion(s.world);s.to.set(-.08,-.20+kick*.01,.14-kick*.025).applyQuaternion(s.world);s.target.add(s.to);solve([d.firingForearm,d.aimArm],s.rightHand);
-    const yaw=Number.isFinite(d.aimAngle)?d.aimAngle:g.rotation.y;
-    s.world.setFromAxisAngle(s.to.set(0,1,0),yaw);d.gun.parent.getWorldQuaternion(s.parent).invert();d.gun.quaternion.slerp(s.parent.multiply(s.world).normalize(),poseBlend);
-    s.target.set(0,.015,.34+(d.gun.userData.pump?.position.z||0));d.gun.localToWorld(s.target);solve([d.offForearm,d.offArm],s.hand);
-  }
-  if(d.weaponId==='crossbow'&&!isRoll){
-    for(const [bone,rotation]of d.crossbowBase)rotation.copy(bone.quaternion);d.crossbowBaseReady=true;
-    const lift=d.aimBlend;
-    d.aimArm.rotateX(-.09*lift);d.aimArm.rotateY(1.4*lift);d.aimArm.rotateZ(-.3*lift);
-    d.firingForearm.rotateX(1.1*lift);d.firingForearm.rotateY(.38*lift);d.firingForearm.rotateZ(.9*lift);
-    g.updateMatrixWorld(true);
-    // The bow must remain level even as the firing wrist and shoulder articulate.
-    const yaw=g.rotation.y;
-    const level=new T.Quaternion().setFromAxisAngle(new T.Vector3(0,1,0),yaw);
-    const parent=d.gun.parent.getWorldQuaternion(new T.Quaternion()).invert();d.gun.quaternion.copy(parent.multiply(level)).normalize();
-    const phase=T.MathUtils.clamp(d.reloadPhase??1,0,1),rise=T.MathUtils.smoothstep(phase,.12,.53),fall=1-T.MathUtils.smoothstep(phase,.56,.82),draw=rise*fall,hold=d.aimBlend;
-    d.offArm.rotateX(1.16*hold);d.offArm.rotateY(-.27*hold);d.offArm.rotateZ(-.87*hold-.18*draw);
-    d.offForearm.rotateX(-.70*hold);d.offForearm.rotateY(-.35*hold+.12*draw);
-    drawCrossbow(d.gun,draw*.34,phase);
+    // Solve toward weapon-specific hand positions; grip constraints must retain the gesture.
+    const id=d.weaponId,staff=['fire','dark'].includes(id),bow=id==='crossbow',throwing=id==='shuriken';
+    d.aimArm.getWorldPosition(s.origin);d.offArm.getWorldPosition(s.target);s.target.add(s.origin).multiplyScalar(.5);const chest=s.target.clone();g.getWorldQuaternion(s.world);
+    if(staff)s.to.set(-.19,-.23,id==='fire'?.24+.22*kick:.22+.09*gather);
+    else if(throwing)s.to.set(-.24-.18*sweep,-.10-.14*gather,.28+.20*kick);
+    else s.to.set(bow?-.16:-.08,-.20+kick*(id==='shotgun'?.06:.025),(bow?.28:.14)-kick*(id==='shotgun'?.13:.065));
+    s.to.applyQuaternion(s.world);s.target.add(s.to);solve([d.firingForearm,d.aimArm],s.rightHand);
+    const yaw=bow?g.rotation.y:Number.isFinite(d.aimAngle)?d.aimAngle:g.rotation.y;
+    s.world.setFromAxisAngle(s.to.set(0,1,0),yaw);
+    const pitch=staff?(id==='fire'?-.15-.4*kick:.08+.15*gather):throwing?-.2+.5*sweep:-kick*(id==='shotgun'?.14:.055);
+    s.world.multiply(new T.Quaternion().setFromAxisAngle(s.to.set(1,0,0),pitch));d.gun.parent.getWorldQuaternion(s.parent).invert();d.gun.quaternion.slerp(s.parent.multiply(s.world).normalize(),poseBlend);
+    if(staff||throwing){
+      s.to.set(throwing?.27:id==='fire'?.24:.18+.13*Math.sin(sweep*Math.PI),throwing?-.24:id==='fire'?-.12:-.10+.12*gather,throwing?.20:id==='fire'?.45+.12*kick:.44-.12*sweep);
+      g.getWorldQuaternion(s.world);s.target.copy(chest).add(s.to.applyQuaternion(s.world));
+    }else if(bow){s.target.set(0,.13,.22-.34*motion.draw);d.gun.localToWorld(s.target);}
+    else{s.target.set(0,.015,.34+(d.gun.userData.pump?.position.z||0));d.gun.localToWorld(s.target);}
+    solve([d.offForearm,d.offArm],s.hand);
+    if(bow)drawCrossbow(d.gun,motion.draw*.34,T.MathUtils.clamp(d.reloadPhase??1,0,1));
   }
   if(d.cape){d.cape.quaternion.copy(d.restCape);d.cape.rotateX(.06+d.blend*.13+Math.sin(t*5)*.015-d.motionLean*.6+kick*.025);d.cape.rotateZ(-bank*.65);d.cape.userData.wind.time.value=t;d.cape.userData.wind.run.value=d.blend;}
   g.visible=!(hurt>0&&Math.floor(hurt*28)%2===0);

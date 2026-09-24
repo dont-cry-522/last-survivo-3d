@@ -10,7 +10,7 @@ const assert=require('node:assert/strict');
     assert(await page.locator('#start').isEnabled());
     const result=await page.evaluate(async()=>{
       const T=await import('./vendor/three.module.js');
-      const {createSkinnedHero,animateSkinnedHero,disposeHero}=await import('./skinned-hero.js?v=24');
+      const {createSkinnedHero,animateSkinnedHero,disposeHero}=await import('./skinned-hero.js?v=30');
       const out=[];
       for(const [kind,weapons] of [['silver',['crossbow','shuriken','dark']],['scout',['rifle','shotgun','fire']]])for(const weapon of weapons){
         const hero=createSkinnedHero(kind,weapon),d=hero.userData;
@@ -18,7 +18,7 @@ const assert=require('node:assert/strict');
           hero.rotation.y=rotation;
           for(let frame=0;frame<90;frame++)animateSkinnedHero(hero,(d.lastTime||0)+1/60,speed,1,0);
           hero.updateMatrixWorld(true);
-          if(!['fire','dark'].includes(weapon)){
+          if(!['fire','dark','shuriken'].includes(weapon)){
             const barrel=new T.Vector3(0,0,1).applyQuaternion(d.gun.getWorldQuaternion(new T.Quaternion()));
             const target=new T.Vector3(0,0,1).applyQuaternion(hero.getWorldQuaternion(new T.Quaternion()));
             if(barrel.dot(target)<.999)throw Error(`${kind}/${weapon}: aim deviated while speed=${speed}, rotation=${rotation}`);

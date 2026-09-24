@@ -1,10 +1,10 @@
 import{ENEMY_MOTION,animateEnemyIdentity}from'./enemy-motion.js?v=28';
 import{REGIONAL_ENEMIES}from'./map-enemies.js?v=27';
 import{groundCue}from'./ground-cues.js?v=19';
-import{heroesReady,createSkinnedHero,animateSkinnedHero}from'./skinned-hero.js?v=24';
+import{heroesReady,createSkinnedHero,animateSkinnedHero}from'./skinned-hero.js?v=30';
 import * as T from './vendor/three.module.js';
-import{makeHero,animateHero}from'./hero-model.js?v=13';
-import{makeWraith,animateWraith}from'./wraith-model.js?v=23';
+import{makeHero,animateHero}from'./hero-model.js?v=30';
+import{makeWraith,animateWraith}from'./wraith-model.js?v=30';
 import{MAPS,seeded}from'./rules.js?v=18';
 const geo=new Map(),materials=new Map(),terrainMaterials=new Map(),detailMaterials=new Map(),weatherMaterials=new Map();
 function geometry(kind,args){const key=kind+args.join(',');if(!geo.has(key))geo.set(key,new T[kind](...args));return geo.get(key);}

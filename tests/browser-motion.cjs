@@ -4,7 +4,7 @@ const assert=require('node:assert/strict');
  const page=await browser.newPage();const errors=[];page.on('pageerror',e=>errors.push(e.message));
  await page.goto(process.env.TEST_URL||'http://127.0.0.1:8897/');await page.waitForFunction(()=>window.game3d);
  const results=await page.evaluate(async()=>{
-  const {createSkinnedHero,animateSkinnedHero,disposeHero}=await import('./skinned-hero.js?v=24');
+  const {createSkinnedHero,animateSkinnedHero,disposeHero}=await import('./skinned-hero.js?v=30');
   const out=[];
   const T=await import('./vendor/three.module.js');
   for(const fps of [30,60,120])for(const [kind,weapon]of [['scout','shotgun'],['silver','shuriken'],['silver','crossbow'],['scout','fire']]){
@@ -25,6 +25,6 @@ const assert=require('node:assert/strict');
    out.push({weapon,fps,tail,maxJump,rest,gripError});disposeHero(h);
   }return out;
  });
- for(const r of results){assert(r.tail>.003,'attack abruptly lost recovery '+JSON.stringify(r));assert(r.rest<.001);assert(r.gripError<.12,'support hand misses weapon '+JSON.stringify(r));assert(r.maxJump<.085);}
+ for(const r of results){assert(r.tail>.003,'attack abruptly lost recovery '+JSON.stringify(r));assert(r.rest<.001);assert(r.gripError<.12,'support hand misses weapon '+JSON.stringify(r));assert(r.maxJump<.085,'body recoil jump '+JSON.stringify(r));}
  assert.deepEqual(errors,[]);console.log('PASS smooth attack recovery for four weapon types at 30/60/120 FPS');
 }finally{await browser.close();}})().catch(e=>{console.error(e);process.exit(1)});

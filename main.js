@@ -1,3 +1,4 @@
+import{weaponCuePhases}from'./weapon-performance.js?v=30';
 import{ENEMY_VOICES}from'./enemy-audio.js?v=29';
 import{ENEMY_MOTION,gaitPace}from'./enemy-motion.js?v=28';
 import{MAP_ROSTERS,REGIONAL_ENEMIES,regionalEnemy}from'./map-enemies.js?v=28';
@@ -7,12 +8,12 @@ import{SCOUT_ROLL_DURATION,rollTravel}from'./dodge-motion.js?v=24';
 import{renderPixelRatio,RenderBudget}from'./render-budget.js?v=21';
 import{groundCue,disposeCue}from'./ground-cues.js?v=19';
 import{SkillVFX}from'./skill-vfx.js?v=26';
-import{loadHeroAssets,disposeHero}from'./skinned-hero.js?v=24';
-import{GameAudio}from'./audio.js?v=29';
+import{loadHeroAssets,disposeHero}from'./skinned-hero.js?v=30';
+import{GameAudio}from'./audio.js?v=30';
 import{ENEMY_GUIDE,CIRCLE_GUIDE}from'./battle-guide.js?v=28';
 import * as T from './vendor/three.module.js';
 import{MAPS,WEAPONS,ENEMIES,weaponFor,experienceNeeded,grantExperience,chooseUpgrades,takeUpgrade,weaponStats,WEAPON_PATHS,segmentDistance,registerCrossbowHit,registerShadowHit,UPGRADES}from'./rules.js?v=27';
-import{actor,animateActor,animateWorld,buildWorld,clearAt,moveActor,mesh,mat}from'./world.js?v=28';
+import{actor,animateActor,animateWorld,buildWorld,clearAt,moveActor,mesh,mat}from'./world.js?v=30';
 const $=s=>document.querySelector(s),touch=matchMedia('(pointer:coarse)').matches;
 document.body.classList.toggle('touch',touch);
 const canvas=$('#world');let renderer;
@@ -55,11 +56,11 @@ function start(){unlockAudio();sound.reset(mapId);$('#audio-settings').open=fals
 $('#start').onclick=start;
 function dialog(title,body,buttons=[]){const content=$('#dialog-content');content.innerHTML='<h2>'+title+'</h2><p>'+body+'</p>';const actions=document.createElement('div');actions.className='dialog-actions';for(const [text,fn]of buttons){const b=document.createElement('button');b.textContent=text;b.onclick=fn;actions.append(b);}content.append(actions);if(!$('#dialog').open)$('#dialog').showModal();}
 function showPauseDialog(){dialog('在林间歇一会儿','当前生命、技能与探索进度已保留。攻击方式：'+(attackMode==='auto'?'自动瞄准并攻击':'手动瞄准并攻击')+'。',[['继续远征',resume],[attackMode==='auto'?'切换为手动攻击':'切换为自动攻击',()=>{setAttackMode(attackMode==='auto'?'manual':'auto');showPauseDialog();}],['结束本局',()=>dialog('结束这次远征？','返回准备界面将结束当前对局。',[['返回暂停',()=>{state='playing';pause();}],['确认结束',menu]])]]);}
-function pause(){if(state==='playing'){sound.stopCreatures();state='paused';keys.clear();releaseStick();clearAttack();showPauseDialog();}else if(state==='paused')resume();}
+function pause(){if(state==='playing'){sound.stopWeapons();sound.stopCreatures();state='paused';keys.clear();releaseStick();clearAttack();showPauseDialog();}else if(state==='paused')resume();}
 function resume(){state='playing';$('#dialog').close();keys.clear();releaseStick();clearAttack();unlockAudio();}
-function menu(){state='menu';$('#dialog').close();$('#menu').hidden=false;$('#hud').hidden=true;$('#touch').hidden=true;$('#encounter').hidden=true;introductions.length=0;encounterTime=0;document.body.classList.remove('playing');keys.clear();releaseStick();clearAttack();build();}
+function menu(){sound.stopWeapons();sound.stopCreatures();state='menu';$('#dialog').close();$('#menu').hidden=false;$('#hud').hidden=true;$('#touch').hidden=true;$('#encounter').hidden=true;introductions.length=0;encounterTime=0;document.body.classList.remove('playing');keys.clear();releaseStick();clearAttack();build();}
 $('#pause').onclick=pause;$('#dialog').addEventListener('cancel',e=>{e.preventDefault();if(state==='paused')resume();});
-$('#battle-guide').onclick=()=>{const playing=state==='playing';if(!playing&&state!=='menu')return;if(playing){sound.stopCreatures();state='paused';keys.clear();releaseStick();clearAttack();}dialog('战场说明','图片使用实战模型；首领实际体型更大。新物种首次出现时也会显示对应图片和介绍。',[[playing?'继续远征':'返回准备',playing?resume:()=>$('#dialog').close()]]);
+$('#battle-guide').onclick=()=>{const playing=state==='playing';if(!playing&&state!=='menu')return;if(playing){sound.stopWeapons();sound.stopCreatures();state='paused';keys.clear();releaseStick();clearAttack();}dialog('战场说明','图片使用实战模型；首领实际体型更大。新物种首次出现时也会显示对应图片和介绍。',[[playing?'继续远征':'返回准备',playing?resume:()=>$('#dialog').close()]]);
  const panel=document.createElement('section');panel.className='guide-content';const renderGuide=id=>{panel.innerHTML='<div class=guide-biomes>'+Object.entries(MAPS).map(([key,m])=>`<button data-guide-map="${key}" aria-pressed="${key===id}">${m.name}</button>`).join('')+'</div><h3>怪物图鉴 · 图片与实战一致</h3><small>图片按展示空间缩放，首领在实战中远大于普通怪物。</small>'+Object.values(MAP_ROSTERS[id]).map(kind=>{const info=ENEMY_GUIDE[kind];return `<article class=enemy-entry data-enemy="${kind}"><img src="${info.image}?v=28" alt="${info.name}的游戏模型" width=112 height=112><div><h4>${info.name}${kind===MAP_ROSTERS[id].boss?'<small>首领</small>':''}</h4><dl><dt>识别与特点</dt><dd>${info.traits}</dd><dt>攻击方式</dt><dd>${info.attack}</dd><dt>应对方法</dt><dd>${info.tip}</dd></dl></div></article>`;}).join('')+'<h3>地面提示代表什么</h3>'+CIRCLE_GUIDE.map(info=>`<p><b>${info.color} · ${info.name}</b><br><small>${info.meaning}</small></p>`).join('');};renderGuide(mapId);panel.onclick=e=>{const id=e.target.closest('[data-guide-map]')?.dataset.guideMap;if(MAPS[id])renderGuide(id);};$('#dialog-content').insertBefore(panel,$('#dialog-content .dialog-actions'));};
 $('#sound').onclick=()=>{if(sound.ctx?.state==='running')sound.setMuted(!sound.muted);else sound.setMuted(false);unlockAudio();syncAudioUI();};
 function upgrade(){if(player.pending<=0||state!=='playing')return;state='upgrade';keys.clear();releaseStick();clearAttack();const choices=chooseUpgrades(player);if(!choices.length){player.pending=0;state='playing';return;}
@@ -79,7 +80,7 @@ function enemyRemains(e){const p=ENEMY_VOICES[e.kind];if(!p||Math.hypot(e.x-play
 function hurtEnemy(e,n,flash=true){if(!e.alive)return;e.hp-=n*(e===boss&&e.recover>0?1.25:1);if(flash){e.hurt=.12;if(e.hp>0)enemySound(e,'hurt');}if(e.hp<=0){enemySound(e,'death');e.alive=false;if(e.marker){e.marker.mesh.visible=false;e.marker.life=0;e.marker=null;}kills++;scene.remove(e.mesh);heroSkills.onKill(e);enemyRemains(e);if(e===boss){finish(true);return;}const o={x:e.x,z:e.z,mesh:mesh('OctahedronGeometry',[.22],0x76f0ef,e.x,.5,e.z,null,true),xp:e.xp};o.mesh.add(glow(0x61e6ed,2.2));scene.add(o.mesh);orbs.push(o);}}
 function shoot(dt){const w=weaponStats(player),angle=aimInput.angle,targets=enemies.filter(e=>e.alive);if(boss?.alive)targets.push(boss);let nearest=null,d=w.range;
  if(w.id==='dark'&&player.weaponPath?.id==='dark_seek')for(const e of targets){const n=Math.hypot(e.x-player.x,e.z-player.z),direction=Math.atan2(e.x-player.x,e.z-player.z),diff=Math.atan2(Math.sin(direction-angle),Math.cos(direction-angle));if(n<d&&Math.abs(diff)<.26){nearest=e;d=n;}}
- player.aimAngle=angle;player.attack=1/w.rate;player.aimTime=player.attack+.16;hero.userData.shoot=w.id==='grimoire'?.32:w.id==='shade'?.20:.16;hero.userData.reloadPhase=0;hero.userData.reloadDuration=player.attack;
+ player.aimAngle=angle;player.attack=1/w.rate;player.aimTime=player.attack+.16;hero.userData.shoot=w.id==='grimoire'?.32:w.id==='shade'?.20:.16;hero.userData.reloadPhase=0;hero.userData.reloadDuration=player.attack;hero.userData.shotSerial=(hero.userData.shotSerial||0)+1;player.weaponCue=0;
  if(w.id==='grimoire'){
   let distance=Math.min(w.range,8),nearestDistance=w.range;
   for(const e of targets){const len=Math.hypot(e.x-player.x,e.z-player.z),a=Math.atan2(e.x-player.x,e.z-player.z),offset=Math.abs(Math.atan2(Math.sin(a-angle),Math.cos(a-angle)));if(len<nearestDistance&&offset<.25){nearestDistance=len;distance=len;}}
@@ -108,7 +109,7 @@ function updateShadowSpells(dt){if(heroId!=='wraith')return;const near=()=>[...e
  }
 }
 function updateVents(){if(mapId!=='ash')return;for(const vent of world.patches){if(vent.kind!=='vent')continue;const phase=(time+vent.phase)%4,warning=phase>=2.55&&phase<3.25,active=phase>=3.25&&phase<3.85;vent.marker.visible=warning||active;vent.marker.material.color.set(active?0xff603c:0xffc16d);vent.marker.material.opacity=active?.8:.58;if(active&&!vent.wasActive){vent.hitPlayer=false;vent.hitEnemies=new Set();vfx.fire(vent.x,vent.z,vent.r*.65);if(Math.hypot(player.x-vent.x,player.z-vent.z)<14)sound.tone(115,.25,.13,'sine',45);}if(active){if(!vent.hitPlayer&&Math.hypot(player.x-vent.x,player.z-vent.z)<vent.r){vent.hitPlayer=true;hitPlayer(12,vent.x,vent.z);if(state!=='playing')return;}for(const e of [...enemies,...(boss?.alive?[boss]:[])])if(e.alive&&!vent.hitEnemies.has(e)&&Math.hypot(e.x-vent.x,e.z-vent.z)<vent.r){vent.hitEnemies.add(e);hurtEnemy(e,18);if(state!=='playing')return;}}vent.wasActive=active;}}
-function beginReturn(b){b.returning=true;b.hits.clear();b.pierce=b.maxPierce;b.life=3;}
+function beginReturn(b){sound.mechanism(b.kind);b.returning=true;b.hits.clear();b.pierce=b.maxPierce;b.life=3;}
 
 function dash(){if(state!=='playing'||player.dash>0)return;renderer.shadowMap.needsUpdate=true;const input=movement(),angle=Math.hypot(input.x,input.z)>.1?Math.atan2((input.x+input.z)*.7071,(input.z-input.x)*.7071):hero.rotation.y;player.dash=2.3/(1+.12*(player.upgrades.stride||0));player.inv=.32;player.dashTime=heroId==='scout'?SCOUT_ROLL_DURATION:.24;player.dashAngle=angle;heroSkills.onDodge(player.dashTime);if(heroId==='silver'||heroId==='wraith'){const ox=player.x,oz=player.z;for(let d=heroId==='wraith'?4.7:5.5;d>0;d-=.2){const x=ox+Math.sin(angle)*d,z=oz+Math.cos(angle)*d;if(clearAt(world,x,z,.45)){player.x=x;player.z=z;break;}}if(heroId==='wraith'){vfx.shadowStep(ox,oz,player.x,player.z);sound.spell('dark');}else{burst('dark',ox,oz,1.3);burst('dark',player.x,player.z,1.5);}}else vfx.dust(player.x,player.z,1);sound.dodge(heroId!=='scout');}
 function movement(){let x=(keys.has('d')||keys.has('arrowright')?1:0)-(keys.has('a')||keys.has('arrowleft')?1:0)+stick.x,z=(keys.has('s')||keys.has('arrowdown')?1:0)-(keys.has('w')||keys.has('arrowup')?1:0)+stick.z;const d=Math.hypot(x,z);if(d>1){x/=d;z/=d;}return{x,z};}
@@ -177,6 +178,7 @@ function update(dt){const rollStart=heroId==='scout'?player.dashTime:0;time+=dt;
  const difference=Math.atan2(Math.sin(desired-hero.rotation.y),Math.cos(desired-hero.rotation.y)),turn=T.MathUtils.clamp(difference*(1-Math.exp(-dt*14)),-12*dt,12*dt);
  hero.rotation.y+=turn;hero.position.set(player.x,0,player.z);
  Object.assign(hero.userData,{dashTime:player.dashTime,travelAngle,aimActive:aimInput.held||!!autoTarget||player.aimTime>0,aimAngle:aimInput.hasAim?aimInput.angle:player.aimTime>0?player.aimAngle:undefined,turnRate:turn/Math.max(dt,.001),reloadPhase:hero.userData.reloadDuration?1-player.attack/hero.userData.reloadDuration:1});
+ const cues=weaponCuePhases(player.weaponId,hero.userData.reloadDuration||1);while(hero.userData.shotSerial&&player.weaponCue<cues.length&&hero.userData.reloadPhase>=cues[player.weaponCue]){if(player.dashTime<=0)sound.mechanism(player.weaponId,player.weaponCue);player.weaponCue++;}
  hero.userData.shoot=Math.max(0,(hero.userData.shoot||0)-dt);animateActor(hero,time,actualSpeed,hero.userData.shoot,player.hurt);
  if(heroId==='silver'&&player.dashTime>0)hero.scale.setScalar(.65+.35*(1-player.dashTime/.24));else hero.scale.setScalar(1);
  const aimOffset=Math.abs(Math.atan2(Math.sin(aimInput.angle-hero.rotation.y),Math.cos(aimInput.angle-hero.rotation.y))),aligned=aimOffset<.26;
@@ -190,7 +192,7 @@ function update(dt){const rollStart=heroId==='scout'?player.dashTime:0;time+=dt;
  vfx.flight(b,dt);
  for(const e of targets()){if(!e.alive||b.hits.has(e.id??'boss')||b.life<=0||b.pierce<=0)continue;if(segmentDistance(e.x,e.z,ox,oz,b.x,b.z)<e.size+b.hitRadius){b.hits.add(e.id??'boss');const strong=b.kind==='crossbow'&&registerCrossbowHit(player,e.id??'boss',time);hurtEnemy(e,b.damage*(strong?1.35:1));heroSkills.onHit(e);inflictStatus(e,b);sound.impact(b.kind,strong);if(b.kind==='shuriken'||b.kind==='shadowblade')vfx.bladeImpact(e.x,e.z,Math.atan2(b.vx,b.vz),b.kind==='shadowblade');else if(b.kind==='rifle'||b.kind==='shotgun')impactChips(e.x,e.z,0xffdf97,2);if(b.kind==='crossbow'){vfx.boltImpact(e.x,e.z,strong);if(strong&&e.alive&&e!==boss){const d=Math.hypot(e.x-player.x,e.z-player.z)||1;moveActor(world,e,(e.x-player.x)/d*1.8,(e.z-player.z)/d*1.8,e.size*.6);e.mesh.position.set(e.x,0,e.z);e.stagger=Math.max(e.stagger||0,.3);e.hurt=.3;}}
  if(b.kind==='shade'){const marked=registerShadowHit(e,time);vfx.shadowMark(e.x,e.z,marked);if(marked){sound.spell('rift');hurtEnemy(e,b.markDamage);for(const other of targets())if(other!==e&&other.alive&&Math.hypot(other.x-e.x,other.z-e.z)<b.markRadius)hurtEnemy(other,b.markDamage*.5);}}
- if(['fire','dark'].includes(b.kind)){if(b.kind==='fire')vfx.fire(e.x,e.z,b.radius);else vfx.dark(e.x,e.z,b.radius);sound.spell(b.kind);if(b.gravity)addGravity(e.x,e.z,b.gravity);for(const other of targets())if(other!==e&&other.alive&&Math.hypot(other.x-e.x,other.z-e.z)<b.radius){hurtEnemy(other,b.damage*.65);inflictStatus(other,b);}}
+ if(['fire','dark'].includes(b.kind)){if(b.kind==='fire')vfx.fire(e.x,e.z,b.radius);else vfx.dark(e.x,e.z,b.radius);if(b.gravity)addGravity(e.x,e.z,b.gravity);for(const other of targets())if(other!==e&&other.alive&&Math.hypot(other.x-e.x,other.z-e.z)<b.radius){hurtEnemy(other,b.damage*.65);inflictStatus(other,b);}}
  if(b.bounces>0){const next=targets().filter(q=>q.alive&&!b.hits.has(q.id??'boss')&&Math.hypot(q.x-e.x,q.z-e.z)<7).sort((a,c)=>Math.hypot(a.x-e.x,a.z-e.z)-Math.hypot(c.x-e.x,c.z-e.z))[0];if(next){const a=Math.atan2(next.x-e.x,next.z-e.z);b.x=e.x;b.z=e.z;b.vx=Math.sin(a)*b.speed;b.vz=Math.cos(a)*b.speed;b.damage*=.75;b.bounces--;b.life=7/b.speed;b.mesh.position.set(b.x,1.15,b.z);break;}}
  b.pierce--;if(b.pierce<=0){if(b.returnable&&!b.returning)b.turnAt=0;else b.life=0;}
  }}

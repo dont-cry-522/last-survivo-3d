@@ -1,3 +1,4 @@
+import{weaponGesture,shotStarted}from'./weapon-performance.js?v=30';
 import * as T from './vendor/three.module.js';
 // Shared smooth geometry: detail is concentrated on the two heroes, not multiplied across the forest.
 const geometries=new Map(),materials=new Map();
@@ -95,12 +96,16 @@ export function animateHero(g,t,speed,attack){
   d.aimBlend=(d.aimBlend||0)+((attack>0?1:0)-(d.aimBlend||0))*(1-Math.exp(-dt*20));
   d.gait=(d.gait||0)+dt*11*Math.max(.25,d.runBlend);
   const run=d.runBlend,phase=d.gait,step=Math.sin(phase),aim=d.aimBlend;
+  const fired=shotStarted(d,attack,d.previousAttack||0);d.previousAttack=attack;d.attackAge=fired?0:(d.attackAge??2)+dt;const motion=weaponGesture(d.weaponId,d.attackAge,d.reloadPhase??1,d.reloadDuration||1);
   d.rig.position.y=.012*Math.sin(t*2.8)+Math.abs(step)*.045*run;d.rig.rotation.z=step*.025*run;
   for(const [side,sign]of [['left',1],['right',-1]]){const f=Math.sin(phase+(sign<0?Math.PI:0));d[side+'Leg'].rotation.x=f*.6*run;d[side+'Knee'].rotation.x=Math.max(0,-f)*.95*run+.06;}
   d.torso.rotation.x=.035+run*.08;d.torso.rotation.y=-step*.08*run;
   d.leftArm.rotation.x=-step*.36*run-.1;d.leftElbow.rotation.x=-.24-Math.max(0,step)*.3*run;
   const staff=['fire','dark'].includes(d.weaponId);d.rightArm.rotation.x=staff?-.12-aim*.3:-.4-aim*.32;d.rightElbow.rotation.x=staff?-.35:-.65-aim*.15;
   d.weapon.rotation.x=staff?.18:-(d.rightArm.rotation.x+d.rightElbow.rotation.x)-.12*(1-aim);
+  const k=motion.kick,s=motion.sweep;d.rig.position.z=-k*(d.weaponId==='shotgun'?.10:.035);
+  d.rightArm.rotation.y=d.weaponId==='shuriken'?-.7*s:d.weaponId==='dark'?.5*s:0;d.rightArm.rotation.x-=k*(staff?.45:.15);d.rightElbow.rotation.x-=k*(d.weaponId==='shuriken'?.4:.15);d.leftArm.rotation.x-=staff?.4*s:motion.draw*.3;
+  if(d.weapon.userData.pump)d.weapon.userData.pump.position.z=-.23*motion.draw;
   d.cape.rotation.x=.07+run*.34+Math.sin(t*5)*.045;d.cape.rotation.z=step*.045*run;
   if(d.pony){d.pony.rotation.x=-.1+run*.22+Math.sin(t*7)*.06;d.pony.rotation.z=step*.06*run;}
   if(d.scarf)d.scarf.rotation.x=run*.4+Math.sin(t*6)*.06;

@@ -1,3 +1,4 @@
+import{weaponGesture,shotStarted}from'./weapon-performance.js?v=30';
 import * as T from './vendor/three.module.js';
 import{shadowCrescentGeometry,shadowCrescentEdge}from'./shadow-weapons.js?v=18';
 
@@ -126,16 +127,16 @@ export function animateWraith(g,t,speed=0,attack=0,hurt=0){
  const blade=d.weaponId==='shadowblade',book=d.weaponId==='grimoire';
  const strokeDuration=book?.32:blade?.16:.20;
  d.recoil??={x:0,v:0};
- const fired=attack>(d.lastAttack||0)+.03;
+ const fired=shotStarted(d,attack,d.lastAttack||0);
  if(fired){d.strokeTime=0;d.recoil.v=Math.min(d.recoil.v+(blade?3.8:book?1.6:3.2),5);}else d.strokeTime=(d.strokeTime??2)+dt;d.lastAttack=attack;
- const recoil=spring(d.recoil,0,dt,18,9);
+ const recoil=spring(d.recoil,0,dt,18,9),motion=weaponGesture(d.weaponId,d.strokeTime,d.reloadPhase??1,d.reloadDuration||1);
  const stroke=T.MathUtils.smoothstep(d.strokeTime,0,strokeDuration),recovery=book?.28:blade?.30:.22;
  const gesture=Math.max(d.aimActive?.24:0,attack>0?1:1-T.MathUtils.smoothstep(d.strokeTime,strokeDuration,strokeDuration+recovery));d.cast=smooth(d.cast||0,gesture,22);const cast=d.cast;
  const acceleration=dt?T.MathUtils.clamp((speed-(d.previousSpeed??speed))/dt,-12,12):0;d.previousSpeed=speed;
  d.clothTrail??={x:.08,v:0};d.clothSide??={x:0,v:0};
  const drag=spring(d.clothTrail,T.MathUtils.clamp(.08+run*.8+acceleration*.025,.02,1.15),dt,8,4.5),sway=spring(d.clothSide,-d.turn*.8-d.side*run*.2,dt,7,3.5);
  d.rig.position.y=.012+(1-Math.cos(d.phase*2))*.009*run+Math.sin(t*2.2)*.004;d.hips.position.y=.73-run*.065;d.rig.rotation.x=-run*.06*d.forward-cast*(book?.015:.035)+recoil*.22-Math.min(1,hurt/.18)*.14;d.rig.rotation.z=-d.turn*.035-step*.023*run;d.rig.position.x=step*.013*run;
- d.hips.rotation.y=d.side*.10+step*.035*run;d.hips.rotation.z=.012*(1-run);d.torso.rotation.y=smooth(d.torso.rotation.y,-d.hips.rotation.y+(blade?cast*(.32-.55*stroke)+recoil*.55:-cast*.045-recoil*.18));d.head.rotation.y=-d.torso.rotation.y*.45-d.turn*.07;d.head.rotation.x=.035+Math.sin(t*1.8)*.008-cast*.03-recoil*.10;
+ d.hips.rotation.y=d.side*.10+step*.035*run;d.hips.rotation.z=.012*(1-run);d.torso.rotation.y=smooth(d.torso.rotation.y,-d.hips.rotation.y+(blade?cast*(.48-.86*stroke)+recoil*.7:-cast*.045-recoil*.18));d.head.rotation.y=-d.torso.rotation.y*.45-d.turn*.07;d.head.rotation.x=.035+Math.sin(t*1.8)*.008-cast*.03-recoil*.10;
  // A support phase and a lifted return replace rigid pendulum legs. Solve the
  // two leg links toward the ankle, then counter-rotate the boot to stay level.
  let leftReach=0,rightReach=0;
@@ -156,13 +157,17 @@ export function animateWraith(g,t,speed=0,attack=0,hurt=0){
  const leftBase=leftReach*1.3,rightBase=rightReach*1.3;
  d.leftArm.rotation.x=smooth(d.leftArm.rotation.x,book?-.55+leftBase*.10:leftBase*(1-cast)-cast*(blade?.25:.42));
  d.rightArm.rotation.x=smooth(d.rightArm.rotation.x,rightBase*(1-cast)-.10+recoil*(book?.4:.8)-cast*(blade?.40+.26*stroke:book?.52+.13*stroke:.92+.10*stroke));
- d.leftArm.rotation.z=.10+cast*.12;d.leftArm.rotation.y=smooth(d.leftArm.rotation.y,blade?-cast*.18:0);d.rightArm.rotation.z=smooth(d.rightArm.rotation.z,-.10-cast*(blade?.35+.25*stroke:.1));d.rightArm.rotation.y=smooth(d.rightArm.rotation.y,blade?cast*(.8-stroke)+recoil*.8:book?-cast*.22:-recoil*.25);
+ d.leftArm.rotation.z=.10+cast*.12;d.leftArm.rotation.y=smooth(d.leftArm.rotation.y,blade?-cast*.18:0);d.rightArm.rotation.z=smooth(d.rightArm.rotation.z,-.10-cast*(blade?.35+.25*stroke:.1));d.rightArm.rotation.y=smooth(d.rightArm.rotation.y,blade?cast*(1.02-1.48*stroke)+recoil*.8:book?-cast*.22+motion.sweep*.35:-recoil*.4);
  d.leftElbow.rotation.x=smooth(d.leftElbow.rotation.x,book?-.85:-.20-cast*.32);d.rightElbow.rotation.x=smooth(d.rightElbow.rotation.x,blade?-.25-cast*(.45-.38*stroke):book?-.36-cast*(.45-.18*stroke):-.36-cast*(.48-.60*stroke),20);
  d.leftHand.rotation.x=smooth(d.leftHand.rotation.x,book?-.1:-cast*.28);d.rightHand.rotation.x=smooth(d.rightHand.rotation.x,-.18+cast*(blade?.24:-.10)+recoil*(blade?1.4:.65));d.rightHand.rotation.y=smooth(d.rightHand.rotation.y,blade?cast*(.9-1.25*stroke):cast*.1);d.weapon.position.z=.06-cast*.025*(1-stroke)-recoil*.24;
+ // Give each focus a different release silhouette, blended on top of the running pose.
+ d.rightHand.rotation.z=blade?-motion.sweep*.7:book?motion.gather*.28:-motion.kick*.3;
+ d.leftHand.rotation.z=book?0:-motion.gather*.35;
+ d.weapon.scale.setScalar(blade?1-motion.kick*.55:1);
  d.weapon.rotation.x=book?d.weapon.rotation.x:recoil*(blade?-.65:.35);d.weapon.rotation.z=book?d.weapon.rotation.z:recoil*(blade?1.3:.18);
  if(d.book){
   d.leftHand.getWorldQuaternion(d.bookParentQ);d.bookEuler.set(-.10+Math.sin(t*2.5)*.015,g.rotation.y+.12,.025*Math.sin(t*2));d.bookLevelQ.setFromEuler(d.bookEuler);d.book.quaternion.copy(d.bookParentQ).invert().multiply(d.bookLevelQ);
-  d.book.position.y=-.025+Math.sin(t*2.5)*.018+cast*.035;d.page.rotation.z=Math.sin(t*2.4)*.10-Math.sin(stroke*Math.PI)*cast*.95+recoil*.6;d.page.position.y=.075+Math.sin(stroke*Math.PI)*cast*.025;
+  d.book.position.y=-.025+Math.sin(t*2.5)*.018+cast*.035;d.page.rotation.z=Math.sin(t*2.4)*.10-motion.sweep*1.8+recoil*.6;d.page.position.y=.075+Math.sin(stroke*Math.PI)*cast*.025;
  }
  d.cape.rotation.x=.025+drag*.09+recoil*.12;d.cape.rotation.z=sway*.10+recoil*(blade?.18:.04);d.cape.rotation.y=-d.turn*.035;
  d.clothPhase=(d.clothPhase||0)+dt*(4+run*5);
