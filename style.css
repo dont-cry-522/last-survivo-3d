@@ -64,3 +64,7 @@ body.touch #skills{max-width:calc(100vw - 325px)}body.touch #skills .skill-chip{
 #orientation-help button{display:block;margin:10px 0 0 auto;padding:7px 12px;font-size:12px}
 body.touch header{top:max(10px,env(safe-area-inset-top));left:max(14px,env(safe-area-inset-left));right:max(14px,env(safe-area-inset-right))}
 @media(max-width:480px){body.touch header .brand{display:none}body.touch .top-actions{width:100%;justify-content:space-between;gap:4px}body.touch #landscape{padding:9px 8px}}
+
+#battle-phase{display:block;color:#c5e6bb;font-size:12px;font-weight:600;margin-bottom:3px}#battle-phase[data-mode="warning"],#battle-phase[data-mode="assault"]{color:#ffcd88}#battle-phase[data-mode="rest"]{color:#a8f0dc}#objective-detail{display:block;font-size:11px;opacity:.85}body.touch #battle-phase{font-size:10px}body.touch #objective-detail{font-size:9px}
+
+@media(max-width:560px) and (orientation:portrait){body.touch.playing #toast{top:160px;width:max-content;max-width:calc(100vw - 28px);padding:8px 10px;font-size:11px;line-height:1.4}body.touch #encounter{top:204px}body.touch #objective{left:14px;bottom:207px;transform:none;width:calc(100vw - 130px);max-width:none}}
