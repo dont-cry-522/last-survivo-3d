@@ -4,7 +4,7 @@ const url=process.env.TEST_URL||'http://127.0.0.1:8897/';
 (async()=>{
  const browser=await chromium.launch({executablePath:process.env.BROWSER_EXECUTABLE||'C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe',headless:true});
  try{
-  for(const viewport of [{width:1280,height:800,touch:false},{width:844,height:390,touch:true},{width:390,height:844,touch:true}]){
+  for(const viewport of [{width:1280,height:800,touch:false},{width:844,height:390,touch:true},{width:390,height:844,touch:true},{width:320,height:568,touch:true}]){
    const page=await browser.newPage({viewport,hasTouch:viewport.touch}),errors=[];
    page.on('pageerror',e=>errors.push(e.message));
    await page.addInitScript(()=>{const raf=requestAnimationFrame;window.requestAnimationFrame=cb=>raf(t=>{if(!window.freezeGame)cb(t);});});

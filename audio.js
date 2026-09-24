@@ -99,10 +99,11 @@ export class GameAudio{
   level(){if(!this.allow('level',.35))return;[523.25,659.25,783.99,1046.5].forEach((f,i)=>this.voice(f,.5,.075,'triangle',null,this.ctx.currentTime+i*.085));}
   resolve(){if(!this.allow('resolve',2))return;[293.66,369.99,440].forEach((f,i)=>this.voice(f,.65,.055,'triangle',null,this.ctx.currentTime+i*.12,'music',.025));}
   update(dt,{map='forest',mode='playing',boss=false,pressure=0}={}){
-    this.mode=mode;this.map=map;if(!this.available())return;
+    this.mode=mode;this.map=map;if(!this.ready)return;
     const c=this.ctx,paused=mode==='paused'||mode==='lost'||mode==='won';
     this.music.gain.setTargetAtTime(paused?0:this.musicVolume*(mode==='upgrade'?.3:mode==='menu'?.6:1),c.currentTime,.2);
     if(paused){this.next=c.currentTime+.05;return;}
+    if(!this.available())return;
     this.pressure+=(Math.max(boss?1:0,pressure)-this.pressure)*Math.min(1,dt*(pressure>this.pressure?.8:.45));
     const theme=THEMES[map],step=60/(theme.bpm+this.pressure*18)/2;
     // Schedule against the audio clock, with a bounded lookahead; no frame-rate jitter or catch-up burst.

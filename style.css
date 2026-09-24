@@ -68,3 +68,6 @@ body.touch header{top:max(10px,env(safe-area-inset-top));left:max(14px,env(safe-
 #battle-phase{display:block;color:#c5e6bb;font-size:12px;font-weight:600;margin-bottom:3px}#battle-phase[data-mode="warning"],#battle-phase[data-mode="assault"]{color:#ffcd88}#battle-phase[data-mode="rest"]{color:#a8f0dc}#objective-detail{display:block;font-size:11px;opacity:.85}body.touch #battle-phase{font-size:10px}body.touch #objective-detail{font-size:9px}
 
 @media(max-width:560px) and (orientation:portrait){body.touch.playing #toast{top:160px;width:max-content;max-width:calc(100vw - 28px);padding:8px 10px;font-size:11px;line-height:1.4}body.touch #encounter{top:204px}body.touch #objective{left:14px;bottom:207px;transform:none;width:calc(100vw - 130px);max-width:none}}
+
+/* Keep three independent thumb controls on narrow portrait phones. */
+@media(max-width:359px){body.touch #joystick,body.touch #aim-stick{width:96px;height:96px}body.touch #joystick{left:max(16px,env(safe-area-inset-left))}body.touch #aim-stick{right:max(16px,env(safe-area-inset-right))}body.touch #joystick i,body.touch #aim-stick i{width:34px;height:34px;left:calc(50% - 17px);top:calc(50% - 17px)}body.touch #dash{width:54px;height:54px;padding:0;white-space:nowrap;right:calc(50% - 27px)}}

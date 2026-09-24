@@ -11,7 +11,7 @@ import{renderPixelRatio,RenderBudget}from'./render-budget.js?v=21';
 import{groundCue,disposeCue}from'./ground-cues.js?v=19';
 import{SkillVFX}from'./skill-vfx.js?v=26';
 import{loadHeroAssets,disposeHero}from'./skinned-hero.js?v=30';
-import{GameAudio}from'./audio.js?v=33';
+import{GameAudio}from'./audio.js?v=34';
 import{ENEMY_GUIDE,CIRCLE_GUIDE}from'./battle-guide.js?v=28';
 import * as T from './vendor/three.module.js';
 import{MAPS,WEAPONS,ENEMIES,weaponFor,experienceNeeded,grantExperience,chooseUpgrades,takeUpgrade,weaponStats,weaponReachText,WEAPON_PATHS,segmentDistance,registerCrossbowHit,registerShadowHit,UPGRADES}from'./rules.js?v=33';
