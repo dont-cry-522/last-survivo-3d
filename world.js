@@ -40,23 +40,25 @@ export function animateActor(g,t,speed=0,attack=0,hurt=0){
  d.phase=(d.phase||0)+dt*frequency*(.45+Math.min(speed,8)*.16);const phase=d.phase,rig=d.rig;
  if(attack>0&&!(d.previousAttack>0))d.attackLength=attack;
  const wind=attack>0?1-T.MathUtils.clamp(attack/(d.attackLength||.6),0,1):0,pounce=d.pounce||0;
+ if((d.previousPounce||0)>0&&pounce<=0)d.landing=.18;d.previousPounce=pounce;
+ d.landing=Math.max(0,(d.landing||0)-dt);
  if(attack<=0&&d.previousAttack>0)d.release=.2;d.previousAttack=attack;
  d.release=Math.max(0,(d.release||0)-dt);const strike=Math.sin(Math.PI*(1-d.release/.2));
- const impact=Math.sin(Math.PI*T.MathUtils.clamp(hurt/.12,0,1));
+ const impact=Math.sin(Math.PI*T.MathUtils.clamp(hurt/.12,0,1)),brace=Math.sin(Math.PI*wind),landing=Math.sin(Math.PI*(1-d.landing/.18));
  rig.scale.set(1,1,1);rig.position.set(0,0,-impact*.13);rig.rotation.set(-wind*.16+strike*.20-impact*.18,0,0);
  if(d.kind==='mushroom'){
-  const bounce=Math.max(0,Math.sin(phase))*stride;rig.position.y=bounce*.19+Math.sin((1-pounce)*Math.PI)*.4*(pounce>0);
+  const bounce=Math.max(0,Math.sin(phase))*stride;rig.position.y=bounce*.19-brace*.14-landing*.09+Math.sin((1-pounce)*Math.PI)*.4*(pounce>0);
   const squash=Math.sin(phase)*.075*stride-wind*.22+Math.sin((1-pounce)*Math.PI)*.12*(pounce>0)-impact*.14;rig.scale.set(1-squash*.5,1+squash,1-squash*.5);rig.rotation.z=Math.sin(phase*.5)*.08*stride;d.cap.rotation.x=wind*.18-pounce*.2;
  }else if(d.kind==='wolf'){
-  rig.position.y=Math.abs(Math.sin(phase))*.065*stride+Math.sin((1-pounce)*Math.PI)*.26*(pounce>0);rig.rotation.x+=Math.sin(phase*2)*.035*stride+wind*.18-pounce*.22;d.head.rotation.x=wind*.25-pounce*.24;d.tail.rotation.y=Math.sin(phase*.7)*(.16+.32*stride);d.tail.rotation.x=-wind*.3+pounce*.26;d.jaw.position.y=-.21-wind*.08-pounce*.035;
+  rig.position.y=Math.abs(Math.sin(phase))*.065*stride-brace*.15-landing*.1+Math.sin((1-pounce)*Math.PI)*.26*(pounce>0);rig.rotation.x+=Math.sin(phase*2)*.035*stride+wind*.18-pounce*.22+landing*.13;d.head.rotation.x=wind*.25-pounce*.24+landing*.12;d.tail.rotation.y=Math.sin(phase*.7)*(.16+.32*stride);d.tail.rotation.x=-wind*.3+pounce*.26;d.jaw.position.y=-.21-wind*.08-pounce*.035;
   for(const leg of d.legs)leg.joint.rotation.x=Math.sin(phase+leg.phase)*.62*stride-wind*.35+pounce*.65*(leg.joint.position.z>0?1:-1);
  }else if(heavy){
-  rig.position.y=Math.abs(Math.sin(phase))*.045*stride;rig.rotation.z=Math.sin(phase)*.055*stride;
+  rig.position.y=Math.abs(Math.sin(phase))*.045*stride-brace*.17;rig.rotation.z=Math.sin(phase)*.055*stride;
   for(const leg of d.legs)leg.joint.rotation.x=Math.sin(phase+leg.phase)*.32*stride;
   d.arms.forEach((arm,i)=>{arm.rotation.x=Math.sin(phase+i*Math.PI)*.26*stride-wind*1.05+strike*.9;arm.rotation.z=(i?-.1:.1)*wind;});
  }else{
-  rig.position.y=.09+Math.sin(t*2.5)*.055;rig.rotation.z=Math.sin(t*2)*.025;rig.rotation.x+=Math.sin(phase)*.035*stride;
-  const breathe=1+Math.sin(t*3)*.015;rig.scale.set(breathe,1,breathe);if(d.staff){d.staff.rotation.x=-wind*(d.attackMode==='heal'?.65:1.1)+strike*.28;d.staff.position.y=.76+wind*.23;d.focus.scale.setScalar(1+wind*.65);}
+  rig.position.y=.09+Math.sin(t*2.5)*.055+Math.abs(Math.sin(phase))*.07*stride-brace*.1;rig.rotation.z=Math.sin(t*2)*.025+Math.sin(phase)*.09*stride;rig.rotation.x+=Math.sin(phase)*.035*stride-wind*.1+strike*.17;
+  const breathe=1+Math.sin(t*3)*.015;rig.scale.set(breathe,1-brace*.04,breathe);if(d.staff){d.staff.rotation.x=-wind*(d.attackMode==='heal'?.65:1.1)+strike*.28;d.staff.rotation.z=Math.sin(phase+1)*.09*stride;d.staff.position.y=.76+wind*.23;d.focus.scale.setScalar(1+wind*.65);}
  }
  g.visible=true;
 }
