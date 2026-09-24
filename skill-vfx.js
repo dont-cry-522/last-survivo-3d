@@ -1,4 +1,5 @@
 import * as T from './vendor/three.module.js';
+import{shadowCrescentGeometry}from'./shadow-weapons.js?v=18';
 
 function flameTexture(){
  if(typeof document==='undefined')return null;
@@ -81,6 +82,13 @@ export class SkillVFX{
   for(const [x,z]of [[ax,az],[bx,bz]]){this.particle('veil',0x342354,x,.08,z,{life:.32,size:[1.25,1.25,1],opacity:.55,additive:false});for(let i=0;i<5;i++){const a=i*Math.PI*2/5;this.particle('crystal',0xae8bff,x,.4,z,{life:.28,size:[.055,.28,.055],velocity:[Math.cos(a)*2,1.2,Math.sin(a)*2],gravity:4});}}
   this.segment(new T.Vector3(ax,.8,az),new T.Vector3(bx,.8,bz),0x6e4aab,.09,.18,true);
  }
+ riftCast(x,z,r,angle,release=false){
+  const axis=new T.Vector3(Math.cos(angle),0,-Math.sin(angle)),center=new T.Vector3(x,.08,z);
+  this.segment(center.clone().addScaledVector(axis,-r*.75),center.clone().addScaledVector(axis,r*.75),release?0xbb9ef4:0x71569c,release?.14:.045,release?.4:.28,true,1);
+  if(!release)return;
+  this.particle('veil',0x312347,x,.06,z,{life:.5,size:[r,r*.58,1],opacity:.58,additive:false});
+  for(let i=-2;i<=2;i++){const off=i*r*.28,px=x+axis.x*off,pz=z+axis.z*off;this.particle('crystal',i%2?0x61427c:0x9d83c9,px,.3,pz,{life:.38,size:[.18,.65-Math.abs(i)*.13,.14],velocity:[0,.65,0],grow:true,additive:false,priority:1});this.particle('ember',0xc4b1ec,px,.2,pz,{life:.4,size:[.04,.07,.04],velocity:[0,2,0]});}
+ }
  shadowMark(x,z,strong=false){
   this.particle('ember',strong?0xd4b1ff:0x8e68d4,x,1,z,{life:strong?.38:.18,size:strong?[.4,.4,.4]:[.14,.14,.14],grow:true,opacity:.7});
   if(strong)for(let i=0;i<8;i++){const a=i*Math.PI/4;this.particle('crystal',i%2?0x9a71ef:0xe0c9ff,x,1,z,{life:.35,size:[.065,.25,.065],velocity:[Math.sin(a)*3,1.4,Math.cos(a)*3],gravity:4,spin:5});}
@@ -103,8 +111,8 @@ export class SkillVFX{
  projectile(w){
   const g=new T.Group(),part=(shape,color,scale,z=0)=>{if(!this.materials.has(color))this.materials.set(color,new T.MeshBasicMaterial({color}));const m=new T.Mesh(this.geometry[shape],this.materials.get(color));m.scale.set(...scale);m.position.z=z;g.add(m);return m;};
   if(w.id==='fire'){part('ember',0xffc05c,[.19,.19,.29]);part('crystal',0xff5b23,[.12,.35,.12],-.3).rotation.x=Math.PI/2;}
-  else if(w.id==='shade'){part('ember',0x543477,[.19,.19,.19]);part('crystal',0xc9aaff,[.11,.18,.11]);for(let i=0;i<3;i++){const m=part('ray',0x8e6bd8,[.025,.025,.33]);m.rotation.y=i*Math.PI/3;}}
-  else if(w.id==='shadowblade'){for(let i=0;i<4;i++){const m=part('crystal',0xa385e9,[.095,.18,.06]);m.rotation.x=Math.PI/2;m.rotation.y=i*Math.PI/2;}part('ember',0x3d285e,[.075,.075,.075]);}
+  else if(w.id==='shade'){part('ember',0x29223e,[.10,.11,.22]);for(const s of [-1,0,1]){const m=part('ray',s===0?0x86dcef:0x7965b0,[.025,.045,.52-Math.abs(s)*.1]);m.position.x=s*.085;m.rotation.y=s*.18;}}
+  else if(w.id==='shadowblade'){const blade=part('ember',0x9c83d2,[1,1,1]);blade.geometry=shadowCrescentGeometry;blade.rotation.x=Math.PI/2;}
   else if(w.id==='dark'){part('ember',0x543477,[.2,.2,.25]);part('crystal',0xd2adff,[.10,.25,.1]).rotation.x=Math.PI/2;for(const s of[-1,1]){const m=part('ember',0xab80ec,[.055,.055,.1],-.2);m.position.x=s*.23;}}
   else if(w.id==='shuriken'){for(let i=0;i<3;i++){const m=part('ray',0xa8f5e4,[.07,.045,.65]);m.rotation.y=i*Math.PI/3;}part('ember',0xe1fff3,[.07,.035,.07]);}
   else if(w.id==='crossbow'){part('ray',0x435363,[.035,.035,.66]);part('crystal',0xd9f1ff,[.072,.16,.072],.38).rotation.x=Math.PI/2;for(const s of[-1,1]){const feather=part('ray',0xa8cee5,[.13,.015,.14],-.27);feather.position.x=s*.10;feather.rotation.y=s*.38;}}

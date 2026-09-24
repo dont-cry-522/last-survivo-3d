@@ -1,4 +1,5 @@
 import * as T from './vendor/three.module.js';
+import{shadowCrescentGeometry,shadowCrescentEdge}from'./shadow-weapons.js?v=18';
 
 // Continuous cloth surfaces share geometry; each actor owns its pose and morph weights.
 const geometry=new Map(),materials=new Map();
@@ -25,8 +26,8 @@ function hoodGeometry(){return cached('hollow-hood',()=>{
 function mantleGeometry(){return cached('draped-mantle',()=>{
  const vertices=[],indices=[],rings=7,slices=32;
  for(let j=0;j<=rings;j++)for(let i=0;i<=slices;i++){
-  const v=j/rings,a=i/slices*Math.PI*2,front=Math.cos(a),side=Math.sin(a),radius=.103+v*.285;
-  const edge=.53-.09*Math.max(0,front)**4+.035*Math.abs(side),y=.73+(edge-.73)*v+.008*Math.cos(a*5)*v;
+  const v=j/rings,a=i/slices*Math.PI*2,front=Math.cos(a),side=Math.sin(a),radius=.13+v*.295;
+  const edge=.44-.075*Math.max(0,front)**4+.035*Math.abs(side),y=.61+(edge-.61)*v+.008*Math.cos(a*5)*v;
   vertices.push(side*radius,y,front*radius*.68-.012);
   if(i<slices&&j<rings){const n=j*(slices+1)+i;indices.push(n,n+1,n+slices+1,n+1,n+slices+2,n+slices+1);}
  }
@@ -45,57 +46,58 @@ function clothGeometry(width,length,front=false){return cached(`cloth:${width}:$
 function cloth(p,d,color,width,length,pos,front=false){const m=mesh(p,clothGeometry(width,length,front),color,pos);d.panels.push(m);return m;}
 
 function hand(parent,d,side){
- const wrist=joint(parent,0,-.27,0);d[side+'Hand']=wrist;
- ell(wrist,C.lining,[0,-.045,.015],[.047,.07,.038]);
+ const wrist=joint(parent,0,-.21,0);d[side+'Hand']=wrist;
+ ell(wrist,C.lining,[0,-.045,.015],[.057,.063,.045]);
  for(let i=0;i<4;i++){const f=ell(wrist,C.armor,[(i-1.5)*.021,-.103,.027],[.010,.033-(i===3?.009:0),.014]);f.rotation.x=-.25;}
  ell(wrist,C.armor,[-.047,-.046,.036],[.017,.034,.019]).rotation.z=-.5;return wrist;
 }
 
 export function makeWraith(weapon='shade'){
- const g=new T.Group(),rig=joint(g,0,0,0),hips=joint(rig,0,1,0),torso=joint(hips,0,0,0),d=g.userData;rig.scale.setScalar(.88);
+ const g=new T.Group(),rig=joint(g,0,0,0),hips=joint(rig,0,.73,0),torso=joint(hips,0,0,0),d=g.userData;rig.scale.setScalar(.88);
  Object.assign(d,{wraith:true,kind:'wraith',weaponId:weapon,rig,hips,torso,panels:[]});
- // Fitted torso, mantle and coat tails form one silhouette rather than stacked blocks.
- shape(torso,C.robe,[[.23,-.04],[.24,.05],[.22,.20],[.265,.41],[.285,.58],[.245,.64]],[0,0,0],.76);
- shape(torso,C.lining,[[.095,.61],[.08,.85]],[0,0,0],.8);
+ // Chibi proportions: a broad rounded body and short articulated limbs below the large hood.
+ shape(torso,C.robe,[[.27,-.04],[.295,.05],[.325,.19],[.33,.34],[.315,.48],[.265,.56]],[0,0,0],.80);
+ shape(torso,C.lining,[[.13,.51],[.11,.74]],[0,0,0],.85);
  mesh(torso,mantleGeometry(),C.robe);
- shape(torso,C.armor,[[.228,0],[.244,.025],[.23,.072],[.226,.08]],[0,.015,0],.82);
+ shape(torso,C.armor,[[.282,0],[.304,.025],[.301,.072],[.293,.08]],[0,.015,0],.83);
  for(const s of [-1,1]){
-  curve(torso,C.trim,[[s*.19,.51,.211],[s*.165,.38,.219],[s*.14,.20,.220]],.006);
+  curve(torso,C.trim,[[s*.22,.42,.239],[s*.20,.31,.260],[s*.18,.16,.252]],.006);
  }
- const chest=cached('chest-panel',()=>{const v=[],ix=[],n=8;for(let y=0;y<=n;y++)for(let x=0;x<=n;x++){const h=y/n,px=(x/n-.5)*(.36+h*.15);v.push(px,.18+h*.34,.224-px*px*.9);if(x<n&&y<n){const a=y*(n+1)+x;ix.push(a,a+1,a+n+1,a+1,a+n+2,a+n+1);}}return surface(v,ix);});mesh(torso,chest,C.armor);
- for(const y of [.27,.35,.43])curve(torso,C.fold,[[-.185,y,.201],[0,y-.008,.233],[.185,y,.201]],.007);
- curve(torso,C.lining,[[-.25,.57,.18],[-.14,.40,.245],[.015,.22,.23],[.185,.05,.2]],.028);
- ell(torso,C.trim,[.025,.02,.205],[.038,.034,.012]);ell(torso,C.light,[.025,.02,.221],[.014,.018,.004],true);
- const cape=joint(torso,0,.58,-.13);d.cape=cape;
- for(const s of [-1,1]){const panel=cloth(cape,d,s<0?C.robe:C.hood,.45,s<0?1.07:1.14,[s*.19,0,-.05]);panel.rotation.y=s*-.19;panel.rotation.z=s*.045;}
- for(const s of [-1,1]){const coat=cloth(torso,d,C.robe,.28,.54,[s*.14,-.01,.19],true);coat.rotation.y=s*.3;coat.rotation.z=s*-.1;}
+ const chest=cached('chest-panel',()=>{const v=[],ix=[],n=8;for(let y=0;y<=n;y++)for(let x=0;x<=n;x++){const h=y/n,px=(x/n-.5)*(.44+h*.12);v.push(px,.15+h*.29,.29-px*px*.95);if(x<n&&y<n){const a=y*(n+1)+x;ix.push(a,a+1,a+n+1,a+1,a+n+2,a+n+1);}}return surface(v,ix);});mesh(torso,chest,C.armor);
+ for(const y of [.22,.29,.36])curve(torso,C.fold,[[-.21,y,.255],[0,y-.008,.298],[.21,y,.255]],.007);
+ curve(torso,C.lining,[[-.28,.47,.205],[-.16,.34,.280],[.015,.20,.308],[.215,.05,.238]],.032);
+ ell(torso,C.trim,[.025,.025,.260],[.045,.038,.012]);ell(torso,C.light,[.025,.025,.276],[.017,.020,.004],true);
+ const cape=joint(torso,0,.48,-.16);d.cape=cape;
+ for(const s of [-1,1]){const panel=cloth(cape,d,s<0?C.robe:C.hood,.49,s<0?.80:.85,[s*.215,0,-.05]);panel.rotation.y=s*-.19;panel.rotation.z=s*.045;}
+ for(const s of [-1,1]){const coat=cloth(torso,d,C.robe,.33,.34,[s*.17,-.01,.235],true);coat.rotation.y=s*.3;coat.rotation.z=s*-.1;}
  // Recessed face, hollow hood and three cold light slits are visible from the game camera.
- const head=joint(torso,0,.87,0);head.scale.setScalar(.70);d.head=head;mesh(head,hoodGeometry(),C.hood);
+ const head=joint(torso,0,.76,0);head.scale.set(1.08,.98,1.0);d.head=head;mesh(head,hoodGeometry(),C.hood);
  ell(head,C.void,[0,-.015,.045],[.172,.208,.105]);
  const rim=[];for(let i=0;i<=24;i++){const a=i/24*Math.PI*2,sy=Math.sin(a);rim.push([Math.cos(a)*.224*(sy<0?.85*(1+sy*.18):1),sy*.24+(sy>0?Math.pow(sy,6)*.036:0),.18+sy*.045]);}curve(head,C.fold,rim,.012);
  for(const x of [-.071,0,.071])curve(head,C.light,[[x,.105,.170],[x*.88,.021,.18],[x*.81,-.075,.166],[x*.55,-.135,.135]],x===0?.0085:.0075,true);
  for(const s of [-1,1]){
-  const side=s<0?'left':'right',leg=joint(hips,s*.133,-.05,0);d[side+'Leg']=leg;ell(leg,C.lining,[0,-.21,0],[.09,.235,.095]);
-  const knee=joint(leg,0,-.43,0);d[side+'Knee']=knee;ell(knee,C.armor,[0,-.005,.073],[.078,.085,.03]);
-  shape(knee,C.fold,[[.075,-.43],[.079,-.31],[.066,-.11],[.075,-.025]],[0,0,0],1);curve(knee,C.trim,[[0,-.08,.081],[0,-.26,.088],[0,-.37,.085]],.005);
-  const foot=joint(knee,0,-.43,.02);d[side+'Foot']=foot;ell(foot,C.lining,[0,-.033,.058],[.083,.057,.145]);
-  const arm=joint(torso,s*.308,.56,0);d[side+'Arm']=arm;ell(arm,C.robe,[s*.01,-.14,0],[.085,.17,.094]);
-  const shoulder=ell(arm,C.armor,[s*.015,-.015,-.01],[.104,.045,.10]);shoulder.rotation.z=s*.16;
-  const elbow=joint(arm,0,-.30,0);d[side+'Elbow']=elbow;ell(elbow,C.lining,[0,-.13,0],[.058,.15,.065]);
-  shape(elbow,C.armor,[[.054,-.25],[.069,-.20],[.063,-.09],[.054,-.055]],[0,0,0],1.08);
-  for(const y of [-.20,-.105])curve(elbow,C.trim,[[-.051,y,.056],[0,y,.084],[.051,y,.056]],.005);hand(elbow,d,side);
+  const side=s<0?'left':'right',leg=joint(hips,s*.16,-.04,0);d[side+'Leg']=leg;ell(leg,C.lining,[0,-.145,0],[.11,.17,.115]);
+  const knee=joint(leg,0,-.29,0);d[side+'Knee']=knee;ell(knee,C.armor,[0,-.005,.087],[.09,.075,.03]);
+  shape(knee,C.fold,[[.093,-.31],[.100,-.23],[.086,-.08],[.092,-.025]],[0,0,0],1);curve(knee,C.trim,[[0,-.065,.101],[0,-.17,.11],[0,-.26,.108]],.005);
+  const foot=joint(knee,0,-.31,.02);d[side+'Foot']=foot;ell(foot,C.lining,[0,-.033,.066],[.107,.067,.164]);
+  const arm=joint(torso,s*.34,.47,0);d[side+'Arm']=arm;ell(arm,C.robe,[s*.01,-.11,0],[.108,.14,.112]);
+  const shoulder=ell(arm,C.armor,[s*.015,-.015,-.01],[.117,.05,.11]);shoulder.rotation.z=s*.16;
+  const elbow=joint(arm,0,-.235,0);d[side+'Elbow']=elbow;ell(elbow,C.lining,[0,-.10,0],[.069,.12,.077]);
+  shape(elbow,C.armor,[[.065,-.20],[.080,-.15],[.075,-.07],[.062,-.03]],[0,0,0],1.08);
+  for(const y of [-.15,-.07])curve(elbow,C.trim,[[-.058,y,.065],[0,y,.098],[.058,y,.065]],.005);hand(elbow,d,side);
  }
- const w=joint(d.rightHand,0,-.045,.04);d.weapon=w;
+ const w=joint(weapon==='grimoire'?d.leftHand:d.rightHand,0,-.035,.06);d.weapon=w;
  if(weapon==='shadowblade'){
-  const ring=mesh(w,cached('blade-ring',()=>new T.TorusGeometry(.105,.012,6,24)),C.trim,[0,0,.13]);ring.rotation.x=Math.PI/2;
-  for(let i=0;i<3;i++){const a=i*Math.PI*2/3,blade=mesh(w,cached('blade',()=>new T.ConeGeometry(.045,.22,3)),C.light,[Math.sin(a)*.15,0,.13+Math.cos(a)*.15],[1,1,.28],true);blade.rotation.set(Math.PI/2,a,0);}
- }else if(weapon==='dark'){
-  shape(w,C.fold,[[.025,-.28],[.032,.19],[.024,.6]],[0,0,.065],1);
-  for(const s of [-1,1])curve(w,C.trim,[[s*.02,.45,.065],[s*.12,.63,.065],[s*.085,.78,.065]],.021);
-  d.focus=ell(w,C.light,[0,.66,.065],[.064,.105,.064],true);
+  mesh(w,shadowCrescentGeometry,0x667297,[0,-.01,.11]).rotation.x=Math.PI/2;
+  curve(w,C.light,shadowCrescentEdge.map(p=>[p.x,.008,.11+p.y]),.007,true);
+ }else if(weapon==='grimoire'){
+  d.book=w;const box=cached('book-unit',()=>new T.BoxGeometry(1,1,1));
+  for(const s of [-1,1]){const leaf=joint(w,0,.04,.11);leaf.rotation.z=s*.18;mesh(leaf,box,C.fold,[s*.10,0,0],[.20,.035,.26]);mesh(leaf,box,0xa1a8b5,[s*.095,.025,0],[.18,.019,.235]);for(const z of [-.065,0,.065])curve(leaf,C.light,[[s*.035,.038,z],[s*.085,.042,z+.02],[s*.155,.038,z]],.004,true);}
+  d.page=mesh(w,box,0xc0c7d3,[0,.075,.11],[.165,.006,.23]);d.page.position.x=.08;
+  curve(w,C.light,[[-.18,.035,-.035],[0,.06,-.048],[.18,.035,-.035]],.008,true);
  }else{
-  d.focus=ell(w,0x181f3b,[0,.045,.17],[.085,.085,.085]);
-  curve(w,C.light,[[-.07,.10,.17],[-.04,.115,.21],[.015,.08,.252],[.06,.022,.22]],.006,true);
+  d.focus=ell(w,0x181f3b,[0,.045,.17],[.048,.048,.048]);
+  for(const s of [-1,0,1])curve(w,C.light,[[s*.075,.045,.11],[s*.1,.095,.19],[s*.06,.055,.285]],.006,true);
   for(let i=0;i<3;i++){const mote=ell(w,C.light,[Math.cos(i*2.1)*.15,.045+Math.sin(i*2.1)*.11,.17],[.012,.012,.012],true);(d.motes??=[]).push(mote);}
  }
  // Preserve each focus's authored size when breathing or casting.
@@ -107,15 +109,23 @@ export function animateWraith(g,t,speed=0,attack=0,hurt=0){
  const d=g.userData,dt=d.lastTime===undefined?1/60:Math.max(0,Math.min(.05,t-d.lastTime));d.lastTime=t;
  const smooth=(a,b,k=12)=>a+(b-a)*(1-Math.exp(-dt*k));
  d.move=smooth(d.move||0,Math.min(1,speed/6));d.cast=smooth(d.cast||0,attack>0?1:0,18);d.turn=smooth(d.turn||0,T.MathUtils.clamp((d.turnRate||0)/9,-1,1),6);
- d.phase=(d.phase||0)+dt*(2+speed*1.6);const step=Math.sin(d.phase),run=d.move,cast=d.cast;
- const travel=Number.isFinite(d.travelAngle)?Math.atan2(Math.sin(d.travelAngle-g.rotation.y),Math.cos(d.travelAngle-g.rotation.y)):0;d.travel=smooth(d.travel||0,T.MathUtils.clamp(travel,-.65,.65));
- d.rig.position.y=.012+Math.abs(step)*.022*run+Math.sin(t*2.2)*.006;d.rig.rotation.x=-run*.045-Math.min(1,hurt/.18)*.14;d.rig.rotation.z=-d.turn*.035;
- d.hips.rotation.y=d.travel+step*.035*run;d.hips.rotation.z=.012*(1-run);d.torso.rotation.y=-d.travel*.65-step*.025*run;d.head.rotation.y=-d.torso.rotation.y*.3-d.turn*.07;d.head.rotation.x=.035+Math.sin(t*1.8)*.008-cast*.03;
- for(const [side,sign]of [['left',1],['right',-1]]){const stride=step*sign,knee=Math.max(0,-stride)*.63*run;d[side+'Leg'].rotation.x=stride*.55*run;d[side+'Leg'].rotation.z=sign*.025*(1-run);d[side+'Knee'].rotation.x=knee;d[side+'Foot'].rotation.x=-knee*.4-Math.max(0,stride)*.14*run;}
- const blade=d.weaponId==='shadowblade',staff=d.weaponId==='dark';
- d.leftArm.rotation.x=smooth(d.leftArm.rotation.x,-step*.34*run-cast*.22);d.rightArm.rotation.x=smooth(d.rightArm.rotation.x,step*.25*run-(staff?.12:.10)-cast*(blade?.45:staff?.65:.50));
- d.leftArm.rotation.z=.06+cast*.13;d.rightArm.rotation.z=-.07-cast*(blade?.52:.1);d.leftElbow.rotation.x=-.16-Math.max(0,step)*.2*run-cast*.18;d.rightElbow.rotation.x=-(staff?.18:.52)-cast*(blade?.36:staff?.28:.42);
- d.rightHand.rotation.x=staff?0:-.17;d.rightHand.rotation.y=blade?cast*.8:cast*.12;d.cape.rotation.x=-.055-run*.07;d.cape.rotation.z=-d.turn*.06;
+ d.phase=(d.phase||0)+dt*(5+speed*1.05)*Math.max(.12,d.move);const step=Math.sin(d.phase),run=d.move,cast=d.cast;
+ const travel=Number.isFinite(d.travelAngle)?d.travelAngle-g.rotation.y:0;d.forward=smooth(d.forward??1,Math.cos(travel));d.side=smooth(d.side||0,Math.sin(travel));
+ const blade=d.weaponId==='shadowblade',book=d.weaponId==='grimoire';
+ const strokeDuration=book?.32:blade?.16:.20;
+ if(attack>(d.lastAttack||0)+.03)d.strokeTime=0;else d.strokeTime=(d.strokeTime??strokeDuration)+dt;d.lastAttack=attack;
+ const stroke=T.MathUtils.smoothstep(d.strokeTime,0,strokeDuration);
+ d.rig.position.y=.012+Math.abs(Math.cos(d.phase))*.024*run+Math.sin(t*2.2)*.006;d.rig.rotation.x=-run*.075-Math.min(1,hurt/.18)*.14;d.rig.rotation.z=-d.turn*.035-step*.018*run;
+ d.hips.rotation.y=d.side*.10+step*.035*run;d.hips.rotation.z=.012*(1-run);d.torso.rotation.y=smooth(d.torso.rotation.y,-d.hips.rotation.y+(blade?cast*(.25-.4*stroke):-cast*.045));d.head.rotation.y=-d.torso.rotation.y*.45-d.turn*.07;d.head.rotation.x=.035+Math.sin(t*1.8)*.008-cast*.03;
+ for(const [side,sign]of [['left',1],['right',-1]]){const stride=step*sign,knee=Math.pow(Math.max(0,stride),1.4)*.70*run;d[side+'Leg'].rotation.x=stride*.62*run*d.forward;d[side+'Leg'].rotation.z=sign*.045*(1-run)-stride*.40*run*d.side;d[side+'Knee'].rotation.x=knee;d[side+'Foot'].rotation.x=-knee*.65-stride*.16*run*d.forward;}
+ const leftBase=-step*.34*run,rightBase=step*.34*run;
+ d.leftArm.rotation.x=smooth(d.leftArm.rotation.x,book?-.55:leftBase*(1-cast)-cast*.42);
+ d.rightArm.rotation.x=smooth(d.rightArm.rotation.x,rightBase*(1-cast)-.10-cast*(blade?.48:book?.62:.92));
+ d.leftArm.rotation.z=.10+cast*.12;d.rightArm.rotation.z=smooth(d.rightArm.rotation.z,-.10-cast*(blade?.35+.25*stroke:.1));d.rightArm.rotation.y=smooth(d.rightArm.rotation.y,blade?cast*(.8-stroke):0);
+ d.leftElbow.rotation.x=book?-.85:-.20-cast*.42;d.rightElbow.rotation.x=-(blade?.25:.36)-cast*(blade?.25:book?.60:.45);
+ d.leftHand.rotation.x=book?-.1:-cast*.28;d.rightHand.rotation.x=-.18-cast*.17;d.rightHand.rotation.y=blade?cast*.75:cast*.1;
+ if(d.book){d.book.rotation.x=-d.leftArm.rotation.x-d.leftElbow.rotation.x-d.leftHand.rotation.x-.16;d.book.position.y=-.025+Math.sin(t*2.5)*.015;d.page.rotation.z=Math.sin(t*2.4+cast*3)*(.12+cast*.35);}
+ d.cape.rotation.x=-.055-run*.08;d.cape.rotation.z=-d.turn*.08;
  d.panels.forEach((panel,i)=>{panel.morphTargetInfluences[0]=run*.65+Math.sin(t*2.4+i*.8)*.06+.07;panel.morphTargetInfluences[1]=d.turn*.65+Math.sin(t*1.7+i)*.09;});
  if(d.focus){d.focus.scale.copy(d.focus.userData.baseScale).multiplyScalar(1+Math.sin(t*4)*.045+cast*.12);d.focus.rotation.y=t*.55;}
  d.motes?.forEach((m,i)=>{const a=t*2+i*Math.PI*2/3;m.position.set(Math.cos(a)*.14,.045+Math.sin(a)*.1,.17+Math.sin(a)*.06);});

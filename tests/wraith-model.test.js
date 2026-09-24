@@ -14,7 +14,7 @@ test('shadow hero is shorter than a human and has articulated body parts',()=>{
 });
 
 test('cloth and articulated casts animate independently without changing shared geometry',()=>{
- for(const weapon of ['shade','shadowblade','dark']){
+ for(const weapon of ['shade','shadowblade','grimoire']){
   const actor=makeWraith(weapon),idle=makeWraith(weapon),d=actor.userData;
   const rest=Array.from(d.panels[0].geometry.attributes.position.array),idleWeights=[...idle.userData.panels[0].morphTargetInfluences];
   d.turnRate=6;d.travelAngle=.4;

@@ -1,6 +1,6 @@
 export const MAPS={forest:{name:'翡翠幽林',subtitle:'穿过古木与遗迹，追寻林心的回声',ground:0x284b3b,fog:0x173d39,leaf:0x287456,accent:0xecc988,slow:'泥地'},snow:{name:'霜月峡谷',subtitle:'冰晶照亮雪路，寒风掩藏猎手',ground:0x96b7bd,fog:0x769daa,leaf:0x456e7d,accent:0x9ae9ff,slow:'深雪'},ash:{name:'赤烬荒原',subtitle:'越过熔岩裂隙，唤醒沉睡的守卫',ground:0x5c4544,fog:0x382e3c,leaf:0x69545d,accent:0xffa25d,slow:'灰烬'}};
-export const WEAPONS={rifle:{id:'rifle',name:'游侠连发枪',rate:3,damage:12,count:1,speed:27,range:24,color:0xffdc91},shotgun:{id:'shotgun',name:'碎岩霰弹枪',rate:1,damage:10,count:5,speed:25,range:13,color:0xffbe69},fire:{id:'fire',name:'烬火法杖',rate:.9,damage:30,count:1,speed:14,range:22,color:0xff743b},crossbow:{id:'crossbow',name:'夜翎短弩',rate:2.05,damage:20,count:1,speed:35,range:25,color:0xd8edff},shuriken:{id:'shuriken',name:'月刃飞镖',rate:1.4,damage:13,count:3,speed:22,range:19,color:0x95fff0},dark:{id:'dark',name:'夜幕法杖',rate:1,damage:26,count:1,speed:12,range:23,color:0xc5a2ff},shade:{id:'shade',name:'影脉法球',rate:1.6,damage:18,count:1,speed:20,range:21,color:0x9679ff},shadowblade:{id:'shadowblade',name:'幽刃回旋',rate:1.5,damage:13,count:3,speed:23,range:20,color:0x8d76dc}};
-export function weaponFor(hero,index){return WEAPONS[(hero==='wraith'?['shade','shadowblade','dark']:hero==='silver'?['crossbow','shuriken','dark']:['rifle','shotgun','fire'])[index]];}
+export const WEAPONS={rifle:{id:'rifle',name:'游侠连发枪',rate:3,damage:12,count:1,speed:27,range:24,color:0xffdc91},shotgun:{id:'shotgun',name:'碎岩霰弹枪',rate:1,damage:10,count:5,speed:25,range:13,color:0xffbe69},fire:{id:'fire',name:'烬火法杖',rate:.9,damage:30,count:1,speed:14,range:22,color:0xff743b},crossbow:{id:'crossbow',name:'夜翎短弩',rate:2.05,damage:20,count:1,speed:35,range:25,color:0xd8edff},shuriken:{id:'shuriken',name:'月刃飞镖',rate:1.4,damage:13,count:3,speed:22,range:19,color:0x95fff0},dark:{id:'dark',name:'夜幕法杖',rate:1,damage:26,count:1,speed:12,range:23,color:0xc5a2ff},shade:{id:'shade',name:'噬影掌',rate:1.6,damage:18,count:1,speed:20,range:21,color:0x9679ff},shadowblade:{id:'shadowblade',name:'回魂影镰',rate:1.15,damage:26,count:1,speed:20,range:15,color:0x8d76dc},grimoire:{id:'grimoire',name:'悬影魔典',rate:.8,damage:34,count:1,speed:1,range:12,color:0x9d8cf5}};
+export function weaponFor(hero,index){return WEAPONS[(hero==='wraith'?['shade','shadowblade','grimoire']:hero==='silver'?['crossbow','shuriken','dark']:['rifle','shotgun','fire'])[index]];}
 export function registerCrossbowHit(player,targetId,now){const mark=player.crossbowMark;if(!mark||mark.target!==targetId||now-mark.time>2.5)player.crossbowMark={target:targetId,time:now,hits:1};else{mark.time=now;mark.hits++;if(mark.hits===3){mark.hits=0;return true;}}return false;}
 export function registerShadowHit(target,now){const mark=target.shadowMark;if(!mark||now-mark.time>=2.5)target.shadowMark={hits:1,time:now};else{mark.time=now;mark.hits++;if(mark.hits>=3){mark.hits=0;return true;}}return false;}
 export function seeded(seed){let n=seed>>>0;return()=>{n=(Math.imul(n,1664525)+1013904223)>>>0;return n/4294967296;};}
@@ -22,10 +22,12 @@ export const WEAPON_PATHS={
  shuriken_return:route('shuriken','回旋月刃','↶',['飞镖折返，可再次命中；单次伤害 -20%，贯穿 3 个目标','贯穿 4 个目标，弹速 +10%','贯穿 5 个目标，弹速 +15%']),
  dark_gravity:route('dark','引力漩涡','✺',['命中留下 1.4 秒牵引区，半径 2.6；直接伤害 -10%','牵引半径 2.9，持续 1.6 秒','牵引半径 3.2，持续 1.8 秒；最多 3 处，首领牵引减弱']),
  dark_seek:route('dark','追魂魔矢','♦',['追踪弹速 +35%，射速 +15%，伤害 -10%','双追踪魔矢，每枚伤害 -30%，射速恢复基础值','双魔矢射速 +15%，每枚伤害 -30%']),
- shade_echo:route('shade','残响弹射','◇',['影球弹射 1 次','影球弹射 2 次，伤害 +10%','影球弹射 3 次，伤害 +20%']),
+ shade_echo:route('shade','残响弹射','◇',['影脉弹射 1 次','影脉弹射 2 次，伤害 +10%','影脉弹射 3 次，伤害 +20%']),
  shade_blight:route('shade','蚀影刻印','◈',['三次命中引爆刻印，额外 24 伤害','刻印伤害 36，爆炸半径增加','刻印伤害 48，爆炸半径增加']),
- shadowblade_fan:route('shadowblade','群鸦飞刃','✧',['每次 5 枚幽刃，单枚伤害 -20%','每次 6 枚幽刃','每次 7 枚幽刃']),
- shadowblade_return:route('shadowblade','折返幽刃','↶',['幽刃折返，可再次命中；贯穿 3 个目标','贯穿 4 个目标，弹速 +10%','贯穿 5 个目标，弹速 +15%'])
+ shadowblade_fan:route('shadowblade','双月分影','✧',['投出 2 枚回旋影镰，单枚伤害 -30%','投出 3 枚影镰','投出 4 枚影镰']),
+ shadowblade_return:route('shadowblade','追魂弧刃','↶',['影镰来回均可命中，贯穿 3 个目标','贯穿 4 个目标，速度 +5%','贯穿 5 个目标，速度 +10%']),
+ grimoire_wide:route('grimoire','裂界之页','▱',['裂口半径 2.1，伤害 +8%','裂口半径 2.5，伤害 +16%','裂口半径 2.9，伤害 +24%']),
+ grimoire_echo:route('grimoire','复诵禁咒','◈',['裂口延迟再次爆发，造成 40% 伤害','再次爆发造成 55% 伤害','再次爆发造成 70% 伤害'])
 };
 const PATH_LEVELS=[3,5,8];
 function routeChoices(p){const rank=p.weaponPath?.rank||0;if(rank>=3||(p.level||1)<PATH_LEVELS[rank])return[];return Object.entries(WEAPON_PATHS).filter(([id,v])=>v.weapon===p.weaponId&&(!p.weaponPath||p.weaponPath.id===id)).map(([id,v])=>({id:'path:'+id,pathId:id,name:v.name,icon:v.icon,text:v.steps[rank],max:3,rank,category:'weapon'}));}
@@ -44,7 +46,7 @@ export function takeUpgrade(p,id){
  const u=UPGRADES.find(u=>u.id===id);if(!u||!heroSpell(p.heroId,id)||(p.upgrades[id]||0)>=u.max)return false;p.upgrades[id]=(p.upgrades[id]||0)+1;if(id==='vitality'){p.maxHp+=24;p.hp=Math.min(p.maxHp,p.hp+24);}return true;
 }
 export function weaponStats(p){
- const base=WEAPONS[p.weaponId]||WEAPONS.crossbow,w={...base,pierce:['shuriken','shadowblade'].includes(base.id)?2:1,spread:.14,radius:base.id==='fire'?2.5:base.id==='dark'?2:0,bounces:0,burn:0,returning:false,gravity:0,markDamage:base.id==='shade'?24:0,markRadius:1.8};
+ const base=WEAPONS[p.weaponId]||WEAPONS.crossbow,w={...base,pierce:['shuriken','shadowblade'].includes(base.id)?2:1,spread:.14,radius:base.id==='fire'?2.5:base.id==='dark'?2:base.id==='grimoire'?1.7:0,bounces:0,burn:0,returning:base.id==='shadowblade',gravity:0,echo:0,markDamage:base.id==='shade'?24:0,markRadius:1.8};
  const id=p.weaponPath?.id,path=WEAPON_PATHS[id],r=path?.weapon===base.id?Math.min(3,Math.max(0,p.weaponPath.rank)):0;
  if(r)switch(id){
  case'rifle_pierce':w.pierce=1+r;w.damage*=1+.08*r;w.rate*=.9;break;
@@ -61,8 +63,10 @@ export function weaponStats(p){
  case'dark_seek':w.speed*=1.35;w.count=r>=2?2:1;w.damage*=r>=2?.7:.9;w.rate*=r===2?1:1.15;break;
  case'shade_echo':w.bounces=r;w.damage*=1+.1*(r-1);break;
  case'shade_blight':w.markDamage=12+12*r;w.markRadius=1.6+.3*r;break;
- case'shadowblade_fan':w.count=4+r;w.damage*=.8;w.spread=.18;break;
+ case'shadowblade_fan':w.count=1+r;w.damage*=.7;w.spread=.22;break;
  case'shadowblade_return':w.returning=true;w.pierce=2+r;w.speed*=1+.05*(r-1);break;
+ case'grimoire_wide':w.radius=1.7+.4*r;w.damage*=1+.08*r;break;
+ case'grimoire_echo':w.echo=.25+.15*r;break;
  }
  w.damage*=1+.18*(p.upgrades?.power||0);w.rate*=1+.15*(p.upgrades?.haste||0);return w;
 }

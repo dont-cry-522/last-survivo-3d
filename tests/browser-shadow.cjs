@@ -4,7 +4,7 @@ const assert=require('node:assert/strict');
  for(const viewport of [{width:1440,height:900},{width:844,height:390},{width:390,height:844}]){
   const page=await browser.newPage({viewport,hasTouch:viewport.width<1000}),errors=[];page.on('pageerror',e=>errors.push(e.message));
   await page.goto(process.env.TEST_URL||'http://127.0.0.1:8897/');await page.waitForFunction(()=>window.game3d);await page.locator('[data-hero="wraith"]').click();
-  assert.equal(await page.locator('#weapons button').allTextContents().then(a=>a.join('/')),'影脉法球/幽刃回旋/夜幕法杖');
+  assert.equal(await page.locator('#weapons button').allTextContents().then(a=>a.join('/')),'噬影掌/回魂影镰/悬影魔典');
   assert(await page.locator('#start').isVisible());
   await page.locator('#start').click();
   const result=await page.evaluate(()=>{const g=window.game3d,p=g.player;p.hp=1000;p.maxHp=1000;g.world.obstacles.length=0;g.world.patches.length=0;
