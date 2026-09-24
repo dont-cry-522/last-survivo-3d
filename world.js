@@ -1,3 +1,4 @@
+import{ENEMY_MOTION,animateEnemyIdentity}from'./enemy-motion.js?v=28';
 import{REGIONAL_ENEMIES}from'./map-enemies.js?v=27';
 import{groundCue}from'./ground-cues.js?v=19';
 import{heroesReady,createSkinnedHero,animateSkinnedHero}from'./skinned-hero.js?v=24';
@@ -33,7 +34,7 @@ export function actor(kind='silver',weapon='crossbow'){
  for(const part of [...rig.children]){
   if(kind==='wolf'&&part.geometry?.type==='CylinderGeometry'){const joint=pivot(part,.48);g.userData.legs.push({joint,phase:(joint.position.x*joint.position.z>0?0:Math.PI)});}
   if(['golem','boss'].includes(kind)&&part.geometry?.type==='BoxGeometry'&&part.position.y<.5){const joint=pivot(part,.57);g.userData.legs.push({joint,phase:joint.position.x<0?0:Math.PI});}
-  if(['golem','boss'].includes(kind)&&part.geometry?.type==='DodecahedronGeometry'&&Math.abs(part.position.x)>.6)g.userData.arms.push(pivot(part,1.34));
+  if(['golem','boss'].includes(kind)&&part.geometry?.type==='DodecahedronGeometry'&&Math.abs(part.position.x)>.6){const arm=pivot(part,1.34);g.userData.arms.push(arm);mesh('CapsuleGeometry',[.23,.32,3,7],kind==='boss'?0x536575:0x68735e,0,-.64,.05,arm);}
  }
  return g;
 }
@@ -42,11 +43,11 @@ function regionalActor(id){
  // Materials and geometry are cached; never recolor a material shared with forest actors.
  g.traverse(o=>{if(o.isMesh){const lit=o.material.emissiveIntensity>0,old=o.material.color.getHex();o.material=mat(lit?(snow?0x8bdaf1:0xff9b42):snow?(old===0x42556b||old===0x293c4d?0x486777:0xd5e3df):0x493d43,lit);}});
  if(cfg.role==='mushroom'){
-  rig.clear();const head=new T.Group();head.position.set(0,.9,.12);rig.add(head);d.cap=head;
+  rig.clear();d.ears=[];d.feet=[];const head=new T.Group();head.position.set(0,.9,.12);rig.add(head);d.cap=head;
   const body=orb(rig,snow?0xdce7e2:0x6c3832,0,.48,0,.43);body.scale.set(1,1.1,.9);
   orb(head,snow?0xe9eee4:0xa14a30,0,0,.05,.28);
-  for(const side of [-1,1]){const ear=cone(head,snow?0xd3e7eb:0x372e34,side*.17,.38,0,snow?.075:.11,snow?.62:.4);ear.rotation.z=side*-.16;orb(head,snow?0x304855:0xffb259,side*.105,.015,.285,.04,!snow);const foot=orb(rig,snow?0xb4cdce:0x4c3031,side*.28,.12,.2,.16);foot.scale.z=1.5;}
-  orb(head,snow?0xcb9695:0xffc15c,0,-.075,.325,.045,!snow);const tail=orb(rig,snow?0xe5eddf:0xda6334,0,.4,-.38,.14,!snow);if(!snow){tail.scale.set(.65,.65,2.2);for(let i=0;i<3;i++)cone(rig,0xf38a3b,0,.8-i*.12,-.1-i*.14,.09,.25);}
+  for(const side of [-1,1]){const ear=cone(head,snow?0xd3e7eb:0x372e34,side*.17,.38,0,snow?.075:.11,snow?.62:.4);ear.rotation.z=side*-.16;d.ears.push(ear);orb(head,snow?0x304855:0xffb259,side*.105,.015,.285,.04,!snow);const foot=orb(rig,snow?0xb4cdce:0x4c3031,side*.28,.12,.2,.16);foot.scale.z=1.5;d.feet.push(foot);}
+  orb(head,snow?0xcb9695:0xffc15c,0,-.075,.325,.045,!snow);const tail=orb(rig,snow?0xe5eddf:0xda6334,0,.4,-.38,.14,!snow);d.smallTail=tail;if(!snow){tail.scale.set(.65,.65,2.2);for(let i=0;i<3;i++)cone(rig,0xf38a3b,0,.8-i*.12,-.1-i*.14,.09,.25);}
  }else if(cfg.role==='wolf'){
   for(let i=0;i<4;i++){const spike=cone(rig,snow?0xa4cfdd:0xf0934a,0,1.04,-.35+i*.2,.11,snow?.28:.4);spike.rotation.x=-.25;}
   if(!snow){d.head.children.filter(o=>o.geometry?.type==='ConeGeometry').forEach(o=>{o.scale.y=.3;});d.tail.scale.z=1.65;for(const side of [-1,1]){const fin=cone(d.head,0xba6140,side*.3,.12,-.08,.15,.28);fin.rotation.z=side*.8;}}
@@ -56,8 +57,8 @@ function regionalActor(id){
    if(cfg.role==='boss')for(let i=-2;i<=2;i++)cone(rig,0x8ecde7,i*.18,2.2+(.2-Math.abs(i)*.06),0,.10,.48-Math.abs(i)*.05);
   }else{for(const side of [-1,1]){const horn=cone(rig,0x372b34,side*.4,2.05,-.05,.17,.8);horn.rotation.z=-side*.4;for(let i=0;i<3;i++){const crack=box(rig,0xea7738,side*(.13+i*.12),.8+i*.2,.65-i*.04,.045,.25,.025);crack.material=mat(0xea7738,true);crack.rotation.z=side*.6;}}}
  }else if(id==='snowtotem'||id==='cinderwisp'){
-  rig.clear();d.staff=null;d.focus=null;d.satellites=new T.Group();rig.add(d.satellites);
-  for(let i=0;i<3;i++){const core=mesh('OctahedronGeometry',[.34-i*.07],snow?0x80bad4:0xf38936,0,.6+i*.34,0,rig,!snow);core.scale.y=snow?1.15:.8;}
+  rig.clear();d.staff=null;d.focus=null;d.cores=[];d.satellites=new T.Group();rig.add(d.satellites);
+  for(let i=0;i<3;i++){const core=mesh('OctahedronGeometry',[.34-i*.07],snow?0x80bad4:0xf38936,0,.6+i*.34,0,rig,!snow);core.scale.y=snow?1.15:.8;d.cores.push(core);}
   for(const side of [-1,1]){const shard=mesh('OctahedronGeometry',[snow?.14:.23],snow?0xc2eef1:0x413544,side*.48,.95,0,d.satellites,snow);shard.scale.y=1.8;}
   if(!snow){for(let i=0;i<3;i++)cone(rig,0x71382e,Math.sin(i*2.1)*.2,1.25,Math.cos(i*2.1)*.2,.10,.4);}
  }else{
@@ -72,14 +73,14 @@ export function animateActor(g,t,speed=0,attack=0,hurt=0){
  if(d.satellites){d.satellites.rotation.y=t*.9;d.satellites.position.y=Math.sin(t*3)*.08;}
  const dt=d.lastTime===undefined?1/60:Math.max(0,Math.min(.05,t-d.lastTime));d.lastTime=t;
  d.stride=(d.stride||0)+(Math.min(1,speed/2.5)-(d.stride||0))*(1-Math.exp(-dt*14));
- const stride=d.stride,heavy=['golem','boss'].includes(d.kind),frequency=heavy?5.2:d.kind==='wolf'?13:9;
- d.phase=(d.phase||0)+dt*frequency*(.45+Math.min(speed,8)*.16);const phase=d.phase,rig=d.rig;
+ const motion=ENEMY_MOTION[d.species||d.kind],stride=d.stride,heavy=['golem','boss'].includes(d.kind),frequency=motion?.cadence||(heavy?5.2:d.kind==='wolf'?13:9);
+ d.phase=(d.phase||0)+dt*frequency*(.45+Math.min(speed,8)*.16);const phase=d.walkPhase??d.phase,rig=d.rig;
  if(attack>0&&!(d.previousAttack>0))d.attackLength=attack;
  const wind=attack>0?1-T.MathUtils.clamp(attack/(d.attackLength||.6),0,1):0,pounce=d.pounce||0;
  if((d.previousPounce||0)>0&&pounce<=0)d.landing=.18;d.previousPounce=pounce;
  d.landing=Math.max(0,(d.landing||0)-dt);
- if(attack<=0&&d.previousAttack>0)d.release=.2;d.previousAttack=attack;
- d.release=Math.max(0,(d.release||0)-dt);const strike=Math.sin(Math.PI*(1-d.release/.2));
+ const releaseDuration=motion?.recover||.2;if(attack<=0&&d.previousAttack>0)d.release=d.cancelled?0:releaseDuration;d.cancelled=false;d.previousAttack=attack;
+ d.release=Math.max(0,(d.release||0)-dt);const strike=Math.sin(Math.PI*(1-d.release/releaseDuration));
  const impact=Math.sin(Math.PI*T.MathUtils.clamp(hurt/.12,0,1)),brace=Math.sin(Math.PI*wind),landing=Math.sin(Math.PI*(1-d.landing/.18));
  rig.scale.set(1,1,1);rig.position.set(0,0,-impact*.13);rig.rotation.set(-wind*.16+strike*.20-impact*.18,0,0);
  if(d.kind==='mushroom'){
@@ -96,6 +97,7 @@ export function animateActor(g,t,speed=0,attack=0,hurt=0){
   rig.position.y=.09+Math.sin(t*2.5)*.055+Math.abs(Math.sin(phase))*.07*stride-brace*.1;rig.rotation.z=Math.sin(t*2)*.025+Math.sin(phase)*.09*stride;rig.rotation.x+=Math.sin(phase)*.035*stride-wind*.1+strike*.17;
   const breathe=1+Math.sin(t*3)*.015;rig.scale.set(breathe,1-brace*.04,breathe);if(d.staff){d.staff.rotation.x=-wind*(d.attackMode==='heal'?.65:1.1)+strike*.28;d.staff.rotation.z=Math.sin(phase+1)*.09*stride;d.staff.position.y=.76+wind*.23;d.focus.scale.setScalar(1+wind*.65);}
  }
+ animateEnemyIdentity(d,t,stride,phase,wind,d.release/releaseDuration,impact);
  g.visible=true;
 }
 function groundTexture(id,theme){
