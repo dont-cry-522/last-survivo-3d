@@ -25,7 +25,7 @@ const gameplay=await page.evaluate(async()=>{
  const advance=seconds=>{for(let i=0;i<seconds*60;i++){g.step(1/60);g.vfx.update(1/60);}};
  let checked=0;
  for(const[map,roster]of Object.entries(MAP_ROSTERS))for(const[role,kind]of Object.entries(roster)){
-  setup(map);let e;if(role==='boss'){g.spawnBoss();e=g.boss;e.turn=1;e.cool=0;}else{e=g.spawn(role,g.player.x,g.player.z+Math.min(8,ENEMY_MOTION[kind].range-.2));e.cool=0;e.speed=0;}
+  setup(map);let e;if(role==='boss'){g.spawnBoss();e=g.boss;e.x=g.player.x;e.z=g.player.z+5;e.turn=1;e.cool=0;}else{e=g.spawn(role,g.player.x,g.player.z+Math.min(8,ENEMY_MOTION[kind].range-.2));e.cool=0;e.speed=0;}
   events.length=0;advance(.05);if(!events.some(v=>v.kind===kind&&v.event==='wind'))throw Error(kind+' missing warning');
   const delay=role==='boss'?1.5:ENEMY_MOTION[kind].wind;advance(delay+.95);
   if(!events.some(v=>v.kind===kind&&v.event===(role==='boss'?'impact':'attack')))throw Error(kind+' missing release');
@@ -40,4 +40,3 @@ const gameplay=await page.evaluate(async()=>{
 });assert.equal(gameplay,18);assert.deepEqual(errors,[]);console.log('PASS all 18 species actual anticipation/release/impact/death hooks, movement, interruption, pause/reset');
 await page.close();
 }finally{await browser.close();}})().catch(e=>{console.error(e);process.exit(1);});
-

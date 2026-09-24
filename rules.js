@@ -1,7 +1,7 @@
 import{REGIONAL_ENEMIES}from'./map-enemies.js?v=27';
 import{EXTRA_SKILLS,EXTRA_BY_ID}from'./skill-catalog.js?v=25';
 export const MAPS={forest:{name:'翡翠幽林',subtitle:'穿过古木与遗迹，追寻林心的回声',ground:0x284b3b,fog:0x173d39,leaf:0x287456,accent:0xecc988,slow:'泥地'},snow:{name:'霜月峡谷',subtitle:'冰晶照亮雪路，寒风掩藏猎手',ground:0x96b7bd,fog:0x769daa,leaf:0x456e7d,accent:0x9ae9ff,slow:'深雪'},ash:{name:'赤烬荒原',subtitle:'越过熔岩裂隙，唤醒沉睡的守卫',ground:0x5c4544,fog:0x382e3c,leaf:0x69545d,accent:0xffa25d,slow:'灰烬'}};
-export const WEAPONS={rifle:{id:'rifle',name:'游侠连发枪',rate:3,damage:12,count:1,speed:27,range:24,color:0xffdc91},shotgun:{id:'shotgun',name:'碎岩霰弹枪',rate:1,damage:10,count:5,speed:25,range:13,color:0xffbe69},fire:{id:'fire',name:'烬火法杖',rate:.9,damage:30,count:1,speed:14,range:22,color:0xff743b},crossbow:{id:'crossbow',name:'夜翎短弩',rate:2.05,damage:20,count:1,speed:35,range:25,color:0xd8edff},shuriken:{id:'shuriken',name:'月刃飞镖',rate:1.4,damage:13,count:3,speed:22,range:19,color:0x95fff0},dark:{id:'dark',name:'夜幕法杖',rate:1,damage:26,count:1,speed:12,range:23,color:0xc5a2ff},shade:{id:'shade',name:'噬影掌',rate:1.6,damage:18,count:1,speed:20,range:21,color:0x9679ff},shadowblade:{id:'shadowblade',name:'回魂影镰',rate:1.15,damage:26,count:1,speed:20,range:15,color:0x8d76dc},grimoire:{id:'grimoire',name:'悬影魔典',rate:.8,damage:34,count:1,speed:1,range:12,color:0x9d8cf5}};
+export const WEAPONS={rifle:{id:'rifle',name:'游侠连发枪',rate:3,damage:12,count:1,speed:27,range:14,color:0xffdc91},shotgun:{id:'shotgun',name:'碎岩霰弹枪',rate:1,damage:10,count:5,speed:25,range:8,color:0xffbe69},fire:{id:'fire',name:'烬火法杖',rate:.9,damage:30,count:1,speed:14,range:11,color:0xff743b},crossbow:{id:'crossbow',name:'夜翎短弩',rate:2.05,damage:20,count:1,speed:35,range:16,color:0xd8edff},shuriken:{id:'shuriken',name:'月刃飞镖',rate:1.4,damage:13,count:3,speed:22,range:12,color:0x95fff0},dark:{id:'dark',name:'夜幕法杖',rate:1,damage:26,count:1,speed:12,range:10,color:0xc5a2ff},shade:{id:'shade',name:'噬影掌',rate:1.6,damage:18,count:1,speed:20,range:8,color:0x9679ff},shadowblade:{id:'shadowblade',name:'回魂影镰',rate:1.15,damage:26,count:1,speed:20,range:9,color:0x8d76dc},grimoire:{id:'grimoire',name:'悬影魔典',rate:.8,damage:34,count:1,speed:1,range:10,color:0x9d8cf5}};
 export function weaponFor(hero,index){return WEAPONS[(hero==='wraith'?['shade','shadowblade','grimoire']:hero==='silver'?['crossbow','shuriken','dark']:['rifle','shotgun','fire'])[index]];}
 export function registerCrossbowHit(player,targetId,now){const mark=player.crossbowMark;if(!mark||mark.target!==targetId||now-mark.time>2.5)player.crossbowMark={target:targetId,time:now,hits:1};else{mark.time=now;mark.hits++;if(mark.hits===3){mark.hits=0;return true;}}return false;}
 export function registerShadowHit(target,now){const mark=target.shadowMark;if(!mark||now-mark.time>=2.5)target.shadowMark={hits:1,time:now};else{mark.time=now;mark.hits++;if(mark.hits>=3){mark.hits=0;return true;}}return false;}
@@ -50,7 +50,7 @@ export function takeUpgrade(p,id){
  const u=UPGRADES.find(u=>u.id===id);if(!u||!heroSpell(p.heroId,id)||(p.upgrades[id]||0)>=u.max)return false;p.upgrades[id]=(p.upgrades[id]||0)+1;if(id==='vitality'){p.maxHp+=24;p.hp=Math.min(p.maxHp,p.hp+24);}return true;
 }
 export function weaponStats(p){
- const base=WEAPONS[p.weaponId]||WEAPONS.crossbow,w={...base,hitRadius:({rifle:.06,shotgun:.07,crossbow:.09,shuriken:.22,fire:.32,dark:.28,shade:.18,shadowblade:.32,grimoire:0})[base.id],pierce:['shuriken','shadowblade'].includes(base.id)?2:1,spread:.14,radius:base.id==='fire'?2.5:base.id==='dark'?2:base.id==='grimoire'?1.7:0,bounces:0,burn:0,returning:base.id==='shadowblade',gravity:0,echo:0,markDamage:base.id==='shade'?24:0,markRadius:1.8};
+ const base=WEAPONS[p.weaponId]||WEAPONS.crossbow,w={...base,hitRadius:({rifle:.06,shotgun:.07,crossbow:.09,shuriken:.22,fire:.32,dark:.28,shade:.18,shadowblade:.32,grimoire:0})[base.id],pierce:['shuriken','shadowblade'].includes(base.id)?2:1,spread:({shotgun:.20,shuriken:.19,shadowblade:.22})[base.id]||.12,radius:base.id==='fire'?2.5:base.id==='dark'?2:base.id==='grimoire'?1.7:0,bounces:0,burn:0,returning:base.id==='shadowblade',gravity:0,echo:0,markDamage:base.id==='shade'?24:0,markRadius:1.8};
  const id=p.weaponPath?.id,path=WEAPON_PATHS[id],r=path?.weapon===base.id?Math.min(3,Math.max(0,p.weaponPath.rank)):0;
  if(r)switch(id){
  case'rifle_pierce':w.pierce=1+r;w.damage*=1+.08*r;w.rate*=.9;break;
@@ -73,6 +73,12 @@ export function weaponStats(p){
  case'grimoire_echo':w.echo=.25+.15*r;break;
  }
  w.damage*=1+.18*(p.upgrades?.power||0);w.rate*=1+.15*(p.upgrades?.haste||0);return w;
+}
+export function weaponReachText(w){
+ const n=v=>Number(v.toFixed(1));
+ const reach=w.id==='grimoire'?'施法距离':w.returning?'去程距离':'射程';
+ const area=w.radius>0?' · '+(w.id==='grimoire'?'裂口':'爆炸')+'半径 '+n(w.radius)+' 米':w.count>1?' · 扇面 '+Math.round((w.count-1)*w.spread*180/Math.PI)+'°':w.hitRadius>=.18?' · 宽刃／影脉':' · 窄线直射';
+ return reach+' '+n(w.range)+' 米'+area+(w.returning?' · 飞回可再次命中':'');
 }
 export const ENEMIES={mushroom:{hp:28,speed:2.7,damage:10,xp:6,size:.55},wolf:{hp:24,speed:4.4,damage:12,xp:8,size:.6},golem:{hp:130,speed:1.7,damage:22,xp:23,size:1},spitter:{hp:52,speed:2.3,damage:13,xp:12,size:.6},shaman:{hp:75,speed:2,damage:8,xp:18,size:.65}};
 for(const [id,cfg]of Object.entries(REGIONAL_ENEMIES))if(cfg.role!=='boss')ENEMIES[id]={...cfg};

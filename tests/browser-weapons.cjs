@@ -4,7 +4,7 @@ const {chromium}=require(process.env.PLAYWRIGHT_MODULE||'playwright'),assert=req
  await page.addInitScript(()=>{const raf=requestAnimationFrame;window.requestAnimationFrame=cb=>raf(t=>{if(!window.freezeGame)cb(t);});});
  await page.goto(process.env.TEST_URL||'http://127.0.0.1:8897/');await page.waitForFunction(()=>window.game3d);await page.locator('#start').click();await page.evaluate(()=>window.freezeGame=true);await page.waitForTimeout(50);
  const results=await page.evaluate(async()=>{
-  const {WEAPON_PATHS,takeUpgrade}=await import('./rules.js?v=18'),g=game3d,out=[];
+  const {WEAPON_PATHS,takeUpgrade,WEAPONS}=await import('./rules.js?v=31'),g=game3d,out=[];
   const setup=(hero,index,path)=>{g.select(hero,'forest',index);g.start();g.controls.angle=0;g.controls.hasAim=true;g.world.obstacles.length=0;g.world.patches.length=0;g.player.level=8;for(let i=0;i<3;i++)if(!takeUpgrade(g.player,'path:'+path))throw Error('route rejected');};
   const target=(x,z)=>{const e=g.spawn('golem',g.player.x+x,g.player.z+z);e.hp=e.maxHp=10000;e.cool=99;e.speed=0;return e;};
   const advance=(seconds)=>{for(let i=0;i<seconds*60;i++){g.step(1/60);g.vfx.update(1/60);}};
@@ -14,7 +14,7 @@ const {chromium}=require(process.env.PLAYWRIGHT_MODULE||'playwright'),assert=req
    setup(hero,index,id);const e=target(0,4);once();advance(.7);if(e.hp===e.maxHp)throw Error(id+' did not damage target');out.push(id);
   }
   setup('silver',0,'crossbow_pierce');const bolts=[target(0,4),target(0,6),target(0,8)];once();advance(.8);if(!bolts.every(e=>e.hp<e.maxHp))throw Error('Crossbow pierce missed aligned targets');
-  setup('silver',1,'shuriken_return');const far=target(0,17);once();advance(2);if(far.maxHp-far.hp<20)throw Error('Returning blade failed outbound/return hits at full targeting range');
+  setup('silver',1,'shuriken_return');const far=target(0,WEAPONS.shuriken.range-2);once();advance(2);if(far.maxHp-far.hp<20)throw Error('Returning blade failed outbound/return hits at full targeting range');
   setup('wraith',1,'shadowblade_return');g.player.weaponPath=null;const sickle=target(0,7);once();advance(1.8);if(sickle.maxHp-sickle.hp!==52)throw Error('Base shadow sickle must hit outbound and returning');
   setup('scout',2,'fire_burn');const burn=target(0,4);once();advance(.5);const hp=burn.hp;advance(1);if(burn.hp>=hp||!(burn.burnTime>0))throw Error('Burn did not persist after impact');
   setup('silver',2,'dark_gravity');const center=target(0,4),pulled=target(2.7,4),initial=pulled.x;once();advance(.8);if(!(pulled.x<initial-.1)||g.fields.length>3)throw Error('Gravity pull missing or unbounded');
