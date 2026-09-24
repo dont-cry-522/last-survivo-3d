@@ -56,3 +56,16 @@ test('repeated shadow attacks have bounded recoil and settle at different frame 
   assert(peak>.01);assert(Math.abs(d.recoil.x)<.001);assert(Math.abs(d.weapon.position.z-.06)<.001);
  }
 });
+
+
+test('a running shadow hero keeps a supporting foot near the ground',()=>{
+ for(const direction of [0,Math.PI/2,Math.PI,-Math.PI/2]){
+ const h=makeWraith(),p=new T.Vector3();h.userData.travelAngle=direction;let low=Infinity,high=-Infinity;
+ for(let f=1;f<=360;f++){
+  animateWraith(h,f/60,6,0,0);if(f<60)continue;
+  const ankle=Math.min(...['left','right'].map(side=>h.userData[side+'Foot'].getWorldPosition(p).y));
+  low=Math.min(low,ankle);high=Math.max(high,ankle);
+ }
+ assert(high-low<.055,`supporting foot bobs ${high-low}`);assert(low>.055,'feet sink through the ground');
+ }
+});

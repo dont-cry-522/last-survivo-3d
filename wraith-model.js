@@ -121,7 +121,7 @@ export function animateWraith(g,t,speed=0,attack=0,hurt=0){
  const d=g.userData,dt=d.lastTime===undefined?1/60:Math.max(0,Math.min(.05,t-d.lastTime));d.lastTime=t;
  const smooth=(a,b,k=12)=>a+(b-a)*(1-Math.exp(-dt*k));
  d.move=smooth(d.move||0,Math.min(1,speed/6));d.turn=smooth(d.turn||0,T.MathUtils.clamp((d.turnRate||0)/9,-1,1),6);
- d.phase=(d.phase||0)+dt*(5+speed*1.05)*Math.max(.12,d.move);const step=Math.sin(d.phase),run=d.move;
+ d.phase=(d.phase||0)+dt*(5+speed*1.05)*d.move;const step=Math.sin(d.phase),run=d.move;
  const travel=Number.isFinite(d.travelAngle)?d.travelAngle-g.rotation.y:0;d.forward=smooth(d.forward??1,Math.cos(travel));d.side=smooth(d.side||0,Math.sin(travel));
  const blade=d.weaponId==='shadowblade',book=d.weaponId==='grimoire';
  const strokeDuration=book?.32:blade?.16:.20;
@@ -130,14 +130,30 @@ export function animateWraith(g,t,speed=0,attack=0,hurt=0){
  if(fired){d.strokeTime=0;d.recoil.v=Math.min(d.recoil.v+(blade?3.8:book?1.6:3.2),5);}else d.strokeTime=(d.strokeTime??2)+dt;d.lastAttack=attack;
  const recoil=spring(d.recoil,0,dt,18,9);
  const stroke=T.MathUtils.smoothstep(d.strokeTime,0,strokeDuration),recovery=book?.28:blade?.30:.22;
- const gesture=attack>0?1:1-T.MathUtils.smoothstep(d.strokeTime,strokeDuration,strokeDuration+recovery);d.cast=smooth(d.cast||0,gesture,22);const cast=d.cast;
+ const gesture=Math.max(d.aimActive?.24:0,attack>0?1:1-T.MathUtils.smoothstep(d.strokeTime,strokeDuration,strokeDuration+recovery));d.cast=smooth(d.cast||0,gesture,22);const cast=d.cast;
  const acceleration=dt?T.MathUtils.clamp((speed-(d.previousSpeed??speed))/dt,-12,12):0;d.previousSpeed=speed;
  d.clothTrail??={x:.08,v:0};d.clothSide??={x:0,v:0};
  const drag=spring(d.clothTrail,T.MathUtils.clamp(.08+run*.8+acceleration*.025,.02,1.15),dt,8,4.5),sway=spring(d.clothSide,-d.turn*.8-d.side*run*.2,dt,7,3.5);
- d.rig.position.y=.012+Math.abs(Math.cos(d.phase))*.024*run+Math.sin(t*2.2)*.006;d.rig.rotation.x=-run*.06*d.forward-cast*(book?.015:.035)+recoil*.22-Math.min(1,hurt/.18)*.14;d.rig.rotation.z=-d.turn*.035-step*.023*run;d.rig.position.x=step*.013*run;
+ d.rig.position.y=.012+(1-Math.cos(d.phase*2))*.009*run+Math.sin(t*2.2)*.004;d.hips.position.y=.73-run*.065;d.rig.rotation.x=-run*.06*d.forward-cast*(book?.015:.035)+recoil*.22-Math.min(1,hurt/.18)*.14;d.rig.rotation.z=-d.turn*.035-step*.023*run;d.rig.position.x=step*.013*run;
  d.hips.rotation.y=d.side*.10+step*.035*run;d.hips.rotation.z=.012*(1-run);d.torso.rotation.y=smooth(d.torso.rotation.y,-d.hips.rotation.y+(blade?cast*(.32-.55*stroke)+recoil*.55:-cast*.045-recoil*.18));d.head.rotation.y=-d.torso.rotation.y*.45-d.turn*.07;d.head.rotation.x=.035+Math.sin(t*1.8)*.008-cast*.03-recoil*.10;
- for(const [side,sign]of [['left',1],['right',-1]]){const stride=step*sign,knee=Math.pow(Math.max(0,stride),1.4)*.70*run;d[side+'Leg'].rotation.x=stride*.62*run*d.forward;d[side+'Leg'].rotation.z=sign*.045*(1-run)-stride*.40*run*d.side;d[side+'Knee'].rotation.x=knee;d[side+'Foot'].rotation.x=-knee*.65-stride*.16*run*d.forward;}
- const leftBase=-step*.34*run,rightBase=step*.34*run;
+ // A support phase and a lifted return replace rigid pendulum legs. Solve the
+ // two leg links toward the ankle, then counter-rotate the boot to stay level.
+ let leftReach=0,rightReach=0;
+ for(const [side,sign]of [['left',1],['right',-1]]){
+  const phase=((d.phase/(Math.PI*2)+(sign<0?.5:0))%1+1)%1,stance=phase<.58,u=stance?phase/.58:(phase-.58)/.42;
+  const reach=(stance?Math.cos(u*Math.PI):-Math.cos(u*Math.PI))*.23*run;
+  if(side==='left')leftReach=reach;else rightReach=reach;
+  const lift=stance?0:Math.pow(Math.sin(u*Math.PI),1.6)*.15*run;
+  const z=reach*d.forward,down=d.hips.position.y-.04-.112+d.rig.position.y/.88-lift-z*Math.sin(d.rig.rotation.x);
+  const knee=Math.acos(T.MathUtils.clamp((down*down+z*z-.29*.29-.31*.31)/(2*.29*.31),-.98,.998));
+  const hip=Math.atan2(-z,down)-Math.atan2(.31*Math.sin(knee),.29+.31*Math.cos(knee));
+  const leg=d[side+'Leg'];leg.rotation.x=hip;leg.rotation.z=sign*.025-reach*d.side/.58;
+  d[side+'Knee'].rotation.x=knee;
+  const toe=stance?T.MathUtils.smoothstep(u,.72,1)*.12*run:-Math.sin(u*Math.PI)*.12*run;
+  d[side+'Foot'].rotation.x=-hip-knee-d.rig.rotation.x+toe;
+  d[side+'Foot'].rotation.z=-leg.rotation.z;
+ }
+ const leftBase=leftReach*1.3,rightBase=rightReach*1.3;
  d.leftArm.rotation.x=smooth(d.leftArm.rotation.x,book?-.55+leftBase*.10:leftBase*(1-cast)-cast*(blade?.25:.42));
  d.rightArm.rotation.x=smooth(d.rightArm.rotation.x,rightBase*(1-cast)-.10+recoil*(book?.4:.8)-cast*(blade?.40+.26*stroke:book?.52+.13*stroke:.92+.10*stroke));
  d.leftArm.rotation.z=.10+cast*.12;d.leftArm.rotation.y=smooth(d.leftArm.rotation.y,blade?-cast*.18:0);d.rightArm.rotation.z=smooth(d.rightArm.rotation.z,-.10-cast*(blade?.35+.25*stroke:.1));d.rightArm.rotation.y=smooth(d.rightArm.rotation.y,blade?cast*(.8-stroke)+recoil*.8:book?-cast*.22:-recoil*.25);

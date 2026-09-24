@@ -1,12 +1,12 @@
 import{renderPixelRatio,RenderBudget}from'./render-budget.js?v=21';
 import{groundCue,disposeCue}from'./ground-cues.js?v=19';
 import{SkillVFX}from'./skill-vfx.js?v=22';
-import{loadHeroAssets,disposeHero}from'./skinned-hero.js?v=13';
+import{loadHeroAssets,disposeHero}from'./skinned-hero.js?v=23';
 import{GameAudio}from'./audio.js?v=18';
 import{ENEMY_GUIDE,CIRCLE_GUIDE}from'./battle-guide.js?v=19';
 import * as T from './vendor/three.module.js';
 import{MAPS,WEAPONS,ENEMIES,weaponFor,experienceNeeded,grantExperience,chooseUpgrades,takeUpgrade,weaponStats,WEAPON_PATHS,segmentDistance,registerCrossbowHit,registerShadowHit}from'./rules.js?v=18';
-import{actor,animateActor,animateWorld,buildWorld,clearAt,moveActor,mesh,mat}from'./world.js?v=22';
+import{actor,animateActor,animateWorld,buildWorld,clearAt,moveActor,mesh,mat}from'./world.js?v=23';
 const $=s=>document.querySelector(s),touch=matchMedia('(pointer:coarse)').matches;
 document.body.classList.toggle('touch',touch);
 const canvas=$('#world');let renderer;
