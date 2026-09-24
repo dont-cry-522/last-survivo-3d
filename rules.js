@@ -49,13 +49,13 @@ export function takeUpgrade(p,id){
  const u=UPGRADES.find(u=>u.id===id);if(!u||!heroSpell(p.heroId,id)||(p.upgrades[id]||0)>=u.max)return false;p.upgrades[id]=(p.upgrades[id]||0)+1;if(id==='vitality'){p.maxHp+=24;p.hp=Math.min(p.maxHp,p.hp+24);}return true;
 }
 export function weaponStats(p){
- const base=WEAPONS[p.weaponId]||WEAPONS.crossbow,w={...base,pierce:['shuriken','shadowblade'].includes(base.id)?2:1,spread:.14,radius:base.id==='fire'?2.5:base.id==='dark'?2:base.id==='grimoire'?1.7:0,bounces:0,burn:0,returning:base.id==='shadowblade',gravity:0,echo:0,markDamage:base.id==='shade'?24:0,markRadius:1.8};
+ const base=WEAPONS[p.weaponId]||WEAPONS.crossbow,w={...base,hitRadius:({rifle:.06,shotgun:.07,crossbow:.09,shuriken:.22,fire:.32,dark:.28,shade:.18,shadowblade:.32,grimoire:0})[base.id],pierce:['shuriken','shadowblade'].includes(base.id)?2:1,spread:.14,radius:base.id==='fire'?2.5:base.id==='dark'?2:base.id==='grimoire'?1.7:0,bounces:0,burn:0,returning:base.id==='shadowblade',gravity:0,echo:0,markDamage:base.id==='shade'?24:0,markRadius:1.8};
  const id=p.weaponPath?.id,path=WEAPON_PATHS[id],r=path?.weapon===base.id?Math.min(3,Math.max(0,p.weaponPath.rank)):0;
  if(r)switch(id){
  case'rifle_pierce':w.pierce=1+r;w.damage*=1+.08*r;w.rate*=.9;break;
  case'rifle_rapid':w.rate*=1+.2*r;w.damage*=.92;w.speed*=1+.05*r;break;
  case'shotgun_fan':w.count=6+r;w.damage*=.8;w.range*=.85;w.spread=.19;break;
- case'shotgun_slug':w.count=1;w.damage=48+7*r;w.range*=1.45;w.rate*=.85;w.pierce=1+r;break;
+ case'shotgun_slug':w.count=1;w.hitRadius=.13;w.damage=48+7*r;w.range*=1.45;w.rate*=.85;w.pierce=1+r;break;
  case'fire_burn':w.burn=4+3*r;w.damage*=.9;break;
  case'fire_blast':w.radius=2.5+.5*r;w.damage*=1+.12*r;w.rate*=.9;break;
  case'crossbow_pierce':w.damage*=1+.08+.14*r;w.rate*=.88;w.pierce=1+r;break;
