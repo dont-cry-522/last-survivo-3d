@@ -1,3 +1,4 @@
+import{creatureSample,creatureSpatial,ENEMY_VOICES}from'./enemy-audio.js?v=29';
 // Original procedural score and sound design. No external audio downloads.
 const midi=n=>440*2**((n-69)/12);
 const THEMES={
@@ -8,7 +9,7 @@ const THEMES={
 export class GameAudio{
   constructor(context=null){
     this.ctx=context;this.ready=false;this.muted=false;this.musicVolume=.65;this.sfxVolume=.8;
-    this.beat=0;this.next=0;this.map='forest';this.pressure=0;this.mode='menu';this.cooldowns=new Map();this.nodes=0;
+    this.beat=0;this.next=0;this.map='forest';this.pressure=0;this.mode='menu';this.cooldowns=new Map();this.nodes=0;this.creatureBuffers=new Map();this.creatureSources=new Set();
     try{const v=JSON.parse(localStorage.getItem('forest3d-audio')||'null');if(v){this.muted=!!v.muted;this.musicVolume=this.clamp(v.music,.65);this.sfxVolume=this.clamp(v.sfx,.8);}}catch{}
   }
   clamp(n,f){return Number.isFinite(n)?Math.max(0,Math.min(1,n)):f;}
@@ -29,7 +30,7 @@ export class GameAudio{
   applyVolumes(immediate=false){if(!this.ready)return;const t=this.ctx.currentTime;for(const [bus,v]of [[this.master,this.muted?0:.78],[this.music,this.musicVolume],[this.sfx,this.sfxVolume]]){bus.gain.cancelScheduledValues(t);if(immediate)bus.gain.setValueAtTime(v,t);else bus.gain.setTargetAtTime(v,t,.025);}}
   setVolume(bus,value){if(bus==='music')this.musicVolume=this.clamp(value,.65);else this.sfxVolume=this.clamp(value,.8);this.applyVolumes();this.save();}
   setMuted(value){this.muted=value;this.applyVolumes();this.save();}
-  reset(map){this.map=map;this.beat=0;this.next=(this.ctx?.currentTime||0)+.04;this.pressure=0;this.cooldowns.clear();}
+  reset(map){this.stopCreatures();this.map=map;this.beat=0;this.next=(this.ctx?.currentTime||0)+.04;this.pressure=0;this.cooldowns.clear();}
   available(){return this.ready&&!this.muted&&this.ctx.state==='running'&&this.nodes<100;}
   allow(key,seconds){if(!this.available())return false;const t=this.ctx.currentTime;if((this.cooldowns.get(key)||0)>t)return false;this.cooldowns.set(key,t+seconds);return true;}
   voice(f,d,vol,type='sine',end=null,at=null,bus='sfx',attack=.005,pan=0){
@@ -46,6 +47,22 @@ export class GameAudio{
     s.buffer=this.noiseBuffer;filter.type=type;filter.Q.value=.8;filter.frequency.setValueAtTime(frequency,t);filter.frequency.exponentialRampToValueAtTime(Math.max(30,end),t+d);
     g.gain.setValueAtTime(.0001,t);g.gain.linearRampToValueAtTime(vol,t+.003);g.gain.exponentialRampToValueAtTime(vol*.3,t+d*.35);g.gain.exponentialRampToValueAtTime(.0001,t+d);s.connect(filter);filter.connect(g);g.connect(this[bus]);this.nodes++;
     s.start(t,Math.random()*.7);s.stop(t+d+.02);s.onended=()=>{s.disconnect();filter.disconnect();g.disconnect();this.nodes--;};
+  }
+  stopCreatures(){for(const s of this.creatureSources)s.stop();}
+  creature(kind,event,dx=0,dz=0){
+    if(!ENEMY_VOICES[kind]||!this.available())return false;
+    const {gain,pan}=creatureSpatial(event,dx,dz),quiet=event==='step'||event==='hurt',limit=quiet?4:10;
+    if(!gain||this.creatureSources.size>=limit||this.nodes>(quiet?65:88))return false;
+    const group=quiet?event:event==='wind'?'warning':'action',interval=event==='step'?.18:event==='hurt'?.12:.045;
+    const key='creature-'+kind+'-'+event,t=this.ctx.currentTime;
+    if((this.cooldowns.get(key)||0)>t||(this.cooldowns.get('creature-'+group)||0)>t)return false;
+    const cacheKey=kind+':'+event;let buffer=this.creatureBuffers.get(cacheKey);
+    if(!buffer){const samples=creatureSample(kind,event,this.ctx.sampleRate);if(!samples)return false;buffer=this.ctx.createBuffer(1,samples.length,this.ctx.sampleRate);buffer.copyToChannel(samples,0);this.creatureBuffers.set(cacheKey,buffer);}
+    this.cooldowns.set(key,t+(quiet?.3:.14));this.cooldowns.set('creature-'+group,t+interval);
+    const source=this.ctx.createBufferSource(),volume=this.ctx.createGain(),panner=this.ctx.createStereoPanner();
+    source.buffer=buffer;source.playbackRate.value=.97+Math.random()*.06;volume.gain.value=gain*(event==='step'?.65:1);panner.pan.value=pan;
+    source.connect(volume);volume.connect(panner);panner.connect(this.sfx);this.creatureSources.add(source);this.nodes++;
+    source.onended=()=>{source.disconnect();volume.disconnect();panner.disconnect();this.creatureSources.delete(source);this.nodes--;};source.start();return true;
   }
   tone(f,d=.12,v=.06,type='sine',end=null){this.voice(f,d,v,type,end);}
   shot(id){if(!this.allow('shot',.055))return;const t=this.ctx.currentTime;
