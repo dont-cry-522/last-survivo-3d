@@ -1,7 +1,8 @@
 import{heroesReady,createSkinnedHero,animateSkinnedHero}from'./skinned-hero.js?v=13';
 import * as T from './vendor/three.module.js';
 import{makeHero,animateHero}from'./hero-model.js?v=13';
-import{MAPS,seeded}from'./rules.js?v=9';
+import{makeWraith,animateWraith}from'./wraith-model.js?v=16';
+import{MAPS,seeded}from'./rules.js?v=16';
 const geo=new Map(),materials=new Map(),terrainMaterials=new Map(),detailMaterials=new Map(),weatherMaterials=new Map();
 function geometry(kind,args){const key=kind+args.join(',');if(!geo.has(key))geo.set(key,new T[kind](...args));return geo.get(key);}
 export function mat(color,glow=false){const key=color+':'+glow;if(!materials.has(key))materials.set(key,new T.MeshStandardMaterial({color,roughness:glow?.35:.86,metalness:glow?.25:.08,emissive:glow?color:0,emissiveIntensity:glow?.9:0,flatShading:true}));return materials.get(key);}
@@ -12,6 +13,7 @@ const cone=(p,c,x,y,z,r,h)=>mesh('ConeGeometry',[r,h,7],c,x,y,z,p);
 function detailMaterial(color,opacity,vertexColors=false){const key=color+':'+opacity+':'+vertexColors;if(!detailMaterials.has(key))detailMaterials.set(key,new T.MeshStandardMaterial({color,transparent:true,opacity,vertexColors,roughness:1,depthWrite:false,side:T.DoubleSide}));return detailMaterials.get(key);}
 export function actor(kind='silver',weapon='crossbow'){
  const g=new T.Group(),rig=new T.Group();g.add(rig);g.userData.rig=rig;
+ if(kind==='wraith')return makeWraith(weapon);
  if(['silver','scout'].includes(kind))return heroesReady()?createSkinnedHero(kind,weapon):makeHero(kind,weapon);
  if(kind==='mushroom'){
   mesh('CylinderGeometry',[.23,.35,.72,7],0xb7a483,0,.45,0,rig);const capRig=new T.Group();capRig.position.y=1.05;rig.add(capRig);g.userData.cap=capRig;const cap=orb(capRig,0xb95e43,0,0,0,.66);cap.scale.y=.6;for(let i=0;i<5;i++)orb(capRig,0xf2dcad,Math.cos(i*2.4)*.37,.2,Math.sin(i*2.4)*.35,.09);for(const s of [-1,1])orb(rig,0xffdc88,s*.13,.7,.27,.04,true);
@@ -33,7 +35,7 @@ export function actor(kind='silver',weapon='crossbow'){
  return g;
 }
 export function animateActor(g,t,speed=0,attack=0,hurt=0){
- const d=g.userData;if(d.skinned){animateSkinnedHero(g,t,speed,attack,hurt);return;}if(d.leftKnee){animateHero(g,t,speed,attack);return;}
+ const d=g.userData;if(d.wraith){animateWraith(g,t,speed,attack,hurt);return;}if(d.skinned){animateSkinnedHero(g,t,speed,attack,hurt);return;}if(d.leftKnee){animateHero(g,t,speed,attack);return;}
  const dt=d.lastTime===undefined?1/60:Math.max(0,Math.min(.05,t-d.lastTime));d.lastTime=t;
  d.stride=(d.stride||0)+(Math.min(1,speed/2.5)-(d.stride||0))*(1-Math.exp(-dt*14));
  const stride=d.stride,heavy=['golem','boss'].includes(d.kind),frequency=heavy?5.2:d.kind==='wolf'?13:9;

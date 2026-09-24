@@ -55,15 +55,18 @@ export class GameAudio{
       const heavy=id==='shotgun';this.noise(heavy?.26:.1,heavy?.65:.42,heavy?1800:3400,heavy?180:600);this.voice(heavy?125:210,heavy?.24:.095,heavy?.3:.2,'sine',42);
       this.noise(.055,.1,6200,3000,t+.035);
     }else if(id==='shuriken'){this.noise(.18,.19,5500,600);for(const f of [1850,2760])this.voice(f,.1,.025,'sine',f*.75);}
+    else if(id==='shade'){this.voice(165,.19,.08,'triangle',55);this.voice(330,.22,.04,'sine',180);this.noise(.16,.09,2400,180);}
+    else if(id==='shadowblade'){this.noise(.14,.2,4400,500);this.voice(480,.12,.055,'sawtooth',115);}
     else if(id==='fire'){this.noise(.36,.5,900,180);this.voice(110,.25,.2,'sine',35);this.noise(.12,.1,3600,1800,t+.1);}
     else{this.voice(80,.4,.14,'sine',220);this.voice(163,.3,.055,'triangle',330);this.noise(.3,.13,450,1700);}
   }
-  impact(id,strong=false){if(!this.allow(strong?'impact-strong':'impact',.085))return;if(id==='crossbow'){this.noise(strong?.21:.08,strong?.26:.12,3000,strong?280:700);this.voice(strong?115:260,strong?.22:.08,strong?.14:.045,'triangle',strong?45:110);if(strong)this.noise(.18,.09,700,120,this.ctx.currentTime+.035);}else{this.noise(.085,.15,id==='shuriken'?3200:900,250);this.voice(105,.09,.09,'sine',48);}}
+  impact(id,strong=false){if(!this.allow(strong?'impact-strong':'impact',.085))return;if(id==='crossbow'){this.noise(strong?.21:.08,strong?.26:.12,3000,strong?280:700);this.voice(strong?115:260,strong?.22:.08,strong?.14:.045,'triangle',strong?45:110);if(strong)this.noise(.18,.09,700,120,this.ctx.currentTime+.035);}else if(id==='shade'||id==='shadowblade'){this.noise(.13,.14,id==='shade'?1300:3800,240);this.voice(strong?90:220,.16,.075,'triangle',55);}else{this.noise(.085,.15,id==='shuriken'?3200:900,250);this.voice(105,.09,.09,'sine',48);}}
   threat(kind='wave'){if(!this.allow('threat',2))return;const t=this.ctx.currentTime,deep=kind==='boss';this.voice(deep?58:82,.9,deep?.15:.105,'sawtooth',deep?35:48,t,'music',.04);this.noise(deep?.75:.42,deep?.16:.085,1400,170,t,'music');for(let i=0;i<(deep?4:3);i++)this.voice((deep?147:196)*2**(i/12),.19,.052,'triangle',null,t+i*.105,'music',.008);}
   spell(kind){if(!this.allow('spell-'+kind,.11))return;const t=this.ctx.currentTime;
     if(kind==='ice'){this.noise(.36,.24,4800,1400);[2100,3150,4100,2700].forEach((f,i)=>this.voice(f,.18,.035,'sine',f*.85,t+i*.035));}
     else if(kind==='storm'){this.noise(.22,.45,4200,300);this.voice(64,.4,.21,'sine',26);this.noise(.045,.23,6200,1800,t+.07);}
     else if(kind==='fire'){this.noise(.48,.55,1100,100);this.voice(92,.4,.25,'sine',25);}
+    else if(['veil','chain','rift'].includes(kind)){this.noise(kind==='rift'?.4:.25,.2,kind==='chain'?2800:900,130);this.voice(kind==='rift'?70:kind==='chain'?130:95,.42,.16,'triangle',35);}
     else if(kind==='heal'){[440,660,880].forEach((f,i)=>this.voice(f,.35,.027,'sine',null,t+i*.045));}
     else{this.noise(.3,.16,1400,200);this.voice(140,.38,.15,'sine',45);this.voice(300,.25,.025,'triangle',620);}
   }

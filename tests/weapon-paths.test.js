@@ -9,6 +9,7 @@ test('all six weapons offer exactly their two routes at level 3',()=>{
     assert(!chooseUpgrades({...p,level:2}).some(c=>c.category==='weapon'));
   }
 });
+test('shadow weapons keep separate branching upgrades',()=>{for(const id of ['shade','shadowblade']){const p=player(id),options=chooseUpgrades(p,()=>.3).filter(c=>c.category==='weapon');assert.equal(options.length,2);assert(options.every(c=>WEAPON_PATHS[c.pathId].weapon===id));p.level=8;for(const choice of options){const selected=player(id,8);for(let rank=0;rank<3;rank++)assert(takeUpgrade(selected,choice.id));const upgraded=weaponStats(selected);assert.equal(upgraded.id,id);assert.notDeepEqual(upgraded,weaponStats(player(id)));}}});
 test('routes are exclusive, gated at levels 3/5/8, and reject foreign upgrades',()=>{
   const p=player('crossbow');assert.equal(takeUpgrade(p,'path:rifle_pierce'),false);
   assert(takeUpgrade(p,'path:crossbow_hunt'));assert.equal(takeUpgrade(p,'path:crossbow_pierce'),false);

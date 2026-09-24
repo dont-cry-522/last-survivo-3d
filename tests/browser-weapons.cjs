@@ -4,13 +4,13 @@ const {chromium}=require(process.env.PLAYWRIGHT_MODULE||'playwright'),assert=req
  await page.addInitScript(()=>{const raf=requestAnimationFrame;window.requestAnimationFrame=cb=>raf(t=>{if(!window.freezeGame)cb(t);});});
  await page.goto(process.env.TEST_URL||'http://127.0.0.1:8897/');await page.waitForFunction(()=>window.game3d);await page.locator('#start').click();await page.evaluate(()=>window.freezeGame=true);await page.waitForTimeout(50);
  const results=await page.evaluate(async()=>{
-  const {WEAPON_PATHS,takeUpgrade}=await import('./rules.js?v=9'),g=game3d,out=[];
+  const {WEAPON_PATHS,takeUpgrade}=await import('./rules.js?v=16'),g=game3d,out=[];
   const setup=(hero,index,path)=>{g.select(hero,'forest',index);g.start();g.controls.angle=0;g.controls.hasAim=true;g.world.obstacles.length=0;g.world.patches.length=0;g.player.level=8;for(let i=0;i<3;i++)if(!takeUpgrade(g.player,'path:'+path))throw Error('route rejected');};
   const target=(x,z)=>{const e=g.spawn('golem',g.player.x+x,g.player.z+z);e.hp=e.maxHp=10000;e.cool=99;e.speed=0;return e;};
   const advance=(seconds)=>{for(let i=0;i<seconds*60;i++){g.step(1/60);g.vfx.update(1/60);}};
   const once=()=>{g.controls.held=true;g.step(1/60);g.controls.held=false;g.player.attack=99;};
   for(const [id,path]of Object.entries(WEAPON_PATHS)){
-   const hero=['crossbow','shuriken','dark'].includes(path.weapon)?'silver':'scout',index=(hero==='silver'?['crossbow','shuriken','dark']:['rifle','shotgun','fire']).indexOf(path.weapon);
+   const hero=['shade','shadowblade'].includes(path.weapon)?'wraith':['crossbow','shuriken','dark'].includes(path.weapon)?'silver':'scout',index=(hero==='wraith'?['shade','shadowblade','dark']:hero==='silver'?['crossbow','shuriken','dark']:['rifle','shotgun','fire']).indexOf(path.weapon);
    setup(hero,index,id);const e=target(0,4);once();advance(.7);if(e.hp===e.maxHp)throw Error(id+' did not damage target');out.push(id);
   }
   setup('silver',0,'crossbow_pierce');const bolts=[target(0,4),target(0,6),target(0,8)];once();advance(.8);if(!bolts.every(e=>e.hp<e.maxHp))throw Error('Crossbow pierce missed aligned targets');
@@ -22,7 +22,7 @@ const {chromium}=require(process.env.PLAYWRIGHT_MODULE||'playwright'),assert=req
   if(g.vfx.active.length>g.vfx.limit)throw Error('VFX exceeded budget');g.vfx.clear();if(g.vfx.active.length)throw Error('VFX cleanup failed');
   return out;
  });
- assert.equal(results.length,12);assert.deepEqual(errors,[]);console.log('PASS all 12 routes damage targets; crossbow pierce, return, burn, pull, rifle pierce; VFX cap and cleanup');
+ assert.equal(results.length,16);assert.deepEqual(errors,[]);console.log('PASS all 16 routes damage targets; crossbow pierce, return, burn, pull, rifle pierce; VFX cap and cleanup');
  await page.close();
  for(const viewport of [{width:1440,height:900},{width:844,height:390},{width:390,height:844}]){
   const p=await b.newPage({viewport,hasTouch:viewport.width<1000});await p.goto(process.env.TEST_URL||'http://127.0.0.1:8897/');await p.waitForFunction(()=>window.game3d);await p.locator('#start').click();

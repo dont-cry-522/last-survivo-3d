@@ -1,11 +1,13 @@
 export const MAPS={forest:{name:'翡翠幽林',subtitle:'穿过古木与遗迹，追寻林心的回声',ground:0x284b3b,fog:0x173d39,leaf:0x287456,accent:0xecc988,slow:'泥地'},snow:{name:'霜月峡谷',subtitle:'冰晶照亮雪路，寒风掩藏猎手',ground:0x96b7bd,fog:0x769daa,leaf:0x456e7d,accent:0x9ae9ff,slow:'深雪'},ash:{name:'赤烬荒原',subtitle:'越过熔岩裂隙，唤醒沉睡的守卫',ground:0x5c4544,fog:0x382e3c,leaf:0x69545d,accent:0xffa25d,slow:'灰烬'}};
-export const WEAPONS={rifle:{id:'rifle',name:'游侠连发枪',rate:3,damage:12,count:1,speed:27,range:24,color:0xffdc91},shotgun:{id:'shotgun',name:'碎岩霰弹枪',rate:1,damage:10,count:5,speed:25,range:13,color:0xffbe69},fire:{id:'fire',name:'烬火法杖',rate:.9,damage:30,count:1,speed:14,range:22,color:0xff743b},crossbow:{id:'crossbow',name:'夜翎短弩',rate:2.05,damage:20,count:1,speed:35,range:25,color:0xd8edff},shuriken:{id:'shuriken',name:'月刃飞镖',rate:1.4,damage:13,count:3,speed:22,range:19,color:0x95fff0},dark:{id:'dark',name:'夜幕法杖',rate:1,damage:26,count:1,speed:12,range:23,color:0xc5a2ff}};
-export function weaponFor(hero,index){return WEAPONS[(hero==='silver'?['crossbow','shuriken','dark']:['rifle','shotgun','fire'])[index]];}
+export const WEAPONS={rifle:{id:'rifle',name:'游侠连发枪',rate:3,damage:12,count:1,speed:27,range:24,color:0xffdc91},shotgun:{id:'shotgun',name:'碎岩霰弹枪',rate:1,damage:10,count:5,speed:25,range:13,color:0xffbe69},fire:{id:'fire',name:'烬火法杖',rate:.9,damage:30,count:1,speed:14,range:22,color:0xff743b},crossbow:{id:'crossbow',name:'夜翎短弩',rate:2.05,damage:20,count:1,speed:35,range:25,color:0xd8edff},shuriken:{id:'shuriken',name:'月刃飞镖',rate:1.4,damage:13,count:3,speed:22,range:19,color:0x95fff0},dark:{id:'dark',name:'夜幕法杖',rate:1,damage:26,count:1,speed:12,range:23,color:0xc5a2ff},shade:{id:'shade',name:'影脉法球',rate:1.6,damage:18,count:1,speed:20,range:21,color:0x9679ff},shadowblade:{id:'shadowblade',name:'幽刃回旋',rate:1.5,damage:13,count:3,speed:23,range:20,color:0x8d76dc}};
+export function weaponFor(hero,index){return WEAPONS[(hero==='wraith'?['shade','shadowblade','dark']:hero==='silver'?['crossbow','shuriken','dark']:['rifle','shotgun','fire'])[index]];}
 export function registerCrossbowHit(player,targetId,now){const mark=player.crossbowMark;if(!mark||mark.target!==targetId||now-mark.time>2.5)player.crossbowMark={target:targetId,time:now,hits:1};else{mark.time=now;mark.hits++;if(mark.hits===3){mark.hits=0;return true;}}return false;}
+export function registerShadowHit(target,now){const mark=target.shadowMark;if(!mark||now-mark.time>=2.5)target.shadowMark={hits:1,time:now};else{mark.time=now;mark.hits++;if(mark.hits>=3){mark.hits=0;return true;}}return false;}
 export function seeded(seed){let n=seed>>>0;return()=>{n=(Math.imul(n,1664525)+1013904223)>>>0;return n/4294967296;};}
 export function experienceNeeded(level){return Math.floor(15+level*5+level*level*.5);}
 export function grantExperience(p,n){p.xp+=n;while(p.xp>=experienceNeeded(p.level)){p.xp-=experienceNeeded(p.level);p.level++;p.pending++;p.maxHp+=4;p.hp=Math.min(p.maxHp,p.hp+4);}}
-export const UPGRADES=[{id:'power',name:'磨砺锋芒',text:'武器伤害 +18%',icon:'✦',max:5},{id:'haste',name:'疾风节拍',text:'射速 +15%',icon:'»',max:4},{id:'fire',name:'陨火降临',text:'周期召唤陨火，轰击附近怪群',icon:'☄',max:3},{id:'ice',name:'霜华绽放',text:'周期释放冰晶环，伤害并减速',icon:'❄',max:3},{id:'storm',name:'雷霆回响',text:'周期落雷，连锁附近敌人',icon:'ϟ',max:3},{id:'vitality',name:'坚韧之心',text:'生命上限 +24，并恢复 24',icon:'♡',max:4},{id:'stride',name:'轻盈步伐',text:'移动速度 +8%，闪避冷却缩短',icon:'➶',max:3},{id:'magnet',name:'灵光牵引',text:'经验吸取范围增加',icon:'◎',max:3}];
+export const UPGRADES=[{id:'power',name:'磨砺锋芒',text:'武器伤害 +18%',icon:'✦',max:5},{id:'haste',name:'疾风节拍',text:'射速 +15%',icon:'»',max:4},{id:'fire',name:'陨火降临',text:'周期召唤陨火，轰击附近怪群',icon:'☄',max:3},{id:'ice',name:'霜华绽放',text:'周期释放冰晶环，伤害并减速',icon:'❄',max:3},{id:'storm',name:'雷霆回响',text:'周期落雷，连锁附近敌人',icon:'ϟ',max:3},{id:'veil',name:'暗幕',text:'周期展开暗幕，遮蔽并削弱逼近的敌人',icon:'◐',max:3},{id:'chain',name:'缚影',text:'周期甩出影链，束缚前方怪物',icon:'⛓',max:3},{id:'rift',name:'裂隙',text:'周期唤出影之裂隙，重创附近怪物',icon:'✺',max:3},{id:'vitality',name:'坚韧之心',text:'生命上限 +24，并恢复 24',icon:'♡',max:4},{id:'stride',name:'轻盈步伐',text:'移动速度 +8%，闪避冷却缩短',icon:'➶',max:3},{id:'magnet',name:'灵光牵引',text:'经验吸取范围增加',icon:'◎',max:3}];
+const heroSpell=(hero,id)=>hero==='wraith'?!['fire','ice','storm'].includes(id):!['veil','chain','rift'].includes(id);
 const route=(weapon,name,icon,steps)=>({weapon,name,icon,steps});
 export const WEAPON_PATHS={
  rifle_pierce:route('rifle','贯穿弹道','➤',['贯穿 2 个目标，伤害 +8%，射速 -10%','贯穿 3 个目标，伤害 +16%','贯穿 4 个目标，伤害 +24%']),
@@ -19,23 +21,30 @@ export const WEAPON_PATHS={
  shuriken_fan:route('shuriken','月刃齐发','✧',['每次 5 枚飞镖，单枚伤害 -20%','每次 6 枚飞镖','每次 7 枚飞镖']),
  shuriken_return:route('shuriken','回旋月刃','↶',['飞镖折返，可再次命中；单次伤害 -20%，贯穿 3 个目标','贯穿 4 个目标，弹速 +10%','贯穿 5 个目标，弹速 +15%']),
  dark_gravity:route('dark','引力漩涡','✺',['命中留下 1.4 秒牵引区，半径 2.6；直接伤害 -10%','牵引半径 2.9，持续 1.6 秒','牵引半径 3.2，持续 1.8 秒；最多 3 处，首领牵引减弱']),
- dark_seek:route('dark','追魂魔矢','♦',['追踪弹速 +35%，射速 +15%，伤害 -10%','双追踪魔矢，每枚伤害 -30%，射速恢复基础值','双魔矢射速 +15%，每枚伤害 -30%'])
+ dark_seek:route('dark','追魂魔矢','♦',['追踪弹速 +35%，射速 +15%，伤害 -10%','双追踪魔矢，每枚伤害 -30%，射速恢复基础值','双魔矢射速 +15%，每枚伤害 -30%']),
+ shade_echo:route('shade','残响弹射','◇',['影球弹射 1 次','影球弹射 2 次，伤害 +10%','影球弹射 3 次，伤害 +20%']),
+ shade_blight:route('shade','蚀影刻印','◈',['三次命中引爆刻印，额外 24 伤害','刻印伤害 36，爆炸半径增加','刻印伤害 48，爆炸半径增加']),
+ shadowblade_fan:route('shadowblade','群鸦飞刃','✧',['每次 5 枚幽刃，单枚伤害 -20%','每次 6 枚幽刃','每次 7 枚幽刃']),
+ shadowblade_return:route('shadowblade','折返幽刃','↶',['幽刃折返，可再次命中；贯穿 3 个目标','贯穿 4 个目标，弹速 +10%','贯穿 5 个目标，弹速 +15%'])
 };
 const PATH_LEVELS=[3,5,8];
 function routeChoices(p){const rank=p.weaponPath?.rank||0;if(rank>=3||(p.level||1)<PATH_LEVELS[rank])return[];return Object.entries(WEAPON_PATHS).filter(([id,v])=>v.weapon===p.weaponId&&(!p.weaponPath||p.weaponPath.id===id)).map(([id,v])=>({id:'path:'+id,pathId:id,name:v.name,icon:v.icon,text:v.steps[rank],max:3,rank,category:'weapon'}));}
-export function chooseUpgrades(p,random=Math.random){const pool=UPGRADES.filter(u=>(p.upgrades[u.id]||0)<u.max).map(u=>{
+export function chooseUpgrades(p,random=Math.random){const pool=UPGRADES.filter(u=>heroSpell(p.heroId,u.id)&&(p.upgrades[u.id]||0)<u.max).map(u=>{
  const rank=(p.upgrades[u.id]||0)+1;let text=u.text;
  if(u.id==='fire')text=`每 5.5 秒落下陨火，造成 ${35*rank} 伤害，爆炸半径 3.5`;
  if(u.id==='ice')text=`每 7 秒冰晶扩散，造成 ${20*rank} 伤害，减速 ${(2+rank*.35).toFixed(2)} 秒`;
  if(u.id==='storm')text=`每 5.5 秒落雷并连锁 ${2+rank} 个目标，每个造成 ${27*rank} 伤害`;
+ if(u.id==='veil')text=`每 8 秒张开暗幕 2.5 秒，范围内敌人减速并受到 ${10*rank} 点影蚀伤害`;
+ if(u.id==='chain')text=`每 7 秒缚住附近 ${2+rank} 只怪物，造成 ${15*rank} 伤害`;
+ if(u.id==='rift')text=`每 9 秒打开裂隙，造成 ${30*rank} 范围伤害并短暂牵引`;
  return{...u,text};
  }),result=routeChoices(p);while(pool.length&&result.length<3)result.push(pool.splice(Math.floor(random()*pool.length),1)[0]);return result;}
 export function takeUpgrade(p,id){
  if(id.startsWith('path:')){const choice=routeChoices(p).find(c=>c.id===id);if(!choice)return false;p.weaponPath={id:choice.pathId,rank:choice.rank+1};return true;}
- const u=UPGRADES.find(u=>u.id===id);if(!u||(p.upgrades[id]||0)>=u.max)return false;p.upgrades[id]=(p.upgrades[id]||0)+1;if(id==='vitality'){p.maxHp+=24;p.hp=Math.min(p.maxHp,p.hp+24);}return true;
+ const u=UPGRADES.find(u=>u.id===id);if(!u||!heroSpell(p.heroId,id)||(p.upgrades[id]||0)>=u.max)return false;p.upgrades[id]=(p.upgrades[id]||0)+1;if(id==='vitality'){p.maxHp+=24;p.hp=Math.min(p.maxHp,p.hp+24);}return true;
 }
 export function weaponStats(p){
- const base=WEAPONS[p.weaponId]||WEAPONS.crossbow,w={...base,pierce:base.id==='shuriken'?2:1,spread:.14,radius:base.id==='fire'?2.5:base.id==='dark'?2:0,bounces:0,burn:0,returning:false,gravity:0};
+ const base=WEAPONS[p.weaponId]||WEAPONS.crossbow,w={...base,pierce:['shuriken','shadowblade'].includes(base.id)?2:1,spread:.14,radius:base.id==='fire'?2.5:base.id==='dark'?2:0,bounces:0,burn:0,returning:false,gravity:0,markDamage:base.id==='shade'?24:0,markRadius:1.8};
  const id=p.weaponPath?.id,path=WEAPON_PATHS[id],r=path?.weapon===base.id?Math.min(3,Math.max(0,p.weaponPath.rank)):0;
  if(r)switch(id){
  case'rifle_pierce':w.pierce=1+r;w.damage*=1+.08*r;w.rate*=.9;break;
@@ -50,6 +59,10 @@ export function weaponStats(p){
  case'shuriken_return':w.returning=true;w.pierce=2+r;w.damage*=.8;w.speed*=1+(r===1?0:.05*r);break;
  case'dark_gravity':w.gravity=r;w.damage*=.9;break;
  case'dark_seek':w.speed*=1.35;w.count=r>=2?2:1;w.damage*=r>=2?.7:.9;w.rate*=r===2?1:1.15;break;
+ case'shade_echo':w.bounces=r;w.damage*=1+.1*(r-1);break;
+ case'shade_blight':w.markDamage=12+12*r;w.markRadius=1.6+.3*r;break;
+ case'shadowblade_fan':w.count=4+r;w.damage*=.8;w.spread=.18;break;
+ case'shadowblade_return':w.returning=true;w.pierce=2+r;w.speed*=1+.05*(r-1);break;
  }
  w.damage*=1+.18*(p.upgrades?.power||0);w.rate*=1+.15*(p.upgrades?.haste||0);return w;
 }

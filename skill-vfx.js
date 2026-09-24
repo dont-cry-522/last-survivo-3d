@@ -77,6 +77,19 @@ export class SkillVFX{
   if(showRing)this.particle('ring',0x9d71ed,x,.11,z,{life:.45,size:[r*.72,r*.72,1],opacity:.72,additive:false,priority:1});
   for(let i=0;i<10;i++){const a=i*Math.PI/5,d=r*.7;this.particle(i%3?'ember':'smoke',i%3?0x9d6dff:0x554077,x+Math.cos(a)*d,.35,z+Math.sin(a)*d,{life:.4+Math.random()*.18,size:i%3?[.1,.18,.1]:[.3,.13,.3],velocity:[-Math.cos(a)*d*1.7,.35,-Math.sin(a)*d*1.7],spin:7,orbit:[x,z,3.4],opacity:i%3?.8:.36});}
  }
+ shadowStep(ax,az,bx,bz){
+  for(const [x,z]of [[ax,az],[bx,bz]]){this.particle('veil',0x342354,x,.08,z,{life:.32,size:[1.25,1.25,1],opacity:.55,additive:false});for(let i=0;i<5;i++){const a=i*Math.PI*2/5;this.particle('crystal',0xae8bff,x,.4,z,{life:.28,size:[.055,.28,.055],velocity:[Math.cos(a)*2,1.2,Math.sin(a)*2],gravity:4});}}
+  this.segment(new T.Vector3(ax,.8,az),new T.Vector3(bx,.8,bz),0x6e4aab,.09,.18,true);
+ }
+ shadowMark(x,z,strong=false){
+  this.particle('ember',strong?0xd4b1ff:0x8e68d4,x,1,z,{life:strong?.38:.18,size:strong?[.4,.4,.4]:[.14,.14,.14],grow:true,opacity:.7});
+  if(strong)for(let i=0;i<8;i++){const a=i*Math.PI/4;this.particle('crystal',i%2?0x9a71ef:0xe0c9ff,x,1,z,{life:.35,size:[.065,.25,.065],velocity:[Math.sin(a)*3,1.4,Math.cos(a)*3],gravity:4,spin:5});}
+ }
+ shadowSpell(kind,x,z,targets=[]){
+  if(kind==='veil'){this.particle('veil',0x49326d,x,.09,z,{life:2.4,size:[4.8,4.8,1],opacity:.36,additive:false,priority:1});for(let i=0;i<12;i++){const a=i*Math.PI/6;this.particle('smoke',0x715090,x+Math.cos(a)*3,.5,z+Math.sin(a)*3,{life:.8,size:[.23,.42,.23],velocity:[0,.5,0],opacity:.4,additive:false});}}
+  else if(kind==='chain'){for(const e of targets){const a=new T.Vector3(x,.8,z),b=new T.Vector3(e.x,1,e.z);this.segment(a,b,0x6544a2,.13,.28,false,1);this.segment(a,b,0xc29cff,.032,.19,true,2);this.shadowMark(e.x,e.z);}}
+  else{this.dark(x,z,2.8,true);for(let i=0;i<5;i++){const a=i*Math.PI*2/5;this.segment(new T.Vector3(x,.1,z),new T.Vector3(x+Math.cos(a)*2.3,.7,z+Math.sin(a)*2.3),0xb48afa,.055,.38,true,1);}}
+ }
  status(kind,x,z,size=1){
   if(kind==='burn')this.particle('flame',0xff8734,x+(Math.random()-.5)*size,.45,z+(Math.random()-.5)*size,{life:.32,size:[.16,.28,.1],velocity:[0,1,0],grow:true,additive:false});
   else if(kind==='frost')this.particle('crystal',0xa5e8ff,x+(Math.random()-.5)*size,.18,z+(Math.random()-.5)*size,{life:.38,size:[.055,.22,.055],grow:true});
@@ -90,6 +103,8 @@ export class SkillVFX{
  projectile(w){
   const g=new T.Group(),part=(shape,color,scale,z=0)=>{if(!this.materials.has(color))this.materials.set(color,new T.MeshBasicMaterial({color}));const m=new T.Mesh(this.geometry[shape],this.materials.get(color));m.scale.set(...scale);m.position.z=z;g.add(m);return m;};
   if(w.id==='fire'){part('ember',0xffc05c,[.19,.19,.29]);part('crystal',0xff5b23,[.12,.35,.12],-.3).rotation.x=Math.PI/2;}
+  else if(w.id==='shade'){part('ember',0x543477,[.19,.19,.19]);part('crystal',0xc9aaff,[.11,.18,.11]);for(let i=0;i<3;i++){const m=part('ray',0x8e6bd8,[.025,.025,.33]);m.rotation.y=i*Math.PI/3;}}
+  else if(w.id==='shadowblade'){for(let i=0;i<4;i++){const m=part('crystal',0xa385e9,[.095,.18,.06]);m.rotation.x=Math.PI/2;m.rotation.y=i*Math.PI/2;}part('ember',0x3d285e,[.075,.075,.075]);}
   else if(w.id==='dark'){part('ember',0x543477,[.2,.2,.25]);part('crystal',0xd2adff,[.10,.25,.1]).rotation.x=Math.PI/2;for(const s of[-1,1]){const m=part('ember',0xab80ec,[.055,.055,.1],-.2);m.position.x=s*.23;}}
   else if(w.id==='shuriken'){for(let i=0;i<3;i++){const m=part('ray',0xa8f5e4,[.07,.045,.65]);m.rotation.y=i*Math.PI/3;}part('ember',0xe1fff3,[.07,.035,.07]);}
   else if(w.id==='crossbow'){part('ray',0x435363,[.035,.035,.66]);part('crystal',0xd9f1ff,[.072,.16,.072],.38).rotation.x=Math.PI/2;for(const s of[-1,1]){const feather=part('ray',0xa8cee5,[.13,.015,.14],-.27);feather.position.x=s*.10;feather.rotation.y=s*.38;}}
