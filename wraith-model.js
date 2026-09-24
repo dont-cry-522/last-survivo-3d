@@ -35,15 +35,24 @@ function mantleGeometry(){return cached('draped-mantle',()=>{
 });}
 
 function clothGeometry(width,length,front=false){return cached(`cloth:${width}:${length}:${front}`,()=>{
- const positions=[],trail=[],twist=[],indices=[],cols=12,rows=14;
+ const positions=[],trail=[],twist=[],waveA=[],waveB=[],indices=[],cols=12,rows=14;
  for(let y=0;y<=rows;y++)for(let x=0;x<=cols;x++){
   const u=x/cols,v=y/rows,px=(u-.5)*width*(.58+.42*v),py=-length*v+(front?Math.abs(u-.5)*.13*v*v:Math.cos(u*Math.PI*3)*.065*v*v),pz=-Math.sin(v*Math.PI/2)*(front?.015:.17)+Math.cos(u*Math.PI*6)*.026*v;
-  positions.push(px,py,pz);trail.push(px*(1+.08*v),py+v*v*.15,pz-v*v*.3);twist.push(px+v*v*.18,py,pz+px*v*.65);
+  const free=v*v,phase=v*7-u*2.3,amplitude=front?.042:.105;
+  positions.push(px,py,pz);trail.push(px*(1+.1*v),py+free*(front?.045:.20),pz-free*(front?.06:.42));twist.push(px+free*(front?.06:.22),py,pz+px*v*.65);
+  waveA.push(px,py+Math.sin(phase)*free*.018,pz+Math.sin(phase)*free*amplitude);
+  waveB.push(px,py+Math.cos(phase)*free*.018,pz+Math.cos(phase)*free*amplitude);
   if(x<cols&&y<rows){const n=y*(cols+1)+x;indices.push(n,n+cols+1,n+1,n+1,n+cols+1,n+cols+2);}
  }
- const g=surface(positions,indices);g.morphAttributes.position=[new T.Float32BufferAttribute(trail,3),new T.Float32BufferAttribute(twist,3)];g.computeBoundingSphere();return g;
+ const g=surface(positions,indices);g.morphAttributes.position=[trail,twist,waveA,waveB].map(p=>new T.Float32BufferAttribute(p,3));
+ g.morphAttributes.normal=g.morphAttributes.position.map(position=>{const target=new T.BufferGeometry();target.setAttribute('position',position);target.setIndex(g.index);target.computeVertexNormals();return target.getAttribute('normal');});g.computeBoundingSphere();return g;
 });}
-function cloth(p,d,color,width,length,pos,front=false){const m=mesh(p,clothGeometry(width,length,front),color,pos);d.panels.push(m);return m;}
+function cloth(p,d,color,width,length,pos,front=false){const m=mesh(p,clothGeometry(width,length,front),color,pos);m.userData.front=front;d.panels.push(m);return m;}
+
+// Integrate in small steps so a slow phone and a desktop produce the same cloth inertia.
+function spring(state,target,dt,frequency=8,damping=5){
+ for(let left=dt;left>0;){const h=Math.min(left,1/120);state.v+=(frequency*frequency*(target-state.x)-2*damping*state.v)*h;state.x+=state.v*h;left-=h;}return state.x;
+}
 
 function hand(parent,d,side){
  const wrist=joint(parent,0,-.21,0);d[side+'Hand']=wrist;
@@ -91,7 +100,7 @@ export function makeWraith(weapon='shade'){
   mesh(w,shadowCrescentGeometry,0x667297,[0,-.01,.11]).rotation.x=Math.PI/2;
   curve(w,C.light,shadowCrescentEdge.map(p=>[p.x,.008,.11+p.y]),.007,true);
  }else if(weapon==='grimoire'){
-  d.book=w;const box=cached('book-unit',()=>new T.BoxGeometry(1,1,1));
+  d.book=w;d.bookParentQ=new T.Quaternion();d.bookLevelQ=new T.Quaternion();d.bookEuler=new T.Euler();const box=cached('book-unit',()=>new T.BoxGeometry(1,1,1));
   for(const s of [-1,1]){const leaf=joint(w,0,.04,.11);leaf.rotation.z=s*.18;mesh(leaf,box,C.fold,[s*.10,0,0],[.20,.035,.26]);mesh(leaf,box,0xa1a8b5,[s*.095,.025,0],[.18,.019,.235]);for(const z of [-.065,0,.065])curve(leaf,C.light,[[s*.035,.038,z],[s*.085,.042,z+.02],[s*.155,.038,z]],.004,true);}
   d.page=mesh(w,box,0xc0c7d3,[0,.075,.11],[.165,.006,.23]);d.page.position.x=.08;
   curve(w,C.light,[[-.18,.035,-.035],[0,.06,-.048],[.18,.035,-.035]],.008,true);
@@ -102,31 +111,47 @@ export function makeWraith(weapon='shade'){
  }
  // Preserve each focus's authored size when breathing or casting.
  if(d.focus)d.focus.userData.baseScale=d.focus.scale.clone();
+ d.leftArm.rotation.set(weapon==='grimoire'?-.55:0,0,.1);d.rightArm.rotation.set(-.1,0,-.1);
+ d.leftElbow.rotation.x=weapon==='grimoire'?-.85:-.20;d.rightElbow.rotation.x=weapon==='shadowblade'?-.25:-.36;
+ d.leftHand.rotation.x=weapon==='grimoire'?-.1:0;d.rightHand.rotation.x=-.18;
  animateWraith(g,0,0,0,0);return g;
 }
 
 export function animateWraith(g,t,speed=0,attack=0,hurt=0){
  const d=g.userData,dt=d.lastTime===undefined?1/60:Math.max(0,Math.min(.05,t-d.lastTime));d.lastTime=t;
  const smooth=(a,b,k=12)=>a+(b-a)*(1-Math.exp(-dt*k));
- d.move=smooth(d.move||0,Math.min(1,speed/6));d.cast=smooth(d.cast||0,attack>0?1:0,18);d.turn=smooth(d.turn||0,T.MathUtils.clamp((d.turnRate||0)/9,-1,1),6);
- d.phase=(d.phase||0)+dt*(5+speed*1.05)*Math.max(.12,d.move);const step=Math.sin(d.phase),run=d.move,cast=d.cast;
+ d.move=smooth(d.move||0,Math.min(1,speed/6));d.turn=smooth(d.turn||0,T.MathUtils.clamp((d.turnRate||0)/9,-1,1),6);
+ d.phase=(d.phase||0)+dt*(5+speed*1.05)*Math.max(.12,d.move);const step=Math.sin(d.phase),run=d.move;
  const travel=Number.isFinite(d.travelAngle)?d.travelAngle-g.rotation.y:0;d.forward=smooth(d.forward??1,Math.cos(travel));d.side=smooth(d.side||0,Math.sin(travel));
  const blade=d.weaponId==='shadowblade',book=d.weaponId==='grimoire';
  const strokeDuration=book?.32:blade?.16:.20;
- if(attack>(d.lastAttack||0)+.03)d.strokeTime=0;else d.strokeTime=(d.strokeTime??strokeDuration)+dt;d.lastAttack=attack;
- const stroke=T.MathUtils.smoothstep(d.strokeTime,0,strokeDuration);
- d.rig.position.y=.012+Math.abs(Math.cos(d.phase))*.024*run+Math.sin(t*2.2)*.006;d.rig.rotation.x=-run*.075-Math.min(1,hurt/.18)*.14;d.rig.rotation.z=-d.turn*.035-step*.018*run;
+ if(attack>(d.lastAttack||0)+.03)d.strokeTime=0;else d.strokeTime=(d.strokeTime??2)+dt;d.lastAttack=attack;
+ const stroke=T.MathUtils.smoothstep(d.strokeTime,0,strokeDuration),recovery=book?.28:blade?.30:.22;
+ const gesture=attack>0?1:1-T.MathUtils.smoothstep(d.strokeTime,strokeDuration,strokeDuration+recovery);d.cast=smooth(d.cast||0,gesture,22);const cast=d.cast;
+ const acceleration=dt?T.MathUtils.clamp((speed-(d.previousSpeed??speed))/dt,-12,12):0;d.previousSpeed=speed;
+ d.clothTrail??={x:.08,v:0};d.clothSide??={x:0,v:0};
+ const drag=spring(d.clothTrail,T.MathUtils.clamp(.08+run*.8+acceleration*.025,.02,1.15),dt,8,4.5),sway=spring(d.clothSide,-d.turn*.8-d.side*run*.2,dt,7,3.5);
+ d.rig.position.y=.012+Math.abs(Math.cos(d.phase))*.024*run+Math.sin(t*2.2)*.006;d.rig.rotation.x=-run*.06*d.forward-cast*(book?.015:.035)-Math.min(1,hurt/.18)*.14;d.rig.rotation.z=-d.turn*.035-step*.023*run;d.rig.position.x=step*.013*run;
  d.hips.rotation.y=d.side*.10+step*.035*run;d.hips.rotation.z=.012*(1-run);d.torso.rotation.y=smooth(d.torso.rotation.y,-d.hips.rotation.y+(blade?cast*(.25-.4*stroke):-cast*.045));d.head.rotation.y=-d.torso.rotation.y*.45-d.turn*.07;d.head.rotation.x=.035+Math.sin(t*1.8)*.008-cast*.03;
  for(const [side,sign]of [['left',1],['right',-1]]){const stride=step*sign,knee=Math.pow(Math.max(0,stride),1.4)*.70*run;d[side+'Leg'].rotation.x=stride*.62*run*d.forward;d[side+'Leg'].rotation.z=sign*.045*(1-run)-stride*.40*run*d.side;d[side+'Knee'].rotation.x=knee;d[side+'Foot'].rotation.x=-knee*.65-stride*.16*run*d.forward;}
  const leftBase=-step*.34*run,rightBase=step*.34*run;
- d.leftArm.rotation.x=smooth(d.leftArm.rotation.x,book?-.55:leftBase*(1-cast)-cast*.42);
- d.rightArm.rotation.x=smooth(d.rightArm.rotation.x,rightBase*(1-cast)-.10-cast*(blade?.48:book?.62:.92));
+ d.leftArm.rotation.x=smooth(d.leftArm.rotation.x,book?-.55+leftBase*.10:leftBase*(1-cast)-cast*(blade?.25:.42));
+ d.rightArm.rotation.x=smooth(d.rightArm.rotation.x,rightBase*(1-cast)-.10-cast*(blade?.40+.26*stroke:book?.52+.13*stroke:.92+.10*stroke));
  d.leftArm.rotation.z=.10+cast*.12;d.rightArm.rotation.z=smooth(d.rightArm.rotation.z,-.10-cast*(blade?.35+.25*stroke:.1));d.rightArm.rotation.y=smooth(d.rightArm.rotation.y,blade?cast*(.8-stroke):0);
- d.leftElbow.rotation.x=book?-.85:-.20-cast*.42;d.rightElbow.rotation.x=-(blade?.25:.36)-cast*(blade?.25:book?.60:.45);
- d.leftHand.rotation.x=book?-.1:-cast*.28;d.rightHand.rotation.x=-.18-cast*.17;d.rightHand.rotation.y=blade?cast*.75:cast*.1;
- if(d.book){d.book.rotation.x=-d.leftArm.rotation.x-d.leftElbow.rotation.x-d.leftHand.rotation.x-.16;d.book.position.y=-.025+Math.sin(t*2.5)*.015;d.page.rotation.z=Math.sin(t*2.4+cast*3)*(.12+cast*.35);}
- d.cape.rotation.x=-.055-run*.08;d.cape.rotation.z=-d.turn*.08;
- d.panels.forEach((panel,i)=>{panel.morphTargetInfluences[0]=run*.65+Math.sin(t*2.4+i*.8)*.06+.07;panel.morphTargetInfluences[1]=d.turn*.65+Math.sin(t*1.7+i)*.09;});
+ d.leftElbow.rotation.x=smooth(d.leftElbow.rotation.x,book?-.85:-.20-cast*.32);d.rightElbow.rotation.x=smooth(d.rightElbow.rotation.x,blade?-.25-cast*(.45-.38*stroke):book?-.36-cast*(.45-.18*stroke):-.36-cast*(.48-.60*stroke),20);
+ d.leftHand.rotation.x=smooth(d.leftHand.rotation.x,book?-.1:-cast*.28);d.rightHand.rotation.x=smooth(d.rightHand.rotation.x,-.18+cast*(blade?.24:-.10));d.rightHand.rotation.y=smooth(d.rightHand.rotation.y,blade?cast*(.9-1.25*stroke):cast*.1);d.weapon.position.z=.06-cast*.025*(1-stroke);
+ if(d.book){
+  d.leftHand.getWorldQuaternion(d.bookParentQ);d.bookEuler.set(-.10+Math.sin(t*2.5)*.015,g.rotation.y+.12,.025*Math.sin(t*2));d.bookLevelQ.setFromEuler(d.bookEuler);d.book.quaternion.copy(d.bookParentQ).invert().multiply(d.bookLevelQ);
+  d.book.position.y=-.025+Math.sin(t*2.5)*.018+cast*.035;d.page.rotation.z=Math.sin(t*2.4)*.10-Math.sin(stroke*Math.PI)*cast*.8;d.page.position.y=.075+Math.sin(stroke*Math.PI)*cast*.025;
+ }
+ d.cape.rotation.x=.025+drag*.09;d.cape.rotation.z=sway*.10;d.cape.rotation.y=-d.turn*.035;
+ d.clothPhase=(d.clothPhase||0)+dt*(4+run*5);
+ d.panels.forEach((panel,i)=>{
+  const front=panel.userData.front,flutter=(front?.08:.16)+run*(front?.20:.52),phase=d.clothPhase-i*.8;
+  panel.morphTargetInfluences[0]=T.MathUtils.clamp(front?run*.16+Math.max(0,step*(i===2?1:-1))*.28:drag,-.15,1.25);
+  panel.morphTargetInfluences[1]=T.MathUtils.clamp(sway*(front?.35:1),-.9,.9);
+  panel.morphTargetInfluences[2]=Math.sin(phase)*flutter;panel.morphTargetInfluences[3]=Math.cos(phase)*flutter;
+ });
  if(d.focus){d.focus.scale.copy(d.focus.userData.baseScale).multiplyScalar(1+Math.sin(t*4)*.045+cast*.12);d.focus.rotation.y=t*.55;}
  d.motes?.forEach((m,i)=>{const a=t*2+i*Math.PI*2/3;m.position.set(Math.cos(a)*.14,.045+Math.sin(a)*.1,.17+Math.sin(a)*.06);});
 }
