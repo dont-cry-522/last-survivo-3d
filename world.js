@@ -1,3 +1,4 @@
+import{REGIONAL_ENEMIES}from'./map-enemies.js?v=27';
 import{groundCue}from'./ground-cues.js?v=19';
 import{heroesReady,createSkinnedHero,animateSkinnedHero}from'./skinned-hero.js?v=24';
 import * as T from './vendor/three.module.js';
@@ -13,6 +14,7 @@ const orb=(p,c,x,y,z,r,glow=false)=>mesh('SphereGeometry',[r,10,7],c,x,y,z,p,glo
 const cone=(p,c,x,y,z,r,h)=>mesh('ConeGeometry',[r,h,7],c,x,y,z,p);
 function detailMaterial(color,opacity,vertexColors=false){const key=color+':'+opacity+':'+vertexColors;if(!detailMaterials.has(key))detailMaterials.set(key,new T.MeshStandardMaterial({color,transparent:true,opacity,vertexColors,roughness:1,depthWrite:false,side:T.DoubleSide}));return detailMaterials.get(key);}
 export function actor(kind='silver',weapon='crossbow'){
+ if(REGIONAL_ENEMIES[kind])return regionalActor(kind);
  const g=new T.Group(),rig=new T.Group();g.add(rig);g.userData.rig=rig;
  if(kind==='wraith')return makeWraith(weapon);
  if(['silver','scout'].includes(kind))return heroesReady()?createSkinnedHero(kind,weapon):makeHero(kind,weapon);
@@ -35,8 +37,39 @@ export function actor(kind='silver',weapon='crossbow'){
  }
  return g;
 }
+function regionalActor(id){
+ const cfg=REGIONAL_ENEMIES[id],g=actor(cfg.role),d=g.userData,rig=d.rig,snow=cfg.map==='snow';d.species=id;
+ // Materials and geometry are cached; never recolor a material shared with forest actors.
+ g.traverse(o=>{if(o.isMesh){const lit=o.material.emissiveIntensity>0,old=o.material.color.getHex();o.material=mat(lit?(snow?0x8bdaf1:0xff9b42):snow?(old===0x42556b||old===0x293c4d?0x486777:0xd5e3df):0x493d43,lit);}});
+ if(cfg.role==='mushroom'){
+  rig.clear();const head=new T.Group();head.position.set(0,.9,.12);rig.add(head);d.cap=head;
+  const body=orb(rig,snow?0xdce7e2:0x6c3832,0,.48,0,.43);body.scale.set(1,1.1,.9);
+  orb(head,snow?0xe9eee4:0xa14a30,0,0,.05,.28);
+  for(const side of [-1,1]){const ear=cone(head,snow?0xd3e7eb:0x372e34,side*.17,.38,0,snow?.075:.11,snow?.62:.4);ear.rotation.z=side*-.16;orb(head,snow?0x304855:0xffb259,side*.105,.015,.285,.04,!snow);const foot=orb(rig,snow?0xb4cdce:0x4c3031,side*.28,.12,.2,.16);foot.scale.z=1.5;}
+  orb(head,snow?0xcb9695:0xffc15c,0,-.075,.325,.045,!snow);const tail=orb(rig,snow?0xe5eddf:0xda6334,0,.4,-.38,.14,!snow);if(!snow){tail.scale.set(.65,.65,2.2);for(let i=0;i<3;i++)cone(rig,0xf38a3b,0,.8-i*.12,-.1-i*.14,.09,.25);}
+ }else if(cfg.role==='wolf'){
+  for(let i=0;i<4;i++){const spike=cone(rig,snow?0xa4cfdd:0xf0934a,0,1.04,-.35+i*.2,.11,snow?.28:.4);spike.rotation.x=-.25;}
+  if(!snow){d.head.children.filter(o=>o.geometry?.type==='ConeGeometry').forEach(o=>{o.scale.y=.3;});d.tail.scale.z=1.65;for(const side of [-1,1]){const fin=cone(d.head,0xba6140,side*.3,.12,-.08,.15,.28);fin.rotation.z=side*.8;}}
+ }else if(cfg.role==='golem'||cfg.role==='boss'){
+  if(snow){g.traverse(o=>{if(o.isMesh&&o.geometry.type==='DodecahedronGeometry')o.geometry=geometry('SphereGeometry',[1,10,7]);if(o.isMesh&&o.geometry.type==='BoxGeometry'&&o.geometry.parameters.height>.5)o.geometry=geometry('CapsuleGeometry',[.20,.25,3,8]);});for(const o of [...rig.children])if(o.geometry?.type==='ConeGeometry'||o.geometry?.type==='TorusGeometry'||o.position.y===1.15&&o.position.z===.64)rig.remove(o);
+   const face=orb(rig,0x567382,0,1.84,.31,.26);face.scale.set(1,.8,.55);for(const side of [-1,1]){orb(rig,0x92e6f7,side*.115,1.87,.46,.045,true);cone(rig,0xf2eddb,side*.17,1.67,.44,.06,.22);for(let i=0;i<3;i++)cone(rig,0xc7dad8,side*(.49+i*.14),1.25-i*.08,.1,.16,.4);}
+   if(cfg.role==='boss')for(let i=-2;i<=2;i++)cone(rig,0x8ecde7,i*.18,2.2+(.2-Math.abs(i)*.06),0,.10,.48-Math.abs(i)*.05);
+  }else{for(const side of [-1,1]){const horn=cone(rig,0x372b34,side*.4,2.05,-.05,.17,.8);horn.rotation.z=-side*.4;for(let i=0;i<3;i++){const crack=box(rig,0xea7738,side*(.13+i*.12),.8+i*.2,.65-i*.04,.045,.25,.025);crack.material=mat(0xea7738,true);crack.rotation.z=side*.6;}}}
+ }else if(id==='snowtotem'||id==='cinderwisp'){
+  rig.clear();d.staff=null;d.focus=null;d.satellites=new T.Group();rig.add(d.satellites);
+  for(let i=0;i<3;i++){const core=mesh('OctahedronGeometry',[.34-i*.07],snow?0x80bad4:0xf38936,0,.6+i*.34,0,rig,!snow);core.scale.y=snow?1.15:.8;}
+  for(const side of [-1,1]){const shard=mesh('OctahedronGeometry',[snow?.14:.23],snow?0xc2eef1:0x413544,side*.48,.95,0,d.satellites,snow);shard.scale.y=1.8;}
+  if(!snow){for(let i=0;i<3;i++)cone(rig,0x71382e,Math.sin(i*2.1)*.2,1.25,Math.cos(i*2.1)*.2,.10,.4);}
+ }else{
+  for(const side of [-1,1]){const crown=cone(rig,snow?0x91c9e2:0x382832,side*.23,1.92,0,.1,.45);crown.rotation.z=-side*.3;}
+  if(snow)for(const side of [-1,1]){const ice=mesh('OctahedronGeometry',[.13],0xb3dceb,side*.42,1.02,-.13,rig);ice.scale.y=2.3;}
+  else {const stole=box(rig,0x973e32,0,.77,.4,.21,.78,.06);stole.rotation.x=-.1;}
+ }
+ return g;
+}
 export function animateActor(g,t,speed=0,attack=0,hurt=0){
  const d=g.userData;if(d.wraith){animateWraith(g,t,speed,attack,hurt);return;}if(d.skinned){animateSkinnedHero(g,t,speed,attack,hurt);return;}if(d.leftKnee){animateHero(g,t,speed,attack);return;}
+ if(d.satellites){d.satellites.rotation.y=t*.9;d.satellites.position.y=Math.sin(t*3)*.08;}
  const dt=d.lastTime===undefined?1/60:Math.max(0,Math.min(.05,t-d.lastTime));d.lastTime=t;
  d.stride=(d.stride||0)+(Math.min(1,speed/2.5)-(d.stride||0))*(1-Math.exp(-dt*14));
  const stride=d.stride,heavy=['golem','boss'].includes(d.kind),frequency=heavy?5.2:d.kind==='wolf'?13:9;
