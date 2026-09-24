@@ -1,6 +1,7 @@
+import{rollProgress,rollWeight}from'./dodge-motion.js?v=24';
 import * as T from './vendor/three.module.js';
 import {clone} from './vendor/SkeletonUtils.js';
-import {loadCharacterData} from './character-loader.js?v=9';
+import {loadCharacterData} from './character-loader.js?v=24';
 import {makeHero as makePrototype} from './hero-model.js?v=13';
 
 const templates=new Map(),clips=new Map();
@@ -166,8 +167,8 @@ export function animateSkinnedHero(g,t,speed,attack,hurt){
   const strideScale=d.rig.scale.y/1.23;
   const cadence=T.MathUtils.lerp(d.smoothedSpeed/2.5/d.walk.getClip().duration,d.smoothedSpeed/5.8/d.run.getClip().duration,jogging)/strideScale;d.gaitPhase=(d.gaitPhase+dt*cadence)%1;
   for(const a of[d.run,d.backRun,d.upperRun,d.walk,d.backWalk,d.upperWalk]){a.paused=true;a.time=d.gaitPhase*a.getClip().duration;}d.aim.setEffectiveWeight(d.aimBlend);
-  const isRoll=d.kind==='scout'&&d.dashTime>0,roll=d.actions.Roll;
-  if(isRoll){roll.enabled=true;roll.play();roll.setEffectiveWeight(1);roll.paused=true;roll.time=(1-d.dashTime/.24)*roll.getClip().duration;for(const a of[d.idle,d.run,d.walk,d.backRun,d.backWalk,d.upperIdle,d.upperRun,d.upperWalk,d.aim])a.setEffectiveWeight(0);}else roll.stop();
+  const isRoll=d.kind==='scout'&&d.dashTime>0,roll=d.actions.Roll,weight=isRoll?rollWeight(d.dashTime):0,poseBlend=1-weight;
+  if(isRoll){roll.enabled=true;roll.setLoop(T.LoopOnce,1);roll.clampWhenFinished=true;roll.play();roll.setEffectiveWeight(weight);roll.paused=true;roll.time=rollProgress(d.dashTime)*roll.getClip().duration;for(const a of[d.idle,d.run,d.walk,d.backRun,d.backWalk,d.upperIdle,d.upperRun,d.upperWalk,d.aim])a.setEffectiveWeight(a.getEffectiveWeight()*poseBlend);}else roll.stop();
   const bank=isRoll?0:T.MathUtils.clamp(-(d.turnRate||0)*.008,-.075,.075)*d.blend;d.rig.rotation.z+=(bank-d.rig.rotation.z)*(1-Math.exp(-dt*10));
   // Recovery belongs to the animation, so it can finish after the shot timer.
   const fired=attack>(d.previousAttack||0)+.025;d.previousAttack=attack;
@@ -220,7 +221,7 @@ export function animateSkinnedHero(g,t,speed,attack,hurt){
       d.offArm.rotateZ(.33*gesture);d.offForearm.rotateY(-.22*gesture);
     }
   }
-  if(d.support&&!isRoll&&d.aimBlend>.01){
+  if(d.support&&poseBlend>.01&&d.aimBlend>.01){
     const s=d.support;
     const solve=(bones,hand)=>{
       const [lower,upper]=bones;bones.forEach((bone,i)=>s.start[i].copy(bone.quaternion));
@@ -233,13 +234,13 @@ export function animateSkinnedHero(g,t,speed,attack,hurt){
       s.delta.setFromUnitVectors(s.from,s.to);upper.getWorldQuaternion(s.world);s.world.premultiply(s.delta);upper.parent.getWorldQuaternion(s.parent).invert();upper.quaternion.copy(s.parent.multiply(s.world)).normalize();upper.updateWorldMatrix(false,true);
       lower.getWorldPosition(s.origin);hand.getWorldPosition(s.from);s.from.sub(s.origin).normalize();s.to.copy(s.goal).sub(s.origin).normalize();
       s.delta.setFromUnitVectors(s.from,s.to);lower.getWorldQuaternion(s.world);s.world.premultiply(s.delta);lower.parent.getWorldQuaternion(s.parent).invert();lower.quaternion.copy(s.parent.multiply(s.world)).normalize();lower.updateWorldMatrix(false,true);
-      bones.forEach((bone,i)=>bone.quaternion.slerp(s.start[i],1-d.aimBlend));
+      bones.forEach((bone,i)=>bone.quaternion.slerp(s.start[i],1-d.aimBlend*poseBlend));
     };
     // Hold the trigger hand in front of the chest, then bring the other hand
     // to the actual moving foregrip. Neither solve changes the muzzle direction.
     d.aimArm.getWorldPosition(s.origin);d.offArm.getWorldPosition(s.target);s.target.add(s.origin).multiplyScalar(.5);g.getWorldQuaternion(s.world);s.to.set(-.08,-.20+kick*.01,.14-kick*.025).applyQuaternion(s.world);s.target.add(s.to);solve([d.firingForearm,d.aimArm],s.rightHand);
     const yaw=Number.isFinite(d.aimAngle)?d.aimAngle:g.rotation.y;
-    s.world.setFromAxisAngle(s.to.set(0,1,0),yaw);d.gun.parent.getWorldQuaternion(s.parent).invert();d.gun.quaternion.copy(s.parent.multiply(s.world)).normalize();
+    s.world.setFromAxisAngle(s.to.set(0,1,0),yaw);d.gun.parent.getWorldQuaternion(s.parent).invert();d.gun.quaternion.slerp(s.parent.multiply(s.world).normalize(),poseBlend);
     s.target.set(0,.015,.34+(d.gun.userData.pump?.position.z||0));d.gun.localToWorld(s.target);solve([d.offForearm,d.offArm],s.hand);
   }
   if(d.weaponId==='crossbow'&&!isRoll){

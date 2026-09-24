@@ -4,7 +4,7 @@ const assert=require('node:assert/strict');
  const page=await browser.newPage();const errors=[];page.on('pageerror',e=>errors.push(e.message));
  await page.goto(process.env.TEST_URL||'http://127.0.0.1:8897/');await page.waitForFunction(()=>window.game3d);
  const results=await page.evaluate(async()=>{
-  const {createSkinnedHero,animateSkinnedHero,disposeHero}=await import('./skinned-hero.js?v=23');
+  const {createSkinnedHero,animateSkinnedHero,disposeHero}=await import('./skinned-hero.js?v=24');
   const out=[];
   const T=await import('./vendor/three.module.js');
   for(const fps of [30,60,120])for(const [kind,weapon]of [['scout','shotgun'],['silver','shuriken'],['silver','crossbow'],['scout','fire']]){

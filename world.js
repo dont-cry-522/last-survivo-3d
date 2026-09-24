@@ -1,5 +1,5 @@
 import{groundCue}from'./ground-cues.js?v=19';
-import{heroesReady,createSkinnedHero,animateSkinnedHero}from'./skinned-hero.js?v=23';
+import{heroesReady,createSkinnedHero,animateSkinnedHero}from'./skinned-hero.js?v=24';
 import * as T from './vendor/three.module.js';
 import{makeHero,animateHero}from'./hero-model.js?v=13';
 import{makeWraith,animateWraith}from'./wraith-model.js?v=23';

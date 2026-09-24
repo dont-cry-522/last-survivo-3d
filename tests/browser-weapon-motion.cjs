@@ -7,7 +7,7 @@ const assert=require('node:assert/strict');
   const page=await browser.newPage(),errors=[];page.on('pageerror',e=>errors.push(e.message));
   await page.goto(process.env.TEST_URL||'http://127.0.0.1:8897/');await page.waitForFunction(()=>window.game3d);
   const motions=await page.evaluate(async()=>{
-   const {createSkinnedHero,animateSkinnedHero,disposeHero}=await import('./skinned-hero.js?v=23'),result={};
+   const {createSkinnedHero,animateSkinnedHero,disposeHero}=await import('./skinned-hero.js?v=24'),result={};
    for(const [kind,weapon] of [['scout','rifle'],['scout','shotgun'],['scout','fire'],['silver','shuriken'],['silver','dark']]){
     const hero=createSkinnedHero(kind,weapon),d=hero.userData,reference=createSkinnedHero(kind,weapon),rest=reference.userData;d.aimActive=rest.aimActive=true;
     for(let i=0;i<90;i++){animateSkinnedHero(hero,(d.lastTime||0)+1/60,0,0,0);animateSkinnedHero(reference,(rest.lastTime||0)+1/60,0,0,0);}

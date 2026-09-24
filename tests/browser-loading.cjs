@@ -10,7 +10,7 @@ const assert=require('node:assert/strict');
    if(mode==='no-cache')await page.addInitScript(()=>{Object.defineProperty(globalThis,'caches',{value:{open:async()=>{throw Error('storage denied');}}});});
    if(mode==='legacy')await page.addInitScript(()=>{Object.defineProperty(globalThis,'DecompressionStream',{value:undefined});});
    await page.goto(url);await page.waitForFunction(()=>window.game3d,{},{timeout:60000});
-   assert(await page.locator('#start').isEnabled());assert(!requests.some(u=>u.endsWith('animations.glb')));
+   assert(await page.locator('#start').isEnabled());assert(await page.evaluate(()=>Object.entries(game3d.hero.userData.actions).every(([name,action])=>action.getClip().name===name)),'loaded clips must remain distinct');assert(!requests.some(u=>u.endsWith('animations.glb')));
    assert(await page.evaluate(()=>game3d.hero.userData.rig.scale.y===1.12));
    if(mode==='normal'){
     assert(!requests.some(u=>u.endsWith('.bin')||u.endsWith('.gltf')));

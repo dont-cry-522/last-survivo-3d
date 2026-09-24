@@ -1,4 +1,4 @@
-import {LoadingManager,AnimationClip} from './vendor/three.module.js';
+import {LoadingManager,AnimationClip,MathUtils} from './vendor/three.module.js';
 import {GLTFLoader} from './vendor/GLTFLoader.js';
 import {CHARACTER_ASSETS as assets} from './character-assets.js?v=9';
 
@@ -26,7 +26,9 @@ export async function loadCharacterData(onProgress=()=>{}){
     assets.textures.forEach((file,i)=>{const blob=URL.createObjectURL(new Blob([textureData[i]],{type:'image/webp'}));blobs.push(blob);textures.set(new URL(file,base).href,blob);});
     const models=await Promise.all(modelNames.map((n,i)=>compressed?loader.parseAsync(data[i],base.href):loader.loadAsync(new URL(n+'.gltf',base).href)));
     if(!compressed)onProgress(total,total);
-    const clips=JSON.parse(new TextDecoder().decode(motionData)).map(json=>AnimationClip.parse(json));
+    // Packed clips omit UUIDs; without restoring them, the mixer aliases every
+    // full-body action to the first clip (Idle), including Roll and aiming.
+    const clips=JSON.parse(new TextDecoder().decode(motionData)).map(json=>AnimationClip.parse({...json,uuid:json.uuid||MathUtils.generateUUID()}));
     return{models:Object.fromEntries(modelNames.map((n,i)=>[n,models[i]])),clips};
   }finally{for(const blob of blobs)URL.revokeObjectURL(blob);}
 }
