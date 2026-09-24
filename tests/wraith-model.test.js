@@ -43,3 +43,16 @@ test('cloth and articulated casts animate independently without changing shared 
   if(d.focus)assert(d.focus.scale.length()<.22,'focus must retain its authored size');
  }
 });
+
+
+test('repeated shadow attacks have bounded recoil and settle at different frame rates',()=>{
+ for(const fps of [20,30,60,120])for(const weapon of ['shade','shadowblade','grimoire']){
+  const h=makeWraith(weapon),d=h.userData,duration=weapon==='grimoire'?.32:weapon==='shade'?.20:.16;
+  let peak=0;
+  for(let f=1;f<=fps*4;f++){
+   const t=f/fps;animateWraith(h,t,t<2?6:0,t<2?Math.max(0,duration-t%.4):0,0);
+   assert(Number.isFinite(d.recoil.x));peak=Math.max(peak,Math.abs(d.recoil.x));assert(Math.abs(d.recoil.x)<.5);
+  }
+  assert(peak>.01);assert(Math.abs(d.recoil.x)<.001);assert(Math.abs(d.weapon.position.z-.06)<.001);
+ }
+});

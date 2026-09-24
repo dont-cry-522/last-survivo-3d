@@ -61,7 +61,7 @@ export class SkillVFX{
    if(i%2===0)this.particle('ember',0xc0f4ff,x,.3,z,{life:.42,size:[.055,.10,.055],velocity:[Math.cos(a)*r*2,.35,Math.sin(a)*r*2],spin:8});
   }
  }
- segment(a,b,color,width,life=.15,additive=width<.04,priority=0){const delta=new T.Vector3().subVectors(b,a),mid=new T.Vector3().addVectors(a,b).multiplyScalar(.5),m=this.particle('ray',color,mid.x,mid.y,mid.z,{life,size:[width,delta.length(),width],additive,priority});if(m)m.quaternion.setFromUnitVectors(new T.Vector3(0,1,0),delta.normalize());}
+ segment(a,b,color,width,life=.15,additive=width<.04,priority=0,opacity=.9){const delta=new T.Vector3().subVectors(b,a),mid=new T.Vector3().addVectors(a,b).multiplyScalar(.5),m=this.particle('ray',color,mid.x,mid.y,mid.z,{life,size:[width,delta.length(),width],additive,priority,opacity});if(m)m.quaternion.setFromUnitVectors(new T.Vector3(0,1,0),delta.normalize());}
  lightning(ax,az,bx,bz,vertical=false){
   this.particle('veil',0x90c8ff,bx,.08,bz,{life:.22,size:[.9,.7,1],opacity:.36,priority:1});
   const start=new T.Vector3(ax,vertical?6:1.1,az),end=new T.Vector3(bx,1,bz);let last=start;
@@ -91,20 +91,46 @@ export class SkillVFX{
   for(let i=0;i<3;i++){const a=Math.random()*Math.PI*2,d=Math.random()*r*.6;this.particle('veil',color,x+Math.cos(a)*d,.14,z+Math.sin(a)*d,{life:.65,size:[r*.43,r*.35,1],velocity:[Math.cos(a)*.15,.12,Math.sin(a)*.15],opacity:.25,additive:false});}
  }
  riftCast(x,z,r,angle,release=false){
-  const axis=new T.Vector3(Math.cos(angle),0,-Math.sin(angle)),center=new T.Vector3(x,.08,z);
-  this.segment(center.clone().addScaledVector(axis,-r*.75),center.clone().addScaledVector(axis,r*.75),release?0xbb9ef4:0x71569c,release?.14:.045,release?.4:.28,true,1);
+  const axis=new T.Vector3(Math.cos(angle),0,-Math.sin(angle)),across=new T.Vector3(Math.sin(angle),0,Math.cos(angle));
+  // Identical preview/release path: a crooked seam opening beneath the target.
+  let last=new T.Vector3(x,.09,z).addScaledVector(axis,-r*.75);
+  for(let i=1;i<=6;i++){
+   const point=new T.Vector3(x,.09,z).addScaledVector(axis,r*(i/6*1.5-.75)).addScaledVector(across,i===6?0:Math.sin(i*2.4)*r*.10);
+   this.segment(last,point,release?0xa88aca:0x71569c,release?.045:.025,release?.32:.28,false,1,.72);
+   last=point;
+  }
   if(!release)return;
-  this.particle('veil',0x312347,x,.06,z,{life:.5,size:[r,r*.58,1],opacity:.58,additive:false});
-  for(let i=-2;i<=2;i++){const off=i*r*.28,px=x+axis.x*off,pz=z+axis.z*off;this.particle('crystal',i%2?0x61427c:0x9d83c9,px,.3,pz,{life:.38,size:[.18,.65-Math.abs(i)*.13,.14],velocity:[0,.65,0],grow:true,additive:false,priority:1});this.particle('ember',0xc4b1ec,px,.2,pz,{life:.4,size:[.04,.07,.04],velocity:[0,2,0]});}
+  this.particle('veil',0x312347,x,.06,z,{life:.5,size:[r,r*.58,1],opacity:.48,additive:false});
+  for(let i=-2;i<=2;i++){const off=i*r*.26,px=x+axis.x*off,pz=z+axis.z*off;
+   const plume=this.particle('flame',i%2?0x715391:0xb494d5,px,.5,pz,{life:.35+Math.abs(i)*.035,size:[.24,.65-Math.abs(i)*.14,1],velocity:[across.x*.25,.7,across.z*.25],grow:true,additive:false,opacity:.7,priority:1});if(plume)plume.rotation.y=angle;
+   this.particle('ember',0xc4b1ec,px,.2,pz,{life:.4,size:[.035,.07,.035],velocity:[0,2,0]});
+  }
+ }
+ bladeImpact(x,z,angle,shadow=false){
+  const forward=new T.Vector3(Math.sin(angle),0,Math.cos(angle)),side=new T.Vector3(Math.cos(angle),0,-Math.sin(angle));let last=null;
+  for(let i=0;i<=4;i++){
+   const u=i/4,point=new T.Vector3(x,.75+u*.65,z).addScaledVector(side,(u-.5)*1.1).addScaledVector(forward,Math.sin(u*Math.PI)*.24);
+   if(last)this.segment(last,point,shadow?0xbea4f0:0xbfffea,.02+Math.sin(u*Math.PI)*.024,.17,true,1);last=point;
+  }
+  for(let i=0;i<3;i++)this.particle('crystal',shadow?0x9d7dd3:0x85d9cf,x,1,z,{life:.23,size:[.025,.09,.025],velocity:[forward.x*(1+i*.5)+side.x*(i-1),.5+i*.25,forward.z*(1+i*.5)+side.z*(i-1)],gravity:3,spin:8});
  }
  shadowMark(x,z,strong=false){
   this.particle('ember',strong?0xd4b1ff:0x8e68d4,x,1,z,{life:strong?.38:.18,size:strong?[.4,.4,.4]:[.14,.14,.14],grow:true,opacity:.7});
   if(strong)for(let i=0;i<8;i++){const a=i*Math.PI/4;this.particle('crystal',i%2?0x9a71ef:0xe0c9ff,x,1,z,{life:.35,size:[.065,.25,.065],velocity:[Math.sin(a)*3,1.4,Math.cos(a)*3],gravity:4,spin:5});}
  }
  shadowSpell(kind,x,z,targets=[]){
-  if(kind==='veil'){this.particle('veil',0x49326d,x,.09,z,{life:2.4,size:[4.8,4.8,1],opacity:.36,additive:false,priority:1});for(let i=0;i<12;i++){const a=i*Math.PI/6;this.particle('smoke',0x715090,x+Math.cos(a)*3,.5,z+Math.sin(a)*3,{life:.8,size:[.23,.42,.23],velocity:[0,.5,0],opacity:.4,additive:false});}}
-  else if(kind==='chain'){for(const e of targets){const a=new T.Vector3(x,.8,z),b=new T.Vector3(e.x,1,e.z);this.segment(a,b,0x6544a2,.13,.28,false,1);this.segment(a,b,0xc29cff,.032,.19,true,2);this.shadowMark(e.x,e.z);}}
-  else{this.dark(x,z,2.8,true);for(let i=0;i<5;i++){const a=i*Math.PI*2/5;this.segment(new T.Vector3(x,.1,z),new T.Vector3(x+Math.cos(a)*2.3,.7,z+Math.sin(a)*2.3),0xb48afa,.055,.38,true,1);}}
+  if(kind==='veil'){
+   this.particle('veil',0x49326d,x,.09,z,{life:2.4,size:[4.8,4.8,1],opacity:.30,additive:false,priority:1});
+   for(let i=0;i<8;i++){const a=i*2.39996,r=Math.sqrt((i+.5)/8)*3.4;
+    this.particle('flame',i%2?0x684c88:0x8d74a5,x+Math.cos(a)*r,.45,z+Math.sin(a)*r,{life:.65+i*.06,size:[.45,.65,1],velocity:[Math.sin(a)*.45,.3,-Math.cos(a)*.45],opacity:.28,additive:false,grow:true});
+   }
+  }else if(kind==='chain'){
+   for(const e of targets){const a=new T.Vector3(x,.8,z),b=new T.Vector3(e.x,1,e.z),dx=e.x-x,dz=e.z-z,len=Math.hypot(dx,dz)||1;let last=a;
+    for(let i=1;i<=5;i++){const u=i/5,bow=Math.sin(u*Math.PI),next=new T.Vector3().lerpVectors(a,b,u);next.x+=dz/len*bow*.35;next.z-=dx/len*bow*.35;next.y+=bow*.28;
+     this.segment(last,next,i===5?0xc5a5ef:0x8061af,.06*(1-u)+.025,.22+(1-u)*.09,false,1,.72);last=next;
+    }this.shadowMark(e.x,e.z);
+   }
+  }else{this.dark(x,z,2.8,true);this.riftCast(x,z,2.8,.65,true);}
  }
  status(kind,x,z,size=1){
   if(kind==='burn')this.particle('flame',0xff8734,x+(Math.random()-.5)*size,.45,z+(Math.random()-.5)*size,{life:.32,size:[.16,.28,.1],velocity:[0,1,0],grow:true,additive:false});

@@ -1,12 +1,12 @@
 import{renderPixelRatio,RenderBudget}from'./render-budget.js?v=21';
 import{groundCue,disposeCue}from'./ground-cues.js?v=19';
-import{SkillVFX}from'./skill-vfx.js?v=19';
+import{SkillVFX}from'./skill-vfx.js?v=22';
 import{loadHeroAssets,disposeHero}from'./skinned-hero.js?v=13';
 import{GameAudio}from'./audio.js?v=18';
 import{ENEMY_GUIDE,CIRCLE_GUIDE}from'./battle-guide.js?v=19';
 import * as T from './vendor/three.module.js';
 import{MAPS,WEAPONS,ENEMIES,weaponFor,experienceNeeded,grantExperience,chooseUpgrades,takeUpgrade,weaponStats,WEAPON_PATHS,segmentDistance,registerCrossbowHit,registerShadowHit}from'./rules.js?v=18';
-import{actor,animateActor,animateWorld,buildWorld,clearAt,moveActor,mesh,mat}from'./world.js?v=20';
+import{actor,animateActor,animateWorld,buildWorld,clearAt,moveActor,mesh,mat}from'./world.js?v=22';
 const $=s=>document.querySelector(s),touch=matchMedia('(pointer:coarse)').matches;
 document.body.classList.toggle('touch',touch);
 const canvas=$('#world');let renderer;
@@ -168,7 +168,7 @@ function update(dt){time+=dt;simTimer+=dt;player.xpFlash=Math.max(0,(player.xpFl
  else if(b.kind==='dark'&&b.target?.alive){const a=Math.atan2(b.target.x-b.x,b.target.z-b.z),blend=1-Math.exp(-dt*6);b.vx=T.MathUtils.lerp(b.vx,Math.sin(a)*b.speed,blend);b.vz=T.MathUtils.lerp(b.vz,Math.cos(a)*b.speed,blend);}
  b.x+=b.vx*dt;b.z+=b.vz*dt;b.life-=dt;b.mesh.position.set(b.x,1.15,b.z);if(['shuriken','shadowblade'].includes(b.kind))b.mesh.rotation.y+=dt*24;else b.mesh.rotation.y=Math.atan2(b.vx,b.vz);if(!b.returning&&!clearAt(world,b.x,b.z,.1))b.life=0;
  b.trail-=dt;if(b.trail<=0&&['fire','dark','crossbow','shade','shadowblade'].includes(b.kind)){b.trail=b.kind==='crossbow'?.048:.075;vfx.particle('ember',b.kind==='fire'?0xffa449:b.kind==='crossbow'?0xc5eaff:0xa778f1,b.x,1.15,b.z,{life:.18,size:b.kind==='crossbow'?[.035,.035,.09]:[.065,.065,.12],opacity:.6});}
- for(const e of targets()){if(!e.alive||b.hits.has(e.id??'boss')||b.life<=0||b.pierce<=0)continue;if(segmentDistance(e.x,e.z,ox,oz,b.x,b.z)<e.size+.2){b.hits.add(e.id??'boss');const strong=b.kind==='crossbow'&&registerCrossbowHit(player,e.id??'boss',time);hurtEnemy(e,b.damage*(strong?1.35:1));inflictStatus(e,b);sound.impact(b.kind,strong);impactChips(e.x,e.z,b.kind==='dark'?0xd4b4ff:b.kind==='shuriken'?0xb9ffec:b.kind==='crossbow'?0xcdeaff:0xffdf97,strong?5:2);if(b.kind==='crossbow'){vfx.boltImpact(e.x,e.z,strong);if(strong&&e.alive&&e!==boss){const d=Math.hypot(e.x-player.x,e.z-player.z)||1;moveActor(world,e,(e.x-player.x)/d*1.8,(e.z-player.z)/d*1.8,e.size*.6);e.mesh.position.set(e.x,0,e.z);e.stagger=.3;e.hurt=.3;}}
+ for(const e of targets()){if(!e.alive||b.hits.has(e.id??'boss')||b.life<=0||b.pierce<=0)continue;if(segmentDistance(e.x,e.z,ox,oz,b.x,b.z)<e.size+.2){b.hits.add(e.id??'boss');const strong=b.kind==='crossbow'&&registerCrossbowHit(player,e.id??'boss',time);hurtEnemy(e,b.damage*(strong?1.35:1));inflictStatus(e,b);sound.impact(b.kind,strong);if(b.kind==='shuriken'||b.kind==='shadowblade')vfx.bladeImpact(e.x,e.z,Math.atan2(b.vx,b.vz),b.kind==='shadowblade');else if(b.kind==='rifle'||b.kind==='shotgun')impactChips(e.x,e.z,0xffdf97,2);if(b.kind==='crossbow'){vfx.boltImpact(e.x,e.z,strong);if(strong&&e.alive&&e!==boss){const d=Math.hypot(e.x-player.x,e.z-player.z)||1;moveActor(world,e,(e.x-player.x)/d*1.8,(e.z-player.z)/d*1.8,e.size*.6);e.mesh.position.set(e.x,0,e.z);e.stagger=.3;e.hurt=.3;}}
  if(b.kind==='shade'){const marked=registerShadowHit(e,time);vfx.shadowMark(e.x,e.z,marked);if(marked){sound.spell('rift');hurtEnemy(e,b.markDamage);for(const other of targets())if(other!==e&&other.alive&&Math.hypot(other.x-e.x,other.z-e.z)<b.markRadius)hurtEnemy(other,b.markDamage*.5);}}
  if(['fire','dark'].includes(b.kind)){if(b.kind==='fire')vfx.fire(e.x,e.z,b.radius);else vfx.dark(e.x,e.z,b.radius);sound.spell(b.kind);if(b.gravity)addGravity(e.x,e.z,b.gravity);for(const other of targets())if(other!==e&&other.alive&&Math.hypot(other.x-e.x,other.z-e.z)<b.radius){hurtEnemy(other,b.damage*.65);inflictStatus(other,b);}}
  if(b.bounces>0){const next=targets().filter(q=>q.alive&&!b.hits.has(q.id??'boss')&&Math.hypot(q.x-e.x,q.z-e.z)<7).sort((a,c)=>Math.hypot(a.x-e.x,a.z-e.z)-Math.hypot(c.x-e.x,c.z-e.z))[0];if(next){const a=Math.atan2(next.x-e.x,next.z-e.z);b.x=e.x;b.z=e.z;b.vx=Math.sin(a)*b.speed;b.vz=Math.cos(a)*b.speed;b.damage*=.75;b.bounces--;b.life=7/b.speed;b.mesh.position.set(b.x,1.15,b.z);break;}}
