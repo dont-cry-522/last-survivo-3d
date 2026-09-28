@@ -1,6 +1,6 @@
-import{boneBoomerang}from'./beast-model.js?v=54';
+import{boneBoomerang}from'./beast-model.js?v=55';
 import * as T from './vendor/three.module.js';
-import{shadowCrescentGeometry}from'./shadow-weapons.js?v=54';
+import{shadowCrescentGeometry}from'./shadow-weapons.js?v=55';
 
 function flameTexture(){
  if(typeof document==='undefined')return null;
@@ -40,6 +40,10 @@ export class SkillVFX{
   }this.active.length=n;
  }
  clear(){for(const p of this.active){this.scene.remove(p.mesh);this.pool.push(p.mesh);}this.active.length=0;}
+ dive(x,z,angle){
+  this.particle('veil',0x3e989c,x,.09,z,{life:.22,size:[.85,.66,1],opacity:.55,additive:false});
+  const dx=Math.sin(angle),dz=Math.cos(angle);for(const side of[-1,1]){this.segment(new T.Vector3(x+Math.cos(angle)*side*.28,.12,z-Math.sin(angle)*side*.28),new T.Vector3(x-dx*.65+Math.cos(angle)*side*.5,.10,z-dz*.65-Math.sin(angle)*side*.5),0xa1dbd4,.022,.2,false,1,.65);}
+ }
  water(x,z,angle=0,strength=1){
   for(const side of [-1,1]){const m=this.particle('waterArc',0xc8f4e5,x,.10,z,{life:.65,size:[.65*strength,.65*strength,1],opacity:.2,additive:false,grow:true,velocity:[Math.sin(angle+side)*.25,0,Math.cos(angle+side)*.25]});if(m)m.rotation.z=-angle+side*1.1;}
   for(let i=0;i<3;i++){const a=angle+i*2.1;this.particle('ember',0xa1e3e0,x,.14,z,{life:.25,size:[.035,.055,.035],velocity:[Math.sin(a)*strength,.9*strength,Math.cos(a)*strength],gravity:5,opacity:.65,additive:false});}

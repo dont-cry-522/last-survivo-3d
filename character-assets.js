@@ -69,11 +69,11 @@ export const CHARACTER_ASSETS={
     "texture-e1932f5f9110.webp"
   ],
   "motion": {
-    "file": "motion-c8b2ca84695c.json.gz",
-    "bytes": 412394
+    "file": "motion-86e8a676816e.json.gz",
+    "bytes": 640864
   },
   "motionFallback": {
-    "file": "motion-5d714a26718b.json",
-    "bytes": 1595534
+    "file": "motion-64931983d84c.json",
+    "bytes": 2394215
   }
 };

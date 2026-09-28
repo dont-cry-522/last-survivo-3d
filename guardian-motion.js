@@ -1,12 +1,13 @@
+import{HERO_DODGES,dodgeTravel}from'./hero-dodge.js?v=55';
 const smooth=t=>{t=Math.max(0,Math.min(1,t));return t*t*(3-2*t);};
 export const GUARDIAN_ATTACKS=[
  {name:'盾牌顶击',impact:.43,damage:.8,reach:.86,arc:.65,sound:'shield'},
  {name:'转身横锤',impact:.48,damage:1,reach:1,arc:Math.PI/3,sound:'hammer'},
  {name:'举锤下砸',impact:.52,damage:1.2,reach:1,arc:.68,sound:'hammer'}
 ];
-export const GUARDIAN_DASH={duration:.38,distance:4.25,parry:.18};
+export const GUARDIAN_DASH={...HERO_DODGES.guardian,parry:.18};
 // Integral of a smooth acceleration/deceleration curve; independent of frame rate.
-export function guardianDashTravel(remaining){const u=Math.max(0,Math.min(1,1-remaining/GUARDIAN_DASH.duration));return GUARDIAN_DASH.distance*(u-Math.sin(2*Math.PI*u)/(2*Math.PI));}
+export function guardianDashTravel(remaining){return dodgeTravel('guardian',remaining);}
 export function nextGuardianAttack(p,now){return now-(p.lastMeleeAt??-100)>1.4?0:((p.meleeCombo??-1)+1)%3;}
 // Hands, torso and weight shift share the same timeline as the damage event.
 // Layout: left xyz/xyz rotation, right xyz/xyz rotation, torso yaw/pitch, body z/y.

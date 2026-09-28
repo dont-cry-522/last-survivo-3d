@@ -1,3 +1,4 @@
+import{dodgeTravel}from'./hero-dodge.js?v=55';
 import * as T from './vendor/three.module.js';
 const boardGeometry=new T.BoxGeometry(2.8,.12,.35),boardMaterial=new T.MeshStandardMaterial({color:0x86765b,roughness:.94}),postGeometry=new T.CylinderGeometry(.11,.14,1.1,7),postMaterial=new T.MeshStandardMaterial({color:0x635b49,roughness:1});
 export function tideState(time){const p=((time%28)+28)%28,warning=p>=14&&p<17,high=p>=17&&p<25;const rise=p<17?0:p<19?(p-17)/2:p<25?1:(28-p)/3;return{warning,high,rise,label:warning?'涨潮将至':high?'涨潮 · 沿栈桥通行':'退潮 · 探索滩地'};}
@@ -11,4 +12,4 @@ export function installCoast(world){
 }
 export function updateTide(world,time){if(world.weather.kind!=='coast')return;world.tide=tideState(time);for(const p of world.ponds){const k=1+.19*world.tide.rise;p.rx=p.baseRx*k;p.rz=p.baseRz*k;p.r=Math.max(p.rx,p.rz)*1.12;p.mesh.scale.set(p.rx,1,p.rz);if(p.bank)p.bank.scale.set(p.rx*1.12,1,p.rz*1.12);}}
 export function harpoonHit(origin,target,angle,range,width){const x=target.x-origin.x,z=target.z-origin.z,along=x*Math.sin(angle)+z*Math.cos(angle),across=Math.abs(x*Math.cos(angle)-z*Math.sin(angle));return along>=0&&along<=range+(target.size||0)*.4&&across<width+(target.size||0)*.45;}
-export function tideDashTravel(remaining){const u=Math.max(0,Math.min(1,1-remaining/.30));return 4.6*(u-Math.sin(2*Math.PI*u)/(2*Math.PI));}
+export function tideDashTravel(remaining){return dodgeTravel('tide',remaining);}

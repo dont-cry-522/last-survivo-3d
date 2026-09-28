@@ -1,0 +1,4 @@
+import test from 'node:test';import assert from 'node:assert/strict';
+import{HERO_DODGES,heroDodgePose,HERO_ABILITY_TEXT}from'../hero-dodge.js';
+test('dive has a continuous submerge, hidden middle and emergence at the two second limit',()=>{assert.equal(HERO_DODGES.tide.duration,2);assert.equal(heroDodgePose('tide',2).depth,0);assert.equal(heroDodgePose('tide',1).depth,1);assert.equal(heroDodgePose('tide',0).depth,0);let previous=0;for(let i=0;i<=240;i++){const p=heroDodgePose('tide',2-i/120);assert(Object.values(p).every(Number.isFinite));assert(Math.abs(p.depth-previous)<.09);previous=p.depth;}});
+test('abilities retain a cooldown beyond their active window and fade back to locomotion',()=>{for(const [kind,c]of Object.entries(HERO_DODGES)){assert(c.cooldown>c.duration);assert(HERO_ABILITY_TEXT[kind].length>30);assert.equal(heroDodgePose(kind,c.duration).weight,0);assert.equal(heroDodgePose(kind,0).weight,0);assert.equal(heroDodgePose(kind,0).height,0);}});

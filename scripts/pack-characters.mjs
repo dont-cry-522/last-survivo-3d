@@ -31,7 +31,7 @@ const [outfit,library]=await Promise.all([loader.loadAsync(new URL('silver-outfi
 function skeleton(root){root.traverse(o=>{if(o.isSkinnedMesh&&!root.skeleton)root.skeleton=o.skeleton;});return root;}
 const target=skeleton(outfit.scene),source=skeleton(library.scene),boneNames=Object.fromEntries(target.skeleton.bones.map(b=>[b.name,b.name]));
 const clips=[];
-for(const name of ['Idle_Loop','Walk_Loop','Jog_Fwd_Loop','Pistol_Idle_Loop','Pistol_Aim_Neutral','Spell_Simple_Idle_Loop','Roll']){
+for(const name of ['Idle_Loop','Walk_Loop','Jog_Fwd_Loop','Pistol_Idle_Loop','Pistol_Aim_Neutral','Spell_Simple_Idle_Loop','Roll','Jump_Start','Jump_Loop','Jump_Land']){
   const original=library.animations.find(c=>c.name===name);if(!original)throw Error(name);
   const baked=retargetClip(target,source,original,{names:boneNames,hip:'pelvis',fps:24,preserveBonePositions:true});baked.name=name;
   // Preserve every source sample; baking removes runtime conversion, not motion detail.

@@ -1,3 +1,4 @@
+import{GUARDIAN_DASH}from'../guardian-motion.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {BOSS_STYLES,bossAttackPlan,tickBoss} from '../boss-combat.js';
@@ -30,7 +31,7 @@ test('boss threat patterns have guaranteed escape space and different silhouette
  for(const[kind,cfg]of Object.entries(BOSS_STYLES))for(const move of cfg.moves){const plan=bossAttackPlan(kind,move,b,p);assert(plan.duration>0);assert(plan.zones.length<=9);}
 });
 test('hammer hits a short front cone; shield only parries the opening frontal window',()=>{
- const p={x:0,z:0,heroId:'guardian',dashTime:.3,dashAngle:0};assert(inMeleeArc(p,{x:0,z:2},0,3));assert(!inMeleeArc(p,{x:0,z:-2},0,3));assert(!inMeleeArc(p,{x:0,z:5},0,3));
+ const p={x:0,z:0,heroId:'guardian',dashTime:GUARDIAN_DASH.duration-.08,dashAngle:0};assert(inMeleeArc(p,{x:0,z:2},0,3));assert(!inMeleeArc(p,{x:0,z:-2},0,3));assert(!inMeleeArc(p,{x:0,z:5},0,3));
  assert(canParry(p,0,2));assert(!canParry(p,0,-2));assert(!canParry({...p,dashTime:.05},0,2));assert(!canParry({...p,heroId:'scout'},0,2));
  const player={heroId:'guardian',weaponId:'hammer',level:8,upgrades:{}};assert.deepEqual(HERO_LOADOUTS.guardian,['hammer']);
  assert(!chooseUpgrades(player).some(s=>['fire','ice','storm','veil'].includes(s.id)));takeUpgrade(player,'path:hammer_guard');assert(weaponStats(player).guardWindow>0);assert(!takeUpgrade(player,'path:hammer_break'));

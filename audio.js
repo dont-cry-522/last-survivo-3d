@@ -1,6 +1,6 @@
-import{companionSample}from'./companion-audio.js?v=54';
-import{weaponSample}from'./weapon-audio.js?v=54';
-import{creatureSample,creatureSpatial,ENEMY_VOICES}from'./enemy-audio.js?v=54';
+import{companionSample}from'./companion-audio.js?v=55';
+import{weaponSample}from'./weapon-audio.js?v=55';
+import{creatureSample,creatureSpatial,ENEMY_VOICES}from'./enemy-audio.js?v=55';
 // Original procedural score and sound design. No external audio downloads.
 const midi=n=>440*2**((n-69)/12);
 const THEMES={coast:{bpm:102,root:50,chords:[0,5,3,7],lead:[12,0,15,19,17,0,15,12,10,12,0,7,10,15,12,0,19,0,22,24,22,19,17,15,12,0,10,7,10,12,0,0]},sand:{bpm:108,root:55,chords:[0,1,5,7],lead:[12,0,13,17,19,0,17,13,12,7,0,12,13,0,19,17,12,0,10,7,8,0,12,13,17,19,0,17,13,12,7,0]},
@@ -102,6 +102,7 @@ export class GameAudio{
     if(kind==='soul')this.voice(495,.28,.025,'sine',990,t+.06);
     else this.noise(duration,volume*.9,kind.startsWith('rain')||kind==='trailSet'?4800:kind==='spikes'?1300:2600,kind==='mineBlast'?100:450,t+.012);
   }
+  land(kind,wet=false){if(wet){this.water(true);return;}if(!this.allow('hero-land',.15))return;this.noise(.09,.065,kind==='guardian'?450:800,140);this.voice(kind==='guardian'?88:140,.10,.05,'sine',60);}
   water(deep=false){if(!this.allow('water',.24))return;this.noise(deep?.22:.13,deep?.11:.07,1100,320);this.voice(310+Math.random()*80,.085,.028,'sine',115);}
   dodge(silver){if(!this.allow('dodge',.2))return;this.noise(silver?.32:.2,.24,silver?4000:650,silver?220:140);if(silver)this.voice(440,.25,.065,'sine',110);}
   hurt(){if(!this.allow('hurt',.15))return;this.noise(.15,.3,700,140);this.voice(130,.22,.25,'sine',36);}
