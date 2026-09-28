@@ -1,15 +1,16 @@
-import{lingyaHopPose}from'./lingya-motion.js?v=47';
-import{lingyaOutfit,lingyaAccessories,lingyaLegs}from'./lingya-appearance.js?v=47';
-import{boneBoomerang}from'./beast-model.js?v=47';
-import{makeHarpoon}from'./coast-models.js?v=47';
-import{guardianOutfit,guardianHair}from'./guardian-appearance.js?v=47';
-import{equipGuardian,animateGuardian}from'./guardian-model.js?v=47';
-import{weaponGesture,shotStarted}from'./weapon-performance.js?v=47';
-import{rollProgress,rollWeight}from'./dodge-motion.js?v=47';
+import{swimLimb as poseLimb}from'./swim-motion.js?v=48';
+import{lingyaHopPose}from'./lingya-motion.js?v=48';
+import{lingyaOutfit,lingyaAccessories,lingyaLegs}from'./lingya-appearance.js?v=48';
+import{boneBoomerang}from'./beast-model.js?v=48';
+import{makeHarpoon}from'./coast-models.js?v=48';
+import{guardianOutfit,guardianHair}from'./guardian-appearance.js?v=48';
+import{equipGuardian,animateGuardian}from'./guardian-model.js?v=48';
+import{weaponGesture,shotStarted}from'./weapon-performance.js?v=48';
+import{rollProgress,rollWeight}from'./dodge-motion.js?v=48';
 import * as T from './vendor/three.module.js';
 import {clone} from './vendor/SkeletonUtils.js';
-import {loadCharacterData} from './character-loader.js?v=47';
-import {makeHero as makePrototype} from './hero-model.js?v=47';
+import {loadCharacterData} from './character-loader.js?v=48';
+import {makeHero as makePrototype} from './hero-model.js?v=48';
 
 const templates=new Map(),clips=new Map();
 
@@ -167,7 +168,7 @@ export function createSkinnedHero(kind,weapon){
     cape=capeMesh(kind);if(kind==='guardian')cape.scale.set(1.14,1.06,1);if(kind==='tide')cape.scale.set(.9,.34,1);if(kind==='lingya')cape.scale.set(1,1,1);owned.push(cape);attachAtRest(bones.get('spine_03'),cape,model);
     if(kind==='silver'){const mask=faceMask();owned.push(mask);attachAtRest(bones.get('Head'),mask,model);}
   }
-  if(kind==='lingya'){const a=lingyaAccessories();attachAtRest(bones.get('pelvis'),a.skirt,model);attachAtRest(bones.get('Head'),a.hood,model);attachAtRest(bones.get('spine_03'),a.chest,model);attachAtRest(bones.get('pelvis'),a.bag,model);}
+  if(kind==='lingya'){const a=lingyaAccessories(),bagPivot=new T.Group();bagPivot.position.set(.24,1,-.10);a.bag.position.set(-.24,-1,.10);bagPivot.add(a.bag);g.userData.satchel=bagPivot;attachAtRest(bones.get('pelvis'),a.skirt,model);attachAtRest(bones.get('Head'),a.hood,model);attachAtRest(bones.get('spine_03'),a.chest,model);attachAtRest(bones.get('pelvis'),bagPivot,model);g.userData.satchelRest=bagPivot.quaternion.clone();}
   // Slightly larger head silhouette remains legible from the elevated game camera.
   bones.get('Head')?.scale.setScalar(1.08);
   if(kind==='lingya')bones.get('Head')?.scale.set(1.4,1.4*1.02/.73,1.4);
@@ -196,7 +197,7 @@ export function animateSkinnedHero(g,t,speed,attack,hurt){
   d.run.setEffectiveWeight(runWeight*(1-d.backBlend));d.backRun.setEffectiveWeight(runWeight*d.backBlend);d.walk.setEffectiveWeight(walkWeight*(1-d.backBlend));d.backWalk.setEffectiveWeight(walkWeight*d.backBlend);d.idle.setEffectiveWeight(1-d.blend);
   d.upperRun.setEffectiveWeight(runWeight*upperFree);d.upperWalk.setEffectiveWeight(walkWeight*upperFree);d.upperIdle.setEffectiveWeight((1-d.blend)*upperFree);
   const strideScale=d.rig.scale.y/1.23;
-  const cadence=T.MathUtils.lerp(d.smoothedSpeed/2.5/d.walk.getClip().duration,d.smoothedSpeed/5.8/d.run.getClip().duration,jogging)/strideScale;d.gaitPhase=(d.gaitPhase+dt*cadence)%1;
+  const cadence=T.MathUtils.lerp(d.smoothedSpeed/2.5/d.walk.getClip().duration,d.smoothedSpeed/5.8/d.run.getClip().duration,jogging)/strideScale;d.gaitPhase=(d.gaitPhase+dt*cadence*(d.kind==='lingya'?1-lingyaHopPose(d.dashTime||0).air:1))%1;
   for(const a of[d.run,d.backRun,d.upperRun,d.walk,d.backWalk,d.upperWalk]){a.paused=true;a.time=d.gaitPhase*a.getClip().duration;}d.aim.setEffectiveWeight(d.aimBlend);
   const isRoll=d.kind==='scout'&&d.dashTime>0&&!(d.waterDepth>.42)&&!d.waterDash,roll=d.actions.Roll,weight=isRoll?rollWeight(d.dashTime):0,poseBlend=1-weight;
   if(isRoll){roll.enabled=true;roll.setLoop(T.LoopOnce,1);roll.clampWhenFinished=true;roll.play();roll.setEffectiveWeight(weight);roll.paused=true;roll.time=rollProgress(d.dashTime)*roll.getClip().duration;for(const a of[d.idle,d.run,d.walk,d.backRun,d.backWalk,d.upperIdle,d.upperRun,d.upperWalk,d.aim])a.setEffectiveWeight(a.getEffectiveWeight()*poseBlend);}else roll.stop();
@@ -289,21 +290,22 @@ export function animateSkinnedHero(g,t,speed,attack,hurt){
   if(d.kind==='lingya'){
     // Capture the freshly mixed/solved pose; restore it before the next frame to prevent drift.
     for(const [bone,q]of d.lingyaPoseBase)q.copy(bone.quaternion);d.lingyaPoseReady=true;
-    const pose=lingyaHopPose(d.dashTime||0),side=Math.sin((d.dashAngle??g.rotation.y+Math.PI/2)-g.rotation.y)>=0?1:-1;
+    const pose=lingyaHopPose(d.dashTime||0),relative=(d.dashAngle??g.rotation.y+Math.PI/2)-g.rotation.y,lateral=Math.sin(relative),forward=Math.cos(relative),side=lateral>=0?1:-1;
     const moving=Math.sin(d.gaitPhase*Math.PI*2)*d.blend*(1-pose.air);
-    d.rig.position.y=pose.height;d.rig.rotation.x+=pose.pitch;d.rig.rotation.y=pose.twist*side;
-    d.hopBank=-pose.bank*side;d.rig.rotation.z+=d.hopBank;
-    d.spine.rotateY(-.15*sweep+.10*gather-pose.twist*side*.8+moving*.018);
+    d.rig.position.y=pose.height;d.rig.rotation.x+=pose.pitch;d.rig.rotation.y=pose.twist*lateral;
+    d.hopBank=-pose.bank*lateral;d.rig.rotation.z+=d.hopBank;
+    d.spine.rotateY(-.15*sweep+.10*gather-pose.twist*lateral*.8+moving*.018);
     d.swimHead.rotateZ(-moving*.02);d.swimHead.rotateX(-pose.air*.07);
     const glance=speed<.2&&d.aimBlend<.2&&Number.isFinite(d.companionAngle)?T.MathUtils.clamp(angleDelta(d.companionAngle,g.rotation.y),-.3,.3)*Math.max(0,Math.sin(t*.8)):0;d.petGlance=(d.petGlance||0)+(glance-(d.petGlance||0))*(1-Math.exp(-dt*4));d.swimHead.rotateY(d.petGlance);
     d.catchTime=Math.max(0,(d.catchTime||0)-dt);const catchWeight=Math.sin(Math.PI*d.catchTime/.2);d.firingForearm.rotateX(-catchWeight*.23);d.offForearm.rotateX(-catchWeight*.13);
-    const lead=side>0?d.swimRightLeg:d.swimLeftLeg,trail=side>0?d.swimLeftLeg:d.swimRightLeg;
-    lead.rotateX(-pose.tuck*.48);trail.rotateX(pose.tuck*.32);lead.rotateZ(-side*pose.air*.17);trail.rotateZ(-side*pose.air*.1);
-    d.swimLeftKnee.rotateX(pose.tuck*.85+(pose.push+pose.land)*.35);d.swimRightKnee.rotateX(pose.tuck*.55+(pose.push+pose.land)*.35);
-    d.swimLeftFoot.rotateX(-pose.air*.22);d.swimRightFoot.rotateX(-pose.air*.30);
+    // Solve actual foot positions; imported bone axes differ from procedural characters.
+    const legs=side>0?[[d.swimRightLeg,d.swimRightKnee,d.swimRightFoot,true],[d.swimLeftLeg,d.swimLeftKnee,d.swimLeftFoot,false]]:[[d.swimLeftLeg,d.swimLeftKnee,d.swimLeftFoot,true],[d.swimRightLeg,d.swimRightKnee,d.swimRightFoot,false]];
+    const legWeight=Math.min(1,pose.air+pose.push+pose.land);g.updateMatrixWorld(true);
+    for(const [leg,knee,foot,lead]of legs){const extension=lead?pose.reach:-.25*(1-pose.reach),y=lead?-.76-.16*pose.reach:-.53-.37*pose.reach;poseLimb(g,leg,knee,foot,{x:lateral*.28*extension,y:-.96+(y+.96)*pose.air+pose.land*.025,z:forward*.3*extension-(lead?0:.18*(1-pose.reach))},[0,.1,1],legWeight,()=>{});foot.rotateX(-pose.air*(lead?.1:.2));}
+    if(d.satchel){d.satchel.quaternion.copy(d.satchelRest);d.satchel.rotateX(Math.sin(t*5.4)*d.blend*.035+pose.air*.13-pose.land*.08);d.satchel.rotateZ(-moving*.06-pose.bank*lateral*.45);}
     d.aimArm.rotateZ(-pose.air*.38);d.offArm.rotateZ(pose.air*.50);d.firingForearm.rotateX(-pose.air*.38);d.offForearm.rotateX(-pose.air*.5);
   }
-  if(d.cape){d.cape.quaternion.copy(d.restCape);d.cape.rotateX(.06+d.blend*.13+Math.sin(t*5)*.015-d.motionLean*.6+kick*.025);d.cape.rotateZ(-bank*.65);d.cape.userData.wind.time.value=t;d.cape.userData.wind.run.value=d.blend;}
+  if(d.cape){d.cape.quaternion.copy(d.restCape);d.cape.rotateX(.06+d.blend*.13+Math.sin(t*5)*.015-d.motionLean*.6+kick*.025);d.cape.rotateZ(-bank*.65);if(d.kind==='lingya'){const hop=lingyaHopPose(d.dashTime||0);d.cape.rotateX(hop.air*.18-hop.land*.1);}d.cape.userData.wind.time.value=t;d.cape.userData.wind.run.value=d.blend;}
   g.visible=!(hurt>0&&Math.floor(hurt*28)%2===0);
 }
 export function disposeHero(g){

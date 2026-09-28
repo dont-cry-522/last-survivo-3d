@@ -1,4 +1,4 @@
-import{weaponGesture,shotStarted}from'./weapon-performance.js?v=47';
+import{weaponGesture,shotStarted}from'./weapon-performance.js?v=48';
 import * as T from './vendor/three.module.js';
 // Shared smooth geometry: detail is concentrated on the two heroes, not multiplied across the forest.
 const geometries=new Map(),materials=new Map();

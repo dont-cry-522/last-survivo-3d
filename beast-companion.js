@@ -58,7 +58,7 @@ export class BeastCompanion{
   }else if(this.state==='return'){
    // Hysteresis: catch up only outside the leash; stop well inside it instead of orbiting a fixed slot.
    if(dist(this,p)<2.1){this.change('look');this.decisionAt=this.now+.65;this.roamGoal=null;}
-   else{const a=p.angle||0;goal={x:p.x-Math.sin(a)*.9,z:p.z-Math.cos(a)*.9};moveSpeed=Math.min(10,4+dist(this,p)*.6);}
+   else{const a=p.angle||0;goal={x:p.x-Math.sin(a)*.9,z:p.z-Math.cos(a)*.9};moveSpeed=Math.min(this.now<this.recallUntil?12:10,4+dist(this,p)*.8);}
   }else if(this.state==='roam'){
    goal=this.roamGoal;moveSpeed=1.65;if(!goal||dist(this,goal)<.35||this.elapsed>3.5){goal=null;this.change(this.random()<.65?'sniff':'look');this.decisionAt=this.now+1+this.random()*1.8;}
   }else if(this.now>=this.decisionAt)this.chooseRoam(p);
@@ -77,4 +77,4 @@ export class BeastCompanion{
   this.angle+=angleDiff(desired,this.angle)*(1-Math.exp(-dt*(['wind','pounce'].includes(this.state)?16:7)));this.turnRate=angleDiff(this.angle,oldAngle)/dt;
  }
 }
-export {sideHopTravel} from './lingya-motion.js?v=47';
+export {sideHopTravel} from './lingya-motion.js?v=48';

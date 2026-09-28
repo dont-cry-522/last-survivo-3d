@@ -25,10 +25,10 @@ export function makeBadger(){
 }
 export function animateBadger(g,t,speed,state='look',progress=0,turnRate=0){
  const d=g.userData,dt=d.last===undefined?1/60:Math.max(0,Math.min(.05,t-d.last));d.last=t;const blend=1-Math.exp(-dt*16),ease=(o,key,target)=>o[key]+=(target-o[key])*blend;
- d.motionSpeed=(d.motionSpeed||0)+(speed-(d.motionSpeed||0))*(1-Math.exp(-dt*10));d.phase+=d.motionSpeed*dt*5;
+ d.motionSpeed=(d.motionSpeed||0)+(speed-(d.motionSpeed||0))*(1-Math.exp(-dt*10));d.phase+=dt*Math.min(19,Math.min(d.motionSpeed,3)*4+Math.max(0,d.motionSpeed-3)*1.15);
  const stride=Math.min(1,d.motionSpeed/4),run=T.MathUtils.smoothstep(d.motionSpeed,3.2,7),leap=state==='pounce'?Math.sin(Math.PI*progress):0,brace=state==='wind'?Math.sin(progress*Math.PI/2):0,landing=state==='recover'?Math.sin(Math.PI*progress):0;
  const sniff=state==='sniff'?1:0,look=['look','follow'].includes(state)&&speed<.4;
- ease(d.rig.position,'y',Math.abs(Math.sin(d.phase))*stride*.027+leap*.34-brace*.065-landing*.055);
+ ease(d.rig.position,'y',Math.abs(Math.sin(d.phase))*stride*(.027+run*.045)+leap*.34-brace*.065-landing*.055);
  ease(d.rig.rotation,'z',Math.sin(d.phase)*stride*.025-T.MathUtils.clamp(turnRate*.012,-.09,.09)*stride);
  ease(d.rig.rotation,'x',-leap*.13+brace*.07+landing*.12);
  for(const l of d.legs){const walkPhase=d.phase+l.phase,phase=walkPhase+run*((l.front?0:1.1)-l.phase),swing=Math.sin(phase),lift=Math.max(0,Math.cos(phase));
