@@ -2,20 +2,20 @@ import{test}from'node:test';import assert from'node:assert/strict';
 import{waterDepth,terrainAt}from'../water.js';
 import{buildWorld,actor,animateActor}from'../world.js';
 globalThis.document={createElement:()=>({getContext:()=>({fillRect(){}})})};
-test('mud depth follows the rotated shoreline and slows gradually without stacking mud',()=>{
- const pond={kind:'swamp',x:5,z:7,rx:6,rz:4,angle:Math.PI/2},world={patches:[pond,{kind:'slow',x:5,z:7,r:10}]};
+test('water depth follows the rotated shoreline and slows gradually without stacking mud',()=>{
+ const pond={kind:'water',x:5,z:7,rx:6,rz:4,angle:Math.PI/2},world={patches:[pond,{kind:'slow',x:5,z:7,r:10}]};
  assert.equal(waterDepth(pond,5,7),1);assert.equal(waterDepth(pond,10,7),0);assert(waterDepth(pond,5,2)>0);
  assert.equal(terrainAt(world,5,7).speed,.48);assert.equal(terrainAt(world,5,7,'golem').speed,.76);assert.equal(terrainAt(world,5,7,'snowtotem').speed,1);assert.equal(terrainAt(world,50,50).speed,1);
  const speeds=[0,1,2,3,4,5,6,7].map(d=>terrainAt({patches:[pond]},5,7+d).speed);assert(speeds.every((n,i)=>!i||n>=speeds[i-1]));
 });
-test('marshes stay clear of trees, spawn and reward sites; ash stays dry; surface meshes are shared',()=>{
+test('ponds stay clear of trees, spawn and reward sites; ash stays dry; surface meshes are shared',()=>{
  let previous;for(const id of ['forest','snow','ash'])for(let seed=0;seed<30;seed++){
   const w=buildWorld(id,seed);assert.equal(w.ponds.length,id==='ash'?0:6);
   for(const p of w.ponds){assert(Math.hypot(p.x-w.spawn.x,p.z-w.spawn.z)>p.r+5);for(const s of w.sites)assert(Math.hypot(p.x-s.x,p.z-s.z)>p.r+7);for(const o of w.obstacles)assert(Math.hypot(p.x-o.x,p.z-o.z)>p.r);if(previous)assert.strictEqual(previous,p.mesh.geometry);previous=p.mesh.geometry;}
   w.group.traverse(o=>{if(o.isInstancedMesh)o.dispose();});
  }
 });
-test('mud pose does not accumulate and returns to land for heroes and ground creatures',()=>{
+test('water pose does not accumulate and returns to land for heroes and ground creatures',()=>{
  for(const kind of ['silver','scout','wraith','wolf','golem','mushroom']){const g=actor(kind),d=g.userData;d.waterDepth=1;
   for(let i=0;i<600;i++){animateActor(g,i/60,3,0,0);assert(Math.abs(d.rig.position.y)<1.2);g.traverse(o=>{assert(Number.isFinite(o.quaternion.w));assert(Number.isFinite(o.position.y));});}
   assert(d.waterBlend>.99);assert(d.rig.position.y<0);

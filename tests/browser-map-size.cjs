@@ -5,7 +5,7 @@ const {chromium}=require(process.env.PLAYWRIGHT_MODULE||'playwright'),assert=req
   await p.addInitScript(()=>{const raf=requestAnimationFrame;window.requestAnimationFrame=cb=>{window.nextFrame=cb;return raf(t=>{if(!window.freezeGame)cb(t)})};});
   await p.goto(process.env.TEST_URL||'http://127.0.0.1:8899/');await p.waitForFunction(()=>window.game3d,null,{timeout:60000});await p.locator('#start').click();await p.evaluate(()=>freezeGame=true);await p.waitForTimeout(60);
   const result=await p.evaluate(async()=>{
-   const {clearAt,moveActor}=await import('./world.js?v=38'),{mapPixel,MAP_HALF}=await import('./map-layout.js?v=38'),g=game3d,out=[];
+   const {clearAt,moveActor}=await import('./world.js?v=39'),{mapPixel,MAP_HALF}=await import('./map-layout.js?v=38'),g=game3d,out=[];
    for(const map of ['forest','snow','ash']){
     g.select('silver',map,0);g.start();g.world.obstacles.length=0;g.world.patches.length=0;g.player.inv=999;
     const outer=g.world.sites.slice(3);if(outer.length!==2)throw Error('missing outer rewards');
@@ -20,7 +20,7 @@ const {chromium}=require(process.env.PLAYWRIGHT_MODULE||'playwright'),assert=req
     const at=g.player.x;moveActor(g.world,g.player,10,0);if(g.player.x!==at)throw Error('walk crossed map edge');
     for(const sign of [-1,1]){g.player.x=sign*78;g.player.z=sign*78;g.spawnBoss();if(!g.boss||!clearAt(g.world,g.boss.x,g.boss.z,2)||Math.hypot(g.boss.x-g.player.x,g.boss.z-g.player.z)>24)throw Error('boss not local to new corner');}
     const coordinates=[...g.world.ponds,...g.world.obstacles,...outer,g.player,g.boss];if(coordinates.some(o=>mapPixel(o.x)<6||mapPixel(o.x)>138||mapPixel(o.z)<6||mapPixel(o.z)>138))throw Error('minimap clips markers');
-    const mud=g.world.ponds[0];if(mud){g.world.patches=[mud];g.player.x=mud.x;g.player.z=mud.z;for(let i=0;i<20;i++)g.step(.016);const now=performance.now();for(let i=1;i<=4;i++)nextFrame(now+i*100);if(!document.querySelector('#hint').textContent.includes('泥沼'))throw Error('old water label');}
+    const mud=g.world.ponds[0];if(mud){g.world.patches=[mud];g.player.x=mud.x;g.player.z=mud.z;for(let i=0;i<20;i++)g.step(.016);const now=performance.now();for(let i=1;i<=4;i++)nextFrame(now+i*100);if(!document.querySelector('#hint').textContent.includes('游泳'))throw Error('missing water label');}
     out.push(map);
    }return out;
   });assert.equal(result.length,3);assert.deepEqual(errors,[]);console.log('PASS outer rewards, movement, teleport, skill damage, local bosses and minimap on all maps',width);await p.close();

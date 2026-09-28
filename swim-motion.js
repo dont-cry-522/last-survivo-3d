@@ -1,14 +1,15 @@
 import * as T from './vendor/three.module.js';
-// Longer planted stance, then a raised-knee recovery to pull the boot out of mud.
-export function wadeStep(phase){
- const u=((phase%1)+1)%1,stance=u<.62,t=stance?u/.62:(u-.62)/.38;
- const blend=t*t*(3-2*t);
- return{y:-.94+(stance?0:.24*Math.sin(Math.PI*t)**2),z:stance?.24-.48*blend:-.24+.48*blend};
+// Reach, catch, pull, recovery. Positions are fractions of each character's arm length.
+const strokeKeys=[[0,.16,-.28,.55],[.2,.30,-.30,.76],[.62,.52,-.65,-.24],[.83,.13,-.48,-.28],[1,.16,-.28,.55]];
+export function swimStroke(phase){
+ const u=((phase%1)+1)%1;let i=0;while(u>strokeKeys[i+1][0])i++;
+ const a=strokeKeys[i],b=strokeKeys[i+1],t=(u-a[0])/(b[0]-a[0]),blend=t*t*(3-2*t);
+ return{x:a[1]+(b[1]-a[1])*blend,y:a[2]+(b[2]-a[2])*blend,z:a[3]+(b[3]-a[3])*blend};
 }
 const v=()=>new T.Vector3(),origin=v(),elbow=v(),tip=v(),axis=v(),pole=v(),goal=v(),from=v(),to=v(),offset=v();
 const world=new T.Quaternion(),parent=new T.Quaternion(),delta=new T.Quaternion(),startUpper=new T.Quaternion(),startLower=new T.Quaternion();
 // Two-bone solve works with both authored skeleton axes and the small procedural hero.
-export function poseLimb(g,upper,lower,end,point,bend,weight,save){
+export function swimLimb(g,upper,lower,end,point,bend,weight,save){
  if(!upper||!lower||!end||weight<.001)return;
  save(upper);save(lower);startUpper.copy(upper.quaternion);startLower.copy(lower.quaternion);
  upper.getWorldPosition(origin);lower.getWorldPosition(elbow);end.getWorldPosition(tip);
