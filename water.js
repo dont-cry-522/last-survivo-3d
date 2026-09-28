@@ -1,6 +1,6 @@
-import{onBridge}from'./coast.js?v=53';
-import{MAP_SCALE}from'./map-layout.js?v=53';
-import{swimStroke,swimLimb}from'./swim-motion.js?v=53';
+import{onBridge}from'./coast.js?v=54';
+import{MAP_SCALE}from'./map-layout.js?v=54';
+import{swimStroke,swimLimb}from'./swim-motion.js?v=54';
 import * as T from './vendor/three.module.js';
 const clamp=T.MathUtils.clamp;
 const shore=a=>1+.07*Math.sin(a*3)+.045*Math.cos(a*5);
@@ -46,10 +46,11 @@ function waterSurface(id){
 export function buildPonds(group,id,rnd,spawn,sites){
  if(id==='ash')return[];const ponds=[],surface=waterSurface(id);
  for(let i=0;i<180&&ponds.length<6;i++){
-  const a=rnd()*Math.PI*2,d=18+rnd()*8,rx=(id==='coast'?7:4.7)+rnd()*2.2,rz=(id==='coast'?5:3.7)+rnd()*1.6;
-  const x=ponds.length? (rnd()-.5)*96*MAP_SCALE:spawn.x+Math.sin(a)*d,z=ponds.length?(rnd()-.5)*96*MAP_SCALE:spawn.z+Math.cos(a)*d,r=Math.max(rx,rz)*1.12;
-  if(Math.hypot(x-spawn.x,z-spawn.z)<r+6||Math.hypot(x,z)<r+9||sites.some(s=>Math.hypot(x-s.x,z-s.z)<r+8)||ponds.some(p=>Math.hypot(x-p.x,z-p.z)<r+p.r+4))continue;
-  const p={kind:'water',x,z,rx,rz,r,angle:rnd()*Math.PI*2},bank=new T.Mesh(surfaceGeometry,surface.bank);bank.position.set(x,.045,z);bank.rotation.y=p.angle;bank.scale.set(rx*1.12,1,rz*1.12);bank.receiveShadow=true;group.add(bank);const m=new T.Mesh(surfaceGeometry,surface.material);m.position.set(x,.075,z);m.rotation.y=p.angle;m.scale.set(rx,1,rz);m.receiveShadow=true;group.add(m);p.mesh=m;p.bank=bank;ponds.push(p);
+  const a=rnd()*Math.PI*2,d=18+rnd()*8,rx=(id==='coast'?9:4.7)+rnd()*2.2,rz=(id==='coast'?16:3.7)+rnd()*1.6;
+  let x=ponds.length? (rnd()-.5)*96*MAP_SCALE:spawn.x+Math.sin(a)*d,z=ponds.length?(rnd()-.5)*96*MAP_SCALE:spawn.z+Math.cos(a)*d,r=Math.max(rx,rz)*1.12;
+  if(id==='coast'){x=4+Math.sin(ponds.length*.7)*1.5;z=-62+ponds.length*24;}
+  if(id!=='coast'&&(Math.hypot(x-spawn.x,z-spawn.z)<r+6||Math.hypot(x,z)<r+9||sites.some(s=>Math.hypot(x-s.x,z-s.z)<r+8)||ponds.some(p=>Math.hypot(x-p.x,z-p.z)<r+p.r+4)))continue;
+  const p={kind:'water',x,z,rx,rz,r,angle:id==='coast'?0:rnd()*Math.PI*2},bank=new T.Mesh(surfaceGeometry,surface.bank);bank.position.set(x,.045,z);bank.rotation.y=p.angle;bank.scale.set(rx*1.12,1,rz*1.12);bank.receiveShadow=true;group.add(bank);const m=new T.Mesh(surfaceGeometry,surface.material);m.position.set(x,.075,z);m.rotation.y=p.angle;m.scale.set(rx,1,rz);m.receiveShadow=true;group.add(m);p.mesh=m;p.bank=bank;ponds.push(p);
  }
  const reeds=new T.InstancedMesh(reedGeometry,surface.reeds,ponds.length*24),stones=new T.InstancedMesh(stoneGeometry,surface.stones,ponds.length*6),dummy=new T.Object3D();let ri=0,si=0;
  for(const pond of ponds){const c=Math.cos(pond.angle),s=Math.sin(pond.angle),at=(a,r)=>{const k=shore(a)*r,lx=Math.cos(a)*pond.rx*k,lz=Math.sin(a)*pond.rz*k;return{x:pond.x+c*lx+s*lz,z:pond.z-s*lx+c*lz};};

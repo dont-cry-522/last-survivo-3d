@@ -1,6 +1,6 @@
-import{boneBoomerang}from'./beast-model.js?v=53';
+import{boneBoomerang}from'./beast-model.js?v=54';
 import * as T from './vendor/three.module.js';
-import{shadowCrescentGeometry}from'./shadow-weapons.js?v=53';
+import{shadowCrescentGeometry}from'./shadow-weapons.js?v=54';
 
 function flameTexture(){
  if(typeof document==='undefined')return null;
@@ -19,7 +19,7 @@ function shadowTexture(){
 export class SkillVFX{
  constructor(scene,{mobile=false}={}){
   this.scene=scene;this.limit=mobile?110:190;this.active=[];this.pool=[];this.materials=new Map();
-  this.flameTexture=flameTexture();this.shadowTexture=shadowTexture();this.geometry={waterArc:new T.RingGeometry(.89,1,24,1,Math.PI*.12,Math.PI*.76),ember:new T.IcosahedronGeometry(1,0),crystal:new T.ConeGeometry(1,2,5),flame:new T.PlaneGeometry(2,2),veil:new T.PlaneGeometry(2,2),smoke:new T.SphereGeometry(1,7,5),ray:new T.BoxGeometry(1,1,1)};
+  this.flameTexture=flameTexture();this.shadowTexture=shadowTexture();this.geometry={stone:new T.DodecahedronGeometry(1,0),waterArc:new T.RingGeometry(.89,1,24,1,Math.PI*.12,Math.PI*.76),ember:new T.IcosahedronGeometry(1,0),crystal:new T.ConeGeometry(1,2,5),flame:new T.PlaneGeometry(2,2),veil:new T.PlaneGeometry(2,2),smoke:new T.SphereGeometry(1,7,5),ray:new T.BoxGeometry(1,1,1)};
  }
  particle(shape,color,x,y,z,{life=.4,size=[.1,.1,.1],velocity=[0,0,0],opacity=.9,additive=true,grow=false,gravity=0,spin=0,orbit=null,priority=0}={}){
   if(this.active.length>=this.limit){let victim=-1,lowest=priority;for(let i=0;i<this.active.length;i++)if(this.active[i].priority<lowest){victim=i;lowest=this.active[i].priority;if(lowest===0)break;}if(victim<0)return null;const old=this.active.splice(victim,1)[0];this.scene.remove(old.mesh);this.pool.push(old.mesh);}
@@ -149,7 +149,31 @@ export class SkillVFX{
  }
  skill(e){
   const {kind,x,z}=e,point=(x,y,z)=>new T.Vector3(x,y,z);
-  if(kind==='mine'){
+  if(['fault','landing','reprisal'].includes(kind)){
+   const radial=kind!=='fault',count=radial?9:5;this.dust(x,z,radial?2.3:1);
+   for(let i=0;i<count;i++){const a=radial?i/count*Math.PI*2:(e.angle||0)+Math.PI/2,d=radial?1.1+(i%3)*.45:(i-2)*.36,px=x+Math.sin(a)*d,pz=z+Math.cos(a)*d;
+    const rock=this.particle('stone',i%2?0x9b865e:0x655d4b,px+Math.sin(i*3)*.13,.12,pz+Math.cos(i*2)*.17,{life:.48,size:[.20,.25+(i%3)*.10,.23],velocity:[Math.sin(a)*.5,1.4,Math.cos(a)*.5],gravity:7,spin:2,additive:false});if(rock)rock.rotation.z=(i%2?1:-1)*.25;
+    this.segment(point(px,.08,pz),point(px+Math.sin(a)*.5,.07,pz+Math.cos(a)*.5),0xe0c493,.035,.25,false,0,.5);
+   }
+  }else if(['surge','wake'].includes(kind)){
+   const a=e.angle||0,dx=Math.sin(a),dz=Math.cos(a),surge=kind==='surge';
+   this.particle('veil',0x438f96,x,.055,z,{life:.5,size:[1.1,.75,1],opacity:.25,additive:false});
+   let last;for(let i=-3;i<=3;i++){const u=i/3,curve=.4*(1-u*u),px=x+Math.cos(a)*u+dx*curve,pz=z-Math.sin(a)*u+dz*curve,crest=point(px,surge?.13+(1-u*u)*.24:.08,pz);
+    if(last)this.segment(last,crest,i%2?0xa0d7cc:0x70b5b5,.026,.32,false,0,.6);last=crest;
+    this.particle('veil',0x5eb0ad,px,.10,pz,{life:.42,size:[.45,.35,1],opacity:.22,velocity:[dx*.8,0,dz*.8],additive:false,grow:true});
+    if(surge&&i%2===0)this.particle('ember',0xc5e8dd,px,.24,pz,{life:.35,size:[.025,.045,.025],velocity:[dx,.7,dz],gravity:4,additive:false});
+   }
+  }else if(['brine','brineMark'].includes(kind)){
+   const burst=kind==='brine',count=burst?9:Math.min(3,e.count||1);for(let i=0;i<count;i++){const a=i*2.4;this.particle('crystal',i%2?0xd0eeeb:0x6db4b9,x+Math.sin(a)*.25,.8,z+Math.cos(a)*.25,{life:burst?.45:.65,size:[.04,burst?.23:.12,.04],velocity:burst?[Math.sin(a)*2,1,Math.cos(a)*2]:[0,.12,0],gravity:burst?4:0,spin:burst?6:0,additive:false});}
+  }else if(['briarSet','briarIdle','briar','bond','care'].includes(kind)){
+   if(kind==='care'){this.rise(x,z,0xafcb87,.8);for(let i=0;i<4;i++)this.particle('crystal',0xc2d79c,x+Math.sin(i*2.4)*.35,.5,z+Math.cos(i*2.4)*.35,{life:.7,size:[.06,.1,.025],velocity:[0,.5,0],spin:2,additive:false});}
+   else if(kind==='bond'){for(let i=-1;i<=1;i++)this.segment(point(x+i*.17-.12,.55,z),point(x+i*.17+.12,1.15,z),0xe8d2a0,.045,.22,false);}
+   else{const snap=kind==='briar',radius=snap?1.15:.65;for(let i=0;i<4;i++){
+    const a=i*2.4,dx=Math.sin(a),dz=Math.cos(a);let last=point(x+dx*radius,.07,z+dz*radius);
+    for(let j=1;j<=3;j++){const u=j/3,turn=a+u*.8,r=radius*(1-u*.7),next=point(x+Math.sin(turn)*r,.07+(snap?Math.sin(u*1.6)*.55:u*.08),z+Math.cos(turn)*r);this.segment(last,next,0x4f7946,.035,snap?.45:.44,false,0,.85);last=next;}
+    const leaf=this.particle('crystal',i%2?0x86ac63:0x628a49,last.x,last.y,last.z,{life:.45,size:[.08,.035,.18],velocity:snap?[-dx*.2,.25,-dz*.2]:[0,0,0],additive:false,opacity:.85});if(leaf)leaf.rotation.y=a;
+   }}
+  }else if(kind==='mine'){
    const c=e.armed?0xe8a55e:0x887c68;this.particle('ember',c,x,.13,z,{life:.42,size:[.16,.06,.16],additive:false,opacity:.9});
    for(const a of [-.65,.65])this.segment(point(x-.27,.11,z+a*.2),point(x+.27,.11,z-a*.2),c,.035,.42,false);
   }else if(kind==='mineBlast'){this.fire(x,z,2.5,true);for(let i=0;i<5;i++)this.particle('crystal',0xd6b07d,x,.3,z,{life:.35,size:[.08,.12,.08],velocity:[Math.sin(i*2.4)*4,2,Math.cos(i*2.4)*4],gravity:8,additive:false});}

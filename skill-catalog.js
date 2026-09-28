@@ -1,4 +1,13 @@
 export const EXTRA_SKILLS=[
+ {id:'fault',hero:'guardian',name:'裂岩重击',icon:'⋀',max:3,describe:r=>`连招第三锤沿前方依次震出三段岩脊，每段 ${14+8*r} 伤害，最远 6 米；岩脊遇障碍停止。`},
+ {id:'reprisal',hero:'guardian',name:'铁壁回响',icon:'▣',max:3,describe:r=>`精准格挡后反震 3 米内敌人，造成 ${16+10*r} 伤害并击退普通怪；4 秒触发间隔。`},
+ {id:'landing',hero:'guardian',name:'落地震荡',icon:'◆',max:3,describe:r=>`盾冲结束时震击 2.8 米内敌人，造成 ${12+9*r} 伤害并减速 1 秒；6 秒触发间隔。`},
+ {id:'surge',hero:'tide',name:'破浪锋',icon:'≈',max:3,describe:r=>`第三次穿刺向前推出三段浪锋，每段 ${10+7*r} 伤害并减速；最远 6 米，遇障碍停止。`},
+ {id:'brine',hero:'tide',name:'盐蚀印记',icon:'✧',max:3,describe:r=>`同一目标 3 秒内连续被长叉命中三次，爆开盐晶，造成 ${16+10*r} 伤害；触发间隔 1 秒，首领也可生效。`},
+ {id:'wake',hero:'tide',name:'踏浪余流',icon:'↝',max:3,describe:r=>`踏浪结束后留下 3 秒水流，触碰的敌人受到 ${9+7*r} 伤害并减速；每只敌人只受伤一次，6 秒触发间隔。`},
+ {id:'bond',hero:'lingya',name:'同猎追击',icon:'✦',max:3,describe:r=>`獾兽扑中刚被骨镖标记的敌人时，追加 ${12+8*r} 伤害；1.5 秒触发间隔。伙伴倒地时不会触发。`},
+ {id:'briar',hero:'lingya',name:'燕返藤绊',icon:'♧',max:3,describe:r=>`燕步起点留下藤绊，0.45 秒后就绪，靠近触发 ${12+8*r} 伤害并减速 2 秒；最多 2 处，8 秒失效，首领不会被定身。`},
+ {id:'care',hero:'lingya',name:'归镖抚慰',icon:'♡',max:3,describe:r=>`每接回四次骨镖，为 10 米内存活的伙伴恢复 ${6+4*r} 点生命；不会提前复活倒地伙伴。`},
  {id:'mine',hero:'scout',name:'爆破陷阱',icon:'✹',max:3,describe:r=>`附近有敌人时每 6 秒在脚下布置陷阱，0.45 秒后就绪；敌人靠近引爆，造成 ${18+14*r} 范围伤害。最多保留 2 个，10 秒后失效。`},
  {id:'volley',hero:'scout',name:'破阵齐射',icon:'⋔',max:3,describe:r=>`每攻击 5 次，沿瞄准方向追加 3 发贯穿弹，单发造成 ${8+4*r} 伤害，射程 10 米。按攻击次数计数，不按弹丸数量。`},
  {id:'counter',hero:'scout',name:'翻滚反击',icon:'↶',max:3,describe:r=>`翻滚结束后 2 秒内的第一次攻击追加近身扇面冲击，造成 ${14+12*r} 伤害并击退普通敌人。首领不会被推走。`},

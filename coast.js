@@ -4,8 +4,8 @@ export function tideState(time){const p=((time%28)+28)%28,warning=p>=14&&p<17,hi
 export function onBridge(world,x,z){return(world.bridges||[]).some(b=>Math.abs(x-b.x)<b.width/2&&Math.abs(z-b.z)<b.length/2);}
 export function installCoast(world){
  world.bridges=[];const boards=[],posts=[];
- for(const p of world.ponds){p.baseRx=p.rx;p.baseRz=p.rz;const b={x:p.x,z:p.z,width:2.8,length:Math.max(p.rx,p.rz)*2.9};world.bridges.push(b);const count=Math.ceil(b.length/.40);for(let i=0;i<count;i++)boards.push([b.x,.14,b.z-b.length/2+i*.4]);for(const s of[-1,1])for(let i=0;i<4;i++)posts.push([b.x+s*1.3,.26,b.z-b.length/2+i*b.length/3]);}
- for(const [positions,geometry,material]of[[boards,boardGeometry,boardMaterial],[posts,postGeometry,postMaterial]]){const m=new T.InstancedMesh(geometry,material,positions.length),dummy=new T.Object3D();for(let i=0;i<positions.length;i++){dummy.position.set(...positions[i]);dummy.updateMatrix();m.setMatrixAt(i,dummy.matrix);}m.castShadow=m.receiveShadow=true;world.group.add(m);}
+ for(const p of world.ponds){p.baseRx=p.rx;p.baseRz=p.rz;const b={x:p.x,z:p.z,width:p.rx*2.9,length:2.8};world.bridges.push(b);const count=Math.ceil(b.width/.40);for(let i=0;i<count;i++)boards.push([b.x-b.width/2+i*.4,.14,b.z]);for(const s of[-1,1])for(let i=0;i<6;i++)posts.push([b.x-b.width/2+i*b.width/5,.26,b.z+s*1.3]);}
+ for(const [positions,geometry,material]of[[boards,boardGeometry,boardMaterial],[posts,postGeometry,postMaterial]]){const m=new T.InstancedMesh(geometry,material,positions.length),dummy=new T.Object3D();for(let i=0;i<positions.length;i++){dummy.position.set(...positions[i]);dummy.rotation.y=geometry===boardGeometry?Math.PI/2:0;dummy.updateMatrix();m.setMatrixAt(i,dummy.matrix);}m.castShadow=m.receiveShadow=true;world.group.add(m);}
  world.obstacles=world.obstacles.filter(o=>{const blocked=world.bridges.some(b=>Math.abs(o.x-b.x)<b.width/2+o.r+.6&&Math.abs(o.z-b.z)<b.length/2+o.r+.6);if(blocked)o.mesh.removeFromParent();return !blocked;});
  world.tide=tideState(0);return world;
 }

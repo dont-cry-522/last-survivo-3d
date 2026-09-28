@@ -1,16 +1,16 @@
-import{swimLimb as poseLimb}from'./swim-motion.js?v=53';
-import{lingyaHopPose,lingyaHopFoot}from'./lingya-motion.js?v=53';
-import{lingyaOutfit,lingyaAccessories,lingyaLegs}from'./lingya-appearance.js?v=53';
-import{boneBoomerang}from'./beast-model.js?v=53';
-import{makeHarpoon}from'./coast-models.js?v=53';
-import{guardianOutfit,guardianHair}from'./guardian-appearance.js?v=53';
-import{equipGuardian,animateGuardian}from'./guardian-model.js?v=53';
-import{weaponGesture,shotStarted}from'./weapon-performance.js?v=53';
-import{rollProgress,rollWeight}from'./dodge-motion.js?v=53';
+import{swimLimb as poseLimb}from'./swim-motion.js?v=54';
+import{lingyaHopPose,lingyaHopFoot}from'./lingya-motion.js?v=54';
+import{lingyaOutfit,lingyaAccessories,lingyaLegs}from'./lingya-appearance.js?v=54';
+import{boneBoomerang}from'./beast-model.js?v=54';
+import{makeHarpoon}from'./coast-models.js?v=54';
+import{guardianOutfit,guardianHair}from'./guardian-appearance.js?v=54';
+import{equipGuardian,animateGuardian}from'./guardian-model.js?v=54';
+import{weaponGesture,shotStarted}from'./weapon-performance.js?v=54';
+import{rollProgress,rollWeight}from'./dodge-motion.js?v=54';
 import * as T from './vendor/three.module.js';
 import {clone} from './vendor/SkeletonUtils.js';
-import {loadCharacterData} from './character-loader.js?v=53';
-import {makeHero as makePrototype} from './hero-model.js?v=53';
+import {loadCharacterData} from './character-loader.js?v=54';
+import {makeHero as makePrototype} from './hero-model.js?v=54';
 
 const templates=new Map(),clips=new Map();
 
@@ -177,6 +177,7 @@ export function createSkinnedHero(kind,weapon){
   g.userData.support={hand:bones.get('hand_l'),rightHand:bones.get('hand_r'),elbow:new T.Vector3(),goal:new T.Vector3(),axis:new T.Vector3(),bend:new T.Vector3(),target:new T.Vector3(),origin:new T.Vector3(),from:new T.Vector3(),to:new T.Vector3(),delta:new T.Quaternion(),world:new T.Quaternion(),parent:new T.Quaternion(),start:[new T.Quaternion(),new T.Quaternion()]};
   if(weapon==='crossbow')g.userData.crossbowBase=[g.userData.aimArm,g.userData.firingForearm,g.userData.offArm,g.userData.offForearm].map(bone=>[bone,new T.Quaternion()]);
   else g.userData.attackBase=[g.userData.aimArm,g.userData.firingForearm,g.userData.offArm,g.userData.offForearm].map(bone=>[bone,new T.Quaternion()]);
+  if(kind==='tide')g.userData.attackBase.push(...[g.userData.spine,g.userData.swimHead].map(bone=>[bone,bone.quaternion.clone()]));
   if(kind==='lingya')g.userData.lingyaPoseBase=[g.userData.spine,g.userData.swimHead,g.userData.swimLeftLeg,g.userData.swimRightLeg,g.userData.swimLeftKnee,g.userData.swimRightKnee,g.userData.swimLeftFoot,g.userData.swimRightFoot,g.userData.aimArm,g.userData.offArm,g.userData.firingForearm,g.userData.offForearm].map(b=>[b,b.quaternion.clone()]);
   if(kind==='guardian'){
     gun.removeFromParent();equipGuardian(g,guardianGrips);
@@ -229,7 +230,12 @@ export function animateSkinnedHero(g,t,speed,attack,hurt){
     for(const [bone,rotation]of d.attackBase)rotation.copy(bone.quaternion);d.attackBaseReady=true;
     if(d.kind==='guardian'){animateGuardian(g,t,speed,dt);if(d.cape){d.cape.quaternion.copy(d.restCape);d.cape.rotateX(.06+d.blend*.13-d.motionLean*.6);d.cape.userData.wind.time.value=t;d.cape.userData.wind.run.value=d.blend;}g.visible=!(hurt>0&&Math.floor(hurt*28)%2===0);return;}
     const gesture=isRoll?0:kick;
-    if(d.weaponId==='rifle'){
+    if(d.weaponId==='harpoon'){
+      // Rear-hand thrust, torso weight transfer and the gaze staying on the target.
+      d.spine.rotateY(.10*gather-.18*gesture);d.spine.rotateX(.06*gesture-.03*gather);
+      d.swimHead.rotateY(-.06*gather+.09*gesture);d.rig.position.y-=.045*gesture;
+      d.aimArm.rotateX(-.28*gesture+.12*gather);d.firingForearm.rotateX(-.24*gesture);
+    }else if(d.weaponId==='rifle'){
       d.aimArm.rotateX(-.16*gesture);d.firingForearm.rotateX(.24*gesture);
       d.offArm.rotateX(.14*gesture);d.offForearm.rotateX(-.22*gesture);
     }else if(d.weaponId==='shotgun'){
@@ -268,7 +274,7 @@ export function animateSkinnedHero(g,t,speed,attack,hurt){
     // Solve toward weapon-specific hand positions; grip constraints must retain the gesture.
     const id=d.weaponId,staff=['fire','dark'].includes(id),bow=id==='crossbow',throwing=['shuriken','boomerang'].includes(id);
     d.aimArm.getWorldPosition(s.origin);d.offArm.getWorldPosition(s.target);s.target.add(s.origin).multiplyScalar(.5);const chest=s.target.clone();g.getWorldQuaternion(s.world);
-    if(id==='harpoon')s.to.set(-.19,-.24,.05+.43*kick-.12*gather);
+    if(id==='harpoon')s.to.set(-.21+.06*kick,-.24+.035*kick,.02+.49*kick-.16*gather);
     else if(staff)s.to.set(-.19,-.23,id==='fire'?.24+.22*kick:.22+.09*gather);
     else if(id==='boomerang')s.to.set(-.20-.25*sweep+.06*gather,-.10-.12*gather,.24+.24*kick);
     else if(throwing)s.to.set(-.24-.18*sweep,-.10-.14*gather,.28+.20*kick);

@@ -1,15 +1,16 @@
-import{segmentDistance}from'./rules.js?v=53';
+import{NewHeroSkills}from'./new-hero-skills.js?v=54';
+import{segmentDistance}from'./rules.js?v=54';
 // Gameplay records are bounded and independent from the recycled visual particles.
 export class HeroSkills{
  constructor(api){this.api=api;this.reset();}
- reset(){this.now=0;this.cool={};this.count={};this.mines=[];this.trails=[];this.bolts=[];this.pending=[];this.last=null;this.anchor=null;this.walked=0;this.mark=null;this.counterUntil=0;this.counterReady=0;}
+ reset(){this.now=0;this.cool={};this.count={};this.mines=[];this.trails=[];this.bolts=[];this.pending=[];this.last=null;this.anchor=null;this.walked=0;this.mark=null;this.counterUntil=0;this.counterReady=0;if(this.newHeroes)this.newHeroes.reset();else this.newHeroes=new NewHeroSkills(this);}
  rank(id){return this.api.player().upgrades[id]||0;}
  fx(kind,x,z,extra={}){this.api.fx({kind,x,z,...extra});}
  foes(x=this.api.player().x,z=this.api.player().z,r=14){return this.api.foes().filter(e=>e.alive&&Math.hypot(e.x-x,e.z-z)<r).sort((a,b)=>Math.hypot(a.x-x,a.z-z)-Math.hypot(b.x-x,b.z-z));}
  canHit(x,z,e){return !this.api.blocked(x,z,e.x,e.z);}
  hit(e,damage){if(this.api.active()&&e.alive)this.api.damage(e,damage);}
  area(x,z,r,damage,slow=0){for(const e of this.foes(x,z,r)){if(!this.api.active())break;if(!this.canHit(x,z,e))continue;this.hit(e,damage);if(e.alive&&slow)e.slow=Math.max(e.slow||0,slow);}}
- onDodge(duration){if(!this.api.active()||!this.rank('counter'))return;this.counterReady=this.now+duration;this.counterUntil=this.counterReady+2;}
+ onDodge(duration){this.newHeroes.dodge(duration);if(!this.api.active()||!this.rank('counter'))return;this.counterReady=this.now+duration;this.counterUntil=this.counterReady+2;}
  onShot(angle,elapsed=0){
   if(!this.api.active())return;const p=this.api.player(),now=this.now+elapsed;
   if(this.rank('counter')&&this.counterUntil>now&&now>=this.counterReady){
@@ -27,6 +28,7 @@ export class HeroSkills{
   }
  }
  onHit(e){
+  this.newHeroes.hit(e);
   if(!this.api.active()||!this.rank('pursuit')||!e.alive||this.now<(this.cool.pursuit||0))return;
   if(!this.mark||this.mark.enemy!==e||this.now-this.mark.time>2.5)this.mark={enemy:e,count:0,time:this.now};
   this.mark.count++;this.mark.time=this.now;
@@ -38,7 +40,7 @@ export class HeroSkills{
   this.cool.soul=this.now+1;p.hp=Math.min(p.maxHp,p.hp+1+this.rank('soul'));this.fx('soul',e.x,e.z,{x2:p.x,z2:p.z});
  }
  update(dt){
-  if(!this.api.active()||dt<=0)return;this.now+=dt;const p=this.api.player();
+  if(!this.api.active()||dt<=0)return;this.now+=dt;const p=this.api.player();this.newHeroes.update(dt);if(!this.api.active())return;
   for(const [id,cooldown]of [['mine',6],['rain',8],['spikes',7]]){
    if(!this.rank(id))continue;this.cool[id]=(this.cool[id]??1)-dt;if(this.cool[id]>0)continue;
    const near=this.foes(p.x,p.z,id==='mine'?14:12).filter(e=>this.canHit(p.x,p.z,e));if(!near.length){this.cool[id]=.3;continue;}this.cool[id]=cooldown;

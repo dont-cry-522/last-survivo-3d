@@ -67,7 +67,7 @@ export class BeastCompanion{
    const e=this.target,reach=(e?.size||.5)+.60,available=e?Math.max(0,dist(e,this)-reach):2.6;const travel=this.struck?0:Math.min(available,Math.min(dt,Math.max(0,PET_TIMING.pounce-(this.elapsed-dt)))*8.7);
    this.api.move(this,Math.sin(this.attackAngle)*travel,Math.cos(this.attackAngle)*travel);
    if(this.elapsed>=PET_TIMING.pounce*.55&&!this.struck&&e?.alive&&dist(e,this)<reach+.08&&this.api.clear(this.x,this.z,e.x,e.z)){
-    this.struck=true;this.api.damage(e,w.petDamage*(e.lingyaMark>this.now?1+.22*(w.pincerRank||0):1));if(e.alive&&!e.boss)e.stagger=Math.max(e.stagger||0,.22);this.api.fx('bite',e.x,e.z);}
+    this.struck=true;this.api.damage(e,w.petDamage*(e.lingyaMark>this.now?1+.22*(w.pincerRank||0):1));this.api.onHit?.(e);if(e.alive&&!e.boss)e.stagger=Math.max(e.stagger||0,.22);this.api.fx('bite',e.x,e.z);}
    if(this.elapsed>=PET_TIMING.pounce){this.change('recover');this.target=null;this.cool=w.petCooldown;this.api.fx('land',this.x,this.z);}
   }else if(this.state==='recover'){
    if(this.elapsed>=PET_TIMING.recover){this.change(dist(this,p)>PET_LEASH.follow?'return':'look');this.decisionAt=this.now+.5;}
@@ -93,4 +93,4 @@ export class BeastCompanion{
   this.angle+=angleDiff(desired,this.angle)*(1-Math.exp(-dt*(['wind','pounce'].includes(this.state)?16:7)));this.turnRate=angleDiff(this.angle,oldAngle)/dt;
  }
 }
-export {sideHopTravel} from './lingya-motion.js?v=53';
+export {sideHopTravel} from './lingya-motion.js?v=54';
