@@ -1,6 +1,6 @@
-import{onBridge}from'./coast.js?v=60';
-import{MAP_SCALE}from'./map-layout.js?v=60';
-import{swimStroke,swimLimb}from'./swim-motion.js?v=60';
+import{onBridge}from'./coast.js?v=61';
+import{MAP_SCALE}from'./map-layout.js?v=61';
+import{swimStroke,swimLimb}from'./swim-motion.js?v=61';
 import * as T from './vendor/three.module.js';
 const clamp=T.MathUtils.clamp;
 const shore=a=>1+.07*Math.sin(a*3)+.045*Math.cos(a*5);
@@ -31,11 +31,11 @@ function waterSurface(id){
     float edge=smoothstep(.48,.98,radial);
     float wave=sin(waterWorld.x*1.4+waterWorld.z*4.8+sin(waterWorld.x*1.9-waterTime*.6)*.8-waterTime*.8);
     float light=pow(max(0.0,wave),22.0)*.012*smoothstep(.15,.85,sin(waterWorld.x*.8+waterWorld.z*.3+waterTime*.2))*(1.0-edge*.8);
-    diffuseColor.rgb=mix(vec3(${id==='coast'?'.014,.048,.058':id==='snow'?'.010,.035,.055':'.006,.030,.033'}),vec3(${id==='coast'?'.042,.092,.100':id==='snow'?'.065,.105,.115':'.022,.060,.039'}),edge)+vec3(.45,.7,.64)*light;
+    diffuseColor.rgb=mix(vec3(${id==='coast'?'.014,.048,.058':id==='snow'?'.010,.035,.055':'.006,.030,.033'}),vec3(${id==='coast'?'.042,.092,.100':id==='snow'?'.065,.105,.115':'.022,.060,.039'}),${id==='coast'?'edge*.22':'edge'})+vec3(.45,.7,.64)*light;
     diffuseColor.a*=1.0-smoothstep(.84,1.0,radial);
 `);};
   material.customProgramCacheKey=()=> 'pond-'+id;
-  const bank=new T.MeshBasicMaterial({color:id==='snow'?0x677d80:0x263c2f,transparent:true,opacity:.4,depthWrite:false});
+  const bank=new T.MeshBasicMaterial({color:id==='snow'?0x677d80:0x263c2f,transparent:true,opacity:id==='coast'?.22:.4,depthWrite:false});
   bank.onBeforeCompile=shader=>{shader.vertexShader='varying vec2 bankLocal;\n'+shader.vertexShader;shader.vertexShader=shader.vertexShader.replace('#include <begin_vertex>','#include <begin_vertex>\nbankLocal=position.xz;');shader.fragmentShader='varying vec2 bankLocal;\n'+shader.fragmentShader;shader.fragmentShader=shader.fragmentShader.replace('#include <color_fragment>',`#include <color_fragment>
    float a=atan(bankLocal.y,bankLocal.x);float r=length(bankLocal)/(1.0+.07*sin(a*3.0)+.045*cos(a*5.0));diffuseColor.a*=1.0-smoothstep(.78,1.0,r);`);};
   const reeds=new T.MeshStandardMaterial({color:id==='snow'?0x849d97:0x637950,roughness:1}),stones=new T.MeshStandardMaterial({color:id==='snow'?0x9aaeb0:0x6c7a68,roughness:1});

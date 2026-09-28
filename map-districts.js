@@ -1,5 +1,5 @@
 import * as T from './vendor/three.module.js';
-const slabGeometry=new T.BoxGeometry(1,1,1),slabMaterials={sand:new T.MeshStandardMaterial({color:0xb3a184,roughness:1}),coast:new T.MeshStandardMaterial({color:0x81938a,roughness:1})};
+const slabGeometry=new T.BoxGeometry(1,1,1),slabMaterials={sand:new T.MeshStandardMaterial({color:0xb3a184,roughness:1}),coast:new T.MeshStandardMaterial({color:0x697f76,roughness:1})};
 // Districts leave a broad open center; solid pieces have matching collision footprints.
 export function districtLayout(id,spawn){return id==='sand'?[{x:spawn.x+12,z:spawn.z+1,kind:'gate'},{x:-34,z:-31,kind:'court'},{x:34,z:29,kind:'court'},{x:42,z:-33,kind:'court'},{x:-35,z:36,kind:'court'},{x:12,z:57,kind:'court'}]:id==='coast'?[{x:-16,z:-9,kind:'warehouse'},{x:24,z:29,kind:'warehouse'},{x:-16,z:42,kind:'wreck'}]:[];}
 export function buildDistricts(world,id,layouts,mesh,rnd){
@@ -9,7 +9,7 @@ export function buildDistricts(world,id,layouts,mesh,rnd){
  for(const l of layouts){if(sites.some(s=>Math.hypot(s.x-l.x,s.z-l.z)<13))continue;world.districts.push(l);
   const place=(x,z,build,r=.7)=>{x+=l.x;z+=l.z;if(Math.hypot(x-world.spawn.x,z-world.spawn.z)<5||sites.some(s=>Math.hypot(x-s.x,z-s.z)<8)||world.bridges?.some(b=>Math.abs(x-b.x)<b.width/2+r+1&&Math.abs(z-b.z)<b.length/2+r+1))return;
    const g=new T.Group();g.position.set(x,0,z);group.add(g);build(g);obstacles.push({x,z,r,mesh:g});};
-  const box=(g,c,x,y,z,w,h,d)=>mesh('BoxGeometry',[w,h,d],c,x,y,z,g);
+  const box=(g,c,x,y,z,w,h,d)=>{const m=mesh('BoxGeometry',[1,1,1],c,x,y,z,g);m.scale.set(w,h,d);return m;};
   const pier=(g,h=2.5)=>{mesh('CylinderGeometry',[.45,.6,h,10],stone,0,h/2,0,g);box(g,edge,0,.18,0,1.35,.35,1.35);box(g,edge,0,h+.1,0,1.16,.22,1.16);};
   if(id==='sand'){
    // Asymmetric ruined gateway, a broken lintel and two open courtyard wings.
@@ -31,8 +31,8 @@ export function buildDistricts(world,id,layouts,mesh,rnd){
  }
  if(id==='coast')for(const p of world.ponds)for(const side of[-1,1])for(let i=-4;i<=4;i++){
   const z=p.z+i*2.2,x=p.x+side*(p.rx*.97+Math.sin(i*.5)*.6);
-  if(world.bridges.some(b=>Math.abs(z-b.z)<2.7)||Math.abs(z)>76)continue;
-  dummy.position.set(x,.09,z);dummy.rotation.set(0,side*.07+Math.sin(i)*.04,0);dummy.scale.set(1.5,.20,1.7);dummy.updateMatrix();tileMatrices.push(dummy.matrix.clone());
+  if(world.bridges.some(b=>Math.abs(z-b.z)<2.7)||Math.abs(z)>76||rnd()<.28)continue;
+  dummy.position.set(x+(rnd()-.5)*.45,.04+rnd()*.04,z+(rnd()-.5)*.5);dummy.rotation.set((rnd()-.5)*.05,side*.07+(rnd()-.5)*.28,0);dummy.scale.set(1.1+rnd()*.45,.12,1.1+rnd()*.65);dummy.updateMatrix();tileMatrices.push(dummy.matrix.clone());
  }
  const tiles=new T.InstancedMesh(slabGeometry,slabMaterials[id],tileMatrices.length);tileMatrices.forEach((m,i)=>tiles.setMatrixAt(i,m));tiles.receiveShadow=true;group.add(tiles);
 }

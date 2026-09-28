@@ -1,19 +1,20 @@
-import{districtLayout,buildDistricts}from'./map-districts.js?v=60';
-import{makeCoastEnemy,animateCoastEnemy,coastProp}from'./coast-models.js?v=60';
-import{installCoast}from'./coast.js?v=60';
-import{makeBoss,animateBoss,makeSandEnemy,animateSandEnemy}from'./expansion-models.js?v=60';
-import{siteSchedule}from'./site-discovery.js?v=60';
-import{MAP_EVENTS,biomeEvent,eventNodes}from'./map-events.js?v=60';
-import{MAP_HALF,MAP_SCALE}from'./map-layout.js?v=60';
-import{buildPonds,animateWater,waterDepth,restoreWaterPose,animateWaterPose}from'./water.js?v=60';
-import{ENEMY_MOTION,animateEnemyIdentity}from'./enemy-motion.js?v=60';
-import{REGIONAL_ENEMIES}from'./map-enemies.js?v=60';
-import{groundCue}from'./ground-cues.js?v=60';
-import{heroesReady,createSkinnedHero,animateSkinnedHero}from'./skinned-hero.js?v=60';
+import{groveCenters,installScenery}from'./biome-scenery.js?v=61';
+import{districtLayout,buildDistricts}from'./map-districts.js?v=61';
+import{makeCoastEnemy,animateCoastEnemy,coastProp}from'./coast-models.js?v=61';
+import{installCoast}from'./coast.js?v=61';
+import{makeBoss,animateBoss,makeSandEnemy,animateSandEnemy}from'./expansion-models.js?v=61';
+import{siteSchedule}from'./site-discovery.js?v=61';
+import{MAP_EVENTS,biomeEvent,eventNodes}from'./map-events.js?v=61';
+import{MAP_HALF,MAP_SCALE}from'./map-layout.js?v=61';
+import{buildPonds,animateWater,waterDepth,restoreWaterPose,animateWaterPose}from'./water.js?v=61';
+import{ENEMY_MOTION,animateEnemyIdentity}from'./enemy-motion.js?v=61';
+import{REGIONAL_ENEMIES}from'./map-enemies.js?v=61';
+import{groundCue}from'./ground-cues.js?v=61';
+import{heroesReady,createSkinnedHero,animateSkinnedHero}from'./skinned-hero.js?v=61';
 import * as T from './vendor/three.module.js';
-import{makeHero,animateHero}from'./hero-model.js?v=60';
-import{makeWraith,animateWraith}from'./wraith-model.js?v=60';
-import{MAPS,seeded}from'./rules.js?v=60';
+import{makeHero,animateHero}from'./hero-model.js?v=61';
+import{makeWraith,animateWraith}from'./wraith-model.js?v=61';
+import{MAPS,seeded}from'./rules.js?v=61';
 const geo=new Map(),materials=new Map(),terrainMaterials=new Map(),detailMaterials=new Map(),weatherMaterials=new Map();
 function geometry(kind,args){const key=kind+args.join(',');if(!geo.has(key))geo.set(key,new T[kind](...args));return geo.get(key);}
 export function mat(color,glow=false){const key=color+':'+glow;if(!materials.has(key))materials.set(key,new T.MeshStandardMaterial({color,roughness:glow?.35:.86,metalness:glow?.25:.08,emissive:glow?color:0,emissiveIntensity:glow?.9:0,flatShading:true}));return materials.get(key);}
@@ -120,7 +121,7 @@ function groundTexture(id,theme){
   const data=c.createImageData(512,512),pixels=data.data,noise=seeded(id==='forest'?913:id==='snow'?317:711),lattices=[];
   for(const cells of [4,11,31,83])lattices.push({cells,values:Float32Array.from({length:cells*cells},()=>noise()*2-1)});
   const sample=(layer,x,y)=>{const sx=x/512*layer.cells,sy=y/512*layer.cells,ix=Math.floor(sx),iy=Math.floor(sy),u=sx-ix,v=sy-iy,at=(a,b)=>layer.values[(b%layer.cells)*layer.cells+(a%layer.cells)];const a=at(ix,iy)+(at(ix+1,iy)-at(ix,iy))*u,b=at(ix,iy+1)+(at(ix+1,iy+1)-at(ix,iy+1))*u;return a+(b-a)*v;};
-  for(let y=0;y<512;y++)for(let x=0;x<512;x++){const n=sample(lattices[0],x,y)*.46+sample(lattices[1],x,y)*.27+sample(lattices[2],x,y)*.16+sample(lattices[3],x,y)*.11;const fleck=(noise()-.5)*5,shade=n*(id==='snow'?28:21),i=(y*512+x)*4;for(let k=0;k<3;k++)pixels[i+k]=Math.max(0,Math.min(255,rgb[k]+shade+fleck));pixels[i+3]=255;}
+  for(let y=0;y<512;y++)for(let x=0;x<512;x++){const n=sample(lattices[0],x,y)*.46+sample(lattices[1],x,y)*.27+sample(lattices[2],x,y)*.16+sample(lattices[3],x,y)*.11;const fleck=(noise()-.5)*5,shade=n*(id==='snow'?28:21)+(id==='sand'?Math.sin(y*.20+Math.sin(x*.018)*2)*2.8:id==='ash'?-Math.max(0,.055-Math.abs(sample(lattices[2],x,y)))*105:id==='coast'?Math.sin(y*.075+x*.025)*1.7:0),i=(y*512+x)*4;for(let k=0;k<3;k++)pixels[i+k]=Math.max(0,Math.min(255,rgb[k]+shade+fleck));pixels[i+3]=255;}
   c.putImageData(data,0,0);
  }else{c.fillStyle='#'+theme.ground.toString(16).padStart(6,'0');c.fillRect(0,0,512,512);}
  const texture=new T.CanvasTexture(canvas);texture.wrapS=texture.wrapT=T.RepeatWrapping;texture.repeat.set(8*MAP_SCALE,8*MAP_SCALE);texture.colorSpace=T.SRGBColorSpace;texture.anisotropy=4;return texture;
@@ -165,7 +166,7 @@ export function buildWorld(id,seed=1){const theme=MAPS[id],rnd=seeded(seed),grou
  // Outer optional rewards make the expanded space worth exploring; the early relic stays nearby.
  for(const [i,type]of ['supply','altar'].entries()){const a=rnd()*1.1+i*Math.PI+1,r=66+rnd()*6;sites.push({x:Math.sin(a)*r,z:Math.cos(a)*r,type,claimed:false});}
  if(id==='coast'){const positions=[[-32,-30],[36,32],[-33,7],[37,-40],[-38,53]];sites.forEach((s,i)=>{s.x=positions[i][0]+(rnd()-.5)*4;s.z=positions[i][1]+(rnd()-.5)*4;});}
- const districts=districtLayout(id,spawn);
+ const districts=districtLayout(id,spawn),groves=groveCenters(spawn,rnd);
  sites[0].event=biomeEvent(id);sites[0].eventAngle=rnd()*Math.PI*2;sites[3].event=id==='sand'?'excavation':id==='coast'?'salvage':'ambush';sites[3].eventAngle=rnd()*Math.PI*2;sites[3].eventVariant=rnd()<.5?0:1;
  for(const [i,site]of sites.entries()){site.availableAt=siteSchedule(site,i,rnd);site.discovered=false;site.reveal=0;}
  const ground=mesh('PlaneGeometry',[(MAP_HALF+8)*2,(MAP_HALF+8)*2],theme.ground,0,-.03,0,group);ground.rotation.x=-Math.PI/2;
@@ -175,7 +176,7 @@ export function buildWorld(id,seed=1){const theme=MAPS[id],rnd=seeded(seed),grou
  // Soft irregular paths and terrain islands give the forest a readable floor.
  for(const site of sites){site.trail=trail(group,spawn,site,id,rnd);site.trail.visible=site.type==='relic';}
  for(let i=0;i<24;i++){const x=(rnd()-.5)*106*MAP_SCALE,z=(rnd()-.5)*106*MAP_SCALE,r=2+rnd()*3;if(Math.hypot(x-spawn.x,z-spawn.z)<9)continue;const kind=id==='ash'&&i%3===0&&!sites.some(s=>Math.hypot(x-s.x,z-s.z)<(s.event?9:7))?'vent':'slow',patch={x,z,r,kind,phase:rnd()*4};patches.push(patch);group.add(groundShape(x,z,r,rnd,id==='snow'?0xc1d6d9:id==='ash'?kind==='vent'?0xb55438:0x8b6255:id==='sand'?0x938366:0x2b4640));if(kind==='vent'){const marker=groundCue(0xffa45f,r);marker.position.set(x,.09,z);group.add(marker);marker.visible=false;patch.marker=marker;}}
- for(let i=0;i<270;i++){const x=(rnd()-.5)*118*MAP_SCALE,z=(rnd()-.5)*118*MAP_SCALE;if(districts.some(d=>Math.hypot(x-d.x,z-d.z)<10)||ponds.some(p=>Math.hypot(x-p.x,z-p.z)<p.r+1)||Math.hypot(x-spawn.x,z-spawn.z)<7||Math.hypot(x,z)<7||sites.some(s=>Math.hypot(x-s.x,z-s.z)<(s.event?9:7))||patches.some(p=>p.kind==='vent'&&Math.hypot(x-p.x,z-p.z)<p.r+1.05)||Math.abs(x-z)<3||Math.abs(x+z)<3)continue;const tall=2.5+rnd()*3.5,tree=new T.Group();tree.position.set(x,0,z);group.add(tree);obstacles.push({x,z,r:.65,mesh:tree});
+ for(let i=0;i<270;i++){const center=groves[i%groves.length],cluster=['forest','snow'].includes(id)&&i%4!==0,a=rnd()*Math.PI*2,r=Math.sqrt(rnd())*7,x=cluster?center.x+Math.sin(a)*r:(rnd()-.5)*118*MAP_SCALE,z=cluster?center.z+Math.cos(a)*r:(rnd()-.5)*118*MAP_SCALE;if(obstacles.some(o=>Math.hypot(o.x-x,o.z-z)<2.3)||districts.some(d=>Math.hypot(x-d.x,z-d.z)<10)||ponds.some(p=>Math.hypot(x-p.x,z-p.z)<p.r+1)||Math.hypot(x-spawn.x,z-spawn.z)<7||Math.hypot(x,z)<7||sites.some(s=>Math.hypot(x-s.x,z-s.z)<(s.event?9:7))||patches.some(p=>p.kind==='vent'&&Math.hypot(x-p.x,z-p.z)<p.r+1.05)||Math.abs(x-z)<3||Math.abs(x+z)<3)continue;const tall=2.5+rnd()*3.5,tree=new T.Group();tree.position.set(x,0,z);group.add(tree);obstacles.push({x,z,r:.65,mesh:tree});
   if(id==='coast'){obstacles.at(-1).r=coastProp(tree,i,rnd);}
   else if(id==='sand'){const h=.6+rnd()*1.9;if(i%4===0){mesh('CylinderGeometry',[.5,.64,h,10],0xa6977c,0,h/2,0,tree);box(tree,0xc2b89b,0,h+.1,0,1.15,.2,1.15);}else{const rock=mesh('DodecahedronGeometry',[.7,1],i%2?0xb1a083:0x978768,0,.3,0,tree);rock.scale.set(1,.5+rnd()*.6,1);if(i%3===0){const slab=box(tree,0xbcb092,0,.4,0,.9,.45,.8);slab.rotation.z=.25;}}}
   else if(id==='ash'){const stone=mesh('DodecahedronGeometry',[1.2,0],0x66565c,0,tall*.38,0,tree);stone.scale.multiply(new T.Vector3(.7,tall*.55,.8));cone(tree,0xeaa169,0,tall*.8,0,.24,.85);}
@@ -183,13 +184,6 @@ export function buildWorld(id,seed=1){const theme=MAPS[id],rnd=seeded(seed),grou
  }
  if(id==='sand')for(let i=0;i<18;i++){const x=(rnd()-.5)*140,z=(rnd()-.5)*140;for(const [offset,color]of [[0,0xd5c099],[1.7,0x928469]]){const dune=groundShape(x,z+offset,2.5+rnd()*1.5,rnd,color);dune.scale.set(2.8,1,.7);dune.rotation.y=.25+Math.sin(i)*.2;group.add(dune);}}
  const foliage=[];if(!['ash','sand','coast'].includes(id))for(const o of obstacles)for(const leaf of o.mesh.children)if(leaf.geometry?.type===(id==='snow'?'ConeGeometry':'DodecahedronGeometry'))foliage.push({leaf,x:leaf.position.x,z:leaf.position.z,phase:o.x*.17+o.z*.13});
- const grassGeo=geometry('ConeGeometry',[.1,.45,3]),grass=new T.InstancedMesh(grassGeo,mat(id==='snow'?0xe0e9db:id==='ash'?0x977566:id==='sand'?0xa28e66:id==='coast'?0x859b8f:0x85a06a),1200),dummy=new T.Object3D();for(let i=0;i<1200;i++){dummy.position.set((rnd()-.5)*125*MAP_SCALE,.15,(rnd()-.5)*125*MAP_SCALE);dummy.scale.setScalar(inWater(dummy.position.x,dummy.position.z)?0:(id==='coast'?.25:.6)+rnd()*.6);dummy.rotation.y=rnd()*6;dummy.updateMatrix();grass.setMatrixAt(i,dummy.matrix);}group.add(grass);
- // Small clustered floor details add texture without hundreds of draw calls.
- const fleckGeo=geometry('PlaneGeometry',[.27,.11]),fleckMat=detailMaterial(id==='snow'?0xd8edf0:id==='ash'?0xba7760:id==='sand'?0xc9b894:0xa2a76d,1),flecks=new T.InstancedMesh(fleckGeo,fleckMat,1800);
- for(let i=0;i<1800;i++){dummy.position.set((rnd()-.5)*124*MAP_SCALE,.027,(rnd()-.5)*124*MAP_SCALE);dummy.rotation.set(-Math.PI/2,rnd()*6.28,0);dummy.scale.setScalar(.45+rnd()*1.4);if(inWater(dummy.position.x,dummy.position.z))dummy.scale.setScalar(0);dummy.updateMatrix();flecks.setMatrixAt(i,dummy.matrix);}flecks.instanceMatrix.needsUpdate=true;group.add(flecks);
- const shrubs=new T.InstancedMesh(geometry('DodecahedronGeometry',[1,0]),mat(0xffffff),880),shrubPalette=id==='forest'?[0x315e49,0x4a7a59,0x698663]:id==='snow'?[0xb4d0d0,0x86a9a8,0xd3e1dd]:id==='coast'?[0x607c79,0x77968c,0x84998c]:id==='sand'?[0x9b8a66,0xaaa080,0xc2b190]:[0x624e49,0x795951,0x8b6b59];
- for(let i=0;i<880;i++){const x=(rnd()-.5)*120*MAP_SCALE,z=(rnd()-.5)*120*MAP_SCALE;dummy.position.set(x,.24,z);dummy.rotation.set(0,rnd()*6.28,0);const size=.25+rnd()*.35;dummy.scale.set(size,.24+rnd()*.22,size*(.75+rnd()*.4));if(inWater(x,z))dummy.scale.setScalar(0);dummy.updateMatrix();shrubs.setMatrixAt(i,dummy.matrix);shrubs.setColorAt(i,new T.Color(shrubPalette[Math.floor(rnd()*shrubPalette.length)]));}shrubs.instanceMatrix.needsUpdate=true;shrubs.instanceColor.needsUpdate=true;shrubs.receiveShadow=true;group.add(shrubs);
- for(let i=0;i<65;i++){const x=(rnd()-.5)*124*MAP_SCALE,z=(rnd()-.5)*124*MAP_SCALE;if(inWater(x,z))continue;const rock=mesh('DodecahedronGeometry',[.3+rnd()*.5,0],id==='snow'?0xbad0ce:id==='sand'?0xb9aa87:0x8b9376,x,.2,z,group);rock.scale.y*=.6;}
  for(const site of sites){const g=new T.Group();g.position.set(site.x,0,site.z);group.add(g);g.visible=false;site.mesh=g;const base=mesh('CylinderGeometry',[2,2.3,.25,8],0x68796b,0,.12,0,g);if(site.type==='relic'){for(let i=0;i<3;i++){const a=i*Math.PI*2/3;const prong=mesh('ConeGeometry',[.28,1.5,5],0xb19a65,Math.sin(a)*1.15,.8,Math.cos(a)*1.15,g);prong.rotation.z=Math.sin(a)*.2;}site.crystal=mesh('OctahedronGeometry',[.8],0xffd572,0,1.1,0,g,true);box(g,0xd9ba78,0,.35,0,1.3,.3,1.3);}else if(site.type==='altar'){for(const side of [-1,1])box(g,0x8d9b88,side*1.3,1.1,0,.42,2.2,.5);box(g,0xabb398,0,2.35,0,3.2,.4,.7);const crystal=mesh('OctahedronGeometry',[.65],theme.accent,0,1.1,0,g,true);site.crystal=crystal;}else{box(g,0x99724c,0,.62,0,1.4,.8,.9);box(g,0xd6b571,0,1.04,0,1.5,.18,1);box(g,0xebd595,0,.72,.48,.18,.45,.07);}const ring=groundCue(theme.accent,2,'glow',.2);ring.position.set(0,.28,0);g.add(ring);site.ring=ring;
   if(site.event){const color=MAP_EVENTS[site.event].color;site.eventGlow=mesh('OctahedronGeometry',[.3],color,0,2.8,0,g,true);
    if(site.event==='lighthouse'){mesh('CylinderGeometry',[.65,1.05,2.5,12],0x9fada3,0,1.25,0,g);mesh('CylinderGeometry',[.9,.9,.18,12],0x6b888a,0,2.55,0,g);site.lantern=mesh('SphereGeometry',[.4,12,8],0x77c7cb,0,2.9,0,g,true);cone(g,0x5b777b,0,3.45,0,1,.65);}
@@ -203,13 +197,13 @@ export function buildWorld(id,seed=1){const theme=MAPS[id],rnd=seeded(seed),grou
   }
  }
  if(id==='sand'){const s=sites[0],a=Math.atan2(s.x-spawn.x,s.z-spawn.z);s.gates=[];for(let i=-1;i<=1;i++){const x=s.x-Math.sin(a)*11+Math.cos(a)*i*1.75,z=s.z-Math.cos(a)*11-Math.sin(a)*i*1.75,g=new T.Group();g.position.set(x,0,z);box(g,0x847f6b,0,1.25,0,1.7,2.5,.8);g.rotation.y=a;group.add(g);const gate={x,z,r:.95,mesh:g};obstacles.push(gate);s.gates.push(gate);}}
- if(!['sand','coast'].includes(id))for(let i=0;i<12;i++){const a=i*Math.PI/6;const stone=mesh('BoxGeometry',[1.1,2.8,.85],0x819586,Math.cos(a)*6.5,1.4,Math.sin(a)*6.5,group);stone.rotation.y=-a;}
+
  const campX=spawn.x-2.5,campZ=spawn.z+1.5,fire=new T.Group();fire.position.set(campX,.18,campZ);group.add(fire);
  const flame=cone(fire,0xff8d42,0,.41,0,.19,.85);flame.material=mat(0xff8d42,true);const core=cone(fire,0xffd188,0,.42,.01,.09,.53);core.material=mat(0xffd188,true);
  const light=new T.PointLight(0xffa85c,6.5,9,2);light.position.set(campX,1.25,campZ);group.add(light);for(let i=0;i<6;i++){const a=i*Math.PI/3;const log=mesh('CylinderGeometry',[.09,.14,1.1,6],0x624c3d,campX+Math.cos(a)*.23,.14,campZ+Math.sin(a)*.23,group);log.rotation.z=Math.PI/2;log.rotation.y=a;}
  const motes=[];for(let i=0;i<18;i++){const m=orb(group,theme.accent,spawn.x+(rnd()-.5)*20,1+rnd()*3,spawn.z+(rnd()-.5)*20,.035,true);motes.push(m);}
  const weather=makeWeather(id,rnd,group,spawn);
- const result={group,obstacles,patches,ponds,sites,spawn,theme,fire,light,motes,foliage,weather};if(id==='coast')installCoast(result);if(districts.length)buildDistricts(result,id,districts,mesh,rnd);return result;
+ const result={group,ground,groves,obstacles,patches,ponds,sites,spawn,theme,fire,light,motes,foliage,weather};if(id==='coast')installCoast(result);if(districts.length)buildDistricts(result,id,districts,mesh,rnd);installScenery(result,id,rnd);return result;
 }
 export function animateWorld(world,t,focusX=world.spawn.x,focusZ=world.spawn.z){
  animateWater(world.weather.kind,t);
