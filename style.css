@@ -102,3 +102,5 @@ body.has-companion #hint{top:279px}body.touch.has-companion #hint{top:253px}
 @media(max-height:500px){#dialog:has(.companion-detail-stats){padding:14px 18px}#dialog:has(.companion-detail-stats) h2{font-size:21px;margin-bottom:4px}.companion-detail-stats{grid-template-columns:repeat(4,minmax(0,1fr));margin:7px 0;gap:6px}.companion-detail-stats span{font-size:10px;padding:7px}.companion-detail-stats b{font-size:13px}#dialog:has(.companion-detail-stats) .dialog-actions button{padding:9px}}
 
 @media(max-width:560px) and (orientation:portrait){body.touch.has-companion.playing #toast{top:278px}body.touch.has-companion #encounter{top:316px}}
+
+.cards .pair-hint{display:block;color:#d5e8a5;font-size:11px;line-height:1.5;margin-top:6px}#pair-state{color:#d5e8a5}#skills [data-pair-detail]{border-color:#a9c87b99}

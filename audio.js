@@ -1,6 +1,6 @@
-import{companionSample}from'./companion-audio.js?v=58';
-import{weaponSample}from'./weapon-audio.js?v=58';
-import{creatureSample,creatureSpatial,ENEMY_VOICES}from'./enemy-audio.js?v=58';
+import{companionSample}from'./companion-audio.js?v=59';
+import{weaponSample}from'./weapon-audio.js?v=59';
+import{creatureSample,creatureSpatial,ENEMY_VOICES}from'./enemy-audio.js?v=59';
 // Original procedural score and sound design. No external audio downloads.
 const midi=n=>440*2**((n-69)/12);
 const THEMES={coast:{bpm:102,root:50,chords:[0,5,3,7],lead:[12,0,15,19,17,0,15,12,10,12,0,7,10,15,12,0,19,0,22,24,22,19,17,15,12,0,10,7,10,12,0,0]},sand:{bpm:108,root:55,chords:[0,1,5,7],lead:[12,0,13,17,19,0,17,13,12,7,0,12,13,0,19,17,12,0,10,7,8,0,12,13,17,19,0,17,13,12,7,0]},
@@ -92,6 +92,11 @@ export class GameAudio{
     else{this.noise(.3,.16,1400,200);this.voice(140,.38,.15,'sine',45);this.voice(300,.25,.025,'triangle',620);}
   }
   skill(kind){
+    if(['faultPrime','saltWake','snareMark'].includes(kind)){if(!this.allow('pair-'+kind,.45))return;
+      if(kind==='faultPrime'){this.noise(.16,.045,620,130);this.voice(145,.25,.045,'triangle',290);}
+      else if(kind==='saltWake'){this.noise(.15,.035,3200,1000);this.voice(640,.12,.02,'sine',380);}
+      else{this.noise(.12,.035,1800,450);this.voice(240,.14,.025,'triangle',130);}return;}
+
     if(['fault','landing','reprisal'].includes(kind)){if(!this.allow('stone-skill',.18))return;this.noise(.27,.13,650,90);this.voice(kind==='reprisal'?170:82,.22,.11,'sine',38);return;}
     if(['surge','brine','wake'].includes(kind)){if(!this.allow('tide-skill',kind==='wake'?.7:.18))return;this.noise(.30,kind==='wake'?.035:.10,kind==='brine'?3600:1500,480);this.voice(220,.16,.025,'sine',95);return;}
     if(['briarSet','briar','bond','care'].includes(kind)){if(!this.allow('grove-skill',.2))return;if(kind==='care'){this.voice(520,.26,.035,'sine',780);return;}this.noise(.16,.07,kind==='bond'?900:2300,280);this.voice(170,.1,.035,'triangle',85);return;}

@@ -1,0 +1,40 @@
+import{test}from'node:test';
+import assert from'node:assert/strict';
+import{HeroSkills}from'../hero-skills.js';
+import{skillPairState,skillPairHint,SKILL_PAIRS}from'../skill-catalog.js';
+function rig(hero){
+ const p={heroId:hero,x:0,z:0,upgrades:{}},foes=[],events=[],pet={alive:true,now:0};let active=true;
+ const api={player:()=>p,foes:()=>foes,active:()=>active,blocked:()=>false,damage:(e,n)=>e.hp-=n,knock:()=>{},fx:e=>events.push(e),companion:()=>pet};
+ const s=new HeroSkills(api),n=s.newHeroes;
+ const foe=(x=0,z=2)=>{const e={x,z,hp:1000,alive:true};foes.push(e);return e;};
+ return{p,api,s,n,events,pet,foe,step:dt=>{if(active)pet.now+=dt;s.update(dt)},pause:()=>active=false};
+}
+test('charged rock finisher needs both skills, consumes once, expires and respects walls',()=>{
+ const r=rig('guardian');r.p.upgrades={fault:1,reprisal:1};const e=r.foe();r.n.parry();assert.equal(r.n.primeUntil,8);const hp=e.hp;
+ r.n.strike(0,'hammer',true);assert.equal(r.n.primeUntil,0);r.step(.14);assert(Math.abs(e.hp-(hp-22*1.35))<1e-8);
+ r.n.strike(0,'hammer',true);r.step(.14);assert(Math.abs(e.hp-(hp-22*1.35-22))<1e-8);
+ r.step(4);r.n.parry();r.step(8.1);r.n.strike(0,'hammer',true);assert(r.n.pending.every(q=>!q.charged));r.n.pending=[];
+ r.api.blocked=()=>true;r.n.parry();r.n.strike(0,'hammer',true);assert.equal(r.n.pending.length,0);
+ const solo=rig('guardian');solo.p.upgrades={reprisal:1};solo.n.parry();assert.equal(solo.n.primeUntil,0);
+});
+test('wake stacks salt once per enemy per field, can complete a burst and respects walls',()=>{
+ const r=rig('tide');r.p.upgrades={wake:1,brine:1};const e=r.foe();r.n.hit(e);r.n.hit(e);r.n.dodge(.1);r.step(.11);assert.equal(e.hp,958);assert.equal(r.n.marks.get(e).count,0);
+ for(let i=0;i<10;i++)r.step(.1);assert.equal(e.hp,958);assert.equal(r.n.marks.get(e).count,0);
+ const blocked=r.foe(1,0);r.api.blocked=()=>true;r.step(.1);assert.equal(blocked.hp,1000);assert(!r.n.marks.has(blocked));
+ r.api.blocked=()=>false;r.step(.1);assert.equal(blocked.hp,984);assert.equal(r.n.marks.get(blocked).count,1);
+ r.step(4);assert.equal(r.n.fields.length,0);assert.equal(r.n.marks.size,0);
+ const solo=rig('tide');solo.p.upgrades={wake:1};const s=solo.foe();solo.n.dodge(.1);solo.step(.11);assert.equal(s.hp,984);assert.equal(solo.n.marks.size,0);
+});
+test('briar marks for live partner, boosts followup once per cooldown and spares boss root',()=>{
+ const r=rig('lingya');r.p.upgrades={briar:1,bond:1};const e=r.foe(0,0);e.boss=true;r.n.dodge(.5);r.step(.46);assert.equal(e.hp,980);assert(!e.stagger);assert(e.lingyaMark>r.pet.now);
+ r.n.petHit(e);assert.equal(e.hp,955);assert(r.events.some(e=>e.kind==='bond'&&e.linked));r.n.petHit(e);assert.equal(e.hp,955);
+ r.step(2.1);assert.equal(r.n.snared.size,0);r.n.petHit(e);assert.equal(e.hp,955);e.lingyaMark=r.pet.now+2;r.n.petHit(e);assert.equal(e.hp,935);
+ const dead=rig('lingya');dead.p.upgrades={briar:1,bond:1};dead.pet.alive=false;const f=dead.foe(0,0);dead.n.dodge(.5);dead.step(.46);assert(!f.lingyaMark);assert.equal(dead.n.snared.size,0);dead.n.petHit(f);assert.equal(f.hp,980);
+});
+test('pause freezes synergy charges and prevents triggers; restart clears every pair state',()=>{
+ const r=rig('guardian');r.p.upgrades={reprisal:1,fault:1,brine:1,bond:1,briar:1};const e=r.foe(0,0);r.n.parry();r.n.dodge(.4);r.step(.5);r.n.hit(e);r.pause();const hp=e.hp,now=r.s.now,charge=r.n.primeUntil;r.step(20);r.n.petHit(e);r.n.strike(0,'hammer',true);assert.equal(e.hp,hp);assert.equal(r.s.now,now);assert.equal(r.n.primeUntil,charge);assert.equal(r.n.pending.length,0);
+ r.s.reset();assert.equal(r.n.primeUntil,0);assert.equal(r.n.marks.size,0);assert.equal(r.n.snared.size,0);assert.equal(r.n.fields.length,0);
+});
+test('all six pairing guides show missing pieces and only new hero pairs claim bonuses',()=>{
+ for(const [hero,q]of Object.entries(SKILL_PAIRS)){const p={heroId:hero,upgrades:{}};assert.equal(skillPairState(p).missing.length,2);assert(skillPairHint(p,q.ids[0]).includes(q.name));p.upgrades[q.ids[0]]=1;assert.equal(skillPairState(p).missing.length,1);assert(skillPairHint(p,q.ids[1]).includes('选取后'));p.upgrades[q.ids[1]]=1;assert(skillPairState(p).active);assert(skillPairHint(p,q.ids[0]).includes('已成型'));assert.equal(skillPairHint(p,'power'),'');assert.equal(q.bonus,['guardian','tide','lingya'].includes(hero));}
+});
