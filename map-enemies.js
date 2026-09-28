@@ -1,6 +1,13 @@
 // Reuse locomotion roles while giving each biome its own species and attacks.
-export const MAP_ROSTERS={sand:{mushroom:'sandworm',wolf:'clawbeetle',golem:'sandguard',spitter:'sandspitter',shaman:'duneoracle',boss:'dunescorpion'},forest:{mushroom:'mushroom',wolf:'wolf',golem:'golem',spitter:'spitter',shaman:'shaman',boss:'boss'},snow:{mushroom:'snowhare',wolf:'frostwolf',golem:'yeti',spitter:'icewitch',shaman:'snowtotem',boss:'frostking'},ash:{mushroom:'emberling',wolf:'ashstalker',golem:'lavabrute',spitter:'cinderwisp',shaman:'ashseer',boss:'cinderlord'}};
+export const MAP_ROSTERS={coast:{mushroom:'foamling',wolf:'tidecrab',golem:'reefturtle',spitter:'jellyseer',shaman:'tidestar',boss:'wreckwarden'},sand:{mushroom:'sandworm',wolf:'clawbeetle',golem:'sandguard',spitter:'sandspitter',shaman:'duneoracle',boss:'dunescorpion'},forest:{mushroom:'mushroom',wolf:'wolf',golem:'golem',spitter:'spitter',shaman:'shaman',boss:'boss'},snow:{mushroom:'snowhare',wolf:'frostwolf',golem:'yeti',spitter:'icewitch',shaman:'snowtotem',boss:'frostking'},ash:{mushroom:'emberling',wolf:'ashstalker',golem:'lavabrute',spitter:'cinderwisp',shaman:'ashseer',boss:'cinderlord'}};
 export const REGIONAL_ENEMIES={
+ foamling:{map:'coast',role:'mushroom',hp:30,speed:2.9,damage:11,xp:7,size:.5,name:'海沫跳灵',traits:'青蓝水滴身躯，蹲伏压扁后跳扑；落地回弹。',attack:'锁定方向后短距离跳扑',tip:'看到身体压低，侧移避开。'},
+ tidecrab:{map:'coast',role:'wolf',hp:40,speed:3.7,damage:13,xp:10,size:.65,name:'钳潮蟹',traits:'珊瑚红甲壳、六足交替爬动，双钳先张开再夹击。',attack:'短蓄力后前冲夹击',tip:'不要直线后退，横向闪过钳口。'},
+ reefturtle:{map:'coast',role:'golem',hp:150,speed:1.5,damage:21,xp:25,size:.9,name:'礁背海龟',traits:'苔青龟壳和礁石背脊，四肢交替撑地；抬头后吐出浪涌。',attack:'前方两段延迟浪涌，命中减速',tip:'离开前方的青色水纹，绕龟壳两侧。'},
+ jellyseer:{map:'coast',role:'spitter',hp:46,speed:2.3,damage:12,xp:13,size:.6,zone:'tide',name:'刺灯水母',traits:'发光伞盖缓慢收缩，四条触须波动，漂浮时不受水阻。',attack:'锁定位置后放出延迟水爆，留下短暂减速水域',tip:'看见青色落点就继续移动，水爆后也别立刻返回。'},
+ tidestar:{map:'coast',role:'shaman',hp:72,speed:1.8,damage:10,xp:19,size:.65,name:'潮汐海星',traits:'五臂起伏爬动，中心珍珠发光；举起前臂呼唤回潮。',attack:'治疗附近受伤同伴；否则向目标释放减速水爆',tip:'先处理海星，避免厚壳怪反复恢复。'},
+ wreckwarden:{map:'coast',role:'boss',name:'沉舟寄居王',traits:'巨钳、六足和背上的破船；负重迈步、船帆随身体摆动。',attack:'双钳封锁前方、三段追身浪涌、两侧落锚；半血后强化',tip:'双钳向后避，浪涌横移；落锚时两处之间有空隙，收招时反击。'},
+
  sandworm:{map:'sand',role:'mushroom',hp:32,speed:2.5,damage:12,xp:7,size:.55,name:'沙脊虫',traits:'分节沙色身体，贴地扭动；昂起前身后弹射。',attack:'短距离扑击',tip:'观察抬头蓄力，向侧面避开。'},
  clawbeetle:{map:'sand',role:'wolf',hp:38,speed:3.7,damage:13,xp:10,size:.65,name:'钩爪甲虫',traits:'铜色甲壳、六足交替快爬、前端弯钩。',attack:'压低身体后直线冲刺',tip:'侧闪，利用残垣阻挡冲刺。'},
  sandguard:{map:'sand',role:'golem',hp:145,speed:1.6,damage:23,xp:25,size:.85,name:'遗城盾卫',traits:'旧铜盾和短矛；负重迈步、举盾后刺击。',attack:'正面蓄力刺击；正面承受的伤害减少 35%',tip:'绕侧攻击，蓄力时退开。'},

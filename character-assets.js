@@ -32,6 +32,14 @@ export const CHARACTER_ASSETS={
     "guardian-beard": {
       "file": "guardian-beard-87dc189f1ed9.glb.gz",
       "bytes": 24155
+    },
+    "tide-outfit": {
+      "file": "tide-outfit-8b38785bdea6.glb.gz",
+      "bytes": 285743
+    },
+    "tide-hair": {
+      "file": "tide-hair-4c520b3d2fa1.glb.gz",
+      "bytes": 82599
     }
   },
   "textures": [
@@ -55,7 +63,10 @@ export const CHARACTER_ASSETS={
     "texture-bc7aa863bd22.webp",
     "texture-9b25cf920021.webp",
     "texture-419f96dbb881.webp",
-    "texture-c70dabf48574.webp"
+    "texture-c70dabf48574.webp",
+    "texture-7598fa7b63e4.webp",
+    "texture-a43635628d95.webp",
+    "texture-e1932f5f9110.webp"
   ],
   "motion": {
     "file": "motion-c8b2ca84695c.json.gz",

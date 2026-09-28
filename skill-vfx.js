@@ -1,5 +1,5 @@
 import * as T from './vendor/three.module.js';
-import{shadowCrescentGeometry}from'./shadow-weapons.js?v=42';
+import{shadowCrescentGeometry}from'./shadow-weapons.js?v=45';
 
 function flameTexture(){
  if(typeof document==='undefined')return null;

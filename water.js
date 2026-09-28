@@ -1,5 +1,6 @@
-import{MAP_SCALE}from'./map-layout.js?v=42';
-import{swimStroke,swimLimb}from'./swim-motion.js?v=42';
+import{onBridge}from'./coast.js?v=45';
+import{MAP_SCALE}from'./map-layout.js?v=45';
+import{swimStroke,swimLimb}from'./swim-motion.js?v=45';
 import * as T from './vendor/three.module.js';
 const clamp=T.MathUtils.clamp;
 const shore=a=>1+.07*Math.sin(a*3)+.045*Math.cos(a*5);
@@ -8,8 +9,9 @@ export function waterDepth(p,x,z){
  return clamp((1-Math.hypot(u,v)/shore(Math.atan2(v,u)))/.48,0,1);
 }
 export function terrainAt(world,x,z,kind='hero'){
+ if(onBridge(world,x,z))return{kind:'bridge',depth:0,floating:false,speed:1};
  let depth=0;for(const p of world.patches)if(p.kind==='water')depth=Math.max(depth,waterDepth(p,x,z));
- const floating=['snowtotem','cinderwisp'].includes(kind),heavy=['golem','yeti','lavabrute','boss','frostking','cinderlord'].includes(kind);
+ const floating=['snowtotem','cinderwisp','jellyseer'].includes(kind),heavy=['golem','yeti','lavabrute','boss','frostking','cinderlord','reefturtle','wreckwarden'].includes(kind);
  if(depth>0)return{kind:'water',depth,floating,speed:floating?1:1-depth*(heavy?.24:.52)};
  const slow=world.patches.some(p=>p.kind==='slow'&&Math.hypot(p.x-x,p.z-z)<p.r);return{kind:slow?'slow':'land',depth:0,floating,speed:slow?kind==='hero'?.72:.75:1};
 }
@@ -29,7 +31,7 @@ function waterSurface(id){
     float edge=smoothstep(.48,.98,radial);
     float wave=sin(waterWorld.x*1.4+waterWorld.z*4.8+sin(waterWorld.x*1.9-waterTime*.6)*.8-waterTime*.8);
     float light=pow(max(0.0,wave),22.0)*.012*smoothstep(.15,.85,sin(waterWorld.x*.8+waterWorld.z*.3+waterTime*.2))*(1.0-edge*.8);
-    diffuseColor.rgb=mix(vec3(${id==='snow'?'.010,.035,.055':'.006,.030,.033'}),vec3(${id==='snow'?'.065,.105,.115':'.022,.060,.039'}),edge)+vec3(.45,.7,.64)*light;
+    diffuseColor.rgb=mix(vec3(${id==='coast'?'.014,.048,.058':id==='snow'?'.010,.035,.055':'.006,.030,.033'}),vec3(${id==='coast'?'.042,.092,.100':id==='snow'?'.065,.105,.115':'.022,.060,.039'}),edge)+vec3(.45,.7,.64)*light;
     diffuseColor.a*=1.0-smoothstep(.84,1.0,radial);
 `);};
   material.customProgramCacheKey=()=> 'pond-'+id;
@@ -44,10 +46,10 @@ function waterSurface(id){
 export function buildPonds(group,id,rnd,spawn,sites){
  if(id==='ash')return[];const ponds=[],surface=waterSurface(id);
  for(let i=0;i<180&&ponds.length<6;i++){
-  const a=rnd()*Math.PI*2,d=18+rnd()*8,rx=4.7+rnd()*2.2,rz=3.7+rnd()*1.6;
+  const a=rnd()*Math.PI*2,d=18+rnd()*8,rx=(id==='coast'?7:4.7)+rnd()*2.2,rz=(id==='coast'?5:3.7)+rnd()*1.6;
   const x=ponds.length? (rnd()-.5)*96*MAP_SCALE:spawn.x+Math.sin(a)*d,z=ponds.length?(rnd()-.5)*96*MAP_SCALE:spawn.z+Math.cos(a)*d,r=Math.max(rx,rz)*1.12;
   if(Math.hypot(x-spawn.x,z-spawn.z)<r+6||Math.hypot(x,z)<r+9||sites.some(s=>Math.hypot(x-s.x,z-s.z)<r+8)||ponds.some(p=>Math.hypot(x-p.x,z-p.z)<r+p.r+4))continue;
-  const p={kind:'water',x,z,rx,rz,r,angle:rnd()*Math.PI*2},bank=new T.Mesh(surfaceGeometry,surface.bank);bank.position.set(x,.045,z);bank.rotation.y=p.angle;bank.scale.set(rx*1.12,1,rz*1.12);bank.receiveShadow=true;group.add(bank);const m=new T.Mesh(surfaceGeometry,surface.material);m.position.set(x,.075,z);m.rotation.y=p.angle;m.scale.set(rx,1,rz);m.receiveShadow=true;group.add(m);p.mesh=m;ponds.push(p);
+  const p={kind:'water',x,z,rx,rz,r,angle:rnd()*Math.PI*2},bank=new T.Mesh(surfaceGeometry,surface.bank);bank.position.set(x,.045,z);bank.rotation.y=p.angle;bank.scale.set(rx*1.12,1,rz*1.12);bank.receiveShadow=true;group.add(bank);const m=new T.Mesh(surfaceGeometry,surface.material);m.position.set(x,.075,z);m.rotation.y=p.angle;m.scale.set(rx,1,rz);m.receiveShadow=true;group.add(m);p.mesh=m;p.bank=bank;ponds.push(p);
  }
  const reeds=new T.InstancedMesh(reedGeometry,surface.reeds,ponds.length*24),stones=new T.InstancedMesh(stoneGeometry,surface.stones,ponds.length*6),dummy=new T.Object3D();let ri=0,si=0;
  for(const pond of ponds){const c=Math.cos(pond.angle),s=Math.sin(pond.angle),at=(a,r)=>{const k=shore(a)*r,lx=Math.cos(a)*pond.rx*k,lz=Math.sin(a)*pond.rz*k;return{x:pond.x+c*lx+s*lz,z:pond.z-s*lx+c*lz};};
@@ -67,7 +69,7 @@ export function animateWaterPose(g,t,speed){
  if(!d.waterDepth&&d.waterBlend<.002){d.waterBlend=0;d.swimJoints?.clear();}
  const depth=d.waterBlend;if(depth<.001||d.waterFloating||!d.rig)return;
  const save=node=>{if(node&&!d.waterPose.some(p=>p.node===node))d.waterPose.push({node,q:node.quaternion.clone(),p:node.position.clone()});};
- const hero=d.skinned||d.wraith||d.leftKnee,heavy=d.kind==='golem'||d.kind==='boss',swim=T.MathUtils.smoothstep(depth,.42,.85);
+ const hero=d.skinned||d.wraith||d.leftKnee,heavy=['golem','boss','reefturtle','wreckwarden'].includes(d.kind),swim=T.MathUtils.smoothstep(depth,.42,.85);
  const ease=(a,b,k)=>a+(b-a)*(1-Math.exp(-dt*k));
  d.swimMove=ease(d.swimMove||0,clamp(speed/2.8,0,1),6);
  d.swimAim=ease(d.swimAim||0,d.aimActive||(d.shoot||0)>0?1:0,6);
@@ -97,5 +99,5 @@ export function animateWaterPose(g,t,speed){
   if(depth>.002)for(const joint of joints){if(!joint)continue;save(joint);let previous=d.swimJoints.get(joint);if(previous){previous.rotateTowards(joint.quaternion,dt*8);joint.quaternion.copy(previous);}else d.swimJoints.set(joint,joint.quaternion.clone());}else d.swimJoints.clear();
   if(held&&heldWorld){save(held);g.updateMatrixWorld(true);const parent=held.parent.getWorldQuaternion(new T.Quaternion()).invert();if(d.gun){const carry=new T.Quaternion().setFromAxisAngle(new T.Vector3(0,1,0),g.rotation.y);heldWorld.slerp(carry,swim*(1-aim));}held.quaternion.copy(parent.multiply(heldWorld));}
   if(d.cape){save(d.cape);d.cape.rotateX(-.20*swim+Math.sin(phase-.6)*.035*depth);d.cape.rotateZ(Math.sin(phase-.9)*.025*swim);}
- }else if(!heavy){d.rig.rotation.x+=swim*.10*moving;for(const l of d.legs||[]){save(l.joint);l.joint.rotateX(Math.sin(phase+l.phase)*.25*swim);}}
+ }else if(!heavy){d.rig.rotation.x+=swim*.10*moving;for(const [i,l]of(d.legs||[]).entries()){const joint=l.joint||l;save(joint);joint.rotateX(Math.sin(phase+(l.phase??i*Math.PI/3))*.25*swim);}}
 }

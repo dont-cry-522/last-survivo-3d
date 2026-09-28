@@ -8,7 +8,7 @@ const assert=require('node:assert/strict');
   await page.goto(process.env.TEST_URL||'http://127.0.0.1:8897/');await page.waitForFunction(()=>window.game3d,{},{timeout:60000});
   const stats=await page.evaluate(async()=>{
    const g=game3d,next=()=>new Promise(requestAnimationFrame);
-   const run=async()=>{for(let i=0;i<18;i++){const hero=['scout','silver','guardian'][i%3];g.select(hero,['forest','snow','ash','sand'][i%4],hero==='guardian'?0:i%3);g.start();await next();}};
+   const run=async()=>{for(let i=0;i<18;i++){const hero=['scout','silver','guardian','tide','wraith'][i%5];g.select(hero,['forest','snow','ash','sand','coast'][i%5],['guardian','tide'].includes(hero)?0:i%3);g.start();await next();}};
    await run();await run();const before={...g.renderer.info.memory};await run();
    return {before,after:{...g.renderer.info.memory},state:g.state};
   });

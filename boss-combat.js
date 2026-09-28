@@ -1,5 +1,6 @@
 // A locked target and a readable anticipation precede every damaging attack.
 export const BOSS_STYLES={
+ wreckwarden:{name:'沉舟寄居王',speed:1.8,wind:1.25,recovery:1.7,color:0x82d7da,moves:['claws','surge','anchors']},
  boss:{name:'林心古树',speed:1.5,wind:1.2,recovery:1.6,color:0xb6d38b,moves:['branches','roots']},
  frostking:{name:'霜冠巨猿',speed:2.3,wind:1.15,recovery:1.7,color:0xa8e9ff,moves:['leap','icefan']},
  cinderlord:{name:'熔炉暴君',speed:2,wind:1.3,recovery:1.5,color:0xffaa67,moves:['furnace','embers']},
@@ -10,6 +11,9 @@ export function bossAttackPlan(kind,move,b,target){
  const a=Math.atan2(target.x-b.x,target.z-b.z),r=b.phase===2?1.2:1,at=(d,s=0)=>({x:b.x+Math.sin(a)*d+Math.cos(a)*s,z:b.z+Math.cos(a)*d-Math.sin(a)*s}),zones=[];
  const add=(p,radius,delay,damage,type)=>zones.push({...p,r:radius,delay,damage,kind:type});
  const wind=BOSS_STYLES[kind].wind;
+ if(move==='claws')for(const s of [-1.65,1.65])add(at(3.4,s),1.8*r,wind,26,'tide');
+ if(move==='surge')for(let i=0;i<3;i++)add(at(3+i*2.4),1.1*r,wind+i*.27,21,'tide');
+ if(move==='anchors')for(const s of [-3.2,3.2])add({x:target.x+Math.cos(a)*s,z:target.z-Math.sin(a)*s},1.65*r,wind+.3,27,'tide');
  if(move==='branches')for(const s of [-2.4,0,2.4])add(at(3.3,s),1.8*r,wind+Math.abs(s)*.055,24,'root');
  if(move==='roots')for(let i=0;i<(b.phase===2?6:4);i++)add(at(3+i*2.1),1.05,wind+i*.16,20,'root');
  if(move==='leap')add(target,2.9*r,wind+.65,28,'frost');

@@ -28,7 +28,7 @@ export function relicEvent(p,event,now){
 }
 export function incomingRelicDamage(p,damage){return damage*(p.relic?.id==='glass'?1.25:1);}
 export const JOURNAL_KEY='forest-echoes-expedition-v1';
-const maps=['forest','snow','ash','sand'],weapons=['hammer','rifle','shotgun','fire','crossbow','shuriken','dark','shade','shadowblade','grimoire'];
+const maps=['forest','snow','ash','sand','coast'],weapons=['harpoon','hammer','rifle','shotgun','fire','crossbow','shuriken','dark','shade','shadowblade','grimoire'];
 const validWins=new Set(maps.flatMap(m=>weapons.map(w=>m+':'+w)));
 export function readJournal(storage){
  try{const j=JSON.parse(storage.getItem(JOURNAL_KEY));return{relics:[...new Set((Array.isArray(j?.relics)?j.relics:[]).filter(id=>Object.hasOwn(RELICS,id)))],wins:[...new Set((Array.isArray(j?.wins)?j.wins:[]).filter(id=>validWins.has(id)))]};}catch{return{relics:[],wins:[]};}

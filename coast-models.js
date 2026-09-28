@@ -1,0 +1,48 @@
+import * as T from './vendor/three.module.js';
+const geometries=new Map(),materials=new Map();
+function part(p,color,pos,size,type='sphere',glow=false){
+ if(!geometries.has(type))geometries.set(type,type==='rock'?new T.DodecahedronGeometry(1,1):type==='box'?new T.BoxGeometry(2,2,2):type==='cone'?new T.ConeGeometry(1,2,12):new T.SphereGeometry(1,16,12));
+ const key=color+':'+glow;if(!materials.has(key))materials.set(key,new T.MeshStandardMaterial({color,roughness:.62,metalness:.08,emissive:glow?color:0,emissiveIntensity:glow?.6:0}));
+ const m=new T.Mesh(geometries.get(type),materials.get(key));m.position.set(...pos);m.scale.set(...size);m.castShadow=m.receiveShadow=true;p.add(m);return m;
+}
+const joint=(p,x,y,z)=>{const g=new T.Group();g.position.set(x,y,z);p.add(g);return g;};
+function eye(p,x,y,z){part(p,0x122e38,[x,y,z],[.07,.08,.05]);part(p,0xd4ffff,[x-.018,y+.025,z+.037],[.018,.019,.01], 'sphere',true);}
+export function makeCoastEnemy(kind){
+ const g=new T.Group(),r=new T.Group();g.add(r);const d=g.userData={kind,rig:r,coastModel:true,legs:[],claws:[],tips:[],phase:0};
+ if(kind==='foamling'){
+  d.body=part(r,0x7fbfbf,[0,.46,0],[.43,.48,.4]);part(r,0xd5e8d6,[0,.22,.13],[.40,.18,.32]);for(const s of[-1,1])eye(r,s*.13,.54,.36);part(r,0x9cdddd,[.13,.91,-.05],[.10,.25,.10],'cone');
+ }else if(kind==='tidecrab'||kind==='wreckwarden'){
+  const boss=kind==='wreckwarden';d.bossModel=boss;d.coastBoss=boss;if(boss)r.scale.setScalar(2.15);
+  part(r,boss?0x687e7c:0xb66c57,[0,.49,0],[.60,.37,.63]);part(r,0xd2a77b,[0,.35,.41],[.39,.19,.29]);
+  for(const s of[-1,1]){const stalk=joint(r,s*.21,.65,.4);part(stalk,0x8b8065,[0,.08,0],[.04,.17,.04]);eye(stalk,0,.24,.01);
+   for(let i=0;i<3;i++){const leg=joint(r,s*.48,.35,.36-i*.34);const upper=part(leg,boss?0x6c8d85:0xc38965,[s*.25,-.05,0],[.32,.065,.07]);upper.rotation.z=-s*.28;const toe=part(leg,0x3b565d,[s*.51,-.22,.03],[.065,.22,.065]);toe.rotation.z=-s*.5;d.legs.push(leg);}
+   const claw=joint(r,s*.42,.43,.46);part(claw,boss?0x91aea3:0xcf9b75,[s*.13,.0,.38],[.20,.17,.39]);const palm=joint(claw,s*.2,0,.68);part(palm,boss?0x98b6a8:0xd9a477,[s*.12,0,.19],[.16,.18,.31]);const tip=joint(palm,-s*.10,0,.03);part(tip,0x587c80,[-s*.05,0,.23],[.10,.13,.27]);d.claws.push(claw);d.tips.push(tip);
+  }
+  if(boss){d.shell=joint(r,0,.66,-.17);part(d.shell,0x625c50,[0,.39,-.08],[.71,.42,.88]);for(const s of[-1,1]){const side=part(d.shell,0x8c7862,[s*.59,.6,-.04],[.08,.19,.86],'box');side.rotation.z=-s*.2;}for(let i=0;i<4;i++)part(d.shell,0xa99270,[0,.72,-.6+i*.36],[.53,.04,.06],'box');part(d.shell,0x494a42,[0,1.02,-.18],[.05,.74,.05],'box');const sail=part(d.shell,0xbcc4b3,[.28,1.22,-.18],[.28,.36,.018],'box');sail.rotation.y=.2;d.sail=sail;part(d.shell,0x88d4cf,[0,.43,.72],[.16,.14,.10],'sphere',true);}
+ }else if(kind==='reefturtle'){
+  part(r,0x739789,[0,.57,0],[.66,.41,.82]);d.shell=part(r,0x3b6665,[0,.78,-.06],[.68,.4,.76]);for(let i=0;i<5;i++)part(r,0x92b6a5,[(i%2?1:-1)*.19,.94+i%2*.07,-.46+i*.22],[.18,.19,.14],'cone');d.head=joint(r,0,.49,.64);part(d.head,0xa7b990,[0,0,.23],[.27,.22,.32]);for(const s of[-1,1])eye(d.head,s*.17,.07,.45);for(const s of[-1,1])for(const z of[-.48,.46]){const leg=joint(r,s*.45,.3,z);part(leg,0x8da891,[s*.21,-.12,.04],[.31,.13,.21]);d.legs.push(leg);}
+ }else if(kind==='jellyseer'){
+  d.body=part(r,0x79c4d1,[0,1.02,0],[.51,.40,.51]);part(r,0xc4eff0,[0,.88,0],[.43,.16,.43],'sphere',true);for(const s of[-1,1])eye(r,s*.17,1.08,.46);
+  for(let i=0;i<4;i++){const a=i*Math.PI/2;let p=joint(r,Math.sin(a)*.3,.86,Math.cos(a)*.3);for(let k=0;k<3;k++){const seg=joint(p,0,-.21,0);part(seg,0x98cbd3,[0,-.08,0],[.047,.17,.047]);d.tips.push(seg);p=seg;}}
+ }else{
+  part(r,0xc59b83,[0,.36,0],[.4,.23,.4]);for(let i=0;i<5;i++){const a=i*Math.PI*2/5,leg=joint(r,0,.3,0);leg.rotation.y=a;part(leg,0xba847e,[0,-.05,.43],[.18,.14,.48]);part(leg,0xe0bfa0,[0,.07,.52],[.04,.05,.28]);d.legs.push(leg);}part(r,0x93d8ce,[0,.56,0],[.18,.14,.18],'sphere',true);for(const s of[-1,1])eye(r,s*.13,.40,.30);
+ }
+ d.arms=[...d.claws,...d.tips];d.cap=d.body;return g;
+}
+export function animateCoastEnemy(g,t,speed,attack,dt){
+ const d=g.userData,r=d.rig,s=Math.min(1,speed/3);d.phase+=speed*dt*3;const p=d.phase;
+ const target=attack>0?Math.min(1,1-attack/1.2):0;d.wind=(d.wind||0)+(target-(d.wind||0))*(1-Math.exp(-dt*10));
+ if(d.oldAttack>0&&attack<=0)d.release=.35;d.oldAttack=attack;d.release=Math.max(0,(d.release||0)-dt);const hit=Math.sin((d.release||0)/.35*Math.PI);
+ let wind=d.wind,strike=hit;if(d.coastBoss){wind=d.bossStage==='wind'?d.windProgress:d.bossStage==='strike'?1-d.strikeProgress:0;strike=d.bossStage==='strike'?Math.sin(Math.PI*d.strikeProgress):0;}
+ r.position.y=Math.abs(Math.sin(p))*.025*s-wind*.05;r.rotation.z=Math.sin(p)*.035*s;
+ if(d.kind==='foamling'){r.position.y+=Math.max(0,Math.sin(p))*.18*s;d.body.scale.set(.43*(1+wind*.16-hit*.08),.48*(1-wind*.20+hit*.16),.4);}
+ else if(d.kind==='jellyseer'){r.position.y=.1+Math.sin(t*2.2)*.14;d.body.scale.set(.51+Math.sin(t*3)*.025,.4-Math.sin(t*3)*.035,.51+Math.sin(t*3)*.025);d.tips.forEach((o,i)=>o.rotation.set(Math.sin(t*3-i*.6)*.2,0,Math.cos(t*2-i*.7)*.12));}
+ else if(d.kind==='tidestar'){d.legs.forEach((o,i)=>o.rotation.x=Math.sin(p+i*1.25)*.18*s-wind*.3);r.rotation.y=Math.sin(t)*.05;}
+ else{d.legs.forEach((o,i)=>{const side=i<d.legs.length/2?-1:1,phase=p+(i%3)*2.1+(side>0?Math.PI:0);o.rotation.set(0,Math.sin(phase)*.26*s,side*Math.max(0,Math.cos(phase))*.18*s);});d.claws.forEach((o,i)=>{const side=i?1:-1;o.rotation.set(-wind*.2,side*(wind*.4-strike*.55),0);});d.tips.forEach((o,i)=>o.rotation.y=(i?1:-1)*(wind*.6-strike*.28));if(d.head)d.head.rotation.x=-wind*.48+strike*.35;if(d.sail)d.sail.rotation.y=.2+Math.sin(t*2)*.1;}
+}
+export function coastProp(parent,index,rnd){
+ if(index%17===0){const hull=part(parent,0x665b4e,[0,.40,0],[1.6,.4,.7]);hull.rotation.y=rnd()*6;for(const s of[-1,1])part(hull,0x9e8b70,[s*.0,.75,s*.7],[.75,.12,.08],'box');part(parent,0x766c55,[0,1.1,0],[.065,.8,.065],'box');return 1.5;}
+ if(index%3===0){part(parent,0x789088,[0,.55,0],[.74,.56,.68],'rock');part(parent,0xa7b5a2,[.2,.9,.1],[.28,.28,.3],'rock');return .7;}
+ part(parent,0x746b57,[0,.75,0],[.16,.75,.16],'box');part(parent,0x9f997f,[0,1.28,0],[.2,.10,.2]);return .35;
+}
+export function makeHarpoon(){const g=new T.Group();part(g,0x755b40,[0,0,.33],[.028,.028,1.08],'box');for(const z of[-.35,-.12,.18])part(g,0xbe9b5e,[0,0,z],[.042,.042,.045],'box');part(g,0x8ecacb,[0,0,1.47],[.11,.07,.3],'cone').rotation.x=Math.PI/2;for(const s of[-1,1]){part(g,0x8fb5b5,[s*.13,0,1.40],[.035,.045,.25],'box');part(g,0xd2ded0,[s*.13,0,1.65],[.06,.055,.12],'cone').rotation.x=Math.PI/2;}return g;}

@@ -1,6 +1,7 @@
 // Original creature foley: textured samples, cached per species/event by GameAudio.
 // Texture, articulation and timing distinguish creatures, not just oscillator pitch.
 export const ENEMY_VOICES = {
+ foamling:{texture:'wet',pitch:230,grain:29,length:.8,color:0x91d6d1,shape:'smoke'},tidecrab:{texture:'wood',pitch:165,grain:41,length:.85,color:0xcfa88a,shape:'crystal'},reefturtle:{texture:'stone',pitch:64,grain:20,length:1.25,color:0x8ba9a4,shape:'smoke'},jellyseer:{texture:'wet',pitch:430,grain:12,length:1.1,color:0x92dce9,shape:'ember'},tidestar:{texture:'wet',pitch:120,grain:17,length:1.3,color:0xd8bd96,shape:'smoke'},wreckwarden:{texture:'wood',pitch:31,grain:33,length:1.8,color:0xabc7bc,shape:'smoke'},
  sandworm:{texture:'wet',pitch:110,grain:34,length:.9,color:0xcbb98b,shape:'smoke'},
  clawbeetle:{texture:'wood',pitch:195,grain:54,length:.8,color:0xd2bd8b,shape:'crystal'},
  sandguard:{texture:'stone',pitch:70,grain:32,length:1.2,color:0xc3b698,shape:'crystal'},
