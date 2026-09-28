@@ -1,5 +1,6 @@
-import{weaponSample}from'./weapon-audio.js?v=51';
-import{creatureSample,creatureSpatial,ENEMY_VOICES}from'./enemy-audio.js?v=51';
+import{companionSample}from'./companion-audio.js?v=52';
+import{weaponSample}from'./weapon-audio.js?v=52';
+import{creatureSample,creatureSpatial,ENEMY_VOICES}from'./enemy-audio.js?v=52';
 // Original procedural score and sound design. No external audio downloads.
 const midi=n=>440*2**((n-69)/12);
 const THEMES={coast:{bpm:102,root:50,chords:[0,5,3,7],lead:[12,0,15,19,17,0,15,12,10,12,0,7,10,15,12,0,19,0,22,24,22,19,17,15,12,0,10,7,10,12,0,0]},sand:{bpm:108,root:55,chords:[0,1,5,7],lead:[12,0,13,17,19,0,17,13,12,7,0,12,13,0,19,17,12,0,10,7,8,0,12,13,17,19,0,17,13,12,7,0]},
@@ -66,12 +67,16 @@ export class GameAudio{
     source.onended=()=>{source.disconnect();volume.disconnect();panner.disconnect();this.creatureSources.delete(source);this.nodes--;};source.start();return true;
   }
   tone(f,d=.12,v=.06,type='sine',end=null){this.voice(f,d,v,type,end);}
-  weapon(id,event,variant=0){
+  weapon(id,event,variant=0,volume=1,pan=0){
     if(!this.available()||this.weaponSources.size>=16)return false;
     const key=id+':'+event+':'+variant;let buffer=this.weaponBuffers.get(key);
-    if(!buffer){const samples=weaponSample(id,event,this.ctx.sampleRate,variant);if(!samples)return false;buffer=this.ctx.createBuffer(1,samples.length,this.ctx.sampleRate);buffer.copyToChannel(samples,0);this.weaponBuffers.set(key,buffer);}
-    const source=this.ctx.createBufferSource(),gain=this.ctx.createGain();source.buffer=buffer;source.playbackRate.value=.98+Math.random()*.04;gain.gain.value=event==='impact'&&variant?1.2:1;
-    source.connect(gain);gain.connect(this.sfx);this.weaponSources.add(source);this.nodes++;source.onended=()=>{source.disconnect();gain.disconnect();this.weaponSources.delete(source);this.nodes--;};source.start();return true;
+    if(!buffer){const samples=id==='companion'?companionSample(event,this.ctx.sampleRate):weaponSample(id,event,this.ctx.sampleRate,variant);if(!samples)return false;buffer=this.ctx.createBuffer(1,samples.length,this.ctx.sampleRate);buffer.copyToChannel(samples,0);this.weaponBuffers.set(key,buffer);}
+    const source=this.ctx.createBufferSource(),gain=this.ctx.createGain(),panner=this.ctx.createStereoPanner();source.buffer=buffer;source.playbackRate.value=.98+Math.random()*.04;gain.gain.value=(event==='impact'&&variant?1.2:1)*volume;panner.pan.value=pan;
+    source.connect(gain);gain.connect(panner);panner.connect(this.sfx);this.weaponSources.add(source);this.nodes++;source.onended=()=>{source.disconnect();gain.disconnect();panner.disconnect();this.weaponSources.delete(source);this.nodes--;};source.start();return true;
+  }
+  companion(event,dx=0,dz=0){const quiet=['step','sniff'].includes(event),range=quiet?8:20,d=Math.hypot(dx,dz);if(d>=range||!this.allow('companion-'+event,event==='sniff'?5:event==='step'?.20:.12))return false;
+    const volume=({step:.35,sniff:.35,pounce:.85,bite:.85,hurt:.8,down:.85,revive:.8,dodge:.85,dodgeLand:.5,trapSet:.6,trapSnap:.8})[event]||.7;
+    return this.weapon('companion',event,0,volume*(1-d/range)**1.2,Math.max(-1,Math.min(1,(dx-dz)/12)));
   }
   stopWeapons(){for(const s of this.weaponSources)s.stop();}
   shot(id){if(this.allow('shot',.045))this.weapon(id,'shot');}

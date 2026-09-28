@@ -1,18 +1,18 @@
-import{makeCoastEnemy,animateCoastEnemy,coastProp}from'./coast-models.js?v=51';
-import{installCoast}from'./coast.js?v=51';
-import{makeBoss,animateBoss,makeSandEnemy,animateSandEnemy}from'./expansion-models.js?v=51';
-import{siteSchedule}from'./site-discovery.js?v=51';
-import{MAP_EVENTS,biomeEvent,eventNodes}from'./map-events.js?v=51';
-import{MAP_HALF,MAP_SCALE}from'./map-layout.js?v=51';
-import{buildPonds,animateWater,waterDepth,restoreWaterPose,animateWaterPose}from'./water.js?v=51';
-import{ENEMY_MOTION,animateEnemyIdentity}from'./enemy-motion.js?v=51';
-import{REGIONAL_ENEMIES}from'./map-enemies.js?v=51';
-import{groundCue}from'./ground-cues.js?v=51';
-import{heroesReady,createSkinnedHero,animateSkinnedHero}from'./skinned-hero.js?v=51';
+import{makeCoastEnemy,animateCoastEnemy,coastProp}from'./coast-models.js?v=52';
+import{installCoast}from'./coast.js?v=52';
+import{makeBoss,animateBoss,makeSandEnemy,animateSandEnemy}from'./expansion-models.js?v=52';
+import{siteSchedule}from'./site-discovery.js?v=52';
+import{MAP_EVENTS,biomeEvent,eventNodes}from'./map-events.js?v=52';
+import{MAP_HALF,MAP_SCALE}from'./map-layout.js?v=52';
+import{buildPonds,animateWater,waterDepth,restoreWaterPose,animateWaterPose}from'./water.js?v=52';
+import{ENEMY_MOTION,animateEnemyIdentity}from'./enemy-motion.js?v=52';
+import{REGIONAL_ENEMIES}from'./map-enemies.js?v=52';
+import{groundCue}from'./ground-cues.js?v=52';
+import{heroesReady,createSkinnedHero,animateSkinnedHero}from'./skinned-hero.js?v=52';
 import * as T from './vendor/three.module.js';
-import{makeHero,animateHero}from'./hero-model.js?v=51';
-import{makeWraith,animateWraith}from'./wraith-model.js?v=51';
-import{MAPS,seeded}from'./rules.js?v=51';
+import{makeHero,animateHero}from'./hero-model.js?v=52';
+import{makeWraith,animateWraith}from'./wraith-model.js?v=52';
+import{MAPS,seeded}from'./rules.js?v=52';
 const geo=new Map(),materials=new Map(),terrainMaterials=new Map(),detailMaterials=new Map(),weatherMaterials=new Map();
 function geometry(kind,args){const key=kind+args.join(',');if(!geo.has(key))geo.set(key,new T[kind](...args));return geo.get(key);}
 export function mat(color,glow=false){const key=color+':'+glow;if(!materials.has(key))materials.set(key,new T.MeshStandardMaterial({color,roughness:glow?.35:.86,metalness:glow?.25:.08,emissive:glow?color:0,emissiveIntensity:glow?.9:0,flatShading:true}));return materials.get(key);}

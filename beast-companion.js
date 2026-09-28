@@ -1,14 +1,22 @@
-// Pets never block enemies or absorb their damage. Leash and recovery cap autonomous attacks.
+// Companions have their own health; they never block movement or redirect owner damage.
+export const PET_LIFE={base:90,perLevel:6,perVitality:15,revive:18,protection:2,hitGrace:.65};
 export const PET_LEASH={follow:10,engage:16,recall:18,resume:10,nearby:6};
 export const PET_TIMING={wind:.28,pounce:.30,recover:.34};
 const dist=(a,b)=>Math.hypot(a.x-b.x,a.z-b.z);
 const angleDiff=(a,b)=>Math.atan2(Math.sin(a-b),Math.cos(a-b));
 export class BeastCompanion{
- constructor(api){this.api=api;const p=api.player();Object.assign(this,{x:p.x-.9,z:p.z-.7,angle:0,state:'sniff',elapsed:0,cool:.6,now:0,command:null,target:null,throwCount:0,traps:[],recallUntil:0,decisionAt:.9,seed:1937,vx:0,vz:0,stuck:0});}
+ constructor(api){this.api=api;const p=api.player();Object.assign(this,{x:p.x-.9,z:p.z-.7,angle:0,state:'sniff',elapsed:0,cool:.6,now:0,command:null,target:null,throwCount:0,traps:[],recallUntil:0,decisionAt:.9,seed:1937,vx:0,vz:0,stuck:0,hp:0,maxHp:0,alive:true,inv:0,hurt:0,reviveLeft:0,reviveRetry:0});this.syncHealth();}
+ get level(){return Math.max(1,this.api.player().level||1);}
+ syncHealth(){const maximum=PET_LIFE.base+PET_LIFE.perLevel*(this.level-1)+PET_LIFE.perVitality*(this.api.player().upgrades?.vitality||0),gain=maximum-this.maxHp;this.maxHp=maximum;this.hp=this.alive?Math.max(0,Math.min(maximum,this.hp+Math.max(0,gain))):0;}
+ takeDamage(amount){if(!this.api.active()||!this.alive||this.inv>0||!Number.isFinite(amount)||amount<=0)return false;
+  this.hp=Math.max(0,this.hp-amount);this.hurt=.30;this.inv=PET_LIFE.hitGrace;
+  if(this.hp===0){this.alive=false;this.state='down';this.elapsed=0;this.reviveLeft=PET_LIFE.revive;this.reviveRetry=0;this.target=this.command=this.roamGoal=null;this.forcedReturn=false;this.vx=this.vz=this.speed=this.turnRate=0;this.api.fx('petDown',this.x,this.z);}else this.api.fx('petHurt',this.x,this.z);return true;
+ }
+ revive(){if(this.alive||!this.api.active()||this.reviveLeft>0)return false;const home=this.api.home();if(!home)return false;this.x=home.x;this.z=home.z;this.hp=this.maxHp;this.alive=true;this.inv=PET_LIFE.protection;this.hurt=0;this.change('look');this.cool=.65;this.decisionAt=this.now+1;this.recallUntil=0;this.commandUntil=0;this.stuck=0;this.api.fx('petRevive',this.x,this.z);return true;}
  random(){this.seed=(Math.imul(this.seed,1664525)+1013904223)>>>0;return this.seed/4294967296;}
  change(state){if(this.state!==state){this.state=state;this.elapsed=0;}}
  order(angle,thrown=true){const p=this.api.player();let best=null,score=Infinity;
-  for(const e of this.api.foes()){if(!e.alive||!this.api.visible(e)||dist(e,p)>=10||!this.api.clear(p.x,p.z,e.x,e.z))continue;
+  for(const e of this.alive?this.api.foes():[]){if(!e.alive||!this.api.visible(e)||dist(e,p)>=10||!this.api.clear(p.x,p.z,e.x,e.z))continue;
    const diff=Math.abs(angleDiff(Math.atan2(e.x-p.x,e.z-p.z),angle));if(diff>.46)continue;const s=diff*15+dist(e,p)*.05;if(s<score){score=s;best=e;}}
   this.command=best;this.commandUntil=this.now+1.5;
   // An explicit aim can redirect an approach, but cannot swivel an airborne pounce.
@@ -16,7 +24,7 @@ export class BeastCompanion{
   if(!thrown)return;
   const w=this.api.stats();this.throwCount++;if(w.trapRank&&this.throwCount%3===0){if(this.traps.length>=3)this.traps.shift();this.traps.push({x:p.x,z:p.z,life:8,arm:.45,rank:w.trapRank,pulse:0});this.api.fx('trapSet',p.x,p.z);}
  }
- recall(){this.forcedReturn=true;this.change('return');this.target=this.command=null;this.roamGoal=null;this.recallUntil=this.now+1.1;this.cool=Math.max(this.cool,1.1);}
+ recall(){if(!this.alive)return;this.forcedReturn=true;this.change('return');this.target=this.command=null;this.roamGoal=null;this.recallUntil=this.now+1.1;this.cool=Math.max(this.cool,1.1);}
  marked(e){e.lingyaMark=this.now+2.5;}
  updateTraps(dt){for(const trap of this.traps){trap.life-=dt;trap.arm-=dt;trap.pulse-=dt;if(trap.life<=0)continue;
   if(trap.pulse<=0){trap.pulse=.28;this.api.fx('trap',trap.x,trap.z);}
@@ -33,8 +41,9 @@ export class BeastCompanion{
   if(this.api.clear(this.x,this.z,x,z)){this.roamGoal={x,z};this.change('roam');return;}}
   this.change('look');this.decisionAt=this.now+.8;
  }
- update(dt){if(dt<=0||!this.api.active())return;this.now+=dt;this.cool=Math.max(0,this.cool-dt);this.elapsed+=dt;
+ update(dt){if(dt<=0||!this.api.active())return;this.now+=dt;this.syncHealth();this.inv=Math.max(0,this.inv-dt);this.hurt=Math.max(0,this.hurt-dt);this.cool=Math.max(0,this.cool-dt);this.elapsed+=dt;
   const p=this.api.player(),w=this.api.stats(),oldX=this.x,oldZ=this.z,oldAngle=this.angle;this.updateTraps(dt);if(!this.api.active())return;
+  if(!this.alive){this.reviveLeft=Math.max(0,this.reviveLeft-dt);this.reviveRetry=Math.max(0,this.reviveRetry-dt);if(this.reviveLeft<=0&&this.reviveRetry<=0){if(!this.revive())this.reviveRetry=.5;}return;}
   const ownerDistance=dist(this,p);
   // Only the outer leash interrupts combat. Camera visibility and ordinary owner movement do not.
   if(ownerDistance>PET_LEASH.recall&&!this.forcedReturn)this.recall();
@@ -84,4 +93,4 @@ export class BeastCompanion{
   this.angle+=angleDiff(desired,this.angle)*(1-Math.exp(-dt*(['wind','pounce'].includes(this.state)?16:7)));this.turnRate=angleDiff(this.angle,oldAngle)/dt;
  }
 }
-export {sideHopTravel} from './lingya-motion.js?v=51';
+export {sideHopTravel} from './lingya-motion.js?v=52';

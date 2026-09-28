@@ -1,5 +1,5 @@
-import{badgerAttack,badgerCadence,badgerIdle,smooth}from'./badger-motion.js?v=51';
-import{swimLimb as placeLimb}from'./swim-motion.js?v=51';
+import{badgerAttack,badgerCadence,badgerIdle,smooth}from'./badger-motion.js?v=52';
+import{swimLimb as placeLimb}from'./swim-motion.js?v=52';
 import * as T from './vendor/three.module.js';
 const geo=new Map(),mats=new Map();
 function material(c){if(!mats.has(c))mats.set(c,new T.MeshStandardMaterial({color:c,roughness:.84}));return mats.get(c);}
@@ -30,6 +30,9 @@ const footOrigin=new T.Vector3(),footOffset=new T.Vector3(),footTarget=new T.Vec
 export function animateBadger(g,t,speed,state='look',progress=0,turnRate=0){
  const d=g.userData,dt=d.last===undefined?1/60:Math.max(0,Math.min(.05,t-d.last));d.last=t;
  const blend=1-Math.exp(-dt*18),ease=(o,key,target)=>o[key]+=(target-o[key])*blend;
+ if(state==='down'){d.wasDown=true;ease(d.rig.rotation,'z',1.2);ease(d.rig.position,'y',-.06);ease(d.head.rotation,'x',.22);for(const eye of d.eyes)eye.scale.y=.1;return;}
+ if(d.wasDown){d.wasDown=false;d.rig.rotation.set(0,0,0);d.rig.position.y=0;d.motionSpeed=0;for(const leg of d.legs){leg.ready=false;leg.swinging=false;}}
+
  d.motionSpeed=(d.motionSpeed||0)+(speed-(d.motionSpeed||0))*(1-Math.exp(-dt*9));const moving=d.motionSpeed>.12,run=T.MathUtils.smoothstep(d.motionSpeed,2,6),attacking=['wind','pounce','recover'].includes(state),pose=badgerAttack(state,progress);
  if(moving&&!attacking)d.phase=(d.phase+dt*badgerCadence(d.motionSpeed))%1;
  const sway=Math.sin(d.phase*Math.PI*2),stride=Math.min(1,d.motionSpeed/1.2);
@@ -37,7 +40,7 @@ export function animateBadger(g,t,speed,state='look',progress=0,turnRate=0){
  d.sniffBlend=(d.sniffBlend||0)+(((state==='sniff'?1:0)*rest)-(d.sniffBlend||0))*(1-Math.exp(-dt*4));const sniff=d.sniffBlend;
  ease(d.rig.position,'y',pose.air-pose.crouch+(attacking?0:Math.sin(d.phase*Math.PI*4)*.010*stride));
  ease(d.rig.rotation,'z',attacking?0:sway*.018*stride-T.MathUtils.clamp(turnRate*.009,-.055,.055)+idle.shift*rest);
- ease(d.rig.rotation,'x',state==='pounce'?-.07*Math.sin(progress*Math.PI*2):state==='recover'?.08*Math.sin(progress*Math.PI):0);
+ ease(d.rig.rotation,'x',state==='pounce'?-.07*Math.sin(progress*Math.PI*2):state==='recover'?.08*Math.sin(progress*Math.PI):(d.hurt||0)*.35);
  d.shoulders.position.y=.42+sway*.012*stride-pose.crouch*.35;d.haunch.position.y=.43-sway*.008*stride-pose.crouch*.18;
  d.body.scale.y=.27*(1+Math.sin(t*1.8)*.009);d.body.scale.z=.53*(1+pose.reach*.035);
  ease(d.head.position,'z',.40+sniff*(.055+idle.sniff*.009)+pose.impact*.045);ease(d.head.position,'y',.45-sniff*.085-pose.crouch*.3+idle.shift*rest*.4);
