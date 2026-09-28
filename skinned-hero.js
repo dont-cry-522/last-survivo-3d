@@ -1,3 +1,4 @@
+import{equipGuardian,animateGuardian}from'./guardian-model.js?v=43';
 import{weaponGesture,shotStarted}from'./weapon-performance.js?v=42';
 import{rollProgress,rollWeight}from'./dodge-motion.js?v=42';
 import * as T from './vendor/three.module.js';
@@ -120,7 +121,7 @@ function drawCrossbow(gun,pull,phase){
   gun.userData.stringPull=pull;gun.userData.crossbowBolt.visible=phase>.72;
 }
 export function createSkinnedHero(kind,weapon){
-  const g=new T.Group(),rig=new T.Group(),model=clone(templates.get(kind));rig.add(model);g.add(rig);rig.scale.setScalar(1.12);
+  const g=new T.Group(),rig=new T.Group(),model=clone(templates.get(kind==='guardian'?'scout':kind));rig.add(model);g.add(rig);rig.scale.setScalar(1.12);
   model.skeleton=firstSkin(model).skeleton;const bones=new Map();model.traverse(o=>{if(o.isBone)bones.set(o.name,o);if(o.isMesh){o.castShadow=o.receiveShadow=true;o.frustumCulled=false;}});
   const mixer=new T.AnimationMixer(model),actions={};for(const [name,clip]of clips)actions[name]=mixer.clipAction(clip);
   let idleClip=clips.get('Idle_Loop');
@@ -136,14 +137,15 @@ export function createSkinnedHero(kind,weapon){
   const aim=mixer.clipAction(upperClip);aim.play();aim.setEffectiveWeight(0);
   // Calibrate the authored weapon grip in the actual aiming pose, then return to idle.
   const fullAim=actions[aimName];fullAim.play();mixer.update(0);model.updateMatrixWorld(true);
-  const hand=bones.get('hand_r'),gun=makePrototype(kind,weapon).userData.weapon;gun.removeFromParent();gun.position.set(0,.045,0);gun.scale.setScalar(weapon==='crossbow'?.72:.65);gun.quaternion.copy(hand.getWorldQuaternion(new T.Quaternion()).invert());hand.add(gun);
+  const guardianGrips=kind==='guardian'?[bones.get('hand_l'),bones.get('hand_r')].map(b=>b.getWorldQuaternion(new T.Quaternion())):null;
+  const hand=bones.get('hand_r'),gun=kind==='guardian'?new T.Group():makePrototype(kind,weapon).userData.weapon;gun.removeFromParent();gun.position.set(0,.045,0);gun.scale.setScalar(weapon==='crossbow'?.72:.65);gun.quaternion.copy(hand.getWorldQuaternion(new T.Quaternion()).invert());hand.add(gun);
   fullAim.stop();idle.play();upperIdle.play();run.play().setEffectiveWeight(0);upperRun.play().setEffectiveWeight(0);mixer.update(0);
   for(const a of[walk,upperWalk,backRun,backWalk])a.play().setEffectiveWeight(0);
   model.skeleton.pose();model.updateMatrixWorld(true);
   const owned=[];let cape;
-  if(kind==='silver'){
-    cape=capeMesh();owned.push(cape);attachAtRest(bones.get('spine_03'),cape,model);
-    const mask=faceMask();owned.push(mask);attachAtRest(bones.get('Head'),mask,model);
+  if(kind==='silver'||kind==='guardian'){
+    cape=capeMesh();if(kind==='guardian'){cape.scale.set(.95,.85,1);cape.material.color.set(0xb7bca4);}owned.push(cape);attachAtRest(bones.get('spine_03'),cape,model);
+    if(kind==='silver'){const mask=faceMask();owned.push(mask);attachAtRest(bones.get('Head'),mask,model);}
   }
   // Slightly larger head silhouette remains legible from the elevated game camera.
   bones.get('Head')?.scale.setScalar(1.08);
@@ -152,13 +154,19 @@ export function createSkinnedHero(kind,weapon){
   g.userData.support={hand:bones.get('hand_l'),rightHand:bones.get('hand_r'),elbow:new T.Vector3(),goal:new T.Vector3(),axis:new T.Vector3(),bend:new T.Vector3(),target:new T.Vector3(),origin:new T.Vector3(),from:new T.Vector3(),to:new T.Vector3(),delta:new T.Quaternion(),world:new T.Quaternion(),parent:new T.Quaternion(),start:[new T.Quaternion(),new T.Quaternion()]};
   if(weapon==='crossbow')g.userData.crossbowBase=[g.userData.aimArm,g.userData.firingForearm,g.userData.offArm,g.userData.offForearm].map(bone=>[bone,new T.Quaternion()]);
   else g.userData.attackBase=[g.userData.aimArm,g.userData.firingForearm,g.userData.offArm,g.userData.offForearm].map(bone=>[bone,new T.Quaternion()]);
+  if(kind==='guardian'){
+    gun.removeFromParent();equipGuardian(g,guardianGrips);
+    // Keep the original UV textures and facial skin; tint only the ranger's cloth/leather.
+    const materials=new Map();model.traverse(o=>{if(!o.isSkinnedMesh||!o.material.name.includes('Ranger'))return;const source=o.material;if(!materials.has(source)){const m=source.clone();m.color.set(0xb0b8c5);m.roughness=.82;materials.set(source,m);}o.material=materials.get(source);});g.userData.ownedMaterials=[...materials.values()];
+    g.userData.attackBase=[g.userData.aimArm,g.userData.firingForearm,g.userData.offArm,g.userData.offForearm,g.userData.support.hand,g.userData.support.rightHand,g.userData.spine].map(bone=>[bone,bone.quaternion.clone()]);
+  }
   return g;
 }
 export function animateSkinnedHero(g,t,speed,attack,hurt){
   const d=g.userData,dt=d.lastTime===undefined?1/60:Math.max(0,Math.min(.05,t-d.lastTime));d.lastTime=t;
   d.smoothedSpeed+=(speed-d.smoothedSpeed)*(1-Math.exp(-dt*(speed>0?15:22)));
   d.blend+=(Math.min(1,speed/1.6)-d.blend)*(1-Math.exp(-dt*(speed>0?14:18)));
-  d.aimHold=attack>0||d.aimActive?.45:Math.max(0,d.aimHold-dt);d.aimBlend+=((d.aimHold>0?1:0)-d.aimBlend)*(1-Math.exp(-dt*(d.weaponId==='crossbow'?8:20)));
+  d.aimHold=d.kind==='guardian'||attack>0||d.aimActive?.45:Math.max(0,d.aimHold-dt);d.aimBlend+=((d.aimHold>0?1:0)-d.aimBlend)*(1-Math.exp(-dt*(d.weaponId==='crossbow'?8:20)));
   const relative=Number.isFinite(d.travelAngle)?angleDelta(d.travelAngle,g.rotation.y):0,backward=Math.abs(relative)>Math.PI*.55;
   d.backBlend+=((backward?1:0)-d.backBlend)*(1-Math.exp(-dt*12));
   const gaitTarget=speed>.1?T.MathUtils.clamp(angleDelta(relative,backward?Math.PI:0),-.85,.85):0;d.gaitYaw+=(gaitTarget-d.gaitYaw)*(1-Math.exp(-dt*12));
@@ -179,7 +187,7 @@ export function animateSkinnedHero(g,t,speed,attack,hurt){
   const kick=isRoll?0:d.attackGesture,sweep=isRoll?0:motion.sweep,gather=isRoll?0:motion.gather;
   const acceleration=dt?T.MathUtils.clamp((speed-(d.previousSpeed??speed))/dt,-10,10):0;d.previousSpeed=speed;
   d.motionLean=((d.motionLean||0)+(T.MathUtils.clamp(acceleration*.006,-.045,.045)-(d.motionLean||0))*(1-Math.exp(-dt*9)));
-  const recoil={rifle:.075,shotgun:.22,crossbow:.075,shuriken:-.12,fire:-.15,dark:.065}[d.weaponId];
+  const recoil={rifle:.075,shotgun:.22,crossbow:.075,shuriken:-.12,fire:-.15,dark:.065,hammer:0}[d.weaponId];
   d.rig.rotation.x=isRoll?0:-kick*recoil+d.motionLean;
   d.rig.position.z=isRoll?0:-kick*Math.abs(recoil)*.45;
   // Remove last frame's procedural arm offsets before the mixer blends a new pose.
@@ -194,6 +202,7 @@ export function animateSkinnedHero(g,t,speed,attack,hurt){
   d.gun.quaternion.copy(d.gunRest);
   if(d.attackBase){
     for(const [bone,rotation]of d.attackBase)rotation.copy(bone.quaternion);d.attackBaseReady=true;
+    if(d.kind==='guardian'){animateGuardian(g,t,speed,dt);if(d.cape){d.cape.quaternion.copy(d.restCape);d.cape.rotateX(.06+d.blend*.13-d.motionLean*.6);d.cape.userData.wind.time.value=t;d.cape.userData.wind.run.value=d.blend;}g.visible=!(hurt>0&&Math.floor(hurt*28)%2===0);return;}
     const gesture=isRoll?0:kick;
     if(d.weaponId==='rifle'){
       d.aimArm.rotateX(-.16*gesture);d.firingForearm.rotateX(.24*gesture);
@@ -255,5 +264,5 @@ export function animateSkinnedHero(g,t,speed,attack,hurt){
 }
 export function disposeHero(g){
   if(!g?.userData.skinned)return;const d=g.userData,skeletons=new Set();d.mixer.stopAllAction();d.mixer.uncacheRoot(d.model);
-  g.traverse(o=>{if(o.isSkinnedMesh)skeletons.add(o.skeleton);});for(const s of skeletons)s.dispose();for(const o of d.owned){o.geometry.dispose();o.material.dispose();}
+  g.traverse(o=>{if(o.isSkinnedMesh)skeletons.add(o.skeleton);});for(const s of skeletons)s.dispose();for(const m of d.ownedMaterials||[])m.dispose();for(const o of d.owned){o.geometry.dispose();o.material.dispose();}
 }

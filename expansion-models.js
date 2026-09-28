@@ -55,25 +55,6 @@ export function animateBoss(g,t,speed,dt){
   d.appendages.forEach((f,i)=>f.rotation.y=(i?1:-1)*(-.4-wind*.3+hit*.45));
  }
 }
-export function makeGuardian(){
- const g=model('guardian'),d=g.userData,r=d.rig;d.guardian=true;
- part(r,0x425663,0,.95,0,.5,.55,.32);part(r,0x9eafad,0,1.14,.17,.49,.32,.21);part(r,0x574a3b,0,.62,0,.38,.12,.31);
- const head=joint(r,0,1.61,.015);part(head,0xd7b798,0,0,0,.27,.3,.26);part(head,0x463c35,0,.2,-.03,.28,.13,.24);part(head,0x655a4b,0,-.18,.16,.23,.15,.17);for(const side of [-1,1])part(head,0x333a3e,side*.1,.02,.25,.037,.035,.022);d.head=head;
- d.cape=part(r,0x576d76,0,.94,-.35,.43,.59,.08);d.cape.rotation.x=-.1;
- for(const s of [-1,1]){const leg=limb(r,0x414b4e,s*.23,.64,0,.38,.17),knee=limb(leg,0x665f51,0,-.35,0,.31,.15);const foot=part(knee,0x3d3e3b,0,-.25,.12,.19,.13,.29);d[s<0?'leftLeg':'rightLeg']=leg;d[s<0?'leftKnee':'rightKnee']=knee;d[s<0?'leftFoot':'rightFoot']=foot;d.legs.push(leg);d.appendages??=[];d.appendages.push(knee);
- const arm=limb(r,0x6e8790,s*.53,1.28,0,.42,.19),elbow=limb(arm,0x54493e,0,-.36,.01,.3,.14);const hand=part(elbow,0xd0ad89,0,-.3,0,.14,.13,.14);d[s<0?'leftArm':'rightArm']=arm;d[s<0?'leftElbow':'rightElbow']=elbow;d[s<0?'leftHand':'rightHand']=hand;d.arms.push(arm);if(s<0){d.shield=joint(elbow,0,-.1,.20);part(d.shield,0x9d906d,0,0,0,.4,.5,.12);part(d.shield,0x405966,0,0,.10,.32,.4,.07);part(d.shield,0xbcb58e,0,0,.19,.12,.12,.08);}else{d.hammer=joint(elbow,0,-.28,0);part(d.hammer,0x654d39,0,.17,.25,.055,.055,.64);part(d.hammer,0x9ea7a1,0,.18,.81,.31,.21,.23,'hammer');part(d.hammer,0x687778,0,.18,.81,.07,.225,.245,'hammer');for(const x of [-.31,.31])part(d.hammer,0xd2b67d,x,.18,.81,.028,.16,.16,'hammer');}}
- return g;
-}
-export function animateGuardian(g,t,speed,dt){
- const d=g.userData,r=d.rig,stride=Math.min(1,speed/5.6);d.phase+=speed*dt*2.5;const p=d.phase;
- const u=d.shotSerial?Math.max(0,Math.min(1,d.reloadPhase??1)):1,wind=u<.28?ease(u/.28):0,drive=u>=.28&&u<.62?ease((u-.28)/.34):0,recover=u>=.62?1-ease((u-.62)/.38):0;
- const swing=u<.28?-wind:u<.62?-1+drive*2:recover,brace=d.dashTime>0?Math.sin(Math.PI*Math.min(1,d.dashTime/.32)):0;
- r.position.y=Math.abs(Math.sin(p))*.045*stride;r.rotation.set(stride*.065+brace*.18,0,Math.sin(p)*.04*stride);
- d.legs.forEach((l,i)=>{l.rotation.x=Math.sin(p+i*Math.PI)*.48*stride;d.appendages[i].rotation.x=Math.max(0,-Math.sin(p+i*Math.PI))*.65*stride;});
- d.arms[0].rotation.set(-.35-brace*.8+Math.sin(p)*.12*stride,0,-.15);
- d.arms[1].rotation.set(-.1+swing*.9-Math.sin(p)*.17*stride,0,-.08-wind*.25);r.rotation.y=swing*.16;
- d.cape.rotation.x=-.12-Math.abs(Math.sin(p-.4))*.17*stride-brace*.2;d.cape.rotation.z=Math.sin(p-.8)*.07*stride;d.head.rotation.y=-r.rotation.y*.5;
-}
 export function makeSandEnemy(kind){
  const g=model(kind),d=g.userData,r=d.rig;d.sandModel=true;
  if(kind==='sandworm'){

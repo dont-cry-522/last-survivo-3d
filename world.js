@@ -1,4 +1,4 @@
-import{makeBoss,animateBoss,makeGuardian,animateGuardian,makeSandEnemy,animateSandEnemy}from'./expansion-models.js?v=42';
+import{makeBoss,animateBoss,makeSandEnemy,animateSandEnemy}from'./expansion-models.js?v=43';
 import{siteSchedule}from'./site-discovery.js?v=42';
 import{MAP_EVENTS,biomeEvent,eventNodes}from'./map-events.js?v=42';
 import{MAP_HALF,MAP_SCALE}from'./map-layout.js?v=42';
@@ -6,11 +6,11 @@ import{buildPonds,animateWater,waterDepth,restoreWaterPose,animateWaterPose}from
 import{ENEMY_MOTION,animateEnemyIdentity}from'./enemy-motion.js?v=42';
 import{REGIONAL_ENEMIES}from'./map-enemies.js?v=42';
 import{groundCue}from'./ground-cues.js?v=42';
-import{heroesReady,createSkinnedHero,animateSkinnedHero}from'./skinned-hero.js?v=42';
+import{heroesReady,createSkinnedHero,animateSkinnedHero}from'./skinned-hero.js?v=43';
 import * as T from './vendor/three.module.js';
 import{makeHero,animateHero}from'./hero-model.js?v=42';
 import{makeWraith,animateWraith}from'./wraith-model.js?v=42';
-import{MAPS,seeded}from'./rules.js?v=42';
+import{MAPS,seeded}from'./rules.js?v=43';
 const geo=new Map(),materials=new Map(),terrainMaterials=new Map(),detailMaterials=new Map(),weatherMaterials=new Map();
 function geometry(kind,args){const key=kind+args.join(',');if(!geo.has(key))geo.set(key,new T[kind](...args));return geo.get(key);}
 export function mat(color,glow=false){const key=color+':'+glow;if(!materials.has(key))materials.set(key,new T.MeshStandardMaterial({color,roughness:glow?.35:.86,metalness:glow?.25:.08,emissive:glow?color:0,emissiveIntensity:glow?.9:0,flatShading:true}));return materials.get(key);}
@@ -21,7 +21,7 @@ const cone=(p,c,x,y,z,r,h)=>mesh('ConeGeometry',[r,h,7],c,x,y,z,p);
 function detailMaterial(color,opacity,vertexColors=false){const key=color+':'+opacity+':'+vertexColors;if(!detailMaterials.has(key))detailMaterials.set(key,new T.MeshStandardMaterial({color,transparent:true,opacity,vertexColors,roughness:1,depthWrite:false,side:T.DoubleSide}));return detailMaterials.get(key);}
 export function actor(kind='silver',weapon='crossbow'){
  if(['boss','frostking','cinderlord','dunescorpion'].includes(kind))return makeBoss(kind);
- if(kind==='guardian')return makeGuardian();
+ if(kind==='guardian')return heroesReady()?createSkinnedHero(kind,'hammer'):new T.Group();
  if(REGIONAL_ENEMIES[kind]?.map==='sand')return makeSandEnemy(kind);
  if(REGIONAL_ENEMIES[kind])return regionalActor(kind);
  const g=new T.Group(),rig=new T.Group();g.add(rig);g.userData.rig=rig;
@@ -77,8 +77,8 @@ function regionalActor(id){
  return g;
 }
 export function animateActor(g,t,speed=0,attack=0,hurt=0){
- const special=g.userData;if(special.bossModel||special.guardian||special.sandModel){const dt=special.lastTime===undefined?1/60:Math.max(0,Math.min(.05,t-special.lastTime));special.lastTime=t;if(special.bossModel)animateBoss(g,t,speed,dt);else if(special.guardian){restoreWaterPose(g);animateGuardian(g,t,speed,dt);animateWaterPose(g,t,speed);}else animateSandEnemy(g,t,speed,attack,dt);return;}
- restoreWaterPose(g);const d=g.userData,landSpeed=speed*(1-.9*T.MathUtils.smoothstep(d.waterBlend??d.waterDepth??0,.42,.85));if(d.wraith){animateWraith(g,t,landSpeed,attack,hurt);animateWaterPose(g,t,speed);return;}if(d.skinned){animateSkinnedHero(g,t,landSpeed,attack,hurt);animateWaterPose(g,t,speed);return;}if(d.leftKnee){animateHero(g,t,landSpeed,attack);animateWaterPose(g,t,speed);return;}
+ const special=g.userData;if(special.bossModel||special.sandModel){const dt=special.lastTime===undefined?1/60:Math.max(0,Math.min(.05,t-special.lastTime));special.lastTime=t;if(special.bossModel)animateBoss(g,t,speed,dt);else animateSandEnemy(g,t,speed,attack,dt);return;}
+ if(!g.userData.rig)return;restoreWaterPose(g);const d=g.userData,landSpeed=speed*(1-.9*T.MathUtils.smoothstep(d.waterBlend??d.waterDepth??0,.42,.85));if(d.wraith){animateWraith(g,t,landSpeed,attack,hurt);animateWaterPose(g,t,speed);return;}if(d.skinned){animateSkinnedHero(g,t,landSpeed,attack,hurt);animateWaterPose(g,t,speed);return;}if(d.leftKnee){animateHero(g,t,landSpeed,attack);animateWaterPose(g,t,speed);return;}
  if(d.satellites){d.satellites.rotation.y=t*.9;d.satellites.position.y=Math.sin(t*3)*.08;}
  const dt=d.lastTime===undefined?1/60:Math.max(0,Math.min(.05,t-d.lastTime));d.lastTime=t;
  d.stride=(d.stride||0)+(Math.min(1,speed/2.5)-(d.stride||0))*(1-Math.exp(-dt*14));

@@ -1,4 +1,4 @@
-import{weaponSample}from'./weapon-audio.js?v=42';
+import{weaponSample}from'./weapon-audio.js?v=43';
 import{creatureSample,creatureSpatial,ENEMY_VOICES}from'./enemy-audio.js?v=42';
 // Original procedural score and sound design. No external audio downloads.
 const midi=n=>440*2**((n-69)/12);

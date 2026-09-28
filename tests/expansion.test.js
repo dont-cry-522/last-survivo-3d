@@ -35,10 +35,6 @@ test('hammer hits a short front cone; shield only parries the opening frontal wi
  const player={heroId:'guardian',weaponId:'hammer',level:8,upgrades:{}};assert.deepEqual(HERO_LOADOUTS.guardian,['hammer']);
  assert(!chooseUpgrades(player).some(s=>['fire','ice','storm','veil'].includes(s.id)));takeUpgrade(player,'path:hammer_guard');assert(weaponStats(player).guardWindow>0);assert(!takeUpgrade(player,'path:hammer_break'));
 });
-test('new guardian windup, strike and return remain smooth during haste and locomotion',()=>{
- for(const fps of [30,60,120])for(const duration of [.48,.77]){const g=actor('guardian');let prev=null,max=0;g.userData.shotSerial=1;for(let i=0;i<fps*3;i++){g.userData.reloadPhase=Math.min(1,i/fps/duration);animateActor(g,i/fps,4);const pose=transforms(g);if(prev)max=Math.max(max,...pose.map((v,j)=>Math.abs(v-prev[j])));prev=pose;}assert(max<.65,'guardian jumps '+max);}
-});
-test('guardian water pose blends out without accumulating joint offsets',()=>{const g=actor('guardian');g.userData.waterDepth=1;for(let i=0;i<180;i++)animateActor(g,i/60,2);assert(g.userData.waterBlend>.95);assert(g.userData.waterPose.length>0);assert(transforms(g).every(Number.isFinite));g.userData.waterDepth=0;for(let i=180;i<360;i++)animateActor(g,i/60,0);assert(g.userData.waterBlend<.01);assert(Math.abs(g.userData.rig.position.y)<.02);});
 test('desert generates dry terrain, visible destructible gate and accessible landmarks',()=>{
  for(let seed=1;seed<21;seed++){const w=buildWorld('sand',seed);assert.equal(w.ponds.length,0);assert.equal(w.sites[0].event,'mechanism');assert.equal(w.sites[0].gates.length,3);assert(clearAt(w,w.spawn.x,w.spawn.z,1));for(const s of w.sites)assert(clearAt(w,s.x,s.z,3));assert(w.weather.particles.every(p=>p.vx>0&&p.y>0));w.group.traverse(o=>{if(o.isInstancedMesh)o.dispose();});}
 });

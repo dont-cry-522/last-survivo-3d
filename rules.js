@@ -39,6 +39,7 @@ const PATH_LEVELS=[3,5,8];
 function routeChoices(p){const rank=p.weaponPath?.rank||0;if(rank>=3||(p.level||1)<PATH_LEVELS[rank])return[];return Object.entries(WEAPON_PATHS).filter(([id,v])=>v.weapon===p.weaponId&&(!p.weaponPath||p.weaponPath.id===id)).map(([id,v])=>({id:'path:'+id,pathId:id,name:v.name,icon:v.icon,text:v.steps[rank],max:3,rank,category:'weapon'}));}
 export function chooseUpgrades(p,random=Math.random){const pool=UPGRADES.filter(u=>heroSpell(p.heroId,u.id)&&(p.upgrades[u.id]||0)<u.max).map(u=>{
  const rank=(p.upgrades[u.id]||0)+1;let text=u.text;
+ if(u.id==='haste'&&p.heroId==='guardian')text='挥击速度 +15%，连招节奏加快';
  if(u.id==='fire')text=`每 5.5 秒落下陨火，造成 ${35*rank} 伤害，爆炸半径 3.5`;
  if(u.id==='ice')text=`每 7 秒冰晶扩散，造成 ${20*rank} 伤害，减速 ${(2+rank*.35).toFixed(2)} 秒`;
  if(u.id==='storm')text=`每 5.5 秒落雷并连锁 ${2+rank} 个目标，每个造成 ${27*rank} 伤害`;
@@ -80,7 +81,7 @@ export function weaponStats(p){
  w.damage*=1+.18*(p.upgrades?.power||0);w.rate*=1+.15*(p.upgrades?.haste||0);return w;
 }
 export function weaponReachText(w){
- const n=v=>Number(v.toFixed(1));if(w.melee)return '近战距离 '+n(w.range)+' 米 · 正面 120° 横扫 · 盾冲起手格挡后反击';
+ const n=v=>Number(v.toFixed(1));if(w.melee)return '盾击 '+n(w.range*.86)+' 米 / 锤击 '+n(w.range)+' 米 · 横锤正面 120°，盾击与下砸集中在前方';
  const reach=w.id==='grimoire'?'施法距离':w.returning?'去程距离':'射程';
  const area=w.radius>0?' · '+(w.id==='grimoire'?'裂口':'爆炸')+'半径 '+n(w.radius)+' 米':w.count>1?' · 扇面 '+Math.round((w.count-1)*w.spread*180/Math.PI)+'°':w.hitRadius>=.18?' · 宽刃／影脉':' · 窄线直射';
  return reach+' '+n(w.range)+' 米'+area+(w.returning?' · 飞回可再次命中':'');
