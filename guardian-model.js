@@ -1,6 +1,6 @@
-import{heroDodgePose}from'./hero-dodge.js?v=57';
+import{heroDodgePose}from'./hero-dodge.js?v=58';
 import * as T from './vendor/three.module.js';
-import {guardianPose} from './guardian-motion.js?v=57';
+import {guardianPose} from './guardian-motion.js?v=58';
 const geo=new Map(),mats=new Map();
 function material(color,metal=0){const key=color+':'+metal;if(!mats.has(key))mats.set(key,new T.MeshStandardMaterial({color,metalness:metal,roughness:metal?.46:.82,side:T.DoubleSide}));return mats.get(key);}
 function geometry(key,create){if(!geo.has(key))geo.set(key,create());return geo.get(key);}
@@ -27,9 +27,11 @@ export function equipGuardian(g,grips){
  const hammer=joint(d.support.rightHand,[0,0,0]);d.hammer=hammer;d.weapon=hammer;hammer.name='Guardian_wrapped_hammer';
  tube(hammer,0x705139,[0,.24,0],[.050,.94,.050]);for(let i=0;i<7;i++)tube(hammer,0xb2986a,[0,-.11+i*.055,0],[.056,.018,.056],.25);
  ell(hammer,0xb69c6d,[0,-.25,0],[.085,.068,.085],.5);
- const hammerShape=geometry('hammer-head',()=>new T.CylinderGeometry(.93,1,2,16).rotateZ(Math.PI/2));
- mesh(hammer,hammerShape,0x91a5a5,[0,.66,0],[.36,.185,.19],.65);mesh(hammer,hammerShape,0x632a36,[0,.66,0],[.08,.205,.215],.5);
- for(const s of [-1,1]){mesh(hammer,hammerShape,0xbba273,[s*.35,.66,0],[.035,.195,.2],.7);ell(hammer,0x46606b,[s*.395,.66,0],[.017,.10,.115],.6);}
+ // Beveled forged cheeks and a reinforced socket replace the barrel-shaped head.
+ const hammerShape=geometry('forged-hammer-head',()=>{const sh=new T.Shape();sh.moveTo(-.16,-.15);sh.lineTo(.16,-.15);sh.lineTo(.20,-.10);sh.lineTo(.20,.10);sh.lineTo(.14,.16);sh.lineTo(-.14,.16);sh.lineTo(-.20,.10);sh.lineTo(-.20,-.10);sh.closePath();const h=new T.ExtrudeGeometry(sh,{depth:.65,bevelEnabled:true,bevelSize:.035,bevelThickness:.035,bevelSegments:3,steps:1});h.translate(0,0,-.325);h.rotateY(Math.PI/2);return h;});
+ mesh(hammer,hammerShape,0x7a9094,[0,.66,0],[1,1,1],.38);
+ for(const side of[-1,1]){mesh(hammer,hammerShape,0xb59a68,[side*.30,.66,0],[.13,1.025,1.025],.5);mesh(hammer,hammerShape,0x3f555c,[side*.34,.66,0],[.10,.78,.78],.3);}
+ tube(hammer,0xb39a69,[0,.46,0],[.08,.22,.08],.45);
  d.hammerContact=joint(hammer,[0,.66,0]);
 
  for(const [weapon,grip]of [[shield,grips[0]],[hammer,grips[1]]]){weapon.scale.setScalar(.72);weapon.quaternion.copy(grip).invert();}
@@ -51,7 +53,7 @@ function arm(upper,lower,hand,target,pole,grip,desired,previous,dt){
  for(const [i,bone]of [upper,lower,hand].entries()){if(previous[i])bone.quaternion.copy(previous[i].rotateTowards(bone.quaternion,Math.max(.001,dt)*18));else previous[i]=bone.quaternion.clone();previous[i].copy(bone.quaternion);bone.updateWorldMatrix(false,true);}
 }
 export function animateGuardian(g,t,speed,dt){
- const d=g.userData,u=d.shotSerial?T.MathUtils.clamp(d.reloadPhase??1,0,1):1;let pose=guardianPose(d.meleeCombo||0,u);
+ const d=g.userData;let u=d.shotSerial?T.MathUtils.clamp(d.reloadPhase??1,0,1):1;if(d.cancelAttack||d.dashTime>0)d.impactHold=0;if(d.impactHold>0){u=d.impactPhase;d.impactHold=Math.max(0,d.impactHold-dt);}let pose=guardianPose(d.meleeCombo||0,u);
  if(d.cancelAttack){d.cancelAttack=false;d.cancelPose=d.lastPose?.slice();d.cancelTime=0;}
  if(d.cancelPose){d.cancelTime+=dt;const k=Math.min(1,d.cancelTime/.16),blend=k*k*(3-2*k);pose=pose.map((v,i)=>d.cancelPose[i]+(v-d.cancelPose[i])*blend);if(k===1)d.cancelPose=null;}d.lastPose=pose.slice();
  const dodge=heroDodgePose('guardian',d.dashTime||0);d.brace=dodge.weight;

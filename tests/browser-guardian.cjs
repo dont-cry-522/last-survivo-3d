@@ -2,7 +2,7 @@ const{chromium}=require(process.env.PLAYWRIGHT_MODULE||'playwright'),assert=requ
 (async()=>{const browser=await chromium.launch({executablePath:'C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe',headless:true});try{
 const p=await browser.newPage({viewport:{width:1440,height:900}}),errors=[];p.on('pageerror',e=>errors.push(e.message));await p.goto(process.env.TEST_URL||'http://127.0.0.1:8899/');await p.waitForFunction(()=>window.game3d&&!document.querySelector('#start').disabled,null,{timeout:60000});
 const result=await p.evaluate(async()=>{
- const T=await import('./vendor/three.module.js'),{createSkinnedHero,animateSkinnedHero,disposeHero}=await import('./skinned-hero.js?v=57'),{animateActor}=await import('./world.js?v=57');const check=(c,s)=>{if(!c)throw Error(s)},point=o=>o.getWorldPosition(new T.Vector3());let largestJump=0,measurements,materialNames=[];
+ const T=await import('./vendor/three.module.js'),{createSkinnedHero,animateSkinnedHero,disposeHero}=await import('./skinned-hero.js?v=58'),{animateActor}=await import('./world.js?v=58');const check=(c,s)=>{if(!c)throw Error(s)},point=o=>o.getWorldPosition(new T.Vector3());let largestJump=0,measurements,materialNames=[];
  const ranger=createSkinnedHero('scout','rifle'),warden=createSkinnedHero('guardian','hammer');
  const body=g=>{let b;g.traverse(o=>{if(o.name==='Male_Ranger_Body')b=o});return b;};
  check(warden.getObjectByName('Guardian_hair')&&warden.getObjectByName('Guardian_beard'),'guardian facial identity missing');

@@ -1,34 +1,34 @@
-import{HERO_DODGES,HERO_ABILITY_TEXT}from'./hero-dodge.js?v=57';
-import{LINGYA_HOP_DURATION,lingyaHopScale}from'./lingya-motion.js?v=57';
-import{BeastCompanion,PET_TIMING,sideHopTravel}from'./beast-companion.js?v=57';
-import{makeBadger,animateBadger}from'./beast-model.js?v=57';
-import{updateTide,harpoonHit,tideDashTravel}from'./coast.js?v=57';
-import{GUARDIAN_ATTACKS,GUARDIAN_DASH,guardianDashTravel,nextGuardianAttack}from'./guardian-motion.js?v=57';
-import{tickBoss}from'./boss-combat.js?v=57';
-import{inMeleeArc,canParry}from'./melee.js?v=57';
-import{discoverSite}from'./site-discovery.js?v=57';
-import{MAP_EVENTS,createMapEvent,advanceMapEvent,eventProgress}from'./map-events.js?v=57';
-import{MAP_HALF,MINIMAP_SCALE,mapPixel}from'./map-layout.js?v=57';
-import{terrainAt}from'./water.js?v=57';
-import{RELICS,relicChoices,equipRelic,relicEvent,incomingRelicDamage,readJournal,writeJournal,recordDiscovery,recordVictory}from'./expedition.js?v=57';
-import{encounterPhase,enemyGrowth,encounterRole,HUNT_SQUAD,enemyApproach,separation,attackSlotAvailable}from'./encounters.js?v=57';
-import{setupMobileDisplay}from'./mobile-display.js?v=57';
-import{weaponCuePhases}from'./weapon-performance.js?v=57';
-import{ENEMY_VOICES}from'./enemy-audio.js?v=57';
-import{ENEMY_MOTION,gaitPace}from'./enemy-motion.js?v=57';
-import{MAP_ROSTERS,REGIONAL_ENEMIES,regionalEnemy}from'./map-enemies.js?v=57';
-import{HeroSkills}from'./hero-skills.js?v=57';
-import{EXTRA_BY_ID}from'./skill-catalog.js?v=57';
-import{SCOUT_ROLL_DURATION,rollTravel}from'./dodge-motion.js?v=57';
-import{renderPixelRatio,RenderBudget}from'./render-budget.js?v=57';
-import{groundCue,disposeCue}from'./ground-cues.js?v=57';
-import{SkillVFX}from'./skill-vfx.js?v=57';
-import{loadHeroAssets,disposeHero}from'./skinned-hero.js?v=57';
-import{GameAudio}from'./audio.js?v=57';
-import{ENEMY_GUIDE,CIRCLE_GUIDE}from'./battle-guide.js?v=57';
+import{HERO_DODGES,HERO_ABILITY_TEXT}from'./hero-dodge.js?v=58';
+import{LINGYA_HOP_DURATION,lingyaHopScale}from'./lingya-motion.js?v=58';
+import{BeastCompanion,PET_TIMING,sideHopTravel}from'./beast-companion.js?v=58';
+import{makeBadger,animateBadger}from'./beast-model.js?v=58';
+import{updateTide,harpoonHit,tideDashTravel,HARPOON_ATTACKS}from'./coast.js?v=58';
+import{GUARDIAN_ATTACKS,GUARDIAN_DASH,guardianDashTravel,nextGuardianAttack}from'./guardian-motion.js?v=58';
+import{tickBoss}from'./boss-combat.js?v=58';
+import{inMeleeArc,canParry}from'./melee.js?v=58';
+import{discoverSite}from'./site-discovery.js?v=58';
+import{MAP_EVENTS,createMapEvent,advanceMapEvent,eventProgress}from'./map-events.js?v=58';
+import{MAP_HALF,MINIMAP_SCALE,mapPixel}from'./map-layout.js?v=58';
+import{terrainAt}from'./water.js?v=58';
+import{RELICS,relicChoices,equipRelic,relicEvent,incomingRelicDamage,readJournal,writeJournal,recordDiscovery,recordVictory}from'./expedition.js?v=58';
+import{encounterPhase,enemyGrowth,encounterRole,HUNT_SQUAD,enemyApproach,separation,attackSlotAvailable}from'./encounters.js?v=58';
+import{setupMobileDisplay}from'./mobile-display.js?v=58';
+import{weaponCuePhases}from'./weapon-performance.js?v=58';
+import{ENEMY_VOICES}from'./enemy-audio.js?v=58';
+import{ENEMY_MOTION,gaitPace}from'./enemy-motion.js?v=58';
+import{MAP_ROSTERS,REGIONAL_ENEMIES,regionalEnemy}from'./map-enemies.js?v=58';
+import{HeroSkills}from'./hero-skills.js?v=58';
+import{EXTRA_BY_ID}from'./skill-catalog.js?v=58';
+import{SCOUT_ROLL_DURATION,rollTravel}from'./dodge-motion.js?v=58';
+import{renderPixelRatio,RenderBudget}from'./render-budget.js?v=58';
+import{groundCue,disposeCue}from'./ground-cues.js?v=58';
+import{SkillVFX}from'./skill-vfx.js?v=58';
+import{loadHeroAssets,disposeHero}from'./skinned-hero.js?v=58';
+import{GameAudio}from'./audio.js?v=58';
+import{ENEMY_GUIDE,CIRCLE_GUIDE}from'./battle-guide.js?v=58';
 import * as T from './vendor/three.module.js';
-import{MAPS,WEAPONS,ENEMIES,HERO_LOADOUTS,weaponFor,experienceNeeded,grantExperience,chooseUpgrades,takeUpgrade,weaponStats,weaponReachText,WEAPON_PATHS,segmentDistance,registerCrossbowHit,registerShadowHit,UPGRADES}from'./rules.js?v=57';
-import{actor,animateActor,animateWorld,buildWorld,clearAt,moveActor,mesh,mat}from'./world.js?v=57';
+import{MAPS,WEAPONS,ENEMIES,HERO_LOADOUTS,weaponFor,experienceNeeded,grantExperience,chooseUpgrades,takeUpgrade,weaponStats,weaponReachText,WEAPON_PATHS,segmentDistance,registerCrossbowHit,registerShadowHit,UPGRADES}from'./rules.js?v=58';
+import{actor,animateActor,animateWorld,buildWorld,clearAt,moveActor,mesh,mat}from'./world.js?v=58';
 const $=s=>document.querySelector(s),touch=matchMedia('(pointer:coarse)').matches;
 document.body.classList.toggle('touch',touch);
 const canvas=$('#world');let renderer;
@@ -81,7 +81,7 @@ function updateCompanion(dt){if(!companion)return;companion.update(dt);companion
 }
 function clearObjects(){if(companionMesh)scene.remove(companionMesh);companion=companionMesh=null;document.body.classList.remove('has-companion');$('#companion-status').hidden=true;relicBurst=false;heroSkills.reset();vfx.clear();fields=[];riftStrikes=[];for(const list of [enemies,bullets,orbs,effects,zones])for(const o of list){scene.remove(o.mesh);disposeCue(o.mesh);if(o.kind==='line'){o.mesh.geometry.dispose();o.mesh.material.dispose();}}if(boss)scene.remove(boss.mesh);enemies=[];bullets=[];orbs=[];effects=[];zones=[];boss=null;}
 function build(){renderer.shadowMap.needsUpdate=true;renderBudget.reset();clearObjects();if(world){scene.remove(world.group);world.group.traverse(o=>{if(o.isInstancedMesh)o.dispose();disposeCue(o);if(o.userData.ownedGeometry)o.geometry.dispose();});}if(hero){disposeHero(hero);scene.remove(hero);}world=buildWorld(mapId,Math.floor(Math.random()*1e8));scene.add(world.group);scene.background=new T.Color(world.theme.fog);scene.fog=new T.FogExp2(world.theme.fog,.014);hero=actor(heroId,weaponFor(heroId,weaponIndex).id);scene.add(hero);player={...world.spawn,heroId,weaponId:weaponFor(heroId,weaponIndex).id,weaponPath:null,hp:heroId==='guardian'?150:120,maxHp:heroId==='guardian'?150:120,level:1,xp:0,pending:0,upgrades:{},attack:0,dash:0,dashTime:0,inv:0,hurt:0,hexSlow:0,angle:0,spell:{fire:3,ice:3,storm:3,veil:3,chain:3,rift:3},distance:0};hero.position.set(player.x,0,player.z);camTarget.set(player.x,0,player.z);createCompanion();updateCamera(1);}
-function renderChoices(){renderJournalSummary();for(const b of document.querySelectorAll('[data-hero]'))b.classList.toggle('selected',b.dataset.hero===heroId);for(const b of document.querySelectorAll('[data-map]'))b.classList.toggle('selected',b.dataset.map===mapId);const box=$('#weapons');box.replaceChildren();for(let i=0;i<HERO_LOADOUTS[heroId].length;i++){const w=weaponFor(heroId,i),b=document.createElement('button');b.textContent=w.name;b.classList.toggle('selected',i===weaponIndex);b.onclick=()=>{weaponIndex=i;renderChoices();build();};box.append(b);}const selectedWeapon=weaponFor(heroId,weaponIndex),selected=selectedWeapon.id,identity={boomerang:'骨镖去程与回程均能命中；獾兽会在附近游走、嗅探，优先扑击瞄准目标，超出活动范围再归队。普通移动和燕步不会打断伙伴作战，落后超过 18 米才优先归队；主动换位则会命令伙伴撤回。闪避会向 4—9 米内的伙伴侧跃，伙伴撤向起点；伙伴倒地、距离或通路不合适时使用普通燕步，冷却 3.6 秒。伙伴有独立生命，倒地 18 秒后复活。',harpoon:'长叉向前穿刺一线敌人，每第三击牵引普通怪物并减速；潜潮持续最多 2 秒，期间无敌、可移动但不能攻击，再按闪避或重新按攻击提前浮出；冷却 6.5 秒。',hammer:'盾击→横锤→下砸，连续按住攻击；铁壁持续 1.2 秒，正面减伤 75%，可缓慢移动，冷却 4.2 秒；起手精准格挡后，4 秒内下一击伤害 +60%。',rifle:'细长高速枪弹，快速连续射击。',shotgun:'一枪多颗短弹，近距离扇面散射。',fire:'较大的火球，较慢飞行并留下火焰，命中爆燃。',crossbow:'细长箭杆与箭头，快速直射、三连命中击退。',shuriken:'旋转三刃飞镖，可穿过敌人。',dark:'较大的暗紫法球，缓慢飞行、命中散开暗雾。',shade:'掌心发射中型影脉，三次命中引爆刻印。',shadowblade:'投出宽弧影镰，飞回时可再次命中。',grimoire:'在瞄准方向撕开延迟裂口，不发射子弹。'};$('#weapon-preview').textContent=identity[selected]+weaponReachText(weaponStats({weaponId:selected}))+' · 基础频率 '+selectedWeapon.rate+' 次/秒 · '+(selectedWeapon.count>1?'每次 '+selectedWeapon.count+' 发 · ':'')+'成长路线：'+Object.values(WEAPON_PATHS).filter(p=>p.weapon===selected).map(p=>p.name).join(' / ')+' · 3 级起二选一'+({guardian:' · 专属技能：裂岩重击 / 铁壁回响 / 卸势震荡',tide:' · 专属技能：破浪锋 / 盐蚀印记 / 潜潮余流',lingya:' · 专属技能：同猎追击 / 燕返藤绊 / 归镖抚慰'}[heroId]||'');$('.menu-caption span').textContent=heroId==='lingya'?'铃芽 / BEAST KEEPER':heroId==='tide'?'潮行者 / TIDE HUNTER':heroId==='guardian'?'磐山 / STONE WARDEN':heroId==='wraith'?'影裔 / SHADOW WRAITH':heroId==='silver'?'霜影 / SILVER VEIL':'游侠 / WOODLAND RANGER';}
+function renderChoices(){renderJournalSummary();for(const b of document.querySelectorAll('[data-hero]'))b.classList.toggle('selected',b.dataset.hero===heroId);for(const b of document.querySelectorAll('[data-map]'))b.classList.toggle('selected',b.dataset.map===mapId);const box=$('#weapons');box.replaceChildren();for(let i=0;i<HERO_LOADOUTS[heroId].length;i++){const w=weaponFor(heroId,i),b=document.createElement('button');b.textContent=w.name;b.classList.toggle('selected',i===weaponIndex);b.onclick=()=>{weaponIndex=i;renderChoices();build();};box.append(b);}const selectedWeapon=weaponFor(heroId,weaponIndex),selected=selectedWeapon.id,identity={boomerang:'骨镖去程与回程均能命中；獾兽会在附近游走、嗅探，优先扑击瞄准目标，超出活动范围再归队。普通移动和燕步不会打断伙伴作战，落后超过 18 米才优先归队；主动换位则会命令伙伴撤回。闪避会向 4—9 米内的伙伴侧跃，伙伴撤向起点；伙伴倒地、距离或通路不合适时使用普通燕步，冷却 3.6 秒。伙伴有独立生命，倒地 18 秒后复活。',harpoon:'直刺→近身横扫→回钩牵引，第三击拉近普通怪物并减速；潜潮持续最多 2 秒，期间无敌、可移动但不能攻击，再按闪避或重新按攻击提前浮出；冷却 6.5 秒。',hammer:'盾击→横锤→下砸，连续按住攻击；铁壁持续 1.2 秒，正面减伤 75%，可缓慢移动，冷却 4.2 秒；起手精准格挡后，4 秒内下一击伤害 +60%。',rifle:'细长高速枪弹，快速连续射击。',shotgun:'一枪多颗短弹，近距离扇面散射。',fire:'较大的火球，较慢飞行并留下火焰，命中爆燃。',crossbow:'细长箭杆与箭头，快速直射、三连命中击退。',shuriken:'旋转三刃飞镖，可穿过敌人。',dark:'较大的暗紫法球，缓慢飞行、命中散开暗雾。',shade:'掌心发射中型影脉，三次命中引爆刻印。',shadowblade:'投出宽弧影镰，飞回时可再次命中。',grimoire:'在瞄准方向撕开延迟裂口，不发射子弹。'};$('#weapon-preview').textContent=identity[selected]+weaponReachText(weaponStats({weaponId:selected}))+' · 基础频率 '+selectedWeapon.rate+' 次/秒 · '+(selectedWeapon.count>1?'每次 '+selectedWeapon.count+' 发 · ':'')+'成长路线：'+Object.values(WEAPON_PATHS).filter(p=>p.weapon===selected).map(p=>p.name).join(' / ')+' · 3 级起二选一'+({guardian:' · 专属技能：裂岩重击 / 铁壁回响 / 卸势震荡',tide:' · 专属技能：破浪锋 / 盐蚀印记 / 潜潮余流',lingya:' · 专属技能：同猎追击 / 燕返藤绊 / 归镖抚慰'}[heroId]||'');$('.menu-caption span').textContent=heroId==='lingya'?'铃芽 / BEAST KEEPER':heroId==='tide'?'潮行者 / TIDE HUNTER':heroId==='guardian'?'磐山 / STONE WARDEN':heroId==='wraith'?'影裔 / SHADOW WRAITH':heroId==='silver'?'霜影 / SILVER VEIL':'游侠 / WOODLAND RANGER';}
 function setAttackMode(mode){if(mode!=='manual'&&mode!=='auto')return;clearAttack();attackMode=mode;document.body.classList.toggle('auto-attack',mode==='auto');for(const button of document.querySelectorAll('[data-attack-mode]'))button.setAttribute('aria-pressed',String(button.dataset.attackMode===mode));$('#control-help').innerHTML=mode==='auto'?'靠近怪物后自动瞄准并攻击 · 电脑 WASD / 方向键移动，Shift 闪避<br>手机左摇杆移动、按钮闪避 · 点击顶部「横屏」可全屏游玩':'电脑 WASD / 方向键移动 · 鼠标瞄准并按住左键攻击 · Shift 闪避<br>手机左摇杆移动、右摇杆拖动瞄准并射击 · 点击顶部「横屏」可全屏游玩';try{localStorage.setItem('forest-echoes-attack-mode',mode);}catch{}}
 for(const button of document.querySelectorAll('[data-attack-mode]'))button.onclick=()=>setAttackMode(button.dataset.attackMode);
 for(const b of document.querySelectorAll('[data-hero]'))b.onclick=()=>{heroId=b.dataset.hero;weaponIndex=0;for(const q of document.querySelectorAll('[data-hero]'))q.classList.toggle('selected',q===b);renderChoices();build();};
@@ -199,7 +199,7 @@ function shoot(dt){if(player.weaponId==='boomerang'&&bullets.some(b=>b.kind==='b
  if(w.id==='dark'&&player.weaponPath?.id==='dark_seek')for(const e of targets){const n=Math.hypot(e.x-player.x,e.z-player.z),direction=Math.atan2(e.x-player.x,e.z-player.z),diff=Math.atan2(Math.sin(direction-angle),Math.cos(direction-angle));if(n<d&&Math.abs(diff)<.26){nearest=e;d=n;}}
  const relicShot=relicEvent(player,'shot',time);if(relicShot?.kind==='power'){w.damage*=relicShot.multiplier;impactChips(player.x,player.z,0xffe3a3,2);}
  player.aimAngle=angle;player.attack=1/w.rate;player.aimTime=player.attack+.16;hero.userData.shoot=w.id==='grimoire'?.32:w.id==='shade'?.20:.16;hero.userData.reloadPhase=0;hero.userData.reloadDuration=player.attack;hero.userData.shotSerial=(hero.userData.shotSerial||0)+1;player.weaponCue=0;
- if(w.id==='harpoon'){player.harpoonCount=(player.harpoonCount||0)+1;player.melee={angle,hitAt:time+Math.min(.48,.9/w.rate)*.34,w,harpoon:true,tow:player.harpoonCount%3===0};sound.shot('harpoon');resolveRelic(relicShot,player.x,player.z,angle,w.range);return;}
+ if(w.id==='harpoon'){const combo=(player.harpoonCount||0)%3,move=HARPOON_ATTACKS[combo];player.harpoonCount=(player.harpoonCount||0)+1;hero.userData.harpoonCombo=combo;player.melee={angle,hitAt:time+Math.min(.48,.9/w.rate)*.34,w:{...w,range:w.range*move.reach},harpoon:true,combo,tow:combo===2};sound.shot('harpoon');resolveRelic(relicShot,player.x,player.z,angle,w.range);return;}
  if(w.melee){const combo=nextGuardianAttack(player,time),move=GUARDIAN_ATTACKS[combo];player.meleeCombo=combo;player.lastMeleeAt=time;hero.userData.meleeCombo=combo;player.melee={angle,delay:move.impact/w.rate,hitAt:time+move.impact/w.rate,w:{...w,damage:w.damage*move.damage,range:w.range*move.reach},combo,arc:move.arc,empowered:player.counterUntil>time};player.counterUntil=0;sound.shot(move.sound);resolveRelic(relicShot,player.x,player.z,angle,w.range);return;}
  if(w.id==='grimoire'){
   let distance=visibleWeaponRange(angle,w.range),nearestDistance=distance;
@@ -214,13 +214,13 @@ function shoot(dt){if(player.weaponId==='boomerang'&&bullets.some(b=>b.kind==='b
 function updateMelee(dt){const strike=player.melee;if(!strike)return;strike.delay=strike.hitAt-time;if(strike.delay>0)return;player.melee=null;const w=strike.w;if(strike.harpoon){resolveHarpoon(strike);return;}let hits=0;
  for(const e of [...enemies,...(boss?.alive?[boss]:[])]){if(!visibleEnemy(e)||!inMeleeArc(player,e,strike.angle,w.range,strike.arc)||world.obstacles.some(o=>segmentDistance(o.x,o.z,player.x,player.z,e.x,e.z)<o.r))continue;hurtEnemy(e,w.damage*(strike.empowered?1.6+(w.counterBonus||0):1));heroSkills.onHit(e);hits++;const length=Math.hypot(e.x-player.x,e.z-player.z)||1,hx=e.x-(e.x-player.x)/length*e.size*.7,hz=e.z-(e.z-player.z)/length*e.size*.7;impactChips(hx,hz,strike.combo===0?0xb7cfcc:0xe4d1a4,strike.combo===2?7:4);vfx.particle('ember',0xffdf9c,hx,.9,hz,{life:.1,size:[.12,.12,.12],opacity:.75});if(e.alive&&e!==boss){const a=Math.atan2(e.x-player.x,e.z-player.z);moveActor(world,e,Math.sin(a)*(strike.combo===0?.85:.35),Math.cos(a)*(strike.combo===0?.85:.35),e.size*.6);e.stagger=.18;}if(state!=='playing')return;}
  heroSkills.newHeroes.strike(strike.angle,'hammer',strike.combo===2);
- if(hits){sound.impact(GUARDIAN_ATTACKS[strike.combo].sound,strike.empowered||strike.combo===2);if(strike.combo===2)shake=Math.max(shake,.055);}else if(strike.combo===2){hero.updateMatrixWorld(true);const point=hero.userData.hammerContact.getWorldPosition(new T.Vector3());vfx.dust(point.x,point.z,.65);}
+ if(hits){hero.userData.impactHold=strike.combo===2?.065:.035;hero.userData.impactPhase=GUARDIAN_ATTACKS[strike.combo].impact;sound.impact(GUARDIAN_ATTACKS[strike.combo].sound,strike.empowered||strike.combo===2);if(strike.combo===2)shake=Math.max(shake,.055);}else if(strike.combo===2){hero.updateMatrixWorld(true);const point=hero.userData.hammerContact.getWorldPosition(new T.Vector3());vfx.dust(point.x,point.z,.65);}
 
 }
 function resolveHarpoon(strike){const w=strike.w,a=strike.angle,reach=visibleWeaponRange(a,w.range),tip={x:player.x+Math.sin(a)*reach,z:player.z+Math.cos(a)*reach};let hits=0;
- for(const e of [...enemies,...(boss?.alive?[boss]:[])]){if(!visibleEnemy(e)||!harpoonHit(player,e,a,w.range,w.width)||world.obstacles.some(o=>segmentDistance(o.x,o.z,player.x,player.z,e.x,e.z)<o.r))continue;hurtEnemy(e,w.damage);heroSkills.onHit(e);hits++;if(e.alive&&strike.tow){const distance=Math.hypot(e.x-player.x,e.z-player.z);if(e!==boss){const pull=Math.min(w.pull,Math.max(0,distance-1.4)),towAngle=Math.atan2(player.x-e.x,player.z-e.z);moveActor(world,e,Math.sin(towAngle)*pull,Math.cos(towAngle)*pull,e.size*.6);e.stagger=.12;}e.slow=Math.max(e.slow||0,w.slow);vfx.water(e.x,e.z,a,.8);}if(state!=='playing')return;}
+ for(const e of [...enemies,...(boss?.alive?[boss]:[])]){if(!visibleEnemy(e)||!(strike.combo===1?inMeleeArc(player,e,a,w.range,HARPOON_ATTACKS[1].arc):harpoonHit(player,e,a,w.range,w.width))||world.obstacles.some(o=>segmentDistance(o.x,o.z,player.x,player.z,e.x,e.z)<o.r))continue;hurtEnemy(e,w.damage);heroSkills.onHit(e);hits++;if(e.alive&&strike.tow){const distance=Math.hypot(e.x-player.x,e.z-player.z);if(e!==boss){const pull=Math.min(w.pull,Math.max(0,distance-1.4)),towAngle=Math.atan2(player.x-e.x,player.z-e.z);moveActor(world,e,Math.sin(towAngle)*pull,Math.cos(towAngle)*pull,e.size*.6);e.stagger=.12;}e.slow=Math.max(e.slow||0,w.slow);vfx.water(e.x,e.z,a,.8);}if(state!=='playing')return;}
  heroSkills.newHeroes.strike(a,'harpoon',strike.tow);
- vfx.segment(new T.Vector3(player.x,.85,player.z),new T.Vector3(tip.x,.85,tip.z),strike.tow?0x86ded8:0xcadbd0,.05,.14,false,0,.45);if(hits)sound.impact('harpoon',strike.tow);
+ if(strike.combo===1){for(let i=0;i<6;i++){const a0=a-.7+i*.23,a1=a0+.23;vfx.segment(new T.Vector3(player.x+Math.sin(a0)*reach,.85,player.z+Math.cos(a0)*reach),new T.Vector3(player.x+Math.sin(a1)*reach,.85,player.z+Math.cos(a1)*reach),0x9dbab7,.025,.12,false,0,.35);}}else vfx.segment(new T.Vector3(player.x,.85,player.z),new T.Vector3(tip.x,.85,tip.z),strike.tow?0x86ded8:0xcadbd0,.04,.12,false,0,.40);if(hits)sound.impact('harpoon',strike.tow);
 }
 function updateGuardianTrail(){if(heroId!=='guardian')return;const d=hero.userData,strike=player.melee;hero.updateMatrixWorld(true);const contact=(strike?.combo===0?d.shieldContact:d.hammerContact).getWorldPosition(new T.Vector3()),phase=d.reloadPhase||0;
  if(strike&&strike.combo>0&&phase>GUARDIAN_ATTACKS[strike.combo].impact-.14&&phase<GUARDIAN_ATTACKS[strike.combo].impact+.07&&d.trailPoint&&d.trailSerial===d.shotSerial&&contact.distanceTo(d.trailPoint)<2)vfx.segment(d.trailPoint,contact,strike.empowered?0xf1cb7c:0xcee0d7,.045,.1,false,0,.35);
@@ -378,7 +378,7 @@ function update(dt){const rollStart=heroId==='scout'?player.dashTime:0,guardianD
  const movedX=player.x-oldX,movedZ=player.z-oldZ,actualSpeed=(rollStart>0&&!player.waterDash||lingyaHopStart>0)?moving*speed:Math.hypot(movedX,movedZ)/Math.max(dt,.001),travelAngle=actualSpeed>.05?Math.atan2(movedX,movedZ):null;
  player.vx=movedX/Math.max(dt,.001);player.vz=movedZ/Math.max(dt,.001);if(moving>.1)player.angle=Math.atan2(dx,dz);
  const rolling=heroId==='scout'&&player.dashTime>0;
- const autoTarget=attackMode==='auto'?closestAutoTarget(weaponStats(player).range*(heroId==='guardian'?GUARDIAN_ATTACKS[nextGuardianAttack(player,time)].reach:1)):null;if(attackMode==='auto'){aimInput.hasAim=!!autoTarget;if(autoTarget)aimInput.angle=Math.atan2(autoTarget.x-player.x,autoTarget.z-player.z);}
+ const autoTarget=attackMode==='auto'?closestAutoTarget(weaponStats(player).range*(heroId==='guardian'?GUARDIAN_ATTACKS[nextGuardianAttack(player,time)].reach:heroId==='tide'?HARPOON_ATTACKS[(player.harpoonCount||0)%3].reach:1)):null;if(attackMode==='auto'){aimInput.hasAim=!!autoTarget;if(autoTarget)aimInput.angle=Math.atan2(autoTarget.x-player.x,autoTarget.z-player.z);}
  const desired=heroId==='lingya'&&player.dashTime>0?player.dashFacing:rolling||heroId==='guardian'&&player.dashTime>0?player.dashAngle:player.melee?player.melee.angle:aimInput.hasAim?aimInput.angle:player.aimTime>0?player.aimAngle:player.angle;
  const difference=Math.atan2(Math.sin(desired-hero.rotation.y),Math.cos(desired-hero.rotation.y)),turn=T.MathUtils.clamp(difference*(1-Math.exp(-dt*14)),-12*dt,12*dt);
  hero.rotation.y+=turn;hero.position.set(player.x,0,player.z);
@@ -390,15 +390,15 @@ function update(dt){const rollStart=heroId==='scout'?player.dashTime:0,guardianD
  if((attackMode==='auto'?!!autoTarget&&aligned:aimInput.held&&(!['crossbow','hammer','harpoon'].includes(player.weaponId)||aligned))&&player.attack<=0&&player.dashTime===0)shoot(dt);if(state!=='playing')return;updateMelee(dt);if(state!=='playing')return;updateBattleFlow(dt);
  updateRiftStrikes(dt);if(state!=='playing')return;updateFields(dt);updateVents();if(state!=='playing')return;updateEnemies(dt);if(state!=='playing')return;updateBoss(dt);if(state!=='playing')return;
  const targets=()=>[...enemies,...(boss?.alive?[boss]:[])];
- for(const b of bullets){if(b.releaseDelay>0){if(player.dashTime>0){b.life=0;continue;}b.releaseDelay-=dt;b.x=player.x;b.z=player.z;if(b.releaseDelay>0)continue;b.mesh.visible=true;companion?.order(Math.atan2(b.vx,b.vz));sound.shot('boomerang');}if(b.returnable&&!b.returning&&b.turnAt===0)beginReturn(b);const ox=b.x,oz=b.z,travelDt=Math.min(dt,Math.max(0,b.life));let redirected=false;b.elapsed+=travelDt;
+ for(const b of bullets){if(b.releaseDelay>0){if(player.dashTime>0){b.life=0;continue;}b.releaseDelay-=dt;b.x=player.x;b.z=player.z;if(b.releaseDelay>0)continue;hero.updateMatrixWorld(true);const release=hero.userData.gun.getWorldPosition(new T.Vector3());if(clearAt(world,release.x,release.z,b.hitRadius)){b.x=release.x;b.z=release.z;}b.height=release.y; b.mesh.visible=true;companion?.order(Math.atan2(b.vx,b.vz));sound.shot('boomerang');}if(b.returnable&&!b.returning&&b.turnAt===0)beginReturn(b);const ox=b.x,oz=b.z,travelDt=Math.min(dt,Math.max(0,b.life));let redirected=false;b.elapsed+=travelDt;
  if(b.returning){const d=Math.hypot(player.x-b.x,player.z-b.z);if(d<.65){b.life=0;if(b.kind==='boomerang'){hero.userData.catchTime=.2;sound.mechanism('boomerang',1);heroSkills.newHeroes.caught();}continue;}const a=Math.atan2(player.x-b.x,player.z-b.z);b.vx=Math.sin(a)*b.speed;b.vz=Math.cos(a)*b.speed;}
  else if(b.kind==='dark'&&b.target?.alive){const a=Math.atan2(b.target.x-b.x,b.target.z-b.z),blend=1-Math.exp(-dt*6);b.vx=T.MathUtils.lerp(b.vx,Math.sin(a)*b.speed,blend);b.vz=T.MathUtils.lerp(b.vz,Math.cos(a)*b.speed,blend);}
- b.x+=b.vx*travelDt;b.z+=b.vz*travelDt;b.mesh.position.set(b.x,b.kind==='boomerang'?.82:1.15,b.z);if(['shuriken','shadowblade','boomerang'].includes(b.kind))b.mesh.rotation.y+=dt*24;else b.mesh.rotation.y=Math.atan2(b.vx,b.vz);const blocked=!b.returning&&!clearAt(world,b.x,b.z,b.hitRadius);if(blocked){b.life=0;if(b.kind==='boomerang'){b.x=ox;b.z=oz;beginReturn(b);continue;}}
+ b.x+=b.vx*travelDt;b.z+=b.vz*travelDt;b.mesh.position.set(b.x,b.kind==='boomerang'?(b.height??.82):1.15,b.z);if(['shuriken','shadowblade','boomerang'].includes(b.kind)){b.mesh.rotation.y+=dt*(b.kind==='boomerang'?(b.returning?-22:26):24);if(b.kind==='boomerang')b.mesh.rotation.z=Math.sin(b.elapsed*7)*.12;}else b.mesh.rotation.y=Math.atan2(b.vx,b.vz);const blocked=!b.returning&&!clearAt(world,b.x,b.z,b.hitRadius);if(blocked){b.life=0;if(b.kind==='boomerang'){b.x=ox;b.z=oz;beginReturn(b);continue;}}
  vfx.flight(b,dt);
  for(const e of targets()){if(!visibleEnemy(e)||b.hits.has(e.id??'boss')||b.life<=0||b.pierce<=0)continue;if(segmentDistance(e.x,e.z,ox,oz,b.x,b.z)<e.size+b.hitRadius){b.hits.add(e.id??'boss');const strong=b.kind==='crossbow'&&registerCrossbowHit(player,e.id??'boss',time);hurtEnemy(e,b.damage*(strong?1.35:1));heroSkills.onHit(e);if(b.kind==='boomerang'){companion?.marked(e);impactChips(e.x,e.z,0xdfc89b,3);}inflictStatus(e,b);sound.impact(b.kind,strong);if(b.kind==='shuriken'||b.kind==='shadowblade')vfx.bladeImpact(e.x,e.z,Math.atan2(b.vx,b.vz),b.kind==='shadowblade');else if(b.kind==='rifle'||b.kind==='shotgun')impactChips(e.x,e.z,0xffdf97,2);if(b.kind==='crossbow'){vfx.boltImpact(e.x,e.z,strong);if(strong&&e.alive&&e!==boss){const d=Math.hypot(e.x-player.x,e.z-player.z)||1;moveActor(world,e,(e.x-player.x)/d*1.8,(e.z-player.z)/d*1.8,e.size*.6);e.mesh.position.set(e.x,0,e.z);e.stagger=Math.max(e.stagger||0,.3);e.hurt=.3;}}
  if(b.kind==='shade'){const marked=registerShadowHit(e,time);vfx.shadowMark(e.x,e.z,marked);if(marked){sound.spell('rift');hurtEnemy(e,b.markDamage);for(const other of targets())if(other!==e&&visibleEnemy(other)&&Math.hypot(other.x-e.x,other.z-e.z)<b.markRadius)hurtEnemy(other,b.markDamage*.5);}}
  if(['fire','dark'].includes(b.kind)){if(b.kind==='fire')vfx.fire(e.x,e.z,b.radius);else vfx.dark(e.x,e.z,b.radius);if(b.gravity)addGravity(e.x,e.z,b.gravity);for(const other of targets())if(other!==e&&visibleEnemy(other)&&Math.hypot(other.x-e.x,other.z-e.z)<b.radius){hurtEnemy(other,b.damage*.65);inflictStatus(other,b);}}
- if(b.bounces>0){const next=targets().filter(q=>visibleEnemy(q)&&!b.hits.has(q.id??'boss')&&Math.hypot(q.x-e.x,q.z-e.z)<7).sort((a,c)=>Math.hypot(a.x-e.x,a.z-e.z)-Math.hypot(c.x-e.x,c.z-e.z))[0];if(next){const a=Math.atan2(next.x-e.x,next.z-e.z);b.x=e.x;b.z=e.z;b.vx=Math.sin(a)*b.speed;b.vz=Math.cos(a)*b.speed;b.damage*=.75;b.bounces--;b.life=Math.min(7,visibleWeaponRange(a,7,b.x,b.z))/b.speed;redirected=true;b.mesh.position.set(b.x,b.kind==='boomerang'?.82:1.15,b.z);break;}}
+ if(b.bounces>0){const next=targets().filter(q=>visibleEnemy(q)&&!b.hits.has(q.id??'boss')&&Math.hypot(q.x-e.x,q.z-e.z)<7).sort((a,c)=>Math.hypot(a.x-e.x,a.z-e.z)-Math.hypot(c.x-e.x,c.z-e.z))[0];if(next){const a=Math.atan2(next.x-e.x,next.z-e.z);b.x=e.x;b.z=e.z;b.vx=Math.sin(a)*b.speed;b.vz=Math.cos(a)*b.speed;b.damage*=.75;b.bounces--;b.life=Math.min(7,visibleWeaponRange(a,7,b.x,b.z))/b.speed;redirected=true;b.mesh.position.set(b.x,b.kind==='boomerang'?(b.height??.82):1.15,b.z);break;}}
  b.pierce--;if(b.pierce<=0){if(b.returnable&&!b.returning)b.turnAt=0;else b.life=0;}
  }}
  if(!redirected)b.life-=travelDt;if(!blocked&&b.returnable&&!b.returning&&(b.life<=1e-8||b.turnAt===0))beginReturn(b);
