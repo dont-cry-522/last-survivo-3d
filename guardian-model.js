@@ -15,15 +15,16 @@ function plate(p,c,outline,pos,depth=.055,bevel=.025,metal=.5){
 export function equipGuardian(g,grips){
  const d=g.userData;
  const shield=joint(d.support.hand,[0,0,0]);d.shield=shield;const outline=[[-.32,.4],[0,.49],[.32,.4],[.36,.10],[.28,-.31],[0,-.55],[-.28,-.31],[-.36,.10]];
- plate(shield,0xc3a877,outline,[0,0,0],.08,.035);plate(shield,0x294d54,outline.map(([x,y])=>[x*.86,y*.86]),[0,0,.065],.045,.022);d.shieldContact=joint(shield,[0,0,.16]);
- plate(shield,0xceb17d,[[-.035,.32],[.035,.32],[.035,-.22],[0,-.34],[-.035,-.22]],[0,0,.106],.02,.009);
- ell(shield,0x8ca3a4,[0,.06,.14],[.12,.14,.07],.7);
+ plate(shield,0xc3a877,outline,[0,0,0],.08,.035);plate(shield,0x632a36,outline.map(([x,y])=>[x*.86,y*.86]),[0,0,.065],.045,.022);d.shieldContact=joint(shield,[0,0,.16]);
+ plate(shield,0xd1b779,[[-.25,-.15],[-.11,.06],[0,-.045],[.12,.24],[.26,-.15]],[0,0,.118],.026,.009);
+ plate(shield,0x3b4950,[[-.035,-.15],[.12,.16],[.16,.035],[.11,.075],[.02,-.15]],[0,0,.142],.008,.004);
+ plate(shield,0xd1b779,[[-.18,-.21],[.18,-.21],[.15,-.245],[-.15,-.245]],[0,0,.118],.016,.007);
  for(const s of [-1,1])for(const y of [-.17,.28])ell(shield,0xdec696,[s*.25,y,.115],[.025,.025,.021],.6);
  const hammer=joint(d.support.rightHand,[0,0,0]);d.hammer=hammer;d.weapon=hammer;
  tube(hammer,0x705139,[0,.24,0],[.050,.94,.050]);for(let i=0;i<5;i++)tube(hammer,0xb2986a,[0,-.11+i*.055,0],[.056,.018,.056],.25);
  ell(hammer,0xb69c6d,[0,-.25,0],[.085,.068,.085],.5);
  const hammerShape=geometry('hammer-head',()=>new T.CylinderGeometry(1,1,2,8).rotateZ(Math.PI/2));
- mesh(hammer,hammerShape,0x91a5a5,[0,.66,0],[.36,.185,.19],.65);mesh(hammer,hammerShape,0x3d5862,[0,.66,0],[.08,.205,.215],.5);
+ mesh(hammer,hammerShape,0x91a5a5,[0,.66,0],[.36,.185,.19],.65);mesh(hammer,hammerShape,0x632a36,[0,.66,0],[.08,.205,.215],.5);
  for(const s of [-1,1]){mesh(hammer,hammerShape,0xbba273,[s*.35,.66,0],[.035,.195,.2],.7);ell(hammer,0x46606b,[s*.395,.66,0],[.017,.10,.115],.6);}
  d.hammerContact=joint(hammer,[0,.66,0]);
 

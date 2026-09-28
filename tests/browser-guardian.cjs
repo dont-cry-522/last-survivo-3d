@@ -2,7 +2,14 @@ const{chromium}=require(process.env.PLAYWRIGHT_MODULE||'playwright'),assert=requ
 (async()=>{const browser=await chromium.launch({executablePath:'C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe',headless:true});try{
 const p=await browser.newPage({viewport:{width:1440,height:900}}),errors=[];p.on('pageerror',e=>errors.push(e.message));await p.goto(process.env.TEST_URL||'http://127.0.0.1:8899/');await p.waitForFunction(()=>window.game3d&&!document.querySelector('#start').disabled,null,{timeout:60000});
 const result=await p.evaluate(async()=>{
- const T=await import('./vendor/three.module.js'),{createSkinnedHero,animateSkinnedHero,disposeHero}=await import('./skinned-hero.js?v=43'),{animateActor}=await import('./world.js?v=43');const check=(c,s)=>{if(!c)throw Error(s)},point=o=>o.getWorldPosition(new T.Vector3());let largestJump=0,measurements,materialNames=[];
+ const T=await import('./vendor/three.module.js'),{createSkinnedHero,animateSkinnedHero,disposeHero}=await import('./skinned-hero.js?v=44'),{animateActor}=await import('./world.js?v=44');const check=(c,s)=>{if(!c)throw Error(s)},point=o=>o.getWorldPosition(new T.Vector3());let largestJump=0,measurements,materialNames=[];
+ const ranger=createSkinnedHero('scout','rifle'),warden=createSkinnedHero('guardian','hammer');
+ const body=g=>{let b;g.traverse(o=>{if(o.name==='Male_Ranger_Body')b=o});return b;};
+ check(warden.getObjectByName('Guardian_hair')&&warden.getObjectByName('Guardian_beard'),'guardian facial identity missing');
+ check(!ranger.getObjectByName('Guardian_beard'),'guardian changed the ranger');
+ const rb=body(ranger),wb=body(warden);check(rb.geometry!==wb.geometry&&rb.material!==wb.material,'guardian mutates shared ranger asset');
+ rb.geometry.computeBoundingBox();wb.geometry.computeBoundingBox();check(wb.geometry.boundingBox.max.x>rb.geometry.boundingBox.max.x*1.1,'guardian silhouette not broader');
+ check(rb.material.metalness!==wb.material.metalness,'armor material unchanged');disposeHero(ranger);disposeHero(warden);
  for(const fps of[30,60,120])for(const duration of[.48,.77])for(let combo=0;combo<3;combo++){
   const g=createSkinnedHero('guardian','hammer'),d=g.userData;let skin=0;g.traverse(o=>{if(o.isSkinnedMesh){skin++;if(fps===30&&duration===.48&&combo===0)materialNames.push(o.material.name)}});check(skin>3,'missing continuous skinned body');
   for(let i=0;i<60;i++)animateSkinnedHero(g,i/60,0,0,0);

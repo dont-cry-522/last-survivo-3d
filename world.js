@@ -6,7 +6,7 @@ import{buildPonds,animateWater,waterDepth,restoreWaterPose,animateWaterPose}from
 import{ENEMY_MOTION,animateEnemyIdentity}from'./enemy-motion.js?v=42';
 import{REGIONAL_ENEMIES}from'./map-enemies.js?v=42';
 import{groundCue}from'./ground-cues.js?v=42';
-import{heroesReady,createSkinnedHero,animateSkinnedHero}from'./skinned-hero.js?v=43';
+import{heroesReady,createSkinnedHero,animateSkinnedHero}from'./skinned-hero.js?v=44';
 import * as T from './vendor/three.module.js';
 import{makeHero,animateHero}from'./hero-model.js?v=42';
 import{makeWraith,animateWraith}from'./wraith-model.js?v=42';

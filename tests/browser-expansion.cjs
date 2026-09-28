@@ -3,7 +3,7 @@ const {chromium}=require(process.env.PLAYWRIGHT_MODULE||'playwright'),assert=req
  for(const [width,height,touch]of [[1440,900,false],[844,390,true],[390,844,true]]){
   const p=await browser.newPage({viewport:{width,height},hasTouch:touch}),errors=[];p.on('pageerror',e=>errors.push(e.message));
   await p.addInitScript(()=>{const raf=requestAnimationFrame;window.requestAnimationFrame=cb=>{window.nextFrame=cb;return raf(t=>{if(!window.freezeGame)cb(t)})};});
-  await p.goto(process.env.TEST_URL||'http://127.0.0.1:8899/');await p.waitForFunction(()=>window.game3d&&!document.querySelector('#start').disabled,null,{timeout:60000});
+  await p.goto(process.env.TEST_URL||'http://127.0.0.1:8899/');await p.waitForFunction(()=>window.game3d&&!document.querySelector('#start').disabled,null,{polling:100,timeout:60000});
   await p.locator('[data-hero=guardian]').click();await p.locator('[data-map=sand]').click();assert.equal(await p.locator('#weapons button').count(),1);
   if(process.env.OUTPUT_DIR)await p.screenshot({path:process.env.OUTPUT_DIR+'/v42-menu-'+width+'.png'});
   await p.locator('#start').click();await p.evaluate(()=>freezeGame=true);await p.waitForTimeout(60);

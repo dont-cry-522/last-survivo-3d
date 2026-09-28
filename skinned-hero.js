@@ -1,9 +1,10 @@
-import{equipGuardian,animateGuardian}from'./guardian-model.js?v=43';
+import{guardianOutfit,guardianHair}from'./guardian-appearance.js?v=44';
+import{equipGuardian,animateGuardian}from'./guardian-model.js?v=44';
 import{weaponGesture,shotStarted}from'./weapon-performance.js?v=42';
 import{rollProgress,rollWeight}from'./dodge-motion.js?v=42';
 import * as T from './vendor/three.module.js';
 import {clone} from './vendor/SkeletonUtils.js';
-import {loadCharacterData} from './character-loader.js?v=42';
+import {loadCharacterData} from './character-loader.js?v=44';
 import {makeHero as makePrototype} from './hero-model.js?v=42';
 
 const templates=new Map(),clips=new Map();
@@ -81,7 +82,7 @@ export async function loadHeroAssets(onProgress=()=>{}){
     const base=assets[kind+'-base'].scene;base.traverse(o=>{if(o.isMesh){o.material=o.material.clone();if(o.material.name.includes('Hair'))o.material.color.set(kind==='silver'?0x65717f:0x38251d);if(o.material.name.includes('Superhero'))skinTone(o.material,kind);}});
     if(kind==='silver'){const extra=new T.Group();extra.add(hunterLegs(base));bindParts(root,extra);}
     bindParts(root,base,true,kind);
-    const hair=assets[kind+'-hair'].scene;hair.traverse(o=>{if(o.isMesh){o.material=o.material.clone();if(kind==='silver'){
+    const hair=assets[kind+'-hair'].scene;hair.traverse(o=>{if(o.isMesh){o.userData.hairstyle=true;o.material=o.material.clone();if(kind==='silver'){
       o.material.color.set(0xdde7f1);o.material.roughness=.78;o.material.normalScale.set(.45,.45);
       o.material.onBeforeCompile=s=>{s.fragmentShader=s.fragmentShader.replace('#include <map_fragment>',`#include <map_fragment>
         float strand=dot(diffuseColor.rgb,vec3(.2126,.7152,.0722));
@@ -89,6 +90,9 @@ export async function loadHeroAssets(onProgress=()=>{}){
     }else o.material.color.set(0x58402e);}});bindParts(root,hair);
     root.updateMatrixWorld(true);templates.set(kind,root);
   }
+  const guardian=clone(templates.get('scout'));guardian.skeleton=firstSkin(guardian).skeleton;guardianOutfit(guardian);
+  for(const role of ['hair','beard']){const detail=assets['guardian-'+role].scene;guardianHair(detail,role);bindParts(guardian,detail);}
+  guardian.updateMatrixWorld(true);templates.set('guardian',guardian);
   for(const c of bakedClips)clips.set(c.name,c);
   loaded=true;
 }
@@ -96,9 +100,9 @@ export function heroesReady(){return loaded;}
 function attachAtRest(bone,object,root){
   root.updateMatrixWorld(true);object.applyMatrix4(bone.matrixWorld.clone().invert().multiply(root.matrixWorld));bone.add(object);
 }
-function capeMesh(){
+function capeMesh(kind){
   const pos=[],uv=[],colors=[],ix=[],cols=24,rows=28;
-  for(let y=0;y<=rows;y++)for(let x=0;x<=cols;x++){const u=x/cols,v=y/rows,w=.22+.13*Math.sin(v*Math.PI*.86),split=.10*Math.exp(-(((u-.5)/.065)**2))*v**8;pos.push((u-.5)*w*2,-v*.86+split+Math.cos(u*Math.PI*4)*.013*v,-.12*v-.04*Math.sin(u*Math.PI)+Math.sin(u*Math.PI*8)*.016*v);uv.push(u,v);const edge=x===0||x===cols||y===rows,color=new T.Color(edge?0x65727d:0x252936);colors.push(color.r,color.g,color.b);}
+  for(let y=0;y<=rows;y++)for(let x=0;x<=cols;x++){const u=x/cols,v=y/rows,w=.22+.13*Math.sin(v*Math.PI*.86),split=.10*Math.exp(-(((u-.5)/.065)**2))*v**8;pos.push((u-.5)*w*2,-v*.86+split+Math.cos(u*Math.PI*4)*.013*v,-.12*v-.04*Math.sin(u*Math.PI)+Math.sin(u*Math.PI*8)*.016*v);uv.push(u,v);const edge=x===0||x===cols||y===rows,color=new T.Color(kind==='guardian'?(edge?0xc6a464:0x852b37):(edge?0x65727d:0x252936));colors.push(color.r,color.g,color.b);}
   for(let y=0;y<rows;y++)for(let x=0;x<cols;x++){const a=y*(cols+1)+x;ix.push(a,a+cols+1,a+1,a+1,a+cols+1,a+cols+2);}
   const geometry=new T.BufferGeometry();geometry.setAttribute('position',new T.Float32BufferAttribute(pos,3));geometry.setAttribute('uv',new T.Float32BufferAttribute(uv,2));geometry.setAttribute('color',new T.Float32BufferAttribute(colors,3));geometry.setIndex(ix);geometry.computeVertexNormals();
   const material=new T.MeshStandardMaterial({color:0xffffff,vertexColors:true,roughness:.87,side:T.DoubleSide}),wind={time:{value:0},run:{value:0}};
@@ -121,7 +125,7 @@ function drawCrossbow(gun,pull,phase){
   gun.userData.stringPull=pull;gun.userData.crossbowBolt.visible=phase>.72;
 }
 export function createSkinnedHero(kind,weapon){
-  const g=new T.Group(),rig=new T.Group(),model=clone(templates.get(kind==='guardian'?'scout':kind));rig.add(model);g.add(rig);rig.scale.setScalar(1.12);
+  const g=new T.Group(),rig=new T.Group(),model=clone(templates.get(kind));rig.add(model);g.add(rig);rig.scale.setScalar(1.12);
   model.skeleton=firstSkin(model).skeleton;const bones=new Map();model.traverse(o=>{if(o.isBone)bones.set(o.name,o);if(o.isMesh){o.castShadow=o.receiveShadow=true;o.frustumCulled=false;}});
   const mixer=new T.AnimationMixer(model),actions={};for(const [name,clip]of clips)actions[name]=mixer.clipAction(clip);
   let idleClip=clips.get('Idle_Loop');
@@ -144,7 +148,7 @@ export function createSkinnedHero(kind,weapon){
   model.skeleton.pose();model.updateMatrixWorld(true);
   const owned=[];let cape;
   if(kind==='silver'||kind==='guardian'){
-    cape=capeMesh();if(kind==='guardian'){cape.scale.set(.95,.85,1);cape.material.color.set(0xb7bca4);}owned.push(cape);attachAtRest(bones.get('spine_03'),cape,model);
+    cape=capeMesh(kind);if(kind==='guardian')cape.scale.set(1.14,1.06,1);owned.push(cape);attachAtRest(bones.get('spine_03'),cape,model);
     if(kind==='silver'){const mask=faceMask();owned.push(mask);attachAtRest(bones.get('Head'),mask,model);}
   }
   // Slightly larger head silhouette remains legible from the elevated game camera.
@@ -156,8 +160,6 @@ export function createSkinnedHero(kind,weapon){
   else g.userData.attackBase=[g.userData.aimArm,g.userData.firingForearm,g.userData.offArm,g.userData.offForearm].map(bone=>[bone,new T.Quaternion()]);
   if(kind==='guardian'){
     gun.removeFromParent();equipGuardian(g,guardianGrips);
-    // Keep the original UV textures and facial skin; tint only the ranger's cloth/leather.
-    const materials=new Map();model.traverse(o=>{if(!o.isSkinnedMesh||!o.material.name.includes('Ranger'))return;const source=o.material;if(!materials.has(source)){const m=source.clone();m.color.set(0xb0b8c5);m.roughness=.82;materials.set(source,m);}o.material=materials.get(source);});g.userData.ownedMaterials=[...materials.values()];
     g.userData.attackBase=[g.userData.aimArm,g.userData.firingForearm,g.userData.offArm,g.userData.offForearm,g.userData.support.hand,g.userData.support.rightHand,g.userData.spine].map(bone=>[bone,bone.quaternion.clone()]);
   }
   return g;
@@ -264,5 +266,5 @@ export function animateSkinnedHero(g,t,speed,attack,hurt){
 }
 export function disposeHero(g){
   if(!g?.userData.skinned)return;const d=g.userData,skeletons=new Set();d.mixer.stopAllAction();d.mixer.uncacheRoot(d.model);
-  g.traverse(o=>{if(o.isSkinnedMesh)skeletons.add(o.skeleton);});for(const s of skeletons)s.dispose();for(const m of d.ownedMaterials||[])m.dispose();for(const o of d.owned){o.geometry.dispose();o.material.dispose();}
+  g.traverse(o=>{if(o.isSkinnedMesh)skeletons.add(o.skeleton);});for(const s of skeletons)s.dispose();for(const o of d.owned){o.geometry.dispose();o.material.dispose();}
 }
