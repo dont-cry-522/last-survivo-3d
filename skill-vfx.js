@@ -18,14 +18,14 @@ function shadowTexture(){
 export class SkillVFX{
  constructor(scene,{mobile=false}={}){
   this.scene=scene;this.limit=mobile?110:190;this.active=[];this.pool=[];this.materials=new Map();
-  this.flameTexture=flameTexture();this.shadowTexture=shadowTexture();this.geometry={ember:new T.IcosahedronGeometry(1,0),crystal:new T.ConeGeometry(1,2,5),flame:new T.PlaneGeometry(2,2),veil:new T.PlaneGeometry(2,2),smoke:new T.SphereGeometry(1,7,5),ray:new T.BoxGeometry(1,1,1)};
+  this.flameTexture=flameTexture();this.shadowTexture=shadowTexture();this.geometry={waterArc:new T.RingGeometry(.89,1,24,1,Math.PI*.12,Math.PI*.76),ember:new T.IcosahedronGeometry(1,0),crystal:new T.ConeGeometry(1,2,5),flame:new T.PlaneGeometry(2,2),veil:new T.PlaneGeometry(2,2),smoke:new T.SphereGeometry(1,7,5),ray:new T.BoxGeometry(1,1,1)};
  }
  particle(shape,color,x,y,z,{life=.4,size=[.1,.1,.1],velocity=[0,0,0],opacity=.9,additive=true,grow=false,gravity=0,spin=0,orbit=null,priority=0}={}){
   if(this.active.length>=this.limit){let victim=-1,lowest=priority;for(let i=0;i<this.active.length;i++)if(this.active[i].priority<lowest){victim=i;lowest=this.active[i].priority;if(lowest===0)break;}if(victim<0)return null;const old=this.active.splice(victim,1)[0];this.scene.remove(old.mesh);this.pool.push(old.mesh);}
   const mesh=this.pool.pop()||new T.Mesh(this.geometry.ember,new T.MeshBasicMaterial({transparent:true,depthWrite:false,side:T.DoubleSide}));
   mesh.geometry=this.geometry[shape];mesh.material.color.set(color);mesh.material.opacity=opacity;mesh.material.blending=additive?T.AdditiveBlending:T.NormalBlending;
   const map=shape==='flame'?this.flameTexture:shape==='veil'?this.shadowTexture:null;if(mesh.material.map!==map){mesh.material.map=map;mesh.material.needsUpdate=true;}
-  mesh.position.set(x,y,z);mesh.rotation.set(shape==='veil'?-Math.PI/2:0,shape==='flame'?Math.PI/4:0,0);mesh.scale.set(...size);mesh.visible=true;mesh.frustumCulled=false;this.scene.add(mesh);
+  mesh.position.set(x,y,z);mesh.rotation.set(shape==='veil'||shape==='waterArc'?-Math.PI/2:0,shape==='flame'?Math.PI/4:0,0);mesh.scale.set(...size);mesh.visible=true;mesh.frustumCulled=false;this.scene.add(mesh);
   const p={mesh,shape,life,max:life,size,velocity,opacity,grow,gravity,spin,orbit,priority};this.active.push(p);return mesh;
  }
  update(dt){
@@ -39,6 +39,10 @@ export class SkillVFX{
   }this.active.length=n;
  }
  clear(){for(const p of this.active){this.scene.remove(p.mesh);this.pool.push(p.mesh);}this.active.length=0;}
+ water(x,z,angle=0,strength=1){
+  for(const side of [-1,1]){const m=this.particle('waterArc',0xc8f4e5,x,.10,z,{life:.65,size:[.65*strength,.65*strength,1],opacity:.2,additive:false,grow:true,velocity:[Math.sin(angle+side)*.25,0,Math.cos(angle+side)*.25]});if(m)m.rotation.z=-angle+side*1.1;}
+  for(let i=0;i<3;i++){const a=angle+i*2.1;this.particle('ember',0xa1e3e0,x,.14,z,{life:.25,size:[.035,.055,.035],velocity:[Math.sin(a)*strength,.9*strength,Math.cos(a)*strength],gravity:5,opacity:.65,additive:false});}
+ }
  fire(x,z,r=2,large=false){
   this.particle('veil',0xf18b35,x,.08,z,{life:.36,size:[r*.8,r*.66,1],opacity:large?.4:.23,priority:1});
   this.particle('flame',0xffd27c,x,.65,z,{life:.28,size:[r*.24,r*.4,1],opacity:.85,additive:false,grow:true});
