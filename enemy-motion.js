@@ -1,5 +1,6 @@
 // Attack timings are shared with the pose driver so the strike matches its hit.
 export const ENEMY_MOTION={
+ sandworm:{wind:.7,recover:.28,cadence:8,range:2.2},clawbeetle:{wind:.65,recover:.3,cadence:11,range:3.4},sandguard:{wind:1.05,recover:.6,cadence:4,range:2.5},sandspitter:{wind:.8,recover:.4,cadence:4,range:12},duneoracle:{wind:.85,recover:.4,cadence:4,range:12},dunescorpion:{wind:1.1,recover:1.55,cadence:6},
  mushroom:{wind:.42,recover:.18,cadence:8.5,range:1.95},wolf:{wind:.48,recover:.18,cadence:12,range:3},golem:{wind:.95,recover:.48,cadence:4.7,range:2.4},spitter:{wind:.72,recover:.32,cadence:6,range:15},shaman:{wind:.85,recover:.35,cadence:4.8,range:12},
  snowhare:{wind:.40,recover:.22,cadence:10,range:2.1},frostwolf:{wind:.60,recover:.26,cadence:10.6,range:3.1},yeti:{wind:1.08,recover:.55,cadence:4.1,range:2.5},icewitch:{wind:.82,recover:.32,cadence:3.9,range:14},snowtotem:{wind:.95,recover:.40,cadence:3.2,range:12},
  emberling:{wind:.46,recover:.21,cadence:13,range:2},ashstalker:{wind:.66,recover:.33,cadence:9,range:3.5},lavabrute:{wind:1.15,recover:.65,cadence:3.6,range:3.3},cinderwisp:{wind:.68,recover:.28,cadence:6.7,range:14},ashseer:{wind:.92,recover:.42,cadence:5.4,range:12},

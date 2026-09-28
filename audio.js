@@ -1,8 +1,8 @@
-import{weaponSample}from'./weapon-audio.js?v=30';
-import{creatureSample,creatureSpatial,ENEMY_VOICES}from'./enemy-audio.js?v=29';
+import{weaponSample}from'./weapon-audio.js?v=42';
+import{creatureSample,creatureSpatial,ENEMY_VOICES}from'./enemy-audio.js?v=42';
 // Original procedural score and sound design. No external audio downloads.
 const midi=n=>440*2**((n-69)/12);
-const THEMES={
+const THEMES={sand:{bpm:108,root:55,chords:[0,1,5,7],lead:[12,0,13,17,19,0,17,13,12,7,0,12,13,0,19,17,12,0,10,7,8,0,12,13,17,19,0,17,13,12,7,0]},
   forest:{bpm:104,root:57,chords:[0,5,3,7],lead:[12,0,19,17,15,0,12,10,12,15,19,0,22,19,17,0,15,0,12,10,7,10,12,0,15,17,19,15,12,10,7,0]},
   snow:{bpm:90,root:62,chords:[0,3,5,7],lead:[19,0,22,0,24,22,19,0,17,0,15,17,19,0,12,0,15,0,19,0,22,19,17,15,12,0,10,12,15,0,17,0]},
   ash:{bpm:116,root:50,chords:[0,0,5,7],lead:[12,7,12,0,15,12,17,15,12,0,10,7,10,12,15,0,19,17,15,12,17,15,12,10,7,10,12,15,12,0,7,0]}

@@ -1,9 +1,9 @@
-import{weaponGesture,shotStarted}from'./weapon-performance.js?v=30';
-import{rollProgress,rollWeight}from'./dodge-motion.js?v=24';
+import{weaponGesture,shotStarted}from'./weapon-performance.js?v=42';
+import{rollProgress,rollWeight}from'./dodge-motion.js?v=42';
 import * as T from './vendor/three.module.js';
 import {clone} from './vendor/SkeletonUtils.js';
-import {loadCharacterData} from './character-loader.js?v=24';
-import {makeHero as makePrototype} from './hero-model.js?v=30';
+import {loadCharacterData} from './character-loader.js?v=42';
+import {makeHero as makePrototype} from './hero-model.js?v=42';
 
 const templates=new Map(),clips=new Map();
 let loaded=false;

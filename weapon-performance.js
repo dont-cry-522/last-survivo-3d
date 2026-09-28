@@ -1,9 +1,9 @@
 const clamp=x=>Math.max(0,Math.min(1,x));
 const smooth=(a,b,t)=>{const x=clamp((t-a)/(b-a));return x*x*(3-2*x);};
 const pulse=(t,a,b,c)=>smooth(a,b,t)*(1-smooth(b,c,t));
-export const WEAPON_RECOVERY={rifle:.22,shotgun:.48,crossbow:.26,shuriken:.46,fire:.62,dark:.68,shade:.36,shadowblade:.56,grimoire:.72};
+export const WEAPON_RECOVERY={hammer:.7,rifle:.22,shotgun:.48,crossbow:.26,shuriken:.46,fire:.62,dark:.68,shade:.36,shadowblade:.56,grimoire:.72};
 // Cycle fractions also drive the audible mechanism cues, so haste preserves sync.
-export const WEAPON_CUES={rifle:[],shotgun:[.25,.6],crossbow:[.22,.68],shuriken:[.68],fire:[.68],dark:[.68],shade:[],shadowblade:[],grimoire:[.58]};
+export const WEAPON_CUES={hammer:[],rifle:[],shotgun:[.25,.6],crossbow:[.22,.68],shuriken:[.68],fire:[.68],dark:[.68],shade:[],shadowblade:[],grimoire:[.58]};
 export function weaponGesture(id,age,cycle=1,period=1){
   const duration=WEAPON_RECOVERY[id]||.3;
   const t=age/Math.min(duration,Math.max(.12,period*.9));

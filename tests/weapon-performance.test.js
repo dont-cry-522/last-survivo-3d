@@ -4,7 +4,7 @@ import {WEAPONS} from '../rules.js';
 import {weaponSample} from '../weapon-audio.js';
 import {weaponGesture,shotStarted,WEAPON_RECOVERY} from '../weapon-performance.js';
 
-test('nine weapons have finite bounded distinct shot and impact textures with smooth ends',()=>{
+test('all weapons have finite bounded distinct shot and impact textures with smooth ends',()=>{
   for(const event of ['shot','impact']){
     const signatures=new Set();
     for(const id of Object.keys(WEAPONS)){
@@ -14,7 +14,7 @@ test('nine weapons have finite bounded distinct shot and impact textures with sm
       assert(Math.abs(s[0])<.0001);assert(Math.abs(s.at(-1))<.001);
       signatures.add(Array.from(s.slice(20,60)).map(n=>n.toFixed(4)).join(','));
     }
-    assert.equal(signatures.size,9);
+    assert.equal(signatures.size,Object.keys(WEAPONS).length);
   }
 });
 test('weapon follow-throughs settle, remain continuous and compress with attack speed',()=>{

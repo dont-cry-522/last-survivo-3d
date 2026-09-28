@@ -1,15 +1,16 @@
-import{siteSchedule}from'./site-discovery.js?v=41';
-import{MAP_EVENTS,biomeEvent,eventNodes}from'./map-events.js?v=40';
-import{MAP_HALF,MAP_SCALE}from'./map-layout.js?v=38';
-import{buildPonds,animateWater,waterDepth,restoreWaterPose,animateWaterPose}from'./water.js?v=39';
-import{ENEMY_MOTION,animateEnemyIdentity}from'./enemy-motion.js?v=28';
-import{REGIONAL_ENEMIES}from'./map-enemies.js?v=27';
-import{groundCue}from'./ground-cues.js?v=19';
-import{heroesReady,createSkinnedHero,animateSkinnedHero}from'./skinned-hero.js?v=38';
+import{makeBoss,animateBoss,makeGuardian,animateGuardian,makeSandEnemy,animateSandEnemy}from'./expansion-models.js?v=42';
+import{siteSchedule}from'./site-discovery.js?v=42';
+import{MAP_EVENTS,biomeEvent,eventNodes}from'./map-events.js?v=42';
+import{MAP_HALF,MAP_SCALE}from'./map-layout.js?v=42';
+import{buildPonds,animateWater,waterDepth,restoreWaterPose,animateWaterPose}from'./water.js?v=42';
+import{ENEMY_MOTION,animateEnemyIdentity}from'./enemy-motion.js?v=42';
+import{REGIONAL_ENEMIES}from'./map-enemies.js?v=42';
+import{groundCue}from'./ground-cues.js?v=42';
+import{heroesReady,createSkinnedHero,animateSkinnedHero}from'./skinned-hero.js?v=42';
 import * as T from './vendor/three.module.js';
-import{makeHero,animateHero}from'./hero-model.js?v=30';
-import{makeWraith,animateWraith}from'./wraith-model.js?v=30';
-import{MAPS,seeded}from'./rules.js?v=18';
+import{makeHero,animateHero}from'./hero-model.js?v=42';
+import{makeWraith,animateWraith}from'./wraith-model.js?v=42';
+import{MAPS,seeded}from'./rules.js?v=42';
 const geo=new Map(),materials=new Map(),terrainMaterials=new Map(),detailMaterials=new Map(),weatherMaterials=new Map();
 function geometry(kind,args){const key=kind+args.join(',');if(!geo.has(key))geo.set(key,new T[kind](...args));return geo.get(key);}
 export function mat(color,glow=false){const key=color+':'+glow;if(!materials.has(key))materials.set(key,new T.MeshStandardMaterial({color,roughness:glow?.35:.86,metalness:glow?.25:.08,emissive:glow?color:0,emissiveIntensity:glow?.9:0,flatShading:true}));return materials.get(key);}
@@ -19,6 +20,9 @@ const orb=(p,c,x,y,z,r,glow=false)=>mesh('SphereGeometry',[r,10,7],c,x,y,z,p,glo
 const cone=(p,c,x,y,z,r,h)=>mesh('ConeGeometry',[r,h,7],c,x,y,z,p);
 function detailMaterial(color,opacity,vertexColors=false){const key=color+':'+opacity+':'+vertexColors;if(!detailMaterials.has(key))detailMaterials.set(key,new T.MeshStandardMaterial({color,transparent:true,opacity,vertexColors,roughness:1,depthWrite:false,side:T.DoubleSide}));return detailMaterials.get(key);}
 export function actor(kind='silver',weapon='crossbow'){
+ if(['boss','frostking','cinderlord','dunescorpion'].includes(kind))return makeBoss(kind);
+ if(kind==='guardian')return makeGuardian();
+ if(REGIONAL_ENEMIES[kind]?.map==='sand')return makeSandEnemy(kind);
  if(REGIONAL_ENEMIES[kind])return regionalActor(kind);
  const g=new T.Group(),rig=new T.Group();g.add(rig);g.userData.rig=rig;
  if(kind==='wraith')return makeWraith(weapon);
@@ -73,6 +77,7 @@ function regionalActor(id){
  return g;
 }
 export function animateActor(g,t,speed=0,attack=0,hurt=0){
+ const special=g.userData;if(special.bossModel||special.guardian||special.sandModel){const dt=special.lastTime===undefined?1/60:Math.max(0,Math.min(.05,t-special.lastTime));special.lastTime=t;if(special.bossModel)animateBoss(g,t,speed,dt);else if(special.guardian){restoreWaterPose(g);animateGuardian(g,t,speed,dt);animateWaterPose(g,t,speed);}else animateSandEnemy(g,t,speed,attack,dt);return;}
  restoreWaterPose(g);const d=g.userData,landSpeed=speed*(1-.9*T.MathUtils.smoothstep(d.waterBlend??d.waterDepth??0,.42,.85));if(d.wraith){animateWraith(g,t,landSpeed,attack,hurt);animateWaterPose(g,t,speed);return;}if(d.skinned){animateSkinnedHero(g,t,landSpeed,attack,hurt);animateWaterPose(g,t,speed);return;}if(d.leftKnee){animateHero(g,t,landSpeed,attack);animateWaterPose(g,t,speed);return;}
  if(d.satellites){d.satellites.rotation.y=t*.9;d.satellites.position.y=Math.sin(t*3)*.08;}
  const dt=d.lastTime===undefined?1/60:Math.max(0,Math.min(.05,t-d.lastTime));d.lastTime=t;
@@ -118,7 +123,7 @@ function groundTexture(id,theme){
 }
 function groundShape(cx,cz,r,rnd,color,segments=24){const points=[0,.014,0],colors=[1,1,1,.68],indices=[];for(let i=0;i<segments;i++){const a=i/segments*Math.PI*2,rad=r*(.87+rnd()*.2);points.push(Math.cos(a)*rad,.014,Math.sin(a)*rad);colors.push(1,1,1,0);if(i)indices.push(0,i,i+1);}indices.push(0,segments,1);const geo=new T.BufferGeometry();geo.setAttribute('position',new T.Float32BufferAttribute(points,3));geo.setAttribute('color',new T.Float32BufferAttribute(colors,4));geo.setIndex(indices);geo.computeVertexNormals();const g=new T.Mesh(geo,detailMaterial(color,1,true));g.userData.ownedGeometry=true;g.position.set(cx,0,cz);g.receiveShadow=true;return g;}
 function trail(group,spawn,site,id,rnd){
- const n=30,verts=[],colors=[],indices=[],shade=id==='snow'?0xb7d0cc:id==='ash'?0x795c52:0x6b8065;
+ const n=30,verts=[],colors=[],indices=[],shade=id==='snow'?0xb7d0cc:id==='ash'?0x795c52:id==='sand'?0xd2be94:0x6b8065;
  for(let i=0;i<=n;i++){const f=i/n,curve=Math.sin(f*Math.PI)*4,x=spawn.x+(site.x-spawn.x)*f+curve,z=spawn.z+(site.z-spawn.z)*f,dx=(site.x-spawn.x)+4*Math.PI*Math.cos(f*Math.PI),dz=site.z-spawn.z,l=Math.hypot(dx,dz),w=(1.75+Math.sin(f*19)*.15)*(i===0||i===n?.85:1);
   const sideX=-dz/l,sideZ=dx/l;for(const [sign,alpha] of [[-1.5,0],[-.72,.24],[.72,.24],[1.5,0]]){const rag=(rnd()-.5)*.12;verts.push(x+sideX*(sign*w+rag),.008,z+sideZ*(sign*w+rag));colors.push(1,1,1,alpha);}
   if(i<n)for(let strip=0;strip<3;strip++){const a=i*4+strip;indices.push(a,a+4,a+1,a+1,a+4,a+5);}
@@ -135,11 +140,12 @@ function placeWeatherParticle(weather,p,x,z,initial=false){
  p.life=(weather.kind==='ash'?2:4)+random()*(weather.kind==='forest'?7:4);
  p.vx=weather.kind==='snow'?-1.1-random()*.8:weather.kind==='ash'?.15+random()*.55:(random()-.5)*.45;
  p.vz=weather.kind==='snow'?(random()-.5)*.6:weather.kind==='ash'?(random()-.5)*.4:(random()-.5)*.45;
- p.vy=weather.kind==='snow'?-1-random()*.6:weather.kind==='ash'?.65+random()*.5:(random()-.5)*.2;
+ if(weather.kind==='sand'){p.vx=1.2+random();p.vz=.2;p.y=.35+random()*1.5;}
+ p.vy=weather.kind==='snow'?-1-random()*.6:weather.kind==='ash'?.65+random()*.5:weather.kind==='sand'?.04:(random()-.5)*.2;
 }
 function makeWeather(id,rnd,group,spawn){
- const count=id==='snow'?72:id==='ash'?54:42,colors=id==='snow'?[0xf5ffff,0xc9eafa,0xffffff]:id==='ash'?[0xffaa60,0xf7d39a,0xcb6e51]:[0xffe9a0,0xc5ef9c,0x95dcc1];
- if(!weatherMaterials.has(id))weatherMaterials.set(id,new T.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:id==='forest'?.72:.82,depthWrite:false,blending:id==='snow'?T.NormalBlending:T.AdditiveBlending}));
+ const count=id==='snow'?72:id==='ash'?54:42,colors=id==='snow'?[0xf5ffff,0xc9eafa,0xffffff]:id==='ash'?[0xffaa60,0xf7d39a,0xcb6e51]:id==='sand'?[0xdac699,0xc0ac7f,0xe1d4af]:[0xffe9a0,0xc5ef9c,0x95dcc1];
+ if(!weatherMaterials.has(id))weatherMaterials.set(id,new T.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:id==='forest'?.72:.82,depthWrite:false,blending:['snow','sand'].includes(id)?T.NormalBlending:T.AdditiveBlending}));
  const material=weatherMaterials.get(id);
  const cloud=new T.InstancedMesh(geometry('DodecahedronGeometry',[id==='snow'?.115:id==='forest'?.085:.075,0]),material,count);
  cloud.castShadow=false;cloud.receiveShadow=false;cloud.frustumCulled=false;cloud.instanceMatrix.setUsage(T.DynamicDrawUsage);
@@ -158,30 +164,33 @@ export function buildWorld(id,seed=1){const theme=MAPS[id],rnd=seeded(seed),grou
  const ground=mesh('PlaneGeometry',[(MAP_HALF+8)*2,(MAP_HALF+8)*2],theme.ground,0,-.03,0,group);ground.rotation.x=-Math.PI/2;
  if(!terrainMaterials.has(id))terrainMaterials.set(id,new T.MeshStandardMaterial({map:groundTexture(id,theme),roughness:1}));ground.material=terrainMaterials.get(id);
 
- const ponds=buildPonds(group,id,rnd,spawn,sites);patches.push(...ponds);const inWater=(x,z)=>ponds.some(p=>waterDepth(p,x,z)>0);
+ const ponds=id==='sand'?[]:buildPonds(group,id,rnd,spawn,sites);patches.push(...ponds);const inWater=(x,z)=>ponds.some(p=>waterDepth(p,x,z)>0);
  // Soft irregular paths and terrain islands give the forest a readable floor.
  for(const site of sites){site.trail=trail(group,spawn,site,id,rnd);site.trail.visible=site.type==='relic';}
- for(let i=0;i<24;i++){const x=(rnd()-.5)*106*MAP_SCALE,z=(rnd()-.5)*106*MAP_SCALE,r=2+rnd()*3;if(Math.hypot(x-spawn.x,z-spawn.z)<9)continue;const kind=id==='ash'&&i%3===0&&!sites.some(s=>Math.hypot(x-s.x,z-s.z)<(s.event?9:7))?'vent':'slow',patch={x,z,r,kind,phase:rnd()*4};patches.push(patch);group.add(groundShape(x,z,r,rnd,id==='snow'?0xc1d6d9:id==='ash'?kind==='vent'?0xb55438:0x8b6255:0x2b4640));if(kind==='vent'){const marker=groundCue(0xffa45f,r);marker.position.set(x,.09,z);group.add(marker);marker.visible=false;patch.marker=marker;}}
+ for(let i=0;i<24;i++){const x=(rnd()-.5)*106*MAP_SCALE,z=(rnd()-.5)*106*MAP_SCALE,r=2+rnd()*3;if(Math.hypot(x-spawn.x,z-spawn.z)<9)continue;const kind=id==='ash'&&i%3===0&&!sites.some(s=>Math.hypot(x-s.x,z-s.z)<(s.event?9:7))?'vent':'slow',patch={x,z,r,kind,phase:rnd()*4};patches.push(patch);group.add(groundShape(x,z,r,rnd,id==='snow'?0xc1d6d9:id==='ash'?kind==='vent'?0xb55438:0x8b6255:id==='sand'?0x938366:0x2b4640));if(kind==='vent'){const marker=groundCue(0xffa45f,r);marker.position.set(x,.09,z);group.add(marker);marker.visible=false;patch.marker=marker;}}
  for(let i=0;i<270;i++){const x=(rnd()-.5)*118*MAP_SCALE,z=(rnd()-.5)*118*MAP_SCALE;if(ponds.some(p=>Math.hypot(x-p.x,z-p.z)<p.r+1)||Math.hypot(x-spawn.x,z-spawn.z)<7||Math.hypot(x,z)<7||sites.some(s=>Math.hypot(x-s.x,z-s.z)<(s.event?9:7))||patches.some(p=>p.kind==='vent'&&Math.hypot(x-p.x,z-p.z)<p.r+1.05)||Math.abs(x-z)<3||Math.abs(x+z)<3)continue;const tall=2.5+rnd()*3.5,tree=new T.Group();tree.position.set(x,0,z);group.add(tree);obstacles.push({x,z,r:.65,mesh:tree});
-  if(id==='ash'){const stone=mesh('DodecahedronGeometry',[1.2,0],0x66565c,0,tall*.38,0,tree);stone.scale.multiply(new T.Vector3(.7,tall*.55,.8));cone(tree,0xeaa169,0,tall*.8,0,.24,.85);}
+  if(id==='sand'){const h=1+rnd()*2.3;mesh('CylinderGeometry',[.56,.68,h,8],0x9c947f,0,h/2,0,tree);box(tree,0xc2b89b,0,h+.12,0,1.3,.24,1.3);if(i%3===0)box(tree,0x7e7968,0,h*.5,.3,.75,.12,.08);}
+  else if(id==='ash'){const stone=mesh('DodecahedronGeometry',[1.2,0],0x66565c,0,tall*.38,0,tree);stone.scale.multiply(new T.Vector3(.7,tall*.55,.8));cone(tree,0xeaa169,0,tall*.8,0,.24,.85);}
   else{const bend=(rnd()-.5)*.18,variation=.78+rnd()*.38;const trunk=mesh('CylinderGeometry',[.17,.38,tall,8],id==='snow'?0x697879:0x675a46,bend*tall*.18,tall/2,0,tree);trunk.rotation.z=-bend*.18;for(let j=0;j<3;j++){const a=j*2.27+rnd()*.55,off=id==='snow'?0:.46+j*.13,r=(1.62-j*.18)*variation,leaf=mesh(id==='snow'?'ConeGeometry':'DodecahedronGeometry',id==='snow'?[1,1,10]:[r,1],id==='snow'?[0x688c91,0x94b0ad,0xd7e4df][j]:[theme.leaf,0x37765c,0x5d9174][j],bend+Math.sin(a)*off,tall-.85+j*.65,id==='snow'?0:Math.cos(a)*off,tree);leaf.rotation.y=a;if(id==='snow')leaf.scale.set(r,2.15,r);else{leaf.scale.set(1,.62+rnd()*.13,.85+rnd()*.2);leaf.rotation.z=(rnd()-.5)*.18;}}for(let j=0;j<3;j++){const a=j*2.1+.4,branch=mesh('CylinderGeometry',[.055,.11,1.25,5],id==='snow'?0x849395:0x70634d,Math.cos(a)*.46,tall*.57,Math.sin(a)*.46,tree);branch.rotation.z=Math.cos(a)*.78;branch.rotation.x=-Math.sin(a)*.78;}}
  }
- const foliage=[];if(id!=='ash')for(const o of obstacles)for(const leaf of o.mesh.children)if(leaf.geometry?.type===(id==='snow'?'ConeGeometry':'DodecahedronGeometry'))foliage.push({leaf,x:leaf.position.x,z:leaf.position.z,phase:o.x*.17+o.z*.13});
- const grassGeo=geometry('ConeGeometry',[.1,.45,3]),grass=new T.InstancedMesh(grassGeo,mat(id==='snow'?0xe0e9db:id==='ash'?0x977566:0x85a06a),1200),dummy=new T.Object3D();for(let i=0;i<1200;i++){dummy.position.set((rnd()-.5)*125*MAP_SCALE,.15,(rnd()-.5)*125*MAP_SCALE);dummy.scale.setScalar(inWater(dummy.position.x,dummy.position.z)?0:.6+rnd());dummy.rotation.y=rnd()*6;dummy.updateMatrix();grass.setMatrixAt(i,dummy.matrix);}group.add(grass);
+ const foliage=[];if(id!=='ash'&&id!=='sand')for(const o of obstacles)for(const leaf of o.mesh.children)if(leaf.geometry?.type===(id==='snow'?'ConeGeometry':'DodecahedronGeometry'))foliage.push({leaf,x:leaf.position.x,z:leaf.position.z,phase:o.x*.17+o.z*.13});
+ const grassGeo=geometry('ConeGeometry',[.1,.45,3]),grass=new T.InstancedMesh(grassGeo,mat(id==='snow'?0xe0e9db:id==='ash'?0x977566:id==='sand'?0xa28e66:0x85a06a),1200),dummy=new T.Object3D();for(let i=0;i<1200;i++){dummy.position.set((rnd()-.5)*125*MAP_SCALE,.15,(rnd()-.5)*125*MAP_SCALE);dummy.scale.setScalar(inWater(dummy.position.x,dummy.position.z)?0:.6+rnd());dummy.rotation.y=rnd()*6;dummy.updateMatrix();grass.setMatrixAt(i,dummy.matrix);}group.add(grass);
  // Small clustered floor details add texture without hundreds of draw calls.
- const fleckGeo=geometry('PlaneGeometry',[.27,.11]),fleckMat=detailMaterial(id==='snow'?0xd8edf0:id==='ash'?0xba7760:0xa2a76d,1),flecks=new T.InstancedMesh(fleckGeo,fleckMat,1800);
+ const fleckGeo=geometry('PlaneGeometry',[.27,.11]),fleckMat=detailMaterial(id==='snow'?0xd8edf0:id==='ash'?0xba7760:id==='sand'?0xc9b894:0xa2a76d,1),flecks=new T.InstancedMesh(fleckGeo,fleckMat,1800);
  for(let i=0;i<1800;i++){dummy.position.set((rnd()-.5)*124*MAP_SCALE,.027,(rnd()-.5)*124*MAP_SCALE);dummy.rotation.set(-Math.PI/2,rnd()*6.28,0);dummy.scale.setScalar(.45+rnd()*1.4);if(inWater(dummy.position.x,dummy.position.z))dummy.scale.setScalar(0);dummy.updateMatrix();flecks.setMatrixAt(i,dummy.matrix);}flecks.instanceMatrix.needsUpdate=true;group.add(flecks);
- const shrubs=new T.InstancedMesh(geometry('DodecahedronGeometry',[1,0]),mat(0xffffff),880),shrubPalette=id==='forest'?[0x315e49,0x4a7a59,0x698663]:id==='snow'?[0xb4d0d0,0x86a9a8,0xd3e1dd]:[0x624e49,0x795951,0x8b6b59];
+ const shrubs=new T.InstancedMesh(geometry('DodecahedronGeometry',[1,0]),mat(0xffffff),880),shrubPalette=id==='forest'?[0x315e49,0x4a7a59,0x698663]:id==='snow'?[0xb4d0d0,0x86a9a8,0xd3e1dd]:id==='sand'?[0x9b8a66,0xaaa080,0xc2b190]:[0x624e49,0x795951,0x8b6b59];
  for(let i=0;i<880;i++){const x=(rnd()-.5)*120*MAP_SCALE,z=(rnd()-.5)*120*MAP_SCALE;dummy.position.set(x,.24,z);dummy.rotation.set(0,rnd()*6.28,0);const size=.25+rnd()*.35;dummy.scale.set(size,.24+rnd()*.22,size*(.75+rnd()*.4));if(inWater(x,z))dummy.scale.setScalar(0);dummy.updateMatrix();shrubs.setMatrixAt(i,dummy.matrix);shrubs.setColorAt(i,new T.Color(shrubPalette[Math.floor(rnd()*shrubPalette.length)]));}shrubs.instanceMatrix.needsUpdate=true;shrubs.instanceColor.needsUpdate=true;shrubs.receiveShadow=true;group.add(shrubs);
- for(let i=0;i<65;i++){const x=(rnd()-.5)*124*MAP_SCALE,z=(rnd()-.5)*124*MAP_SCALE;if(inWater(x,z))continue;const rock=mesh('DodecahedronGeometry',[.3+rnd()*.5,0],id==='snow'?0xbad0ce:0x8b9376,x,.2,z,group);rock.scale.y*=.6;}
+ for(let i=0;i<65;i++){const x=(rnd()-.5)*124*MAP_SCALE,z=(rnd()-.5)*124*MAP_SCALE;if(inWater(x,z))continue;const rock=mesh('DodecahedronGeometry',[.3+rnd()*.5,0],id==='snow'?0xbad0ce:id==='sand'?0xb9aa87:0x8b9376,x,.2,z,group);rock.scale.y*=.6;}
  for(const site of sites){const g=new T.Group();g.position.set(site.x,0,site.z);group.add(g);g.visible=false;site.mesh=g;const base=mesh('CylinderGeometry',[2,2.3,.25,8],0x68796b,0,.12,0,g);if(site.type==='relic'){for(let i=0;i<3;i++){const a=i*Math.PI*2/3;const prong=mesh('ConeGeometry',[.28,1.5,5],0xb19a65,Math.sin(a)*1.15,.8,Math.cos(a)*1.15,g);prong.rotation.z=Math.sin(a)*.2;}site.crystal=mesh('OctahedronGeometry',[.8],0xffd572,0,1.1,0,g,true);box(g,0xd9ba78,0,.35,0,1.3,.3,1.3);}else if(site.type==='altar'){for(const side of [-1,1])box(g,0x8d9b88,side*1.3,1.1,0,.42,2.2,.5);box(g,0xabb398,0,2.35,0,3.2,.4,.7);const crystal=mesh('OctahedronGeometry',[.65],theme.accent,0,1.1,0,g,true);site.crystal=crystal;}else{box(g,0x99724c,0,.62,0,1.4,.8,.9);box(g,0xd6b571,0,1.04,0,1.5,.18,1);box(g,0xebd595,0,.72,.48,.18,.45,.07);}const ring=groundCue(theme.accent,2,'glow',.2);ring.position.set(0,.28,0);g.add(ring);site.ring=ring;
   if(site.event){const color=MAP_EVENTS[site.event].color;site.eventGlow=mesh('OctahedronGeometry',[.3],color,0,2.8,0,g,true);
+   if(site.event==='mechanism'){const wheel=mesh('TorusGeometry',[.65,.12,6,14],0xb19761,0,1.2,.55,g);site.wheel=wheel;box(g,0xa2987b,0,.7,0,1.3,1.2,.7);}
    if(site.event==='purify'){for(let j=0;j<5;j++){const a=j*1.26;const root=mesh('CapsuleGeometry',[.12,1.6,3,5],0x507953,Math.sin(a)*1.2,.65,Math.cos(a)*1.2,g);root.rotation.z=Math.sin(a)*.5;orb(g,0x8fbd7c,Math.sin(a)*.8,1.6,Math.cos(a)*.8,.25);}}
    if(site.event==='beacons'){site.nodes=eventNodes(site.x,site.z,site.eventAngle);for(const n of site.nodes){mesh('CylinderGeometry',[.4,.55,.18,6],0x708c97,n.x-site.x,.1,n.z-site.z,g);n.mesh=mesh('OctahedronGeometry',[.5],0x4b778a,n.x-site.x,.75,n.z-site.z,g);n.mesh.scale.y=1.7;}}
    if(site.event==='forge'){for(let j=0;j<4;j++){const a=j*Math.PI/2;const pipe=mesh('CylinderGeometry',[.3,.4,.85,6],0x796253,Math.sin(a)*1.9,.45,Math.cos(a)*1.9,g);pipe.rotation.z=Math.sin(a)*.3;}site.furnace=mesh('SphereGeometry',[.65,8,6],0xff9c50,0,.55,0,g,true);}
    if(site.event==='ambush')for(const side of [-1,1]){mesh('CylinderGeometry',[.07,.1,2.3,5],0x76624e,side*1.9,1.15,0,g);const banner=box(g,0x9d5d4b,side*1.9,1.75,0,.6,.65,.06);banner.rotation.z=side*.1;}
   }
  }
+ if(id==='sand'){const s=sites[0],a=Math.atan2(s.x-spawn.x,s.z-spawn.z);s.gates=[];for(let i=-1;i<=1;i++){const x=s.x-Math.sin(a)*11+Math.cos(a)*i*1.75,z=s.z-Math.cos(a)*11-Math.sin(a)*i*1.75,g=new T.Group();g.position.set(x,0,z);box(g,0x847f6b,0,1.25,0,1.7,2.5,.8);g.rotation.y=a;group.add(g);const gate={x,z,r:.95,mesh:g};obstacles.push(gate);s.gates.push(gate);}}
  for(let i=0;i<12;i++){const a=i*Math.PI/6;const stone=mesh('BoxGeometry',[1.1,2.8,.85],0x819586,Math.cos(a)*6.5,1.4,Math.sin(a)*6.5,group);stone.rotation.y=-a;}
  const campX=spawn.x-2.5,campZ=spawn.z+1.5,fire=new T.Group();fire.position.set(campX,.18,campZ);group.add(fire);
  const flame=cone(fire,0xff8d42,0,.41,0,.19,.85);flame.material=mat(0xff8d42,true);const core=cone(fire,0xffd188,0,.42,.01,.09,.53);core.material=mat(0xffd188,true);

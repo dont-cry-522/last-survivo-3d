@@ -1,0 +1,51 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {BOSS_STYLES,bossAttackPlan,tickBoss} from '../boss-combat.js';
+import {actor,animateActor,buildWorld,clearAt} from '../world.js';
+import {inMeleeArc,canParry} from '../melee.js';
+import {createMapEvent,advanceMapEvent} from '../map-events.js';
+import {recordVictory,readJournal,writeJournal} from '../expedition.js';
+import {weaponStats,takeUpgrade,chooseUpgrades,HERO_LOADOUTS} from '../rules.js';
+globalThis.document={createElement:()=>({width:256,height:256,getContext:()=>({fillRect(){}})})};
+const transforms=m=>{const a=[];m.traverse(o=>a.push(...o.position.toArray(),o.rotation.x,o.rotation.y,o.rotation.z,...o.scale.toArray()));return a;};
+test('four bosses finish every distinct move, lock targets, and expose a recovery window at all frame rates',()=>{
+ for(const fps of [30,60,120])for(const[kind,style]of Object.entries(BOSS_STYLES)){
+  const b={kind,mesh:actor(kind),x:0,z:0,hp:2000,maxHp:2000,phase:1,turn:0},p={x:1,z:8},zones=[],stages=new Set(),moves=new Set();
+  const io={move:(b,x,z)=>{b.x+=x;b.z+=z;},visible:()=>true,landing:p=>({...p}),zone:z=>zones.push({...z}),sound(){},notice(){}};
+  let previous=null,maxJump=0;
+  for(let i=0;i<fps*32;i++){
+   const speed=tickBoss(b,p,1/fps,io);animateActor(b.mesh,i/fps,speed);const pose=transforms(b.mesh);assert(pose.every(Number.isFinite));
+   if(previous)maxJump=Math.max(maxJump,...pose.map((v,j)=>Math.abs(v-previous[j])));previous=pose;
+   stages.add(b.stage);if(b.move)moves.add(b.move);
+   if(b.stage==='wind'){const before=JSON.stringify(zones);p.x+=.002;assert.equal(JSON.stringify(zones),before);}
+  }
+  assert.deepEqual([...moves].sort(),[...style.moves].sort());for(const stage of ['walk','wind','strike','recover'])assert(stages.has(stage));
+  assert(maxJump<.7,`${kind} ${fps} FPS joint jump ${maxJump}`);assert(zones.every(z=>z.delay>=1&&z.damage>0));
+ }
+});
+test('boss threat patterns have guaranteed escape space and different silhouettes',()=>{
+ const b={x:0,z:0,phase:1},p={x:0,z:8};
+ const furnace=bossAttackPlan('cinderlord','furnace',b,p);assert(furnace.zones.every(z=>Math.abs(z.x)>z.r+.4));
+ const shapes=new Set();for(const kind of Object.keys(BOSS_STYLES))shapes.add(transforms(actor(kind)).join(','));assert.equal(shapes.size,4);
+ for(const[kind,cfg]of Object.entries(BOSS_STYLES))for(const move of cfg.moves){const plan=bossAttackPlan(kind,move,b,p);assert(plan.duration>0);assert(plan.zones.length<=9);}
+});
+test('hammer hits a short front cone; shield only parries the opening frontal window',()=>{
+ const p={x:0,z:0,heroId:'guardian',dashTime:.3,dashAngle:0};assert(inMeleeArc(p,{x:0,z:2},0,3));assert(!inMeleeArc(p,{x:0,z:-2},0,3));assert(!inMeleeArc(p,{x:0,z:5},0,3));
+ assert(canParry(p,0,2));assert(!canParry(p,0,-2));assert(!canParry({...p,dashTime:.05},0,2));assert(!canParry({...p,heroId:'scout'},0,2));
+ const player={heroId:'guardian',weaponId:'hammer',level:8,upgrades:{}};assert.deepEqual(HERO_LOADOUTS.guardian,['hammer']);
+ assert(!chooseUpgrades(player).some(s=>['fire','ice','storm','veil'].includes(s.id)));takeUpgrade(player,'path:hammer_guard');assert(weaponStats(player).guardWindow>0);assert(!takeUpgrade(player,'path:hammer_break'));
+});
+test('new guardian windup, strike and return remain smooth during haste and locomotion',()=>{
+ for(const fps of [30,60,120])for(const duration of [.48,.77]){const g=actor('guardian');let prev=null,max=0;g.userData.shotSerial=1;for(let i=0;i<fps*3;i++){g.userData.reloadPhase=Math.min(1,i/fps/duration);animateActor(g,i/fps,4);const pose=transforms(g);if(prev)max=Math.max(max,...pose.map((v,j)=>Math.abs(v-prev[j])));prev=pose;}assert(max<.65,'guardian jumps '+max);}
+});
+test('guardian water pose blends out without accumulating joint offsets',()=>{const g=actor('guardian');g.userData.waterDepth=1;for(let i=0;i<180;i++)animateActor(g,i/60,2);assert(g.userData.waterBlend>.95);assert(g.userData.waterPose.length>0);assert(transforms(g).every(Number.isFinite));g.userData.waterDepth=0;for(let i=180;i<360;i++)animateActor(g,i/60,0);assert(g.userData.waterBlend<.01);assert(Math.abs(g.userData.rig.position.y)<.02);});
+test('desert generates dry terrain, visible destructible gate and accessible landmarks',()=>{
+ for(let seed=1;seed<21;seed++){const w=buildWorld('sand',seed);assert.equal(w.ponds.length,0);assert.equal(w.sites[0].event,'mechanism');assert.equal(w.sites[0].gates.length,3);assert(clearAt(w,w.spawn.x,w.spawn.z,1));for(const s of w.sites)assert(clearAt(w,s.x,s.z,3));assert(w.weather.particles.every(p=>p.vx>0&&p.y>0));w.group.traverse(o=>{if(o.isInstancedMesh)o.dispose();});}
+});
+test('ruins choice cannot grant both outcomes or repeat the first wave',()=>{
+ const e=createMapEvent('mechanism'),ctx={near:true,guards:0};assert.equal(advanceMapEvent(e,.1,ctx).wave,1);assert(advanceMapEvent(e,.1,ctx).choice);assert(!advanceMapEvent(e,.1,ctx).choice);assert(!e.done);
+ e.choice='treasure';assert.equal(advanceMapEvent(e,.1,ctx).wave,2);assert(!advanceMapEvent(e,.1,{...ctx,guards:1}).complete);assert(advanceMapEvent(e,.1,ctx).complete);assert(!advanceMapEvent(e,.1,ctx).complete);
+});
+test('new victory marks preserve existing journal entries',()=>{
+ let raw=JSON.stringify({wins:['forest:crossbow'],relics:['wind']}),storage={getItem:()=>raw,setItem:(_,v)=>raw=v};const j=readJournal(storage);assert(recordVictory(j,'sand','hammer'));assert(writeJournal(storage,j));assert.deepEqual(readJournal(storage).wins,['forest:crossbow','sand:hammer']);
+});

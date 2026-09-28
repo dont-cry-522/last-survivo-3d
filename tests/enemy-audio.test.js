@@ -16,7 +16,7 @@ test('every biome creature has audible, finite, bounded and distinct foley for a
       assert(Math.abs(data[0])<.001&&Math.abs(data.at(-1))<.001,'no abrupt sample boundary');
       signatures.add(Array.from(data.slice(100,140)).map(v=>v.toFixed(5)).join(','));
     }
-    assert.equal(signatures.size,18,event+' should retain species identity');
+    assert.equal(signatures.size,kinds.length,event+' should retain species identity');
   }
 });
 

@@ -1,6 +1,12 @@
 // Original creature foley: textured samples, cached per species/event by GameAudio.
 // Texture, articulation and timing distinguish creatures, not just oscillator pitch.
 export const ENEMY_VOICES = {
+ sandworm:{texture:'wet',pitch:110,grain:34,length:.9,color:0xcbb98b,shape:'smoke'},
+ clawbeetle:{texture:'wood',pitch:195,grain:54,length:.8,color:0xd2bd8b,shape:'crystal'},
+ sandguard:{texture:'stone',pitch:70,grain:32,length:1.2,color:0xc3b698,shape:'crystal'},
+ sandspitter:{texture:'hiss',pitch:190,grain:52,length:1.1,color:0xd3bb86,shape:'smoke'},
+ duneoracle:{texture:'hiss',pitch:88,grain:17,length:1.2,color:0xcbb0dd,shape:'smoke'},
+ dunescorpion:{texture:'wood',pitch:35,grain:42,length:1.7,color:0xc6aa73,shape:'crystal'},
   mushroom:  {texture:'wet',   pitch:175, grain:23,  length:.82, color:0xc9d589, shape:'smoke'},
   wolf:      {texture:'growl', pitch:105, grain:31,  length:1,   color:0x9caa9b, shape:'smoke'},
   golem:     {texture:'stone', pitch:58,  grain:17,  length:1.1, color:0xb5a68a, shape:'crystal'},
