@@ -1,8 +1,9 @@
-import{buildPonds,animateWater,waterDepth,restoreWaterPose,animateWaterPose}from'./water.js?v=37';
+import{MAP_HALF,MAP_SCALE}from'./map-layout.js?v=38';
+import{buildPonds,animateWater,waterDepth,restoreWaterPose,animateWaterPose}from'./water.js?v=38';
 import{ENEMY_MOTION,animateEnemyIdentity}from'./enemy-motion.js?v=28';
 import{REGIONAL_ENEMIES}from'./map-enemies.js?v=27';
 import{groundCue}from'./ground-cues.js?v=19';
-import{heroesReady,createSkinnedHero,animateSkinnedHero}from'./skinned-hero.js?v=37';
+import{heroesReady,createSkinnedHero,animateSkinnedHero}from'./skinned-hero.js?v=38';
 import * as T from './vendor/three.module.js';
 import{makeHero,animateHero}from'./hero-model.js?v=30';
 import{makeWraith,animateWraith}from'./wraith-model.js?v=30';
@@ -70,7 +71,7 @@ function regionalActor(id){
  return g;
 }
 export function animateActor(g,t,speed=0,attack=0,hurt=0){
- restoreWaterPose(g);const d=g.userData,landSpeed=speed*(1-.9*T.MathUtils.smoothstep(d.waterBlend??d.waterDepth??0,.42,.85));if(d.wraith){animateWraith(g,t,landSpeed,attack,hurt);animateWaterPose(g,t,speed);return;}if(d.skinned){animateSkinnedHero(g,t,landSpeed,attack,hurt);animateWaterPose(g,t,speed);return;}if(d.leftKnee){animateHero(g,t,landSpeed,attack);animateWaterPose(g,t,speed);return;}
+ restoreWaterPose(g);const d=g.userData,landSpeed=speed*(1-.35*(d.waterBlend??d.waterDepth??0));if(d.wraith){animateWraith(g,t,landSpeed,attack,hurt);animateWaterPose(g,t,speed);return;}if(d.skinned){animateSkinnedHero(g,t,landSpeed,attack,hurt);animateWaterPose(g,t,speed);return;}if(d.leftKnee){animateHero(g,t,landSpeed,attack);animateWaterPose(g,t,speed);return;}
  if(d.satellites){d.satellites.rotation.y=t*.9;d.satellites.position.y=Math.sin(t*3)*.08;}
  const dt=d.lastTime===undefined?1/60:Math.max(0,Math.min(.05,t-d.lastTime));d.lastTime=t;
  d.stride=(d.stride||0)+(Math.min(1,speed/2.5)-(d.stride||0))*(1-Math.exp(-dt*14));
@@ -111,7 +112,7 @@ function groundTexture(id,theme){
   for(let y=0;y<512;y++)for(let x=0;x<512;x++){const n=sample(lattices[0],x,y)*.46+sample(lattices[1],x,y)*.27+sample(lattices[2],x,y)*.16+sample(lattices[3],x,y)*.11;const fleck=(noise()-.5)*5,shade=n*(id==='snow'?28:21),i=(y*512+x)*4;for(let k=0;k<3;k++)pixels[i+k]=Math.max(0,Math.min(255,rgb[k]+shade+fleck));pixels[i+3]=255;}
   c.putImageData(data,0,0);
  }else{c.fillStyle='#'+theme.ground.toString(16).padStart(6,'0');c.fillRect(0,0,512,512);}
- const texture=new T.CanvasTexture(canvas);texture.wrapS=texture.wrapT=T.RepeatWrapping;texture.repeat.set(8,8);texture.colorSpace=T.SRGBColorSpace;texture.anisotropy=4;return texture;
+ const texture=new T.CanvasTexture(canvas);texture.wrapS=texture.wrapT=T.RepeatWrapping;texture.repeat.set(8*MAP_SCALE,8*MAP_SCALE);texture.colorSpace=T.SRGBColorSpace;texture.anisotropy=4;return texture;
 }
 function groundShape(cx,cz,r,rnd,color,segments=24){const points=[0,.014,0],colors=[1,1,1,.68],indices=[];for(let i=0;i<segments;i++){const a=i/segments*Math.PI*2,rad=r*(.87+rnd()*.2);points.push(Math.cos(a)*rad,.014,Math.sin(a)*rad);colors.push(1,1,1,0);if(i)indices.push(0,i,i+1);}indices.push(0,segments,1);const geo=new T.BufferGeometry();geo.setAttribute('position',new T.Float32BufferAttribute(points,3));geo.setAttribute('color',new T.Float32BufferAttribute(colors,4));geo.setIndex(indices);geo.computeVertexNormals();const g=new T.Mesh(geo,detailMaterial(color,1,true));g.userData.ownedGeometry=true;g.position.set(cx,0,cz);g.receiveShadow=true;return g;}
 function trail(group,spawn,site,id,rnd){
@@ -124,7 +125,7 @@ function trail(group,spawn,site,id,rnd){
 }
 function placeWeatherParticle(weather,p,x,z,initial=false){
  const random=weather.random,angle=random()*Math.PI*2,radius=Math.sqrt(random())*(initial?16:24);
- p.x=T.MathUtils.clamp(x+Math.sin(angle)*radius,-61,61);p.z=T.MathUtils.clamp(z+Math.cos(angle)*radius,-61,61);
+ p.x=T.MathUtils.clamp(x+Math.sin(angle)*radius,-MAP_HALF+1,MAP_HALF-1);p.z=T.MathUtils.clamp(z+Math.cos(angle)*radius,-MAP_HALF+1,MAP_HALF-1);
  if(weather.kind==='forest')p.y=1+random()*2.6;
  else if(weather.kind==='snow')p.y=initial?0.4+random()*3.6:3.6+random()*0.5;
  else p.y=initial?0.3+random()*3.5:0.3+random()*0.6;
@@ -147,25 +148,27 @@ function makeWeather(id,rnd,group,spawn){
 export function buildWorld(id,seed=1){const theme=MAPS[id],rnd=seeded(seed),group=new T.Group(),obstacles=[],patches=[],sites=[{x:24+rnd()*10,z:-32+rnd()*10,type:'altar',claimed:false},{x:-34+rnd()*10,z:23+rnd()*10,type:'supply',claimed:false},{x:-25-rnd()*8,z:-5-rnd()*8,type:'relic',claimed:false}],spawn={x:-12,z:9};
  // Place the early relic in a different direction, clear of the central ruin and other landmarks.
  for(let attempt=0;attempt<24;attempt++){const a=rnd()*Math.PI*2,r=20+rnd()*8,x=spawn.x+Math.sin(a)*r,z=spawn.z+Math.cos(a)*r;if(Math.hypot(x,z)>11&&sites.slice(0,2).every(s=>Math.hypot(s.x-x,s.z-z)>15)){Object.assign(sites[2],{x,z});break;}}
- const ground=mesh('PlaneGeometry',[140,140],theme.ground,0,-.03,0,group);ground.rotation.x=-Math.PI/2;
+ // Outer optional rewards make the expanded space worth exploring; the early relic stays nearby.
+ for(const [i,type]of ['supply','altar'].entries()){const a=rnd()*1.1+i*Math.PI+1,r=66+rnd()*6;sites.push({x:Math.sin(a)*r,z:Math.cos(a)*r,type,claimed:false});}
+ const ground=mesh('PlaneGeometry',[(MAP_HALF+8)*2,(MAP_HALF+8)*2],theme.ground,0,-.03,0,group);ground.rotation.x=-Math.PI/2;
  if(!terrainMaterials.has(id))terrainMaterials.set(id,new T.MeshStandardMaterial({map:groundTexture(id,theme),roughness:1}));ground.material=terrainMaterials.get(id);
 
  const ponds=buildPonds(group,id,rnd,spawn,sites);patches.push(...ponds);const inWater=(x,z)=>ponds.some(p=>waterDepth(p,x,z)>0);
  // Soft irregular paths and terrain islands give the forest a readable floor.
  for(const site of sites)trail(group,spawn,site,id,rnd);
- for(let i=0;i<15;i++){const x=(rnd()-.5)*106,z=(rnd()-.5)*106,r=2+rnd()*3;if(Math.hypot(x-spawn.x,z-spawn.z)<9)continue;const kind=id==='ash'&&i%3===0&&!sites.some(s=>Math.hypot(x-s.x,z-s.z)<7)?'vent':'slow',patch={x,z,r,kind,phase:rnd()*4};patches.push(patch);group.add(groundShape(x,z,r,rnd,id==='snow'?0xc1d6d9:id==='ash'?kind==='vent'?0xb55438:0x8b6255:0x2b4640));if(kind==='vent'){const marker=groundCue(0xffa45f,r);marker.position.set(x,.09,z);group.add(marker);marker.visible=false;patch.marker=marker;}}
- for(let i=0;i<170;i++){const x=(rnd()-.5)*118,z=(rnd()-.5)*118;if(ponds.some(p=>Math.hypot(x-p.x,z-p.z)<p.r+1)||Math.hypot(x-spawn.x,z-spawn.z)<7||Math.hypot(x,z)<7||sites.some(s=>Math.hypot(x-s.x,z-s.z)<7)||patches.some(p=>p.kind==='vent'&&Math.hypot(x-p.x,z-p.z)<p.r+1.05)||Math.abs(x-z)<3||Math.abs(x+z)<3)continue;const tall=2.5+rnd()*3.5,tree=new T.Group();tree.position.set(x,0,z);group.add(tree);obstacles.push({x,z,r:.65,mesh:tree});
+ for(let i=0;i<24;i++){const x=(rnd()-.5)*106*MAP_SCALE,z=(rnd()-.5)*106*MAP_SCALE,r=2+rnd()*3;if(Math.hypot(x-spawn.x,z-spawn.z)<9)continue;const kind=id==='ash'&&i%3===0&&!sites.some(s=>Math.hypot(x-s.x,z-s.z)<7)?'vent':'slow',patch={x,z,r,kind,phase:rnd()*4};patches.push(patch);group.add(groundShape(x,z,r,rnd,id==='snow'?0xc1d6d9:id==='ash'?kind==='vent'?0xb55438:0x8b6255:0x2b4640));if(kind==='vent'){const marker=groundCue(0xffa45f,r);marker.position.set(x,.09,z);group.add(marker);marker.visible=false;patch.marker=marker;}}
+ for(let i=0;i<270;i++){const x=(rnd()-.5)*118*MAP_SCALE,z=(rnd()-.5)*118*MAP_SCALE;if(ponds.some(p=>Math.hypot(x-p.x,z-p.z)<p.r+1)||Math.hypot(x-spawn.x,z-spawn.z)<7||Math.hypot(x,z)<7||sites.some(s=>Math.hypot(x-s.x,z-s.z)<7)||patches.some(p=>p.kind==='vent'&&Math.hypot(x-p.x,z-p.z)<p.r+1.05)||Math.abs(x-z)<3||Math.abs(x+z)<3)continue;const tall=2.5+rnd()*3.5,tree=new T.Group();tree.position.set(x,0,z);group.add(tree);obstacles.push({x,z,r:.65,mesh:tree});
   if(id==='ash'){const stone=mesh('DodecahedronGeometry',[1.2,0],0x66565c,0,tall*.38,0,tree);stone.scale.multiply(new T.Vector3(.7,tall*.55,.8));cone(tree,0xeaa169,0,tall*.8,0,.24,.85);}
   else{const bend=(rnd()-.5)*.18,variation=.78+rnd()*.38;const trunk=mesh('CylinderGeometry',[.17,.38,tall,8],id==='snow'?0x697879:0x675a46,bend*tall*.18,tall/2,0,tree);trunk.rotation.z=-bend*.18;for(let j=0;j<3;j++){const a=j*2.27+rnd()*.55,off=id==='snow'?0:.46+j*.13,r=(1.62-j*.18)*variation,leaf=mesh(id==='snow'?'ConeGeometry':'DodecahedronGeometry',id==='snow'?[1,1,10]:[r,1],id==='snow'?[0x688c91,0x94b0ad,0xd7e4df][j]:[theme.leaf,0x37765c,0x5d9174][j],bend+Math.sin(a)*off,tall-.85+j*.65,id==='snow'?0:Math.cos(a)*off,tree);leaf.rotation.y=a;if(id==='snow')leaf.scale.set(r,2.15,r);else{leaf.scale.set(1,.62+rnd()*.13,.85+rnd()*.2);leaf.rotation.z=(rnd()-.5)*.18;}}for(let j=0;j<3;j++){const a=j*2.1+.4,branch=mesh('CylinderGeometry',[.055,.11,1.25,5],id==='snow'?0x849395:0x70634d,Math.cos(a)*.46,tall*.57,Math.sin(a)*.46,tree);branch.rotation.z=Math.cos(a)*.78;branch.rotation.x=-Math.sin(a)*.78;}}
  }
  const foliage=[];if(id!=='ash')for(const o of obstacles)for(const leaf of o.mesh.children)if(leaf.geometry?.type===(id==='snow'?'ConeGeometry':'DodecahedronGeometry'))foliage.push({leaf,x:leaf.position.x,z:leaf.position.z,phase:o.x*.17+o.z*.13});
- const grassGeo=geometry('ConeGeometry',[.1,.45,3]),grass=new T.InstancedMesh(grassGeo,mat(id==='snow'?0xe0e9db:id==='ash'?0x977566:0x85a06a),700),dummy=new T.Object3D();for(let i=0;i<700;i++){dummy.position.set((rnd()-.5)*125,.15,(rnd()-.5)*125);dummy.scale.setScalar(inWater(dummy.position.x,dummy.position.z)?0:.6+rnd());dummy.rotation.y=rnd()*6;dummy.updateMatrix();grass.setMatrixAt(i,dummy.matrix);}group.add(grass);
+ const grassGeo=geometry('ConeGeometry',[.1,.45,3]),grass=new T.InstancedMesh(grassGeo,mat(id==='snow'?0xe0e9db:id==='ash'?0x977566:0x85a06a),1200),dummy=new T.Object3D();for(let i=0;i<1200;i++){dummy.position.set((rnd()-.5)*125*MAP_SCALE,.15,(rnd()-.5)*125*MAP_SCALE);dummy.scale.setScalar(inWater(dummy.position.x,dummy.position.z)?0:.6+rnd());dummy.rotation.y=rnd()*6;dummy.updateMatrix();grass.setMatrixAt(i,dummy.matrix);}group.add(grass);
  // Small clustered floor details add texture without hundreds of draw calls.
- const fleckGeo=geometry('PlaneGeometry',[.27,.11]),fleckMat=detailMaterial(id==='snow'?0xd8edf0:id==='ash'?0xba7760:0xa2a76d,1),flecks=new T.InstancedMesh(fleckGeo,fleckMat,1100);
- for(let i=0;i<1100;i++){dummy.position.set((rnd()-.5)*124,.027,(rnd()-.5)*124);dummy.rotation.set(-Math.PI/2,rnd()*6.28,0);dummy.scale.setScalar(.45+rnd()*1.4);if(inWater(dummy.position.x,dummy.position.z))dummy.scale.setScalar(0);dummy.updateMatrix();flecks.setMatrixAt(i,dummy.matrix);}flecks.instanceMatrix.needsUpdate=true;group.add(flecks);
- const shrubs=new T.InstancedMesh(geometry('DodecahedronGeometry',[1,0]),mat(0xffffff),520),shrubPalette=id==='forest'?[0x315e49,0x4a7a59,0x698663]:id==='snow'?[0xb4d0d0,0x86a9a8,0xd3e1dd]:[0x624e49,0x795951,0x8b6b59];
- for(let i=0;i<520;i++){const x=(rnd()-.5)*120,z=(rnd()-.5)*120;dummy.position.set(x,.24,z);dummy.rotation.set(0,rnd()*6.28,0);const size=.25+rnd()*.35;dummy.scale.set(size,.24+rnd()*.22,size*(.75+rnd()*.4));if(inWater(x,z))dummy.scale.setScalar(0);dummy.updateMatrix();shrubs.setMatrixAt(i,dummy.matrix);shrubs.setColorAt(i,new T.Color(shrubPalette[Math.floor(rnd()*shrubPalette.length)]));}shrubs.instanceMatrix.needsUpdate=true;shrubs.instanceColor.needsUpdate=true;shrubs.receiveShadow=true;group.add(shrubs);
- for(let i=0;i<65;i++){const x=(rnd()-.5)*124,z=(rnd()-.5)*124;if(inWater(x,z))continue;const rock=mesh('DodecahedronGeometry',[.3+rnd()*.5,0],id==='snow'?0xbad0ce:0x8b9376,x,.2,z,group);rock.scale.y*=.6;}
+ const fleckGeo=geometry('PlaneGeometry',[.27,.11]),fleckMat=detailMaterial(id==='snow'?0xd8edf0:id==='ash'?0xba7760:0xa2a76d,1),flecks=new T.InstancedMesh(fleckGeo,fleckMat,1800);
+ for(let i=0;i<1800;i++){dummy.position.set((rnd()-.5)*124*MAP_SCALE,.027,(rnd()-.5)*124*MAP_SCALE);dummy.rotation.set(-Math.PI/2,rnd()*6.28,0);dummy.scale.setScalar(.45+rnd()*1.4);if(inWater(dummy.position.x,dummy.position.z))dummy.scale.setScalar(0);dummy.updateMatrix();flecks.setMatrixAt(i,dummy.matrix);}flecks.instanceMatrix.needsUpdate=true;group.add(flecks);
+ const shrubs=new T.InstancedMesh(geometry('DodecahedronGeometry',[1,0]),mat(0xffffff),880),shrubPalette=id==='forest'?[0x315e49,0x4a7a59,0x698663]:id==='snow'?[0xb4d0d0,0x86a9a8,0xd3e1dd]:[0x624e49,0x795951,0x8b6b59];
+ for(let i=0;i<880;i++){const x=(rnd()-.5)*120*MAP_SCALE,z=(rnd()-.5)*120*MAP_SCALE;dummy.position.set(x,.24,z);dummy.rotation.set(0,rnd()*6.28,0);const size=.25+rnd()*.35;dummy.scale.set(size,.24+rnd()*.22,size*(.75+rnd()*.4));if(inWater(x,z))dummy.scale.setScalar(0);dummy.updateMatrix();shrubs.setMatrixAt(i,dummy.matrix);shrubs.setColorAt(i,new T.Color(shrubPalette[Math.floor(rnd()*shrubPalette.length)]));}shrubs.instanceMatrix.needsUpdate=true;shrubs.instanceColor.needsUpdate=true;shrubs.receiveShadow=true;group.add(shrubs);
+ for(let i=0;i<65;i++){const x=(rnd()-.5)*124*MAP_SCALE,z=(rnd()-.5)*124*MAP_SCALE;if(inWater(x,z))continue;const rock=mesh('DodecahedronGeometry',[.3+rnd()*.5,0],id==='snow'?0xbad0ce:0x8b9376,x,.2,z,group);rock.scale.y*=.6;}
  for(const site of sites){const g=new T.Group();g.position.set(site.x,0,site.z);group.add(g);site.mesh=g;const base=mesh('CylinderGeometry',[2,2.3,.25,8],0x68796b,0,.12,0,g);if(site.type==='relic'){for(let i=0;i<3;i++){const a=i*Math.PI*2/3;const prong=mesh('ConeGeometry',[.28,1.5,5],0xb19a65,Math.sin(a)*1.15,.8,Math.cos(a)*1.15,g);prong.rotation.z=Math.sin(a)*.2;}site.crystal=mesh('OctahedronGeometry',[.8],0xffd572,0,1.1,0,g,true);box(g,0xd9ba78,0,.35,0,1.3,.3,1.3);}else if(site.type==='altar'){for(const side of [-1,1])box(g,0x8d9b88,side*1.3,1.1,0,.42,2.2,.5);box(g,0xabb398,0,2.35,0,3.2,.4,.7);const crystal=mesh('OctahedronGeometry',[.65],theme.accent,0,1.1,0,g,true);site.crystal=crystal;}else{box(g,0x99724c,0,.62,0,1.4,.8,.9);box(g,0xd6b571,0,1.04,0,1.5,.18,1);box(g,0xebd595,0,.72,.48,.18,.45,.07);}const ring=groundCue(theme.accent,2,'glow',.2);ring.position.set(0,.28,0);g.add(ring);site.ring=ring;}
  for(let i=0;i<12;i++){const a=i*Math.PI/6;const stone=mesh('BoxGeometry',[1.1,2.8,.85],0x819586,Math.cos(a)*6.5,1.4,Math.sin(a)*6.5,group);stone.rotation.y=-a;}
  const campX=spawn.x-2.5,campZ=spawn.z+1.5,fire=new T.Group();fire.position.set(campX,.18,campZ);group.add(fire);
@@ -188,5 +191,5 @@ export function animateWorld(world,t,focusX=world.spawn.x,focusZ=world.spawn.z){
  }
  weather.mesh.instanceMatrix.needsUpdate=true;
 }
-export function clearAt(world,x,z,r=.45){return Math.abs(x)<62-r&&Math.abs(z)<62-r&&!world.obstacles.some(o=>Math.hypot(x-o.x,z-o.z)<r+o.r);}
+export function clearAt(world,x,z,r=.45){return Math.abs(x)<MAP_HALF-r&&Math.abs(z)<MAP_HALF-r&&!world.obstacles.some(o=>Math.hypot(x-o.x,z-o.z)<r+o.r);}
 export function moveActor(world,p,dx,dz,r=.45){let x=p.x+dx,z=p.z+dz;if(clearAt(world,x,z,r)){p.x=x;p.z=z;return;}if(clearAt(world,x,p.z,r))p.x=x;if(clearAt(world,p.x,z,r))p.z=z;}

@@ -40,8 +40,8 @@ export class SkillVFX{
  }
  clear(){for(const p of this.active){this.scene.remove(p.mesh);this.pool.push(p.mesh);}this.active.length=0;}
  water(x,z,angle=0,strength=1){
-  for(const side of [-1,1]){const m=this.particle('waterArc',0xc8f4e5,x,.10,z,{life:.65,size:[.65*strength,.65*strength,1],opacity:.2,additive:false,grow:true,velocity:[Math.sin(angle+side)*.25,0,Math.cos(angle+side)*.25]});if(m)m.rotation.z=-angle+side*1.1;}
-  for(let i=0;i<3;i++){const a=angle+i*2.1;this.particle('ember',0xa1e3e0,x,.14,z,{life:.25,size:[.035,.055,.035],velocity:[Math.sin(a)*strength,.9*strength,Math.cos(a)*strength],gravity:5,opacity:.65,additive:false});}
+  for(const side of [-1,1]){const m=this.particle('waterArc',0x6b7151,x,.10,z,{life:.42,size:[.4*strength,.4*strength,1],opacity:.14,additive:false,grow:true,velocity:[Math.sin(angle+side)*.25,0,Math.cos(angle+side)*.25]});if(m)m.rotation.z=-angle+side*1.1;}
+  for(let i=0;i<3;i++){const a=angle+i*2.1;this.particle('ember',0x4b5036,x,.14,z,{life:.25,size:[.05,.035,.05],velocity:[Math.sin(a)*strength*.4,.5*strength,Math.cos(a)*strength*.4],gravity:5,opacity:.65,additive:false});}
  }
  fire(x,z,r=2,large=false){
   this.particle('veil',0xf18b35,x,.08,z,{life:.36,size:[r*.8,r*.66,1],opacity:large?.4:.23,priority:1});

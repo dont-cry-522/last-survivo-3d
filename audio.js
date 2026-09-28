@@ -93,7 +93,7 @@ export class GameAudio{
     if(kind==='soul')this.voice(495,.28,.025,'sine',990,t+.06);
     else this.noise(duration,volume*.9,kind.startsWith('rain')||kind==='trailSet'?4800:kind==='spikes'?1300:2600,kind==='mineBlast'?100:450,t+.012);
   }
-  water(deep=false){if(!this.allow('water',.24))return;this.noise(deep?.22:.13,deep?.11:.07,1100,320);this.voice(310+Math.random()*80,.085,.028,'sine',115);}
+  water(deep=false){if(!this.allow('water',.24))return;this.noise(deep?.24:.16,deep?.10:.065,470,110);this.noise(.075,.045,900,260);this.voice(95+Math.random()*20,.10,.022,'sine',48);}
   dodge(silver){if(!this.allow('dodge',.2))return;this.noise(silver?.32:.2,.24,silver?4000:650,silver?220:140);if(silver)this.voice(440,.25,.065,'sine',110);}
   hurt(){if(!this.allow('hurt',.15))return;this.noise(.15,.3,700,140);this.voice(130,.22,.25,'sine',36);}
   pickup(){if(!this.allow('pickup',.09))return;this.voice(780+(this.beat%4)*110,.075,.035,'sine',1100);}
