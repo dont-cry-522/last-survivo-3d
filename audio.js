@@ -1,6 +1,6 @@
-import{companionSample}from'./companion-audio.js?v=52';
-import{weaponSample}from'./weapon-audio.js?v=52';
-import{creatureSample,creatureSpatial,ENEMY_VOICES}from'./enemy-audio.js?v=52';
+import{companionSample}from'./companion-audio.js?v=53';
+import{weaponSample}from'./weapon-audio.js?v=53';
+import{creatureSample,creatureSpatial,ENEMY_VOICES}from'./enemy-audio.js?v=53';
 // Original procedural score and sound design. No external audio downloads.
 const midi=n=>440*2**((n-69)/12);
 const THEMES={coast:{bpm:102,root:50,chords:[0,5,3,7],lead:[12,0,15,19,17,0,15,12,10,12,0,7,10,15,12,0,19,0,22,24,22,19,17,15,12,0,10,7,10,12,0,0]},sand:{bpm:108,root:55,chords:[0,1,5,7],lead:[12,0,13,17,19,0,17,13,12,7,0,12,13,0,19,17,12,0,10,7,8,0,12,13,17,19,0,17,13,12,7,0]},

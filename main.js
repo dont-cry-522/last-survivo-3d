@@ -1,33 +1,33 @@
-import{LINGYA_HOP_DURATION,lingyaHopScale}from'./lingya-motion.js?v=52';
-import{BeastCompanion,PET_TIMING,sideHopTravel}from'./beast-companion.js?v=52';
-import{makeBadger,animateBadger}from'./beast-model.js?v=52';
-import{updateTide,harpoonHit,tideDashTravel}from'./coast.js?v=52';
-import{GUARDIAN_ATTACKS,GUARDIAN_DASH,guardianDashTravel,nextGuardianAttack}from'./guardian-motion.js?v=52';
-import{tickBoss}from'./boss-combat.js?v=52';
-import{inMeleeArc,canParry}from'./melee.js?v=52';
-import{discoverSite}from'./site-discovery.js?v=52';
-import{MAP_EVENTS,createMapEvent,advanceMapEvent,eventProgress}from'./map-events.js?v=52';
-import{MAP_HALF,MINIMAP_SCALE,mapPixel}from'./map-layout.js?v=52';
-import{terrainAt}from'./water.js?v=52';
-import{RELICS,relicChoices,equipRelic,relicEvent,incomingRelicDamage,readJournal,writeJournal,recordDiscovery,recordVictory}from'./expedition.js?v=52';
-import{encounterPhase,enemyGrowth,encounterRole,HUNT_SQUAD,enemyApproach,separation,attackSlotAvailable}from'./encounters.js?v=52';
-import{setupMobileDisplay}from'./mobile-display.js?v=52';
-import{weaponCuePhases}from'./weapon-performance.js?v=52';
-import{ENEMY_VOICES}from'./enemy-audio.js?v=52';
-import{ENEMY_MOTION,gaitPace}from'./enemy-motion.js?v=52';
-import{MAP_ROSTERS,REGIONAL_ENEMIES,regionalEnemy}from'./map-enemies.js?v=52';
-import{HeroSkills}from'./hero-skills.js?v=52';
-import{EXTRA_BY_ID}from'./skill-catalog.js?v=52';
-import{SCOUT_ROLL_DURATION,rollTravel}from'./dodge-motion.js?v=52';
-import{renderPixelRatio,RenderBudget}from'./render-budget.js?v=52';
-import{groundCue,disposeCue}from'./ground-cues.js?v=52';
-import{SkillVFX}from'./skill-vfx.js?v=52';
-import{loadHeroAssets,disposeHero}from'./skinned-hero.js?v=52';
-import{GameAudio}from'./audio.js?v=52';
-import{ENEMY_GUIDE,CIRCLE_GUIDE}from'./battle-guide.js?v=52';
+import{LINGYA_HOP_DURATION,lingyaHopScale}from'./lingya-motion.js?v=53';
+import{BeastCompanion,PET_TIMING,sideHopTravel}from'./beast-companion.js?v=53';
+import{makeBadger,animateBadger}from'./beast-model.js?v=53';
+import{updateTide,harpoonHit,tideDashTravel}from'./coast.js?v=53';
+import{GUARDIAN_ATTACKS,GUARDIAN_DASH,guardianDashTravel,nextGuardianAttack}from'./guardian-motion.js?v=53';
+import{tickBoss}from'./boss-combat.js?v=53';
+import{inMeleeArc,canParry}from'./melee.js?v=53';
+import{discoverSite}from'./site-discovery.js?v=53';
+import{MAP_EVENTS,createMapEvent,advanceMapEvent,eventProgress}from'./map-events.js?v=53';
+import{MAP_HALF,MINIMAP_SCALE,mapPixel}from'./map-layout.js?v=53';
+import{terrainAt}from'./water.js?v=53';
+import{RELICS,relicChoices,equipRelic,relicEvent,incomingRelicDamage,readJournal,writeJournal,recordDiscovery,recordVictory}from'./expedition.js?v=53';
+import{encounterPhase,enemyGrowth,encounterRole,HUNT_SQUAD,enemyApproach,separation,attackSlotAvailable}from'./encounters.js?v=53';
+import{setupMobileDisplay}from'./mobile-display.js?v=53';
+import{weaponCuePhases}from'./weapon-performance.js?v=53';
+import{ENEMY_VOICES}from'./enemy-audio.js?v=53';
+import{ENEMY_MOTION,gaitPace}from'./enemy-motion.js?v=53';
+import{MAP_ROSTERS,REGIONAL_ENEMIES,regionalEnemy}from'./map-enemies.js?v=53';
+import{HeroSkills}from'./hero-skills.js?v=53';
+import{EXTRA_BY_ID}from'./skill-catalog.js?v=53';
+import{SCOUT_ROLL_DURATION,rollTravel}from'./dodge-motion.js?v=53';
+import{renderPixelRatio,RenderBudget}from'./render-budget.js?v=53';
+import{groundCue,disposeCue}from'./ground-cues.js?v=53';
+import{SkillVFX}from'./skill-vfx.js?v=53';
+import{loadHeroAssets,disposeHero}from'./skinned-hero.js?v=53';
+import{GameAudio}from'./audio.js?v=53';
+import{ENEMY_GUIDE,CIRCLE_GUIDE}from'./battle-guide.js?v=53';
 import * as T from './vendor/three.module.js';
-import{MAPS,WEAPONS,ENEMIES,HERO_LOADOUTS,weaponFor,experienceNeeded,grantExperience,chooseUpgrades,takeUpgrade,weaponStats,weaponReachText,WEAPON_PATHS,segmentDistance,registerCrossbowHit,registerShadowHit,UPGRADES}from'./rules.js?v=52';
-import{actor,animateActor,animateWorld,buildWorld,clearAt,moveActor,mesh,mat}from'./world.js?v=52';
+import{MAPS,WEAPONS,ENEMIES,HERO_LOADOUTS,weaponFor,experienceNeeded,grantExperience,chooseUpgrades,takeUpgrade,weaponStats,weaponReachText,WEAPON_PATHS,segmentDistance,registerCrossbowHit,registerShadowHit,UPGRADES}from'./rules.js?v=53';
+import{actor,animateActor,animateWorld,buildWorld,clearAt,moveActor,mesh,mat}from'./world.js?v=53';
 const $=s=>document.querySelector(s),touch=matchMedia('(pointer:coarse)').matches;
 document.body.classList.toggle('touch',touch);
 const canvas=$('#world');let renderer;
@@ -78,7 +78,7 @@ function updateCompanion(dt){if(!companion)return;companion.update(dt);companion
  const d=companionMesh.userData;if(companion.alive){for(const leg of d.legs){if(leg.soundSwing&&!leg.swinging&&companion.speed>.2&&!['wind','pounce','recover'].includes(companion.state))sound.companion('step',companion.x-player.x,companion.z-player.z);leg.soundSwing=leg.swinging;}
  const cycle=Math.floor((d.idleClock||0)/8.6),phase=(d.idleClock||0)%8.6;if(companion.state==='sniff'&&phase>.5&&phase<1.7&&d.soundSniff!==cycle){d.soundSniff=cycle;sound.companion('sniff',companion.x-player.x,companion.z-player.z);}}
 }
-function clearObjects(){if(companionMesh)scene.remove(companionMesh);companion=companionMesh=null;document.body.classList.remove('has-companion');$('#companion-status').hidden=true;$('#companion-world-health').hidden=true;relicBurst=false;heroSkills.reset();vfx.clear();fields=[];riftStrikes=[];for(const list of [enemies,bullets,orbs,effects,zones])for(const o of list){scene.remove(o.mesh);disposeCue(o.mesh);if(o.kind==='line'){o.mesh.geometry.dispose();o.mesh.material.dispose();}}if(boss)scene.remove(boss.mesh);enemies=[];bullets=[];orbs=[];effects=[];zones=[];boss=null;}
+function clearObjects(){if(companionMesh)scene.remove(companionMesh);companion=companionMesh=null;document.body.classList.remove('has-companion');$('#companion-status').hidden=true;relicBurst=false;heroSkills.reset();vfx.clear();fields=[];riftStrikes=[];for(const list of [enemies,bullets,orbs,effects,zones])for(const o of list){scene.remove(o.mesh);disposeCue(o.mesh);if(o.kind==='line'){o.mesh.geometry.dispose();o.mesh.material.dispose();}}if(boss)scene.remove(boss.mesh);enemies=[];bullets=[];orbs=[];effects=[];zones=[];boss=null;}
 function build(){renderer.shadowMap.needsUpdate=true;renderBudget.reset();clearObjects();if(world){scene.remove(world.group);world.group.traverse(o=>{if(o.isInstancedMesh)o.dispose();disposeCue(o);if(o.userData.ownedGeometry)o.geometry.dispose();});}if(hero){disposeHero(hero);scene.remove(hero);}world=buildWorld(mapId,Math.floor(Math.random()*1e8));scene.add(world.group);scene.background=new T.Color(world.theme.fog);scene.fog=new T.FogExp2(world.theme.fog,.014);hero=actor(heroId,weaponFor(heroId,weaponIndex).id);scene.add(hero);player={...world.spawn,heroId,weaponId:weaponFor(heroId,weaponIndex).id,weaponPath:null,hp:heroId==='guardian'?150:120,maxHp:heroId==='guardian'?150:120,level:1,xp:0,pending:0,upgrades:{},attack:0,dash:0,dashTime:0,inv:0,hurt:0,hexSlow:0,angle:0,spell:{fire:3,ice:3,storm:3,veil:3,chain:3,rift:3},distance:0};hero.position.set(player.x,0,player.z);camTarget.set(player.x,0,player.z);createCompanion();updateCamera(1);}
 function renderChoices(){renderJournalSummary();for(const b of document.querySelectorAll('[data-hero]'))b.classList.toggle('selected',b.dataset.hero===heroId);for(const b of document.querySelectorAll('[data-map]'))b.classList.toggle('selected',b.dataset.map===mapId);const box=$('#weapons');box.replaceChildren();for(let i=0;i<HERO_LOADOUTS[heroId].length;i++){const w=weaponFor(heroId,i),b=document.createElement('button');b.textContent=w.name;b.classList.toggle('selected',i===weaponIndex);b.onclick=()=>{weaponIndex=i;renderChoices();build();};box.append(b);}const selectedWeapon=weaponFor(heroId,weaponIndex),selected=selectedWeapon.id,identity={boomerang:'骨镖去程与回程均能命中；獾兽会在附近游走、嗅探，优先扑击瞄准目标，超出活动范围再归队。移动和燕步不会打断伙伴作战，落后超过 18 米才优先归队。伙伴有独立生命，倒地 18 秒后在附近满血复活；扑击只能短暂牵制。',harpoon:'长叉向前穿刺一线敌人，每第三击牵引普通怪物并减速；踏浪滑步可取消攻击，涉水速度最低为陆地的 72%。',hammer:'盾击→横锤→下砸，连续按住攻击；盾冲约 4.25 米，起手正面格挡后，4 秒内下一击伤害 +60%。',rifle:'细长高速枪弹，快速连续射击。',shotgun:'一枪多颗短弹，近距离扇面散射。',fire:'较大的火球，较慢飞行并留下火焰，命中爆燃。',crossbow:'细长箭杆与箭头，快速直射、三连命中击退。',shuriken:'旋转三刃飞镖，可穿过敌人。',dark:'较大的暗紫法球，缓慢飞行、命中散开暗雾。',shade:'掌心发射中型影脉，三次命中引爆刻印。',shadowblade:'投出宽弧影镰，飞回时可再次命中。',grimoire:'在瞄准方向撕开延迟裂口，不发射子弹。'};$('#weapon-preview').textContent=identity[selected]+weaponReachText(weaponStats({weaponId:selected}))+' · 基础频率 '+selectedWeapon.rate+' 次/秒 · '+(selectedWeapon.count>1?'每次 '+selectedWeapon.count+' 发 · ':'')+'成长路线：'+Object.values(WEAPON_PATHS).filter(p=>p.weapon===selected).map(p=>p.name).join(' / ')+' · 3 级起二选一';$('.menu-caption span').textContent=heroId==='lingya'?'铃芽 / BEAST KEEPER':heroId==='tide'?'潮行者 / TIDE HUNTER':heroId==='guardian'?'磐山 / STONE WARDEN':heroId==='wraith'?'影裔 / SHADOW WRAITH':heroId==='silver'?'霜影 / SILVER VEIL':'游侠 / WOODLAND RANGER';}
 function setAttackMode(mode){if(mode!=='manual'&&mode!=='auto')return;clearAttack();attackMode=mode;document.body.classList.toggle('auto-attack',mode==='auto');for(const button of document.querySelectorAll('[data-attack-mode]'))button.setAttribute('aria-pressed',String(button.dataset.attackMode===mode));$('#control-help').innerHTML=mode==='auto'?'靠近怪物后自动瞄准并攻击 · 电脑 WASD / 方向键移动，Shift 闪避<br>手机左摇杆移动、按钮闪避 · 点击顶部「横屏」可全屏游玩':'电脑 WASD / 方向键移动 · 鼠标瞄准并按住左键攻击 · Shift 闪避<br>手机左摇杆移动、右摇杆拖动瞄准并射击 · 点击顶部「横屏」可全屏游玩';try{localStorage.setItem('forest-echoes-attack-mode',mode);}catch{}}
@@ -389,9 +389,9 @@ function collectExperience(n){const previous=player.level;player.xpGain=(player.
 function updateEffects(dt){vfx.update(dt);for(const e of effects){e.life-=dt;const p=1-e.life/e.max;if(e.kind==='line')continue;if(e.kind==='lane'){e.mesh.material.opacity=.5+.15*p;continue;}if(e.kind==='cue'||e.kind==='target')e.mesh.material.opacity=.48+.2*p;const scale=e.telegraph?e.r:e.kind==='spike'?e.r*Math.sin(Math.PI*Math.min(.99,p)):e.r*(1-p*.7);e.mesh.scale.setScalar(Math.max(.001,scale));if(e.vy)e.mesh.position.y+=dt*e.vy;if(e.vx)e.mesh.position.x+=dt*e.vx;if(e.vz)e.mesh.position.z+=dt*e.vz;}effects=effects.filter(e=>{if(e.life>0)return true;scene.remove(e.mesh);disposeCue(e.mesh);if(e.kind==='line'){e.mesh.geometry.dispose();e.mesh.material.dispose();}return false;});}
 function updateCamera(dt){const menuMode=state==='menu',target=new T.Vector3(player.x+(menuMode?-2:0),menuMode?1.1:.5,player.z+(menuMode?2:0));camTarget.lerp(target,1-Math.exp(-dt*8));const distance=menuMode?8.5:touch&&innerHeight>innerWidth?27:touch?20:24;camera.position.set(camTarget.x+distance*.7,camTarget.y+distance*(menuMode?.48:1),camTarget.z+distance*.7);if(shake>0){camera.position.x+=(Math.random()-.5)*shake;camera.position.y+=(Math.random()-.5)*shake;}camera.lookAt(camTarget);camera.updateMatrixWorld(true);sun.position.set(player.x+15,30,player.z+12);sun.target.position.set(player.x,0,player.z);}
 function companionStateText(){if(!companion)return '';if(!companion.alive)return companion.reviveLeft>0?'倒地 · '+Math.ceil(companion.reviveLeft)+' 秒复活':'等待安全位置';return({return:'归队',approach:'追击',wind:'蓄势',pounce:'扑击',recover:'收招',roam:'探索',sniff:'嗅探',look:'待命'})[companion.state]||'跟随';}
-function updateCompanionHUD(){const box=$('#companion-status'),bar=$('#companion-world-health');box.hidden=!companion;if(!companion){bar.hidden=true;return;}const p=companion,ratio=p.hp/p.maxHp;
+function updateCompanionHUD(){const box=$('#companion-status');box.hidden=!companion;if(!companion)return;const p=companion,ratio=p.hp/p.maxHp;
  box.dataset.state=p.state;box.dataset.low=String(p.alive&&ratio<.3);$('#companion-state').textContent=companionStateText();const hp=box.querySelector('.companion-hp');hp.setAttribute('aria-valuenow',Math.ceil(p.hp));hp.setAttribute('aria-valuemax',p.maxHp);hp.querySelector('i').style.width=ratio*100+'%';hp.querySelector('b').textContent=Math.ceil(p.hp)+' / '+p.maxHp;
- temp.set(p.x,.98,p.z).project(camera);bar.hidden=state!=='playing'||!p.alive||Math.abs(temp.x)>1||Math.abs(temp.y)>1||temp.z< -1||temp.z>1;if(!bar.hidden){bar.style.left=(temp.x*.5+.5)*innerWidth+'px';bar.style.top=(-temp.y*.5+.5)*innerHeight+'px';bar.firstElementChild.style.width=ratio*100+'%';bar.firstElementChild.style.background=ratio<.3?'#d98770':'#a8d394';}
+
 }
 function showCompanionDetails(){if(!companion||state!=='playing')return;companion.syncHealth();pause();const p=companion,w=weaponStats(player);
  dialog('獾兽伙伴 · Lv.'+p.level,'近战伙伴 · '+companionStateText()+'<br>生命随主人每级增加 6 点，「坚韧之心」每阶再增加 15 点；攻击随磨砺锋芒与同心夹击成长。<br>附近近战怪会攻击伙伴，敌方范围攻击和地火也会伤害它。它不阻挡移动，不会替主人免除同一范围攻击。<br>倒地后 18 秒自动在主人附近安全位置满血复活，获得 2 秒保护；没有安全位置时继续等待。暂停、查看说明和选择升级期间不计时。<br>移动与燕步不会召回正在战斗的伙伴；超过 18 米才优先归队。',[['继续远征',resume]]);
