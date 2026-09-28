@@ -10,6 +10,11 @@ export function sideHopTravel(remaining){const t=clamp(1-remaining/LINGYA_HOP_DU
 }
 export function lingyaHopScale(slow,depth=0){return depth>.42?slow:Math.max(.9,slow);}
 export function lingyaHopPose(remaining){
- const t=clamp(1-remaining/LINGYA_HOP_DURATION),air=pulse(t,.06,.38,.80),push=pulse(t,0,.08,.23),land=pulse(t,.68,.82,1),reach=pulse(t,.4,.68,.92);
- return{air,push,land,reach,height:air*.30-push*.055-land*.075,tuck:air*.9,pitch:push*.13-air*.12+land*.16,bank:air*.16,twist:air*.16};
+ const t=clamp(1-remaining/LINGYA_HOP_DURATION),air=pulse(t,.08,.36,.78),push=pulse(t,0,.12,.32),land=pulse(t,.64,.82,1),reach=smooth(.32,.76,t),weight=smooth(0,.10,t)*(1-smooth(.85,1,t));
+ return{t,air,push,land,reach,weight,height:air*.12-push*.12-land*.11,tuck:air*.55,pitch:push*.18+air*.12+land*.16,bank:air*.24+push*.08,twist:air*.24};
+}
+// A leading foot reaches the landing first; the trailing foot pushes off, folds, then catches up.
+export function lingyaHopFoot(pose,lead,lateral,forward){
+ const {air,push,land,reach}=pose,extension=lead?-.12*(1-reach)+.42*reach:-.32*(1-reach)+.08*reach;
+ return{x:lateral*extension,y:-.96+push*.15+land*.13+air*(lead?.16*(1-reach):.34*(1-reach)),z:forward*extension-(lead?0:.12*air*(1-reach))};
 }

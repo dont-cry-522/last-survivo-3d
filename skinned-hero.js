@@ -1,16 +1,16 @@
-import{swimLimb as poseLimb}from'./swim-motion.js?v=49';
-import{lingyaHopPose}from'./lingya-motion.js?v=49';
-import{lingyaOutfit,lingyaAccessories,lingyaLegs}from'./lingya-appearance.js?v=49';
-import{boneBoomerang}from'./beast-model.js?v=49';
-import{makeHarpoon}from'./coast-models.js?v=49';
-import{guardianOutfit,guardianHair}from'./guardian-appearance.js?v=49';
-import{equipGuardian,animateGuardian}from'./guardian-model.js?v=49';
-import{weaponGesture,shotStarted}from'./weapon-performance.js?v=49';
-import{rollProgress,rollWeight}from'./dodge-motion.js?v=49';
+import{swimLimb as poseLimb}from'./swim-motion.js?v=50';
+import{lingyaHopPose,lingyaHopFoot}from'./lingya-motion.js?v=50';
+import{lingyaOutfit,lingyaAccessories,lingyaLegs}from'./lingya-appearance.js?v=50';
+import{boneBoomerang}from'./beast-model.js?v=50';
+import{makeHarpoon}from'./coast-models.js?v=50';
+import{guardianOutfit,guardianHair}from'./guardian-appearance.js?v=50';
+import{equipGuardian,animateGuardian}from'./guardian-model.js?v=50';
+import{weaponGesture,shotStarted}from'./weapon-performance.js?v=50';
+import{rollProgress,rollWeight}from'./dodge-motion.js?v=50';
 import * as T from './vendor/three.module.js';
 import {clone} from './vendor/SkeletonUtils.js';
-import {loadCharacterData} from './character-loader.js?v=49';
-import {makeHero as makePrototype} from './hero-model.js?v=49';
+import {loadCharacterData} from './character-loader.js?v=50';
+import {makeHero as makePrototype} from './hero-model.js?v=50';
 
 const templates=new Map(),clips=new Map();
 
@@ -199,9 +199,9 @@ export function animateSkinnedHero(g,t,speed,attack,hurt){
   const strideScale=d.rig.scale.y/1.23;
   const cadence=T.MathUtils.lerp(d.smoothedSpeed/2.5/d.walk.getClip().duration,d.smoothedSpeed/5.8/d.run.getClip().duration,jogging)/strideScale;d.gaitPhase=(d.gaitPhase+dt*cadence*(d.kind==='lingya'?1-lingyaHopPose(d.dashTime||0).air:1))%1;
   for(const a of[d.run,d.backRun,d.upperRun,d.walk,d.backWalk,d.upperWalk]){a.paused=true;a.time=d.gaitPhase*a.getClip().duration;}d.aim.setEffectiveWeight(d.aimBlend);
-  const isRoll=d.kind==='scout'&&d.dashTime>0&&!(d.waterDepth>.42)&&!d.waterDash,roll=d.actions.Roll,weight=isRoll?rollWeight(d.dashTime):0,poseBlend=1-weight;
+  const isRoll=d.kind==='scout'&&d.dashTime>0&&!(d.waterDepth>.42)&&!d.waterDash,roll=d.actions.Roll,weight=isRoll?rollWeight(d.dashTime):0,poseBlend=(1-weight)*(d.kind==='lingya'?1-lingyaHopPose(d.dashTime||0).weight:1);
   if(isRoll){roll.enabled=true;roll.setLoop(T.LoopOnce,1);roll.clampWhenFinished=true;roll.play();roll.setEffectiveWeight(weight);roll.paused=true;roll.time=rollProgress(d.dashTime)*roll.getClip().duration;for(const a of[d.idle,d.run,d.walk,d.backRun,d.backWalk,d.upperIdle,d.upperRun,d.upperWalk,d.aim])a.setEffectiveWeight(a.getEffectiveWeight()*poseBlend);}else roll.stop();
-  if(d.kind==='lingya'&&d.dashTime>0){const hop=lingyaHopPose(d.dashTime),weight=Math.min(1,hop.air+hop.push+hop.land);for(const a of[d.run,d.walk,d.backRun,d.backWalk,d.upperRun,d.upperWalk,d.aim])a.setEffectiveWeight(a.getEffectiveWeight()*(1-weight));d.idle.setEffectiveWeight(d.idle.getEffectiveWeight()*(1-weight)+weight);d.upperIdle.setEffectiveWeight(d.upperIdle.getEffectiveWeight()*(1-weight)+weight);}
+  if(d.kind==='lingya'&&d.dashTime>0){const hop=lingyaHopPose(d.dashTime),weight=hop.weight;for(const a of[d.run,d.walk,d.backRun,d.backWalk,d.upperRun,d.upperWalk,d.aim])a.setEffectiveWeight(a.getEffectiveWeight()*(1-weight));d.idle.setEffectiveWeight(d.idle.getEffectiveWeight()*(1-weight)+weight);d.upperIdle.setEffectiveWeight(d.upperIdle.getEffectiveWeight()*(1-weight)+weight);}
   if(d.kind==='lingya')d.rig.rotation.z-=d.hopBank||0;
   const bank=isRoll?0:T.MathUtils.clamp(-(d.turnRate||0)*.008,-.075,.075)*d.blend;d.rig.rotation.z+=(bank-d.rig.rotation.z)*(1-Math.exp(-dt*10));
   // Recovery belongs to the animation, so it can finish after the shot timer.
@@ -209,7 +209,7 @@ export function animateSkinnedHero(g,t,speed,attack,hurt){
   d.attackAge=fired?0:(d.attackAge??2)+dt;
   const motion=weaponGesture(d.weaponId,d.attackAge,d.reloadPhase??1,d.reloadDuration||1);
   d.attackGesture=((d.attackGesture||0)+(motion.kick-(d.attackGesture||0))*(1-Math.exp(-dt*(d.weaponId==='shotgun'?18:32))));
-  const kick=isRoll?0:d.attackGesture,sweep=isRoll?0:motion.sweep,gather=isRoll?0:motion.gather;
+  const kick=isRoll?0:d.attackGesture*poseBlend,sweep=isRoll?0:motion.sweep*poseBlend,gather=isRoll?0:motion.gather*poseBlend;
   const acceleration=dt?T.MathUtils.clamp((speed-(d.previousSpeed??speed))/dt,-10,10):0;d.previousSpeed=speed;
   d.motionLean=((d.motionLean||0)+(T.MathUtils.clamp(acceleration*.006,-.045,.045)-(d.motionLean||0))*(1-Math.exp(-dt*9)));
   const recoil={rifle:.075,shotgun:.22,crossbow:.075,shuriken:-.12,fire:-.15,dark:.065,hammer:0,harpoon:-.18,boomerang:-.08}[d.weaponId];
@@ -292,7 +292,7 @@ export function animateSkinnedHero(g,t,speed,attack,hurt){
     for(const [bone,q]of d.lingyaPoseBase)q.copy(bone.quaternion);d.lingyaPoseReady=true;
     const pose=lingyaHopPose(d.dashTime||0),relative=(d.dashAngle??g.rotation.y+Math.PI/2)-g.rotation.y,lateral=Math.sin(relative),forward=Math.cos(relative),side=lateral>=0?1:-1;
     const moving=Math.sin(d.gaitPhase*Math.PI*2)*d.blend*(1-pose.air);
-    d.rig.position.y=pose.height;d.rig.rotation.x+=pose.pitch;d.rig.rotation.y=pose.twist*lateral;
+    d.rig.position.y=pose.height;d.rig.rotation.x+=pose.pitch+pose.bank*forward;d.rig.rotation.y=pose.twist*lateral;
     d.hopBank=-pose.bank*lateral;d.rig.rotation.z+=d.hopBank;
     d.spine.rotateY(-.15*sweep+.10*gather-pose.twist*lateral*.8+moving*.018);
     d.swimHead.rotateZ(-moving*.02);d.swimHead.rotateX(-pose.air*.07);
@@ -300,10 +300,10 @@ export function animateSkinnedHero(g,t,speed,attack,hurt){
     d.catchTime=Math.max(0,(d.catchTime||0)-dt);const catchWeight=Math.sin(Math.PI*d.catchTime/.2);d.firingForearm.rotateX(-catchWeight*.23);d.offForearm.rotateX(-catchWeight*.13);
     // Solve actual foot positions; imported bone axes differ from procedural characters.
     const legs=side>0?[[d.swimRightLeg,d.swimRightKnee,d.swimRightFoot,true],[d.swimLeftLeg,d.swimLeftKnee,d.swimLeftFoot,false]]:[[d.swimLeftLeg,d.swimLeftKnee,d.swimLeftFoot,true],[d.swimRightLeg,d.swimRightKnee,d.swimRightFoot,false]];
-    const legWeight=Math.min(1,pose.air+pose.push+pose.land);g.updateMatrixWorld(true);
-    for(const [leg,knee,foot,lead]of legs){const extension=lead?pose.reach:-.25*(1-pose.reach),y=lead?-.76-.16*pose.reach:-.53-.37*pose.reach;poseLimb(g,leg,knee,foot,{x:lateral*.28*extension,y:-.96+(y+.96)*pose.air+pose.land*.025,z:forward*.3*extension-(lead?0:.18*(1-pose.reach))},[0,.1,1],legWeight,()=>{});foot.rotateX(-pose.air*(lead?.1:.2));}
+    const legWeight=pose.weight;g.updateMatrixWorld(true);
+    for(const [leg,knee,foot,lead]of legs){poseLimb(g,leg,knee,foot,lingyaHopFoot(pose,lead,lateral,forward),[0,.1,1],legWeight,()=>{});foot.rotateX(-pose.push*(lead?.06:.22)-pose.air*(lead?.05:.16));}
     if(d.satchel){d.satchel.quaternion.copy(d.satchelRest);d.satchel.rotateX(Math.sin(t*5.4)*d.blend*.035+pose.air*.13-pose.land*.08);d.satchel.rotateZ(-moving*.06-pose.bank*lateral*.45);}
-    d.aimArm.rotateZ(-pose.air*.38);d.offArm.rotateZ(pose.air*.50);d.firingForearm.rotateX(-pose.air*.38);d.offForearm.rotateX(-pose.air*.5);
+    d.aimArm.rotateZ(-pose.air*.28);d.offArm.rotateZ(pose.air*.36);d.aimArm.rotateX(-pose.air*.18*side);d.offArm.rotateX(pose.air*.18*side);d.firingForearm.rotateX(-pose.weight*.55);d.offForearm.rotateX(-pose.weight*.65);
   }
   if(d.cape){d.cape.quaternion.copy(d.restCape);d.cape.rotateX(.06+d.blend*.13+Math.sin(t*5)*.015-d.motionLean*.6+kick*.025);d.cape.rotateZ(-bank*.65);if(d.kind==='lingya'){const hop=lingyaHopPose(d.dashTime||0);d.cape.rotateX(hop.air*.18-hop.land*.1);}d.cape.userData.wind.time.value=t;d.cape.userData.wind.run.value=d.blend;}
   g.visible=!(hurt>0&&Math.floor(hurt*28)%2===0);

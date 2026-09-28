@@ -1,4 +1,5 @@
 // Pets never block enemies or absorb their damage. Leash and recovery cap autonomous attacks.
+export const PET_LEASH={follow:10,engage:16,recall:18,resume:10,nearby:6};
 export const PET_TIMING={wind:.28,pounce:.30,recover:.34};
 const dist=(a,b)=>Math.hypot(a.x-b.x,a.z-b.z);
 const angleDiff=(a,b)=>Math.atan2(Math.sin(a-b),Math.cos(a-b));
@@ -15,7 +16,7 @@ export class BeastCompanion{
   if(!thrown)return;
   const w=this.api.stats();this.throwCount++;if(w.trapRank&&this.throwCount%3===0){if(this.traps.length>=3)this.traps.shift();this.traps.push({x:p.x,z:p.z,life:8,arm:.45,rank:w.trapRank,pulse:0});this.api.fx('trapSet',p.x,p.z);}
  }
- recall(){this.change('return');this.target=this.command=null;this.roamGoal=null;this.recallUntil=this.now+1.1;this.cool=Math.max(this.cool,1.1);}
+ recall(){this.forcedReturn=true;this.change('return');this.target=this.command=null;this.roamGoal=null;this.recallUntil=this.now+1.1;this.cool=Math.max(this.cool,1.1);}
  marked(e){e.lingyaMark=this.now+2.5;}
  updateTraps(dt){for(const trap of this.traps){trap.life-=dt;trap.arm-=dt;trap.pulse-=dt;if(trap.life<=0)continue;
   if(trap.pulse<=0){trap.pulse=.28;this.api.fx('trap',trap.x,trap.z);}
@@ -24,7 +25,7 @@ export class BeastCompanion{
   this.traps=this.traps.filter(q=>q.life>0);
  }
  nearbyTarget(p){let best=null,score=Infinity;for(const e of this.api.foes()){
-  const d=dist(e,this);if(!e.alive||!this.api.visible(e)||dist(e,p)>5.5||d>3.6||!this.api.clear(this.x,this.z,e.x,e.z))continue;
+  const d=dist(e,this);if(!e.alive||dist(e,p)>PET_LEASH.engage||d>PET_LEASH.nearby||!this.api.clear(this.x,this.z,e.x,e.z))continue;
   const priority=d-(e.lingyaMark>this.now?1.8:0);if(priority<score){score=priority;best=e;}}
   return best;
  }
@@ -34,18 +35,24 @@ export class BeastCompanion{
  }
  update(dt){if(dt<=0||!this.api.active())return;this.now+=dt;this.cool=Math.max(0,this.cool-dt);this.elapsed+=dt;
   const p=this.api.player(),w=this.api.stats(),oldX=this.x,oldZ=this.z,oldAngle=this.angle;this.updateTraps(dt);if(!this.api.active())return;
-  const attacking=['approach','wind','pounce'].includes(this.state);
-  if(dist(this,p)>(attacking?9:6.5)||this.target&&(!this.target.alive||!this.api.visible(this.target))){this.change('return');this.target=null;}
-  if(['sniff','look','roam','follow'].includes(this.state)&&this.cool<=0&&this.now>=this.recallUntil){
-   const commanded=this.commandUntil>=this.now,choice=commanded?this.command:this.nearbyTarget(p);
-   if(choice?.alive&&dist(choice,p)<10&&this.api.clear(this.x,this.z,choice.x,choice.z)){this.target=choice;this.change('approach');}
+  const ownerDistance=dist(this,p);
+  // Only the outer leash interrupts combat. Camera visibility and ordinary owner movement do not.
+  if(ownerDistance>PET_LEASH.recall&&!this.forcedReturn)this.recall();
+  if(this.forcedReturn&&ownerDistance<PET_LEASH.resume&&this.now>=this.recallUntil)this.forcedReturn=false;
+  if(this.target&&!this.target.alive){this.target=null;this.change(['wind','pounce'].includes(this.state)?'recover':'look');}
+  if(!this.forcedReturn&&['sniff','look','roam','follow','return'].includes(this.state)&&this.cool<=0){
+   const commanded=this.commandUntil>=this.now&&this.command?.alive&&dist(this.command,p)<PET_LEASH.engage&&this.api.clear(this.x,this.z,this.command.x,this.command.z);
+   const choice=commanded?this.command:this.nearbyTarget(p);
+   if(choice){this.target=choice;this.change('approach');}
   }
+  if(ownerDistance>PET_LEASH.follow&&['sniff','look','roam','follow'].includes(this.state)){this.change('return');this.roamGoal=null;}
   let goal,moveSpeed=0;
   if(this.state==='approach'){
    const e=this.target;if(!e){this.recall();return;}const a=Math.atan2(e.x-p.x,e.z-p.z),offset=w.pincerRank?1.35:0;goal={x:e.x+Math.cos(a)*offset,z:e.z-Math.sin(a)*offset};moveSpeed=5.1;
    if(dist(e,this)<2.35){this.change('wind');this.attackAngle=Math.atan2(e.x-this.x,e.z-this.z);goal=null;}
    else if(this.elapsed>2){this.change('return');this.target=null;}
   }else if(this.state==='wind'){
+   const e=this.target;if(e)this.attackAngle+=angleDiff(Math.atan2(e.x-this.x,e.z-this.z),this.attackAngle)*(1-Math.exp(-dt*14));
    if(this.elapsed>=PET_TIMING.wind){this.change('pounce');this.struck=false;this.vx=this.vz=0;this.api.fx('pounce',this.x,this.z);}
   }else if(this.state==='pounce'){
    const e=this.target,reach=(e?.size||.5)+.60,available=e?Math.max(0,dist(e,this)-reach):2.6;const travel=this.struck?0:Math.min(available,Math.min(dt,Math.max(0,PET_TIMING.pounce-(this.elapsed-dt)))*8.7);
@@ -54,10 +61,10 @@ export class BeastCompanion{
     this.struck=true;this.api.damage(e,w.petDamage*(e.lingyaMark>this.now?1+.22*(w.pincerRank||0):1));if(e.alive&&!e.boss)e.stagger=Math.max(e.stagger||0,.22);this.api.fx('bite',e.x,e.z);}
    if(this.elapsed>=PET_TIMING.pounce){this.change('recover');this.target=null;this.cool=w.petCooldown;this.api.fx('land',this.x,this.z);}
   }else if(this.state==='recover'){
-   if(this.elapsed>=PET_TIMING.recover){this.change(dist(this,p)>4?'return':'look');this.decisionAt=this.now+.5;}
+   if(this.elapsed>=PET_TIMING.recover){this.change(dist(this,p)>PET_LEASH.follow?'return':'look');this.decisionAt=this.now+.5;}
   }else if(this.state==='return'){
    // Hysteresis: catch up only outside the leash; stop well inside it instead of orbiting a fixed slot.
-   if(dist(this,p)<2.1){this.change('look');this.decisionAt=this.now+.65;this.roamGoal=null;}
+   if(dist(this,p)<4&&!this.forcedReturn){this.change('look');this.decisionAt=this.now+.65;this.roamGoal=null;}
    else{const a=p.angle||0;goal={x:p.x-Math.sin(a)*.9,z:p.z-Math.cos(a)*.9};moveSpeed=Math.min(this.now<this.recallUntil?12:10,4+dist(this,p)*.8);}
   }else if(this.state==='roam'){
    goal=this.roamGoal;moveSpeed=1.15;if(!goal||dist(this,goal)<.35||this.elapsed>3.5){goal=null;this.change(this.random()<.65?'sniff':'look');this.decisionAt=this.now+1+this.random()*1.8;}
@@ -72,9 +79,9 @@ export class BeastCompanion{
   const travel= Math.hypot(this.x-oldX,this.z-oldZ);this.stuck=goal&&travel<dt*.08?this.stuck+dt:0;
   if(this.state==='roam'&&this.stuck>.6){this.change('look');this.decisionAt=this.now+.5;this.roamGoal=null;this.stuck=0;}
   // Only a far-away, truly blocked pet may recover at a verified free point.
-  if(dist(this,p)>14&&this.stuck>.8){const safe=this.api.home();if(safe){this.x=safe.x;this.z=safe.z;this.recall();this.stuck=0;}}
+  if(dist(this,p)>PET_LEASH.recall&&this.stuck>.8){const safe=this.api.home();if(safe){this.x=safe.x;this.z=safe.z;this.recall();this.stuck=0;}}
   this.speed=travel/dt;const desired=['wind','pounce','recover'].includes(this.state)?this.attackAngle:this.speed>.12?Math.atan2(this.x-oldX,this.z-oldZ):this.angle;
   this.angle+=angleDiff(desired,this.angle)*(1-Math.exp(-dt*(['wind','pounce'].includes(this.state)?16:7)));this.turnRate=angleDiff(this.angle,oldAngle)/dt;
  }
 }
-export {sideHopTravel} from './lingya-motion.js?v=49';
+export {sideHopTravel} from './lingya-motion.js?v=50';
