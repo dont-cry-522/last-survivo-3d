@@ -45,4 +45,16 @@ export function coastProp(parent,index,rnd){
  if(index%3===0){part(parent,0x789088,[0,.55,0],[.74,.56,.68],'rock');part(parent,0xa7b5a2,[.2,.9,.1],[.28,.28,.3],'rock');return .7;}
  part(parent,0x746b57,[0,.75,0],[.16,.75,.16],'box');part(parent,0x9f997f,[0,1.28,0],[.2,.10,.2]);return .35;
 }
-export function makeHarpoon(){const g=new T.Group();part(g,0x755b40,[0,0,.33],[.028,.028,1.08],'box');for(const z of[-.35,-.12,.18])part(g,0xbe9b5e,[0,0,z],[.042,.042,.045],'box');part(g,0x8ecacb,[0,0,1.47],[.11,.07,.3],'cone').rotation.x=Math.PI/2;for(const s of[-1,1]){part(g,0x8fb5b5,[s*.13,0,1.40],[.035,.045,.25],'box');part(g,0xd2ded0,[s*.13,0,1.65],[.06,.055,.12],'cone').rotation.x=Math.PI/2;}return g;}
+// Smooth shaft and forged, swept tines keep the silhouette readable without white blocks.
+let harpoonTemplate;
+export function makeHarpoon(){
+ if(harpoonTemplate)return harpoonTemplate.clone();
+ const g=new T.Group(),wood=new T.MeshStandardMaterial({color:0x654833,roughness:.78}),steel=new T.MeshStandardMaterial({color:0x739b9d,metalness:.32,roughness:.32}),edge=new T.MeshStandardMaterial({color:0xb4c9c3,metalness:.42,roughness:.30}),brass=new T.MeshStandardMaterial({color:0x9a8250,metalness:.55,roughness:.48}),wrap=new T.MeshStandardMaterial({color:0x344e50,roughness:.92});
+ const cylinder=(r,h,z,m)=>{const o=new T.Mesh(new T.CylinderGeometry(r,r,h,12),m);o.rotation.x=Math.PI/2;o.position.z=z;g.add(o);return o;};
+ cylinder(.029,2.16,.33,wood);cylinder(.034,.54,-.08,wrap);for(let i=0;i<8;i++)cylinder(.037,.012,-.31+i*.065,brass);cylinder(.043,.14,1.32,brass);cylinder(.038,.10,-.73,brass);
+ const blade=(points,x,z,m)=>{const shape=new T.Shape();points.forEach(([a,b],i)=>i?shape.lineTo(a,b):shape.moveTo(a,b));shape.closePath();const geo=new T.ExtrudeGeometry(shape,{depth:.024,bevelEnabled:true,bevelThickness:.009,bevelSize:.008,bevelSegments:2,steps:1});geo.translate(0,0,-.012);geo.rotateX(Math.PI/2);const o=new T.Mesh(geo,m);o.position.set(x,0,z);g.add(o);return o;};
+ blade([[-.042,0],[-.058,.14],[0,.39],[.058,.14],[.042,0]],0,1.36,edge);
+ for(const side of[-1,1])blade([[0,0],[side*.12,.075],[side*.16,.24],[side*.13,.42],[side*.09,.25],[side*.06,.14],[-side*.015,.07]],0,1.20,steel);
+ const spine=new T.Mesh(new T.CylinderGeometry(.008,.016,.22,8),steel);spine.rotation.x=Math.PI/2;spine.position.set(0,.024,1.51);g.add(spine);
+ g.name='Tide_forged_harpoon';g.traverse(o=>{if(o.isMesh)o.castShadow=o.receiveShadow=true;});harpoonTemplate=g;return g.clone();
+}

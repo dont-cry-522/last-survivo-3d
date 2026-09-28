@@ -7,9 +7,10 @@ export function guardianOutfit(root){
    const name=o.name,armor=/Body$|Pauldron|Bracer/.test(name),belt=name.includes('Belt'),legs=name.includes('Legs');
    o.material=o.material.clone();o.material.color.set(0xffffff);o.material.metalness=armor?.55:belt?.38:.06;o.material.roughness=armor?.48:.87;
    const tint=armor?'.32,.40,.45':belt?'.36,.24,.10':legs?'.055,.067,.083':'.12,.085,.075';
-   o.material.onBeforeCompile=s=>{s.fragmentShader=s.fragmentShader.replace('#include <map_fragment>',`#include <map_fragment>
+   o.material.onBeforeCompile=s=>{s.vertexShader='varying vec3 guardianRest;\n'+s.vertexShader;s.vertexShader=s.vertexShader.replace('#include <begin_vertex>','#include <begin_vertex>\nguardianRest=position;');s.fragmentShader='varying vec3 guardianRest;\n'+s.fragmentShader;s.fragmentShader=s.fragmentShader.replace('#include <map_fragment>',`#include <map_fragment>
      float grain=dot(diffuseColor.rgb,vec3(.2126,.7152,.0722));
      diffuseColor.rgb=vec3(${tint})*(.48+grain*2.0);
+     ${armor?"float seam=1.0-smoothstep(.004,.012,abs(guardianRest.y-1.14));diffuseColor.rgb=mix(diffuseColor.rgb,vec3(.34,.27,.15),seam*.65);":''}
    `);};o.material.customProgramCacheKey=()=> 'guardian-'+tint;
    if(!name.includes('Hood')){
     o.geometry=o.geometry.clone();const p=o.geometry.attributes.position;

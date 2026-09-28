@@ -1,6 +1,6 @@
-import{boneBoomerang}from'./beast-model.js?v=56';
+import{boneBoomerang}from'./beast-model.js?v=57';
 import * as T from './vendor/three.module.js';
-import{shadowCrescentGeometry}from'./shadow-weapons.js?v=56';
+import{shadowCrescentGeometry}from'./shadow-weapons.js?v=57';
 
 function flameTexture(){
  if(typeof document==='undefined')return null;
