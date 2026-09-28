@@ -1,8 +1,8 @@
-import{buildPonds,animateWater,waterDepth,restoreWaterPose,animateWaterPose}from'./water.js?v=36';
+import{buildPonds,animateWater,waterDepth,restoreWaterPose,animateWaterPose}from'./water.js?v=37';
 import{ENEMY_MOTION,animateEnemyIdentity}from'./enemy-motion.js?v=28';
 import{REGIONAL_ENEMIES}from'./map-enemies.js?v=27';
 import{groundCue}from'./ground-cues.js?v=19';
-import{heroesReady,createSkinnedHero,animateSkinnedHero}from'./skinned-hero.js?v=36';
+import{heroesReady,createSkinnedHero,animateSkinnedHero}from'./skinned-hero.js?v=37';
 import * as T from './vendor/three.module.js';
 import{makeHero,animateHero}from'./hero-model.js?v=30';
 import{makeWraith,animateWraith}from'./wraith-model.js?v=30';
@@ -70,7 +70,7 @@ function regionalActor(id){
  return g;
 }
 export function animateActor(g,t,speed=0,attack=0,hurt=0){
- restoreWaterPose(g);const d=g.userData,landSpeed=speed*(1-.9*T.MathUtils.smoothstep(d.waterDepth||0,.42,.85));if(d.wraith){animateWraith(g,t,landSpeed,attack,hurt);animateWaterPose(g,t,speed);return;}if(d.skinned){animateSkinnedHero(g,t,landSpeed,attack,hurt);animateWaterPose(g,t,speed);return;}if(d.leftKnee){animateHero(g,t,landSpeed,attack);animateWaterPose(g,t,speed);return;}
+ restoreWaterPose(g);const d=g.userData,landSpeed=speed*(1-.9*T.MathUtils.smoothstep(d.waterBlend??d.waterDepth??0,.42,.85));if(d.wraith){animateWraith(g,t,landSpeed,attack,hurt);animateWaterPose(g,t,speed);return;}if(d.skinned){animateSkinnedHero(g,t,landSpeed,attack,hurt);animateWaterPose(g,t,speed);return;}if(d.leftKnee){animateHero(g,t,landSpeed,attack);animateWaterPose(g,t,speed);return;}
  if(d.satellites){d.satellites.rotation.y=t*.9;d.satellites.position.y=Math.sin(t*3)*.08;}
  const dt=d.lastTime===undefined?1/60:Math.max(0,Math.min(.05,t-d.lastTime));d.lastTime=t;
  d.stride=(d.stride||0)+(Math.min(1,speed/2.5)-(d.stride||0))*(1-Math.exp(-dt*14));

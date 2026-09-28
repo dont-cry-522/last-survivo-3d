@@ -1,4 +1,4 @@
-import{terrainAt}from'./water.js?v=36';
+import{terrainAt}from'./water.js?v=37';
 import{RELICS,relicChoices,equipRelic,relicEvent,incomingRelicDamage,readJournal,writeJournal,recordDiscovery,recordVictory}from'./expedition.js?v=35';
 import{encounterPhase,enemyGrowth,encounterRole,HUNT_SQUAD,enemyApproach,separation,attackSlotAvailable}from'./encounters.js?v=33';
 import{setupMobileDisplay}from'./mobile-display.js?v=32';
@@ -12,12 +12,12 @@ import{SCOUT_ROLL_DURATION,rollTravel}from'./dodge-motion.js?v=24';
 import{renderPixelRatio,RenderBudget}from'./render-budget.js?v=21';
 import{groundCue,disposeCue}from'./ground-cues.js?v=19';
 import{SkillVFX}from'./skill-vfx.js?v=36';
-import{loadHeroAssets,disposeHero}from'./skinned-hero.js?v=36';
+import{loadHeroAssets,disposeHero}from'./skinned-hero.js?v=37';
 import{GameAudio}from'./audio.js?v=36';
 import{ENEMY_GUIDE,CIRCLE_GUIDE}from'./battle-guide.js?v=28';
 import * as T from './vendor/three.module.js';
 import{MAPS,WEAPONS,ENEMIES,weaponFor,experienceNeeded,grantExperience,chooseUpgrades,takeUpgrade,weaponStats,weaponReachText,WEAPON_PATHS,segmentDistance,registerCrossbowHit,registerShadowHit,UPGRADES}from'./rules.js?v=33';
-import{actor,animateActor,animateWorld,buildWorld,clearAt,moveActor,mesh,mat}from'./world.js?v=36';
+import{actor,animateActor,animateWorld,buildWorld,clearAt,moveActor,mesh,mat}from'./world.js?v=37';
 const $=s=>document.querySelector(s),touch=matchMedia('(pointer:coarse)').matches;
 document.body.classList.toggle('touch',touch);
 const canvas=$('#world');let renderer;
@@ -233,8 +233,9 @@ function updateWaterActor(p,model,dt,speed,isPlayer=false){
  const terrain=terrainAt(world,p.x,p.z,isPlayer?'hero':p.kind),before=p.waterDepth||0;p.waterDepth=terrain.depth;model.userData.waterDepth=terrain.depth;model.userData.waterFloating=terrain.floating;
  if(isPlayer&&terrain.depth>0&&before===0)introduce('terrain:water','浅水涉行，深水游泳','越靠近池心，行动越慢；岸边逐渐恢复。地面怪物同样受水阻，浮霜晶核可掠过水面。游侠在水中短距离划水，霜影和影裔仍可瞬移。');
  p.waterFX=Math.max(0,(p.waterFX||0)-dt);
- if(terrain.depth>0&&!terrain.floating&&speed>.15&&p.waterFX===0&&(isPlayer||Math.hypot(p.x-player.x,p.z-player.z)<14)){
-  p.waterFX=isPlayer?.32:.48;vfx.water(p.x,p.z,model.rotation.y,isPlayer?1:Math.min(1.4,p.size||1));if(isPlayer)sound.water(terrain.depth>.55);
+ const phase=model.userData.swimPhase||0,stroke=terrain.depth<.55||!isPlayer||(phase>.27&&phase<.60);
+ if(terrain.depth>0&&!terrain.floating&&speed>.15&&stroke&&p.waterFX===0&&(isPlayer||Math.hypot(p.x-player.x,p.z-player.z)<14)){
+  p.waterFX=isPlayer?(terrain.depth>.55?.7:.32):.48;let x=p.x,z=p.z;const d=model.userData,hand=d.skinned?d.support?.hand:d.weaponId==='grimoire'?d.rightHand:d.leftHand;if(isPlayer&&terrain.depth>.55&&hand){hand.getWorldPosition(temp);x=temp.x;z=temp.z;}vfx.water(x,z,model.rotation.y,isPlayer?.85:Math.min(1.4,p.size||1));if(isPlayer)sound.water(terrain.depth>.55);
  }
 }
 function updateEnemies(dt){for(const e of enemies){if(!e.alive)continue;updateStatus(e,dt);if(!e.alive)continue;e.cool-=dt;e.rage=Math.max(0,(e.rage||0)-dt);e.hurt=Math.max(0,e.hurt-dt);e.slow=Math.max(0,e.slow-dt);e.stagger=Math.max(0,(e.stagger||0)-dt);const startX=e.x,startZ=e.z,dx=player.x-e.x,dz=player.z-e.z,d=Math.hypot(dx,dz),a=Math.atan2(dx,dz);let moving=0;
@@ -278,7 +279,7 @@ function update(dt){const rollStart=heroId==='scout'?player.dashTime:0;time+=dt;
  // Camera-oriented input keeps up/down aligned with the screen.
  const dx=(input.x+input.z)*.7071,dz=(input.z-input.x)*.7071,oldX=player.x,oldZ=player.z;
  if(rollStart>0){const distance=rollTravel(player.dashTime)-rollTravel(rollStart);moveActor(world,player,Math.sin(player.dashAngle)*distance*slow,Math.cos(player.dashAngle)*distance*slow);}else moveActor(world,player,dx*speed*dt,dz*speed*dt);
- const movedX=player.x-oldX,movedZ=player.z-oldZ,actualSpeed=rollStart>0?moving*speed:Math.hypot(movedX,movedZ)/Math.max(dt,.001),travelAngle=actualSpeed>.05?Math.atan2(movedX,movedZ):null;
+ const movedX=player.x-oldX,movedZ=player.z-oldZ,actualSpeed=rollStart>0&&!player.waterDash?moving*speed:Math.hypot(movedX,movedZ)/Math.max(dt,.001),travelAngle=actualSpeed>.05?Math.atan2(movedX,movedZ):null;
  player.vx=movedX/Math.max(dt,.001);player.vz=movedZ/Math.max(dt,.001);if(moving>.1)player.angle=Math.atan2(dx,dz);
  const rolling=heroId==='scout'&&player.dashTime>0;
  const autoTarget=attackMode==='auto'?closestAutoTarget(weaponStats(player).range):null;if(attackMode==='auto'){aimInput.hasAim=!!autoTarget;if(autoTarget)aimInput.angle=Math.atan2(autoTarget.x-player.x,autoTarget.z-player.z);}
