@@ -1,5 +1,5 @@
-import{badgerAttack,badgerCadence,smooth}from'./badger-motion.js?v=50';
-import{swimLimb as placeLimb}from'./swim-motion.js?v=50';
+import{badgerAttack,badgerCadence,badgerIdle,smooth}from'./badger-motion.js?v=51';
+import{swimLimb as placeLimb}from'./swim-motion.js?v=51';
 import * as T from './vendor/three.module.js';
 const geo=new Map(),mats=new Map();
 function material(c){if(!mats.has(c))mats.set(c,new T.MeshStandardMaterial({color:c,roughness:.84}));return mats.get(c);}
@@ -13,15 +13,15 @@ export function boneBoomerang(){
  sphere(g,0xc69c5f,0,.055,-.05,.045,.025,.045);g.traverse(o=>{if(o.isMesh)o.castShadow=o.receiveShadow=true;});boneTemplate=g;return g.clone();
 }
 export function makeBadger(){
- const g=new T.Group(),rig=new T.Group();g.add(rig);const d=g.userData={rig,legs:[],phase:0};
+ const g=new T.Group(),rig=new T.Group();g.add(rig);const d=g.userData={rig,legs:[],eyes:[],phase:0};
  // A broad low torso and tapered mask distinguish the badger from the enemy wolf.
  d.body=sphere(rig,0x666a68,0,.43,-.05,.34,.27,.53);sphere(rig,0xb1aaa0,0,.32,.09,.28,.13,.34);d.shoulders=joint(rig,0,.42,.25);d.haunch=joint(rig,0,.43,-.35);
  const head=joint(rig,0,.45,.40);d.head=head;
  if(!geo.has('badgerHead')){const h=new T.SphereGeometry(1,28,18),p=h.attributes.position,colors=[];for(let i=0;i<p.count;i++){const x=p.getX(i),y=p.getY(i),z=p.getZ(i),taper=1-Math.max(0,z)*.45;p.setXYZ(i,x*.26*taper,y*.225*(1-Math.max(0,z)*.2),z*.33);const stripe=Math.abs(x)>.22&&Math.abs(x)<.73&&y>-.50,grain=.93+.04*Math.sin(x*37+y*22+z*19),c=new T.Color(stripe?0x292e32:0xe1dbcc).multiplyScalar(grain);colors.push(c.r,c.g,c.b);}h.setAttribute('color',new T.Float32BufferAttribute(colors,3));h.computeVertexNormals();geo.set('badgerHead',h);mats.set('mask',new T.MeshStandardMaterial({vertexColors:true,roughness:.86}));}
  const face=new T.Mesh(geo.get('badgerHead'),mats.get('mask'));face.castShadow=true;head.add(face);sphere(head,0x252c2d,0,-.035,.323,.064,.045,.04);
  d.jaw=joint(head,0,-.045,.10);sphere(d.jaw,0xbbb5a8,0,-.025,.105,.11,.045,.16);sphere(d.jaw,0x38312d,0,.014,.14,.078,.012,.095);
- for(const sign of[-1,1]){const ear=joint(head,sign*.20,.17,-.025);sphere(ear,0x484c49,0,0,0,.082,.091,.045);sphere(ear,0xc7b69d,0,.008,.033,.049,.057,.016);d['ear'+sign]=ear;sphere(head,0x182323,sign*.145,.052,.205,.032,.035,.020);sphere(head,0xf4e8ca,sign*.145-.008,.063,.223,.008,.009,.006);}
- for(const side of[-1,1])for(const z of[-.35,.31]){const leg=joint(z>0?d.shoulders:d.haunch,side*.235,z>0?-.08:-.09,z>0?.06:0);sphere(leg,0x474b48,0,-.07,0,.086,.12,.096);const knee=joint(leg,0,-.19,0);sphere(knee,0x474b48,0,-.045,.008,.065,.09,.073);const paw=joint(knee,0,-.17,0);sphere(paw,0x353c3c,0,0,.025,.098,.057,.13);for(let k=0;k<3;k++)sphere(paw,0xc8b998,(k-1)*.036,-.007,.139,.010,.012,.031);d.legs.push({joint:leg,knee,paw,front:z>0,side,home:new T.Vector3(side*.235,.06,z),phase:z>0?(side>0?.5:0):(side>0?.25:.75),current:new T.Vector3(),anchor:new T.Vector3(),from:new T.Vector3(),to:new T.Vector3(),ready:false,swinging:false});}
+ for(const sign of[-1,1]){const ear=joint(head,sign*.20,.17,-.025);sphere(ear,0x484c49,0,0,0,.082,.091,.045);sphere(ear,0xc7b69d,0,.008,.033,.049,.057,.016);d['ear'+sign]=ear;const eye=joint(head,sign*.145,.052,.205);sphere(eye,0x182323,0,0,0,.032,.035,.020);sphere(eye,0xf4e8ca,-.008,.011,.018,.008,.009,.006);d.eyes.push(eye);}
+ for(const side of[-1,1])for(const z of[-.35,.31]){const leg=joint(z>0?d.shoulders:d.haunch,side*.235,z>0?-.08:-.09,z>0?.06:0);sphere(leg,0x474b48,0,-.095,0,.086,.14,.096);const knee=joint(leg,0,-.24,0);sphere(knee,0x474b48,0,-.07,.008,.065,.12,.073);const paw=joint(knee,0,-.22,0);sphere(paw,0x353c3c,0,0,.025,.098,.057,.13);for(let k=0;k<3;k++)sphere(paw,0xc8b998,(k-1)*.036,-.007,.139,.010,.012,.031);d.legs.push({joint:leg,knee,paw,front:z>0,side,home:new T.Vector3(side*.235,.06,z),phase:z>0?(side>0?.5:0):(side>0?.25:.75),current:new T.Vector3(),anchor:new T.Vector3(),from:new T.Vector3(),to:new T.Vector3(),ready:false,swinging:false});}
  d.tail=joint(rig,0,.36,-.49);sphere(d.tail,0x737770,0,.07,-.15,.105,.105,.22);sphere(d.tail,0xc0bdb0,0,.08,-.32,.07,.07,.08);
  // Small cloth kerchief ties it visually to Lingya without armor or distracting glow.
  sphere(rig,0x678273,0,.36,.35,.29,.095,.13);return g;
@@ -32,17 +32,19 @@ export function animateBadger(g,t,speed,state='look',progress=0,turnRate=0){
  const blend=1-Math.exp(-dt*18),ease=(o,key,target)=>o[key]+=(target-o[key])*blend;
  d.motionSpeed=(d.motionSpeed||0)+(speed-(d.motionSpeed||0))*(1-Math.exp(-dt*9));const moving=d.motionSpeed>.12,run=T.MathUtils.smoothstep(d.motionSpeed,2,6),attacking=['wind','pounce','recover'].includes(state),pose=badgerAttack(state,progress);
  if(moving&&!attacking)d.phase=(d.phase+dt*badgerCadence(d.motionSpeed))%1;
- const sway=Math.sin(d.phase*Math.PI*2),stride=Math.min(1,d.motionSpeed/1.2),sniff=state==='sniff'?1:0;
+ const sway=Math.sin(d.phase*Math.PI*2),stride=Math.min(1,d.motionSpeed/1.2);
+ d.idleClock=(d.idleClock||0)+(moving||attacking?0:dt);const idle=badgerIdle(d.idleClock),rest=(1-stride)*(attacking?0:1);
+ d.sniffBlend=(d.sniffBlend||0)+(((state==='sniff'?1:0)*rest)-(d.sniffBlend||0))*(1-Math.exp(-dt*4));const sniff=d.sniffBlend;
  ease(d.rig.position,'y',pose.air-pose.crouch+(attacking?0:Math.sin(d.phase*Math.PI*4)*.010*stride));
- ease(d.rig.rotation,'z',attacking?0:sway*.018*stride-T.MathUtils.clamp(turnRate*.009,-.055,.055));
+ ease(d.rig.rotation,'z',attacking?0:sway*.018*stride-T.MathUtils.clamp(turnRate*.009,-.055,.055)+idle.shift*rest);
  ease(d.rig.rotation,'x',state==='pounce'?-.07*Math.sin(progress*Math.PI*2):state==='recover'?.08*Math.sin(progress*Math.PI):0);
  d.shoulders.position.y=.42+sway*.012*stride-pose.crouch*.35;d.haunch.position.y=.43-sway*.008*stride-pose.crouch*.18;
- d.body.scale.y=.27*(1+Math.sin(t*2.5)*.012);d.body.scale.z=.53*(1+pose.reach*.035);
- ease(d.head.position,'z',.40+sniff*.045+pose.impact*.045);ease(d.head.position,'y',.45-sniff*.065-pose.crouch*.3);
- ease(d.head.rotation,'x',sniff*(.2+Math.sin(t*9)*.025)-pose.reach*.08+pose.impact*.12);
- ease(d.head.rotation,'y',['look','follow'].includes(state)&&speed<.4?Math.sin(t*.8)*.22:T.MathUtils.clamp(-turnRate*.018,-.13,.13));
- ease(d.jaw.rotation,'x',pose.jaw);d.tail.rotation.y=Math.sin(t*2.3+d.phase*Math.PI*2)*(.05+stride*.08);d.tail.rotation.x=-pose.crouch*2+pose.reach*.14;
- d['ear-1'].rotation.z=Math.sin(t*2.3)*.035+Math.sin(t*8.1)**12*.065;d.ear1.rotation.z=-Math.sin(t*2.3+.8)*.035-Math.sin(t*7.3)**14*.065;
+ d.body.scale.y=.27*(1+Math.sin(t*1.8)*.009);d.body.scale.z=.53*(1+pose.reach*.035);
+ ease(d.head.position,'z',.40+sniff*(.055+idle.sniff*.009)+pose.impact*.045);ease(d.head.position,'y',.45-sniff*.085-pose.crouch*.3+idle.shift*rest*.4);
+ ease(d.head.rotation,'x',sniff*(.24+idle.sniff*.025)-pose.reach*.08+pose.impact*.12);
+ ease(d.head.rotation,'y',idle.look*rest*(1-sniff*.7)+T.MathUtils.clamp(-turnRate*.018,-.13,.13)*(1-rest));
+ ease(d.jaw.rotation,'x',pose.jaw);ease(d.tail.rotation,'y',sway*.07*stride+idle.tail*rest);d.tail.rotation.x=-pose.crouch*2+pose.reach*.14;
+ d['ear-1'].rotation.z=idle.leftEar*rest+sway*.012*stride;d.ear1.rotation.z=-idle.rightEar*rest-sway*.012*stride;for(const eye of d.eyes)eye.scale.y=1-(1-idle.blink)*rest;
  g.updateMatrixWorld(true);g.getWorldQuaternion(inverseBody).invert();
  for(const l of d.legs){if(l.swinging&&t-l.swingStart>=l.swingDuration){l.swinging=false;l.anchor.copy(l.to);l.current.copy(l.to);}l.urgency=l.ready?l.anchor.distanceTo(g.localToWorld(footTarget.copy(l.home))):0;}
  for(const l of [...d.legs].sort((a,b)=>b.urgency-a.urgency)){
@@ -52,19 +54,19 @@ export function animateBadger(g,t,speed,state='look',progress=0,turnRate=0){
    const target=l.home.clone(),reach=state==='pounce'&&l.front?Math.sin(Math.PI*T.MathUtils.clamp(progress+(l.side<0?.10:-.07),0,1)):pose.reach;target.y+=pose.air+(l.front?(l.side<0?.075:.045):.075)*reach;target.z+=(l.front?.19:-.13)*reach;target.x+=l.front?l.side*.025*reach:0;
    g.localToWorld(target);l.current.lerp(target,1-Math.exp(-dt*26));l.anchor.copy(l.current);l.swinging=false;
   }else{
-   g.worldToLocal(footOffset.copy(l.anchor));const overstretched=footOffset.z<l.home.z-.15||Math.abs(footOffset.x-l.home.x)>.18;
+   g.worldToLocal(footOffset.copy(l.anchor));const overstretched=footOffset.z<l.home.z-.28||Math.abs(footOffset.x-l.home.x)>.27;
    const settle=!moving&&l.current.distanceTo(home)>.025;
-   if(!l.swinging&&((wantsSwing&&!l.wasSwing)||overstretched||settle)&&d.legs.filter(leg=>leg.swinging).length<(moving?(speed>3.5?4:2):1)){
-    l.swinging=true;l.swingStart=t;l.swingDuration=Math.max(.07,Math.min(.085,(1-duty)/Math.max(.5,badgerCadence(d.motionSpeed))));l.from.copy(l.current);
-    l.to.copy(l.home);if(moving)l.to.z+=Math.min(.20,d.motionSpeed*l.swingDuration*.3);g.localToWorld(l.to);
+   if(!l.swinging&&((wantsSwing&&!l.wasSwing&&t-(l.lastLift??-10)>.85/Math.max(.5,badgerCadence(d.motionSpeed)))||overstretched||settle)&&d.legs.filter(leg=>leg.swinging).length<(moving?(speed>3.5?4:2):1)){
+    l.swinging=true;l.swingStart=l.lastLift=t;l.swingDuration=moving?.18+run*.04:.24;l.from.copy(l.current);
+    l.to.copy(l.home);if(moving)l.to.z+=.23+run*.03;g.localToWorld(l.to);
     // Predict the landing under the moving torso; the planted phase itself never follows it.
     l.to.x+=Math.sin(g.rotation.y)*speed*l.swingDuration;l.to.z+=Math.cos(g.rotation.y)*speed*l.swingDuration;
    }
-   if(l.swinging){const u=Math.min(1,(t-l.swingStart)/l.swingDuration);l.current.lerpVectors(l.from,l.to,smooth(u));l.current.y+=Math.sin(Math.PI*u)*(moving?.065+run*.045:.028);if(u>=1){l.swinging=false;l.anchor.copy(l.to);}}
+   if(l.swinging){const u=Math.min(1,(t-l.swingStart)/l.swingDuration);l.current.lerpVectors(l.from,l.to,smooth(u));l.current.y+=Math.sin(Math.PI*u)*(moving?.075+run*.06:.025);if(u>=1){l.swinging=false;l.anchor.copy(l.to);}}
    else l.current.copy(l.anchor);
   }
   l.wasSwing=wantsSwing;l.planted=!attacking&&!l.swinging;
-  l.joint.getWorldPosition(footOrigin);footOffset.copy(l.current).sub(footOrigin).applyQuaternion(inverseBody).divideScalar(.36);
+  l.joint.getWorldPosition(footOrigin);footOffset.copy(l.current).sub(footOrigin).applyQuaternion(inverseBody).divideScalar(.46);
   placeLimb(g,l.joint,l.knee,l.paw,footOffset,[0,.1,l.front?-1:1],1,()=>{});
   // Keep the sole level while the shoulder and elbow absorb the body's movement.
   g.getWorldQuaternion(footOrientation);l.paw.parent.getWorldQuaternion(parentOrientation).invert();l.paw.quaternion.copy(parentOrientation.multiply(footOrientation));l.paw.rotateX(l.swinging?-.12*Math.sin(Math.PI*Math.min(1,(t-l.swingStart)/l.swingDuration)):0);
