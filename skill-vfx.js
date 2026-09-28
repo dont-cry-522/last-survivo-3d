@@ -1,5 +1,6 @@
+import{boneBoomerang}from'./beast-model.js?v=46';
 import * as T from './vendor/three.module.js';
-import{shadowCrescentGeometry}from'./shadow-weapons.js?v=45';
+import{shadowCrescentGeometry}from'./shadow-weapons.js?v=46';
 
 function flameTexture(){
  if(typeof document==='undefined')return null;
@@ -187,7 +188,8 @@ export class SkillVFX{
   b.trail-=dt;
   if(b.mesh.userData.aura){const wave=1+Math.sin(b.elapsed*18)*.09;b.mesh.userData.aura.scale.setScalar(wave);}
   if(b.trail>0)return;b.trail=['fire','dark'].includes(b.kind)?.065:.085;
-  if(b.kind==='fire'){
+  if(b.kind==='boomerang'){const len=Math.hypot(b.vx,b.vz)||1;this.segment(new T.Vector3(b.x,1.15,b.z),new T.Vector3(b.x-b.vx/len*.5,1.15,b.z-b.vz/len*.5),b.returning?0xa9c995:0xe3cf9f,.026,.12,false,0,.5);}
+  else if(b.kind==='fire'){
    this.particle('flame',0xff762b,b.x,1.17,b.z,{life:.23,size:[.19,.24,1],velocity:[-b.vx*.09,.45,-b.vz*.09],opacity:.7});
    this.particle('ember',0xffd48b,b.x,1.15,b.z,{life:.14,size:[.06,.06,.09],velocity:[-b.vx*.15,0,-b.vz*.15]});
   }else if(b.kind==='dark'){
@@ -198,6 +200,7 @@ export class SkillVFX{
   else if(b.kind==='crossbow')this.particle('ember',0xc5eaff,b.x,1.15,b.z,{life:.10,size:[.025,.025,.06],opacity:.45});
  }
  projectile(w){
+  if(w.id==='boomerang'){const b=boneBoomerang();b.scale.setScalar(.8);return b;}
   const g=new T.Group(),part=(shape,color,scale,z=0)=>{if(!this.materials.has(color))this.materials.set(color,new T.MeshBasicMaterial({color}));const m=new T.Mesh(this.geometry[shape],this.materials.get(color));m.scale.set(...scale);m.position.z=z;g.add(m);return m;};
   if(w.id==='fire'){part('ember',0xffdd83,[.25,.25,.34]);const aura=new T.Group();g.add(aura);g.userData.aura=aura;const key='fire-flight';if(!this.materials.has(key))this.materials.set(key,new T.MeshBasicMaterial({map:this.flameTexture,color:0xff8a34,transparent:true,opacity:.8,depthWrite:false,side:T.DoubleSide,blending:T.AdditiveBlending}));for(const angle of [0,Math.PI/2]){const flame=new T.Mesh(this.geometry.flame,this.materials.get(key));flame.scale.set(.29,.53,1);flame.position.z=-.22;flame.rotation.set(Math.PI/2,angle,0);aura.add(flame);}}
   else if(w.id==='shade'){part('ember',0x29223e,[.16,.16,.25]);for(const s of [-1,0,1]){const m=part('ray',s===0?0x86dcef:0x7965b0,[.035,.055,.60-Math.abs(s)*.1]);m.position.x=s*.12;m.rotation.y=s*.18;}}

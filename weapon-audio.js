@@ -1,5 +1,5 @@
 // Short original material textures synthesized locally; no remote asset load.
-const DURATIONS={hammer:[.3,.4,.2],rifle:[.17,.13,.1],shotgun:[.42,.27,.23],crossbow:[.25,.18,.2],shuriken:[.3,.16,.14],fire:[.55,.65,.3],dark:[.58,.52,.35],shade:[.24,.32,.15],shadowblade:[.4,.28,.33],grimoire:[.4,.68,.3],shield:[.21,.3,.15],harpoon:[.24,.32,.18]};
+const DURATIONS={hammer:[.3,.4,.2],rifle:[.17,.13,.1],shotgun:[.42,.27,.23],crossbow:[.25,.18,.2],shuriken:[.3,.16,.14],fire:[.55,.65,.3],dark:[.58,.52,.35],shade:[.24,.32,.15],shadowblade:[.4,.28,.33],grimoire:[.4,.68,.3],shield:[.21,.3,.15],harpoon:[.24,.32,.18],boomerang:[.32,.19,.18],badger:[.20,.23,.14]};
 export function weaponSample(id,event,rate,variant=0){
   const durations=DURATIONS[id],index={shot:0,impact:1,mechanism:2}[event];if(!durations||index===undefined)return null;
   const duration=durations[index],data=new Float32Array(Math.ceil(rate*duration));
@@ -23,6 +23,8 @@ export function weaponSample(id,event,rate,variant=0){
       else if(id==='shadowblade')v=low*Math.sin(Math.PI*u)*(1-u)*(.4+flutter);
       else v=high*.5*click;
     }else if(id==='shield')v=hit?(body*3.4+low*.75+Math.sin(t*2*Math.PI*180)*.6)*tail+high*.28*snap:low*Math.sin(Math.PI*u)*.65+high*.13*Math.exp(-t*55);
+    else if(id==='boomerang')v=hit?(low*.8+body*1.6)*tail:(low*.7+high*.17)*Math.sin(Math.PI*u)**2*(.5+flutter*.5);
+    else if(id==='badger')v=hit?(body*3+low*.5)*tail:Math.sin(phase*1.8)*.35*tail+body*2*Math.sin(Math.PI*u);
     else if(id==='harpoon')v=hit?(low*.85+body*2.4)*tail+Math.sin(t*2*Math.PI*(470-210*u))*.25*tail:(high*.22+low*.6)*Math.sin(Math.PI*u)**2;
     else if(id==='hammer')v=hit?(body*4+Math.sin(phase)*.85+low*.3)*tail+high*.3*snap:low*Math.sin(Math.PI*u)**2*.9;
     else if(id==='rifle')v=(high*.85*snap+low*.9*tail+Math.sin(phase)*.32*tail)*(hit?.65:1.15);
