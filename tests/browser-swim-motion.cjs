@@ -4,7 +4,7 @@ const {chromium}=require(process.env.PLAYWRIGHT_MODULE||'playwright'),assert=req
  await p.addInitScript(()=>{const raf=requestAnimationFrame;window.requestAnimationFrame=cb=>{window.nextFrame=cb;return raf(t=>{if(!window.freezeGame)cb(t)})}});
  await p.goto(process.env.TEST_URL||'http://127.0.0.1:8899/');await p.waitForFunction(()=>window.game3d,null,{polling:100,timeout:60000});await p.locator('#start').click();await p.evaluate(()=>freezeGame=true);await p.waitForTimeout(80);
  const report=await p.evaluate(async()=>{
-  const {animateActor}=await import('./world.js?v=40'),g=game3d,rows=[];
+  const {animateActor}=await import('./world.js?v=41'),g=game3d,rows=[];
   for(const hero of ['silver','scout','wraith'])for(const fps of [30,60,120]){
    g.select(hero,'forest',hero==='wraith'?2:0);g.start();const d=g.hero.userData;d.waterDepth=1;
    let maxRig=0,maxArm=0,maxPhase=0,armTime=0,rigTime=0,previous=null;const arm=d.offArm||d.rightArm;

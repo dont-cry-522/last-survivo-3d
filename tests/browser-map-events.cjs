@@ -8,7 +8,7 @@ const {chromium}=require(process.env.PLAYWRIGHT_MODULE||'playwright'),assert=req
    const g=game3d,results=[];const advance=(seconds,clearThreats=false)=>{for(let i=0;i<Math.ceil(seconds*60);i++){if(clearThreats)for(const e of g.enemies)e.alive=false;g.step(1/60);}};
    for(const map of ['forest','snow','ash']){
     g.select('silver',map,0);g.start();g.world.patches.length=0;g.player.inv=999;g.player.attack=999;
-    const s=g.world.sites.find(s=>s.event&&s.event!=='ambush');g.player.x=s.x;g.player.z=s.z;advance(2.2);if(s.state!=='active'||s.guards.length!==3)throw Error('event did not activate '+map);
+    const s=g.world.sites.find(s=>s.event&&s.event!=='ambush');s.availableAt=0;g.player.x=s.x;g.player.z=s.z;advance(2.2);if(s.state!=='active'||s.guards.length!==3)throw Error('event did not activate '+map);
     const snapshot=JSON.stringify(s.eventRun);g.pause();g.step(5);if(JSON.stringify(s.eventRun)!==snapshot)throw Error('paused event changed');g.resume();
     for(const e of s.guards){e.speed=0;e.cool=999;}
     if(map==='forest'){
@@ -23,7 +23,7 @@ const {chromium}=require(process.env.PLAYWRIGHT_MODULE||'playwright'),assert=req
    }return results;
   });assert.equal(result.length,3);assert.deepEqual(errors,[]);console.log('PASS all biome events, interrupted progress, pause, forge warning/damage and one-time skill rewards',width,result);
   // Inspect the live event and guide on each viewport.
-  await p.evaluate(()=>{const g=game3d;g.select('silver','snow',0);g.start();const s=g.world.sites.find(s=>s.event==='beacons');g.player.x=s.x;g.player.z=s.z;g.player.inv=999;for(let i=0;i<140;i++)g.step(1/60);const now=performance.now();for(let i=1;i<=10;i++)nextFrame(now+i*100);});
+  await p.evaluate(()=>{const g=game3d;g.select('silver','snow',0);g.start();const s=g.world.sites.find(s=>s.event==='beacons');s.availableAt=0;g.player.x=s.x;g.player.z=s.z;g.player.inv=999;for(let i=0;i<140;i++)g.step(1/60);const now=performance.now();for(let i=1;i<=10;i++)nextFrame(now+i*100);});
   if(process.env.OUTPUT_DIR)await p.screenshot({path:process.env.OUTPUT_DIR+'/map-event-'+width+'.png'});
   await p.locator('#battle-guide').click();assert((await p.locator('#dialog-content').textContent()).includes('熔炉泄压'));assert((await p.locator('#dialog-content').textContent()).includes('霜晶共鸣'));assert.deepEqual(errors,[]);await p.close();
  }
