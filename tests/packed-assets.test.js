@@ -12,8 +12,8 @@ test('delivery geometry is byte-for-byte identical to the original models',()=>{
   assert.deepEqual(json,original);assert.deepEqual(glb.subarray(28+length,28+length+bin.length),bin);
  }
 });
-test('compressed and fallback motion carry the same ten valid full-sample clips',()=>{
+test('compressed and fallback motion carry the same twelve valid full-sample clips',()=>{
  const raw=read(assets.motionFallback.file);assert.deepEqual(gunzipSync(read(assets.motion.file)),raw);
- const clips=JSON.parse(raw);assert.equal(clips.length,10);
+ const clips=JSON.parse(raw);assert.equal(clips.length,12);
  for(const clip of clips){assert(clip.duration>0);assert(clip.tracks.length>40);for(const track of clip.tracks){assert(track.values.every(Number.isFinite));assert(track.times.every((t,i)=>!i||t>=track.times[i-1]));}}
 });
