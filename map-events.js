@@ -1,4 +1,6 @@
 export const MAP_EVENTS={
+ excavation:{name:'风沙古匣',short:'古匣',color:0xe0ba70,tip:'清除沙地守卫后，在古匣 3 米内挖掘 6 秒。沙暴预警、沙暴或附近有怪物时暂停；挖到一半会惊动第二批守卫。进度保留，完成后领取补给。'},
+ salvage:{name:'退潮打捞',short:'打捞',color:0x87d6d0,tip:'趁退潮清除潮滩守卫，靠近货箱 3 米内累计打捞 6 秒。涨潮预警或涨潮时暂停；打捞到一半会引来第二批海兽。进度保留，完成后领取补给。'},
  lighthouse:{name:'灯塔复燃',short:'灯塔',color:0x90dddf,tip:'清除守卫，在灯塔 3 米内累计修复 8 秒；涨潮预告或涨潮时暂停修复，退潮后继续。完成后领取技能。'},
  mechanism:{name:'遗城机关',short:'机关',color:0xe3c68b,tip:'清除第一批守卫后选择：开启捷径并恢复 25% 生命，或挑战第二批守卫获得技能。只能选一个。'},
  purify:{name:'林心净化',short:'净化',color:0x9de7ac,tip:'站在林心 3 米内净化 10 秒；附近 4.5 米内有怪物时暂停。可以先击退、引开或清除它们。'},
@@ -10,11 +12,16 @@ export const biomeEvent=id=>({forest:'purify',snow:'beacons',ash:'forge',sand:'m
 export function eventNodes(x,z,angle){return Array.from({length:3},(_,i)=>({x:x+Math.sin(angle+i*Math.PI*2/3)*4.8,z:z+Math.cos(angle+i*Math.PI*2/3)*4.8,charge:0}));}
 export function createMapEvent(id){return{id,elapsed:0,progress:0,wave:0,lastWarning:-1,done:false};}
 // Only simulation time advances events. Pauses and far-away sites cannot earn progress.
-export function advanceMapEvent(e,dt,{near,atCenter,contested,guards,nodes=[],player,tide}){
+export function advanceMapEvent(e,dt,{near,atCenter,contested,guards,nodes=[],player,tide,sandstorm}){
  const result={wave:0,warning:false,lit:[],complete:false};if(e.done||!near||dt<=0)return result;
  e.elapsed+=dt;
  if(e.wave===0){e.wave=1;result.wave=1;return result;}
- if(e.id==='lighthouse'){e.flooded=!!(tide?.high||tide?.warning);if(atCenter&&!guards&&!e.flooded)e.progress=Math.min(8,e.progress+dt);e.done=e.progress>=8;}else if(e.id==='mechanism'){if(!guards){if(e.wave===1&&!e.choice&&!e.awaiting){e.awaiting=true;result.choice=true;}else if(e.choice==='treasure'&&e.wave===1){e.wave=2;result.wave=2;}else if(e.wave===2)e.done=true;}}else if(e.id==='ambush'){
+ if(e.id==='excavation'||e.id==='salvage'){
+  e.blocked=e.id==='salvage'?!!(tide?.high||tide?.warning):!!(sandstorm?.active||sandstorm?.warning);
+  if(atCenter&&!guards&&!contested&&!e.blocked)e.progress=Math.min(e.wave===1?3:6,e.progress+dt);
+  if(e.progress>=3&&e.wave===1){e.wave=2;result.wave=2;}
+  e.done=e.progress>=6&&!guards;
+ }else if(e.id==='lighthouse'){e.flooded=!!(tide?.high||tide?.warning);if(atCenter&&!guards&&!e.flooded)e.progress=Math.min(8,e.progress+dt);e.done=e.progress>=8;}else if(e.id==='mechanism'){if(!guards){if(e.wave===1&&!e.choice&&!e.awaiting){e.awaiting=true;result.choice=true;}else if(e.choice==='treasure'&&e.wave===1){e.wave=2;result.wave=2;}else if(e.wave===2)e.done=true;}}else if(e.id==='ambush'){
   if(!guards){if(e.wave===1){e.wave=2;result.wave=2;}else e.done=true;}
  }else if(e.id==='purify'){
   if(atCenter&&!contested)e.progress=Math.min(10,e.progress+dt);
@@ -32,6 +39,7 @@ export function advanceMapEvent(e,dt,{near,atCenter,contested,guards,nodes=[],pl
 }
 export function eventProgress(e,contested=false){
  if(e.done)return '完成 · 靠近领取';
+ if(e.id==='excavation'||e.id==='salvage')return (e.id==='salvage'?'打捞 ':'挖掘 ')+Math.floor(e.progress/6*100)+'% · '+(e.blocked?(e.id==='salvage'?'等待退潮':'等待风息'):contested?'先击退附近怪物':'清除守卫后靠近');
  if(e.id==='mechanism')return e.awaiting&&!e.choice?'机关已解封 · 选择探索路线':'守卫 '+Math.max(1,e.wave)+'/2 · 清除后作出选择';
  if(e.id==='lighthouse')return '修复 '+Math.floor(e.progress/8*100)+'% · '+(e.flooded?'潮水上涨，等待退潮':'清除守卫后靠近灯塔');
  if(e.id==='ambush')return '猎群 '+Math.max(1,e.wave)+'/2 批';

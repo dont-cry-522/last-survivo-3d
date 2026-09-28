@@ -1,6 +1,6 @@
-import{onBridge}from'./coast.js?v=59';
-import{MAP_SCALE}from'./map-layout.js?v=59';
-import{swimStroke,swimLimb}from'./swim-motion.js?v=59';
+import{onBridge}from'./coast.js?v=60';
+import{MAP_SCALE}from'./map-layout.js?v=60';
+import{swimStroke,swimLimb}from'./swim-motion.js?v=60';
 import * as T from './vendor/three.module.js';
 const clamp=T.MathUtils.clamp;
 const shore=a=>1+.07*Math.sin(a*3)+.045*Math.cos(a*5);
@@ -12,8 +12,8 @@ export function terrainAt(world,x,z,kind='hero'){
  if(onBridge(world,x,z))return{kind:'bridge',depth:0,floating:false,speed:1};
  let depth=0;for(const p of world.patches)if(p.kind==='water')depth=Math.max(depth,waterDepth(p,x,z));
  const floating=['snowtotem','cinderwisp','jellyseer'].includes(kind),heavy=['golem','yeti','lavabrute','boss','frostking','cinderlord','reefturtle','wreckwarden'].includes(kind);
- if(depth>0)return{kind:'water',depth,floating,speed:floating?1:1-depth*(heavy?.24:.52)};
- const slow=world.patches.some(p=>p.kind==='slow'&&Math.hypot(p.x-x,p.z-z)<p.r);return{kind:slow?'slow':'land',depth:0,floating,speed:slow?kind==='hero'?.72:.75:1};
+ if(depth>0)return{kind:'water',depth,floating,speed:floating?1:(1-depth*(heavy?.24:.52))*(world.tide?.high?1-.18*depth:1)};
+ const slow=world.patches.some(p=>p.kind==='slow'&&Math.hypot(p.x-x,p.z-z)<p.r);return{kind:slow?'slow':'land',depth:0,floating,speed:slow?(kind==='hero'?.72:.75)*(world.sandstorm?.active?.72:1):1};
 }
 let surfaceGeometry;const reedGeometry=new T.ConeGeometry(1,1,3),stoneGeometry=new T.DodecahedronGeometry(1,0),surfaces=new Map();
 function waterSurface(id){

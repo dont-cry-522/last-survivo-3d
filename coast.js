@@ -1,7 +1,7 @@
-import{dodgeTravel}from'./hero-dodge.js?v=59';
+import{dodgeTravel}from'./hero-dodge.js?v=60';
 import * as T from './vendor/three.module.js';
 const boardGeometry=new T.BoxGeometry(2.8,.12,.35),boardMaterial=new T.MeshStandardMaterial({color:0x86765b,roughness:.94}),postGeometry=new T.CylinderGeometry(.11,.14,1.1,7),postMaterial=new T.MeshStandardMaterial({color:0x635b49,roughness:1});
-export function tideState(time){const p=((time%28)+28)%28,warning=p>=14&&p<17,high=p>=17&&p<25;const rise=p<17?0:p<19?(p-17)/2:p<25?1:(28-p)/3;return{warning,high,rise,label:warning?'涨潮将至':high?'涨潮 · 沿栈桥通行':'退潮 · 探索滩地'};}
+export function tideState(time){const p=((time%28)+28)%28,warning=p>=14&&p<17,high=p>=17&&p<25;const rise=p<17?0:p<19?(p-17)/2:p<25?1:(28-p)/3;return{warning,high,rise,label:warning?'涨潮将至':high?'涨潮 · 水流减速，沿栈桥通行':'退潮 · 探索滩地'};}
 export function onBridge(world,x,z){return(world.bridges||[]).some(b=>Math.abs(x-b.x)<b.width/2&&Math.abs(z-b.z)<b.length/2);}
 export function installCoast(world){
  world.bridges=[];const boards=[],posts=[];

@@ -1,6 +1,8 @@
+import{newWeaponSample,NEW_WEAPON_SOUNDS}from'./new-weapon-audio.js?v=60';
 // Short original material textures synthesized locally; no remote asset load.
 const DURATIONS={hammer:[.3,.4,.2],rifle:[.17,.13,.1],shotgun:[.42,.27,.23],crossbow:[.25,.18,.2],shuriken:[.3,.16,.14],fire:[.55,.65,.3],dark:[.58,.52,.35],shade:[.24,.32,.15],shadowblade:[.4,.28,.33],grimoire:[.4,.68,.3],shield:[.21,.3,.15],harpoon:[.24,.32,.18],boomerang:[.32,.19,.18],badger:[.20,.23,.14]};
 export function weaponSample(id,event,rate,variant=0){
+  if(NEW_WEAPON_SOUNDS[id])return newWeaponSample(id,event,rate,variant);
   const durations=DURATIONS[id],index={shot:0,impact:1,mechanism:2}[event];if(!durations||index===undefined)return null;
   const duration=durations[index],data=new Float32Array(Math.ceil(rate*duration));
   let seed=151+Object.keys(DURATIONS).indexOf(id)*173,low=0,body=0,phase=0;
