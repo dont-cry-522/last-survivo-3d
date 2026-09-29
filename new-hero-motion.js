@@ -12,9 +12,9 @@ const carryProfiles={guardian:[1.8,.009,.022,.040],tide:[2.1,.014,.030,.065],lin
 // Quiet secondary motion; amplitudes are radians/metres, not gameplay movement.
 export function heroCarryPose(kind,time,phase,moving,ready){
  const p=carryProfiles[kind];
- if(!p)return{breath:0,shoulder:0,hand:0};
+ if(!p)return{breath:0,shoulder:0,hand:0,look:0};
  const free=1-clamp(ready)*.75,step=Math.sin(phase*Math.PI*2)*clamp(moving);
- return{breath:Math.sin(time*p[0])*p[1]*free,shoulder:step*p[2]*free,hand:step*p[3]*free};
+ return{breath:Math.sin(time*p[0])*p[1]*free,shoulder:step*p[2]*free,hand:step*p[3]*free,look:Math.sin(time*.55)*Math.sin(time*.23)*.075*(1-clamp(moving))*(1-clamp(ready))};
 }
 export function committedWeaponYaw(facing,aim,attackAngle,weight){
  const desired=Number.isFinite(aim)?aim:facing;if(!Number.isFinite(attackAngle))return desired;

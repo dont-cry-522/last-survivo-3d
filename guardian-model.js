@@ -1,6 +1,6 @@
-import{heroDodgePose}from'./hero-dodge.js?v=65';
+import{heroDodgePose}from'./hero-dodge.js?v=66';
 import * as T from './vendor/three.module.js';
-import {guardianPose} from './guardian-motion.js?v=65';
+import {guardianPose} from './guardian-motion.js?v=66';
 const geo=new Map(),mats=new Map();
 function material(color,metal=0){const key=color+':'+metal;if(!mats.has(key))mats.set(key,new T.MeshStandardMaterial({color,metalness:metal,roughness:metal?.46:.82,side:T.DoubleSide}));return mats.get(key);}
 function geometry(key,create){if(!geo.has(key))geo.set(key,create());return geo.get(key);}
@@ -29,8 +29,8 @@ export function equipGuardian(g,grips){
  ell(hammer,0xb69c6d,[0,-.25,0],[.085,.068,.085],.5);
  // Beveled forged cheeks and a reinforced socket replace the barrel-shaped head.
  const hammerShape=geometry('forged-hammer-head',()=>{const sh=new T.Shape();sh.moveTo(-.16,-.15);sh.lineTo(.16,-.15);sh.lineTo(.20,-.10);sh.lineTo(.20,.10);sh.lineTo(.14,.16);sh.lineTo(-.14,.16);sh.lineTo(-.20,.10);sh.lineTo(-.20,-.10);sh.closePath();const h=new T.ExtrudeGeometry(sh,{depth:.65,bevelEnabled:true,bevelSize:.035,bevelThickness:.035,bevelSegments:3,steps:1});h.translate(0,0,-.325);h.rotateY(Math.PI/2);return h;});
- mesh(hammer,hammerShape,0x7a9094,[0,.66,0],[1,1,1],.38);
- for(const side of[-1,1]){mesh(hammer,hammerShape,0xb59a68,[side*.30,.66,0],[.13,1.025,1.025],.5);mesh(hammer,hammerShape,0x3f555c,[side*.34,.66,0],[.10,.78,.78],.3);}
+ mesh(hammer,hammerShape,0x7a9094,[0,.66,0],[.84,.82,.86],.38);
+ for(const side of[-1,1]){mesh(hammer,hammerShape,0xb59a68,[side*.255,.66,0],[.11,.85,.89],.5);mesh(hammer,hammerShape,0x3f555c,[side*.287,.66,0],[.08,.64,.66],.3);}
  tube(hammer,0xb39a69,[0,.46,0],[.08,.22,.08],.45);
  d.hammerContact=joint(hammer,[0,.66,0]);
 
@@ -60,7 +60,7 @@ export function animateGuardian(g,t,speed,dt){
  const carry=(1-(d.readyBlend||0))*(1-d.brace),step=Math.sin(d.gaitPhase*Math.PI*2)*d.blend;
  d.rig.position.z=pose[14]*.65;d.rig.position.y=pose[15]*.45;
  // Mix weight transfer into the authored pelvis/spine while keeping the walking footfall.
- d.spine.rotateY(pose[12]*.85+step*.035*carry);d.spine.rotateX(pose[13]*.55+d.brace*.17+(d.presence?.breath||0));d.spine.rotateZ((d.presence?.shoulder||0)*carry);d.rig.rotation.x+=dodge.brace*.5-block*.045;d.rig.position.z-=block*.035;
+ d.spine.rotateY(pose[12]*.85+step*.035*carry);d.spine.rotateX(pose[13]*.55+d.brace*.17+(d.presence?.breath||0));d.spine.rotateZ((d.presence?.shoulder||0)*carry);d.swimHead.rotateY((d.presence?.look||0)-pose[12]*.22);d.swimHead.rotateX(-pose[13]*.16);d.rig.rotation.x+=dodge.brace*.5-block*.045;d.rig.position.z-=block*.035;
  g.updateMatrixWorld(true);const yaw=g.getWorldQuaternion(new T.Quaternion()),chest=d.aimArm.getWorldPosition(new T.Vector3()).add(d.offArm.getWorldPosition(new T.Vector3())).multiplyScalar(.5);
  for(let i=0;i<2;i++){
   const offset=i*6,hand=i?d.support.rightHand:d.support.hand,upper=i?d.aimArm:d.offArm,lower=i?d.firingForearm:d.offForearm;

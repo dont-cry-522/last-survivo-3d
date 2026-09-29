@@ -49,10 +49,10 @@ export function coastProp(parent,index,rnd){
 let harpoonTemplate;
 export function makeHarpoon(){
  if(harpoonTemplate)return harpoonTemplate.clone();
- const g=new T.Group(),wood=new T.MeshStandardMaterial({color:0x654833,roughness:.78}),steel=new T.MeshStandardMaterial({color:0x739b9d,metalness:.32,roughness:.32}),edge=new T.MeshStandardMaterial({color:0xb4c9c3,metalness:.42,roughness:.30}),brass=new T.MeshStandardMaterial({color:0x9a8250,metalness:.55,roughness:.48}),wrap=new T.MeshStandardMaterial({color:0x344e50,roughness:.92});
+ const g=new T.Group(),wood=new T.MeshStandardMaterial({color:0x654833,roughness:.78}),steel=new T.MeshStandardMaterial({color:0x739b9d,metalness:.32,roughness:.32}),edge=new T.MeshStandardMaterial({color:0x99b9b5,metalness:.48,roughness:.38}),brass=new T.MeshStandardMaterial({color:0x9a8250,metalness:.55,roughness:.48}),wrap=new T.MeshStandardMaterial({color:0x344e50,roughness:.92});
  const cylinder=(r,h,z,m)=>{const o=new T.Mesh(new T.CylinderGeometry(r,r,h,12),m);o.rotation.x=Math.PI/2;o.position.z=z;g.add(o);return o;};
- cylinder(.029,2.16,.33,wood);cylinder(.034,.54,-.08,wrap);for(let i=0;i<8;i++)cylinder(.037,.012,-.31+i*.065,brass);cylinder(.043,.14,1.32,brass);cylinder(.038,.10,-.73,brass);
- const blade=(points,x,z,m)=>{const shape=new T.Shape();points.forEach(([a,b],i)=>i?shape.lineTo(a,b):shape.moveTo(a,b));shape.closePath();const geo=new T.ExtrudeGeometry(shape,{depth:.024,bevelEnabled:true,bevelThickness:.009,bevelSize:.008,bevelSegments:2,steps:1});geo.translate(0,0,-.012);geo.rotateX(Math.PI/2);const o=new T.Mesh(geo,m);o.position.set(x,0,z);g.add(o);return o;};
+ cylinder(.029,2.16,.33,wood);cylinder(.034,.54,-.08,wrap);for(let i=0;i<8;i++)cylinder(.037,.012,-.31+i*.065,brass);cylinder(.034,.30,.34,wrap);for(let i=0;i<5;i++)cylinder(.036,.010,.21+i*.065,brass);cylinder(.043,.14,1.32,brass);cylinder(.038,.10,-.73,brass);
+ const blade=(points,x,z,m)=>{const shape=new T.Shape();points.forEach(([a,b],i)=>i?shape.lineTo(a,b):shape.moveTo(a,b));shape.closePath();const geo=new T.ExtrudeGeometry(shape,{depth:.024,bevelEnabled:true,bevelThickness:.007,bevelSize:.006,bevelSegments:2,steps:1});geo.translate(0,0,-.012);geo.rotateX(Math.PI/2);const o=new T.Mesh(geo,m);o.position.set(x,0,z);o.scale.x=.78;g.add(o);return o;};
  blade([[-.042,0],[-.058,.14],[0,.39],[.058,.14],[.042,0]],0,1.36,edge);
  for(const side of[-1,1])blade([[0,0],[side*.12,.075],[side*.16,.24],[side*.13,.42],[side*.09,.25],[side*.06,.14],[-side*.015,.07]],0,1.20,steel);
  const spine=new T.Mesh(new T.CylinderGeometry(.008,.016,.22,8),steel);spine.rotation.x=Math.PI/2;spine.position.set(0,.024,1.51);g.add(spine);
