@@ -1,35 +1,36 @@
-import{sandWeather}from'./sand-weather.js?v=68';
-import{HERO_DODGES,HERO_ABILITY_TEXT}from'./hero-dodge.js?v=68';
-import{LINGYA_HOP_DURATION,lingyaHopScale,planLingyaHop,steerLingyaHop}from'./lingya-motion.js?v=68';
-import{BeastCompanion,PET_TIMING,sideHopTravel}from'./beast-companion.js?v=68';
-import{makeBadger,animateBadger}from'./beast-model.js?v=68';
-import{updateTide,harpoonHit,tideDashTravel,HARPOON_ATTACKS}from'./coast.js?v=68';
-import{GUARDIAN_ATTACKS,GUARDIAN_DASH,guardianDashTravel,nextGuardianAttack}from'./guardian-motion.js?v=68';
-import{tickBoss}from'./boss-combat.js?v=68';
-import{inMeleeArc,canParry,meleeDamageScale}from'./melee.js?v=68';
-import{discoverSite}from'./site-discovery.js?v=68';
-import{MAP_EVENTS,createMapEvent,advanceMapEvent,eventProgress}from'./map-events.js?v=68';
-import{MAP_HALF,MINIMAP_SCALE,mapPixel}from'./map-layout.js?v=68';
-import{terrainAt}from'./water.js?v=68';
-import{RELICS,relicChoices,equipRelic,relicEvent,incomingRelicDamage,readJournal,writeJournal,recordDiscovery,recordVictory}from'./expedition.js?v=68';
-import{encounterPhase,enemyGrowth,encounterRole,HUNT_SQUAD,huntFormation,HUNT_BOONS,takeHuntBoon,enemyApproach,separation,attackSlotAvailable}from'./encounters.js?v=68';
-import{setupMobileDisplay}from'./mobile-display.js?v=68';
-import{weaponCuePhases}from'./weapon-performance.js?v=68';
-import{ENEMY_VOICES}from'./enemy-audio.js?v=68';
-import{ENEMY_MOTION,gaitPace}from'./enemy-motion.js?v=68';
-import{MAP_ROSTERS,REGIONAL_ENEMIES,regionalEnemy}from'./map-enemies.js?v=68';
-import{HeroSkills}from'./hero-skills.js?v=68';
-import{EXTRA_BY_ID,skillPairState,skillPairHint}from'./skill-catalog.js?v=68';
-import{SCOUT_ROLL_DURATION,rollTravel}from'./dodge-motion.js?v=68';
-import{renderPixelRatio,RenderBudget}from'./render-budget.js?v=68';
-import{groundCue,disposeCue}from'./ground-cues.js?v=68';
-import{SkillVFX}from'./skill-vfx.js?v=68';
-import{loadHeroAssets,disposeHero}from'./skinned-hero.js?v=68';
-import{GameAudio}from'./audio.js?v=68';
-import{ENEMY_GUIDE,CIRCLE_GUIDE}from'./battle-guide.js?v=68';
+import{sandWeather}from'./sand-weather.js?v=69';
+import{HERO_DODGES,HERO_ABILITY_TEXT}from'./hero-dodge.js?v=69';
+import{LINGYA_HOP_DURATION,lingyaHopScale,planLingyaHop,steerLingyaHop}from'./lingya-motion.js?v=69';
+import{BeastCompanion,PET_TIMING,sideHopTravel}from'./beast-companion.js?v=69';
+import{makeBadger,animateBadger}from'./beast-model.js?v=69';
+import{updateTide,harpoonHit,tideDashTravel,HARPOON_ATTACKS}from'./coast.js?v=69';
+import{GUARDIAN_ATTACKS,GUARDIAN_DASH,guardianDashTravel,nextGuardianAttack}from'./guardian-motion.js?v=69';
+import{tickBoss}from'./boss-combat.js?v=69';
+import{inMeleeArc,canParry,meleeDamageScale}from'./melee.js?v=69';
+import{discoverSite}from'./site-discovery.js?v=69';
+import{MAP_EVENTS,createMapEvent,advanceMapEvent,eventProgress}from'./map-events.js?v=69';
+import{MAP_HALF,MINIMAP_SCALE,mapPixel}from'./map-layout.js?v=69';
+import{terrainAt}from'./water.js?v=69';
+import{crossedSwimPhase}from'./swim-motion.js?v=69';
+import{RELICS,relicChoices,equipRelic,relicEvent,incomingRelicDamage,readJournal,writeJournal,recordDiscovery,recordVictory}from'./expedition.js?v=69';
+import{encounterPhase,enemyGrowth,encounterRole,HUNT_SQUAD,huntFormation,HUNT_BOONS,takeHuntBoon,enemyApproach,separation,attackSlotAvailable}from'./encounters.js?v=69';
+import{setupMobileDisplay}from'./mobile-display.js?v=69';
+import{weaponCuePhases}from'./weapon-performance.js?v=69';
+import{ENEMY_VOICES}from'./enemy-audio.js?v=69';
+import{ENEMY_MOTION,gaitPace}from'./enemy-motion.js?v=69';
+import{MAP_ROSTERS,REGIONAL_ENEMIES,regionalEnemy}from'./map-enemies.js?v=69';
+import{HeroSkills}from'./hero-skills.js?v=69';
+import{EXTRA_BY_ID,skillPairState,skillPairHint}from'./skill-catalog.js?v=69';
+import{SCOUT_ROLL_DURATION,rollTravel}from'./dodge-motion.js?v=69';
+import{renderPixelRatio,RenderBudget}from'./render-budget.js?v=69';
+import{groundCue,disposeCue}from'./ground-cues.js?v=69';
+import{SkillVFX}from'./skill-vfx.js?v=69';
+import{loadHeroAssets,disposeHero}from'./skinned-hero.js?v=69';
+import{GameAudio}from'./audio.js?v=69';
+import{ENEMY_GUIDE,CIRCLE_GUIDE}from'./battle-guide.js?v=69';
 import * as T from './vendor/three.module.js';
-import{MAPS,WEAPONS,ENEMIES,HERO_LOADOUTS,heroHealth,weaponFor,experienceNeeded,grantExperience,chooseUpgrades,takeUpgrade,weaponStats,weaponReachText,WEAPON_PATHS,segmentDistance,registerCrossbowHit,registerShadowHit,UPGRADES}from'./rules.js?v=68';
-import{actor,animateActor,animateWorld,buildWorld,clearAt,moveActor,mesh,mat}from'./world.js?v=68';
+import{MAPS,WEAPONS,ENEMIES,HERO_LOADOUTS,heroHealth,weaponFor,experienceNeeded,grantExperience,chooseUpgrades,takeUpgrade,weaponStats,weaponReachText,WEAPON_PATHS,segmentDistance,registerCrossbowHit,registerShadowHit,UPGRADES}from'./rules.js?v=69';
+import{actor,animateActor,animateWorld,buildWorld,clearAt,moveActor,mesh,mat}from'./world.js?v=69';
 const $=s=>document.querySelector(s),touch=matchMedia('(pointer:coarse)').matches;
 document.body.classList.toggle('touch',touch);
 const canvas=$('#world');let renderer;
@@ -69,16 +70,17 @@ function companionFX(kind,x,z){
  if(kind==='petHurt'){impactChips(x,z,0xf0a08a,4);sound.companion('hurt',x-player.x,z-player.z);return;}
  if(kind==='petDown'){vfx.dust(x,z,.5);sound.companion('down',x-player.x,z-player.z);toast('獾兽倒地 · 12 秒后自动复活');return;}
  if(kind==='petRevive'){vfx.rise(x,z,0xb9e5aa,.8);sound.companion('revive',x-player.x,z-player.z);toast('獾兽已复活 · 2 秒保护');return;}
- if(kind==='land'){vfx.dust(x,z,.28);sound.companion('step',x-player.x,z-player.z);return;}
- if(kind==='pounce'){sound.companion('pounce',x-player.x,z-player.z);vfx.dust(x,z,.45);return;}
+ if(kind==='land'){if(terrainAt(world,x,z).depth>.25)vfx.water(x,z,companion?.angle||0,.35);else{vfx.dust(x,z,.28);sound.companion('step',x-player.x,z-player.z);}return;}
+ if(kind==='pounce'){sound.companion('pounce',x-player.x,z-player.z);if(terrainAt(world,x,z).depth>.25)vfx.water(x,z,companion?.angle||0,.45);else vfx.dust(x,z,.45);return;}
  if(kind==='bite'){sound.companion('bite',x-player.x,z-player.z);for(let i=0;i<3;i++)vfx.segment(new T.Vector3(x-.22+i*.17,.5,z-.18),new T.Vector3(x-.08+i*.17,.9,z+.16),0xe6d6b2,.025,.16,false);return;}
  const snap=kind==='trapSnap';if(snap||kind==='trapSet')sound.companion(snap?'trapSnap':'trapSet',x-player.x,z-player.z);
  for(let i=0;i<3;i++){const a=i*2.1,r=snap?.8:.47;vfx.segment(new T.Vector3(x+Math.sin(a)*r,.12,z+Math.cos(a)*r),new T.Vector3(x+Math.sin(a+.65)*r,snap?.55:.18,z+Math.cos(a+.65)*r),snap?0xa6c88a:0x6c8c5d,.035,snap?.35:.32,false);vfx.particle('crystal',0xb1bf88,x+Math.sin(a)*r,.16,z+Math.cos(a)*r,{life:snap?.4:.32,size:[.08,.035,.16],velocity:[0,snap?.7:0,0],additive:false});}
 }
 function createCompanion(){if(heroId!=='lingya')return;document.body.classList.add('has-companion');companionMesh=makeBadger();scene.add(companionMesh);companion=new BeastCompanion({player:()=>player,stats:()=>weaponStats(player),active:()=>state==='playing',foes:()=>[...enemies,...(boss?.alive?[boss]:[])],visible:visibleEnemy,clear:(ax,az,bx,bz)=>!world.obstacles.some(o=>segmentDistance(o.x,o.z,ax,az,bx,bz)<o.r+.12),move:(p,dx,dz)=>{const slow=terrainAt(world,p.x,p.z,'wolf').speed,ox=p.x,oz=p.z;moveActor(world,p,dx*slow,dz*slow,.30);if(Math.hypot(p.x-ox,p.z-oz)<.001)for(const turn of[.85,-.85,1.35,-1.35]){const x=dx*Math.cos(turn)+dz*Math.sin(turn),z=dz*Math.cos(turn)-dx*Math.sin(turn);if(clearAt(world,p.x+x,p.z+z,.31)){moveActor(world,p,x*slow,z*slow,.30);break;}}},home:()=>{for(const r of[1.2,2,3,4])for(let i=0;i<12;i++){const a=i*Math.PI/6,x=player.x+Math.sin(a)*r,z=player.z+Math.cos(a)*r;if(clearAt(world,x,z,.32)&&!world.patches.some(q=>q.kind==='vent'&&Math.hypot(q.x-x,q.z-z)<q.r+.5)&&![...enemies,...(boss?.alive?[boss]:[])].some(e=>e.alive&&Math.hypot(e.x-x,e.z-z)<e.size+1)&&!zones.some(q=>q.kind!=='meteor'&&q.life>0&&Math.hypot(q.x-x,q.z-z)<q.r+.5))return{x,z};}return null;},damage:hurtEnemy,onHit:e=>heroSkills.newHeroes.petHit(e),fx:companionFX});companionMesh.position.set(companion.x,0,companion.z);}
-function updateCompanion(dt){if(!companion)return;companion.update(dt);companionMesh.position.set(companion.x,-terrainAt(world,companion.x,companion.z).depth*.13,companion.z);companionMesh.rotation.y=companion.angle;companionMesh.visible=companion.alive?!(companion.hurt>0&&Math.floor(companion.hurt*25)%2):companion.elapsed<1.2;companionMesh.userData.hurt=companion.hurt;animateBadger(companionMesh,time,companion.speed||0,companion.state,Math.min(1,companion.elapsed/(PET_TIMING[companion.state]||1)),companion.turnRate||0);
- const d=companionMesh.userData;if(companion.alive){for(const leg of d.legs){if(leg.soundSwing&&!leg.swinging&&companion.speed>.2&&!['wind','pounce','recover'].includes(companion.state))sound.companion('step',companion.x-player.x,companion.z-player.z);leg.soundSwing=leg.swinging;}
- const cycle=Math.floor((d.idleClock||0)/8.6),phase=(d.idleClock||0)%8.6;if(companion.state==='sniff'&&phase>.5&&phase<1.7&&d.soundSniff!==cycle){d.soundSniff=cycle;sound.companion('sniff',companion.x-player.x,companion.z-player.z);}}
+function updateCompanion(dt){if(!companion)return;companion.update(dt);companionMesh.position.set(companion.x,0,companion.z);companionMesh.userData.waterDepth=terrainAt(world,companion.x,companion.z).depth;companionMesh.rotation.y=companion.angle;companionMesh.visible=companion.alive?!(companion.hurt>0&&Math.floor(companion.hurt*25)%2):companion.elapsed<1.2;companionMesh.userData.hurt=companion.hurt;animateBadger(companionMesh,time,companion.speed||0,companion.state,Math.min(1,companion.elapsed/(PET_TIMING[companion.state]||1)),companion.turnRate||0);
+ const d=companionMesh.userData;if(companion.alive){for(const leg of d.legs){if(d.waterBlend<.1&&leg.soundSwing&&!leg.swinging&&companion.speed>.2&&!['wind','pounce','recover'].includes(companion.state))sound.companion('step',companion.x-player.x,companion.z-player.z);leg.soundSwing=leg.swinging;}
+ if(d.waterDepth>.4&&d.waterBlend>.5&&crossedSwimPhase(d.lastWaterPhase,d.swimPhase)&&Math.hypot(companion.x-player.x,companion.z-player.z)<14)vfx.water(companion.x,companion.z,companion.angle,.30);d.lastWaterPhase=d.swimPhase;
+ const cycle=Math.floor((d.idleClock||0)/8.6),phase=(d.idleClock||0)%8.6;if(d.waterBlend<.1&&companion.state==='sniff'&&phase>.5&&phase<1.7&&d.soundSniff!==cycle){d.soundSniff=cycle;sound.companion('sniff',companion.x-player.x,companion.z-player.z);}}
 }
 function clearObjects(){if(companionMesh)scene.remove(companionMesh);companion=companionMesh=null;document.body.classList.remove('has-companion');$('#companion-status').hidden=true;relicBurst=false;heroSkills.reset();vfx.clear();fields=[];riftStrikes=[];for(const list of [enemies,bullets,orbs,effects,zones])for(const o of list){scene.remove(o.mesh);disposeCue(o.mesh);if(o.kind==='line'){o.mesh.geometry.dispose();o.mesh.material.dispose();}}if(boss)scene.remove(boss.mesh);enemies=[];bullets=[];orbs=[];effects=[];zones=[];boss=null;}
 function build(){renderer.shadowMap.needsUpdate=true;renderBudget.reset();clearObjects();if(world){scene.remove(world.group);world.group.traverse(o=>{if(o.isInstancedMesh)o.dispose();disposeCue(o);if(o.userData.ownedGeometry)o.geometry.dispose();});}if(hero){disposeHero(hero);scene.remove(hero);}world=buildWorld(mapId,Math.floor(Math.random()*1e8));scene.add(world.group);scene.background=new T.Color(world.theme.fog);scene.fog=new T.FogExp2(world.theme.fog,.014);hero=actor(heroId,weaponFor(heroId,weaponIndex).id);scene.add(hero);player={...world.spawn,heroId,weaponId:weaponFor(heroId,weaponIndex).id,weaponPath:null,hp:heroHealth(heroId),maxHp:heroHealth(heroId),level:1,xp:0,pending:0,upgrades:{},attack:0,dash:0,dashTime:0,inv:0,hurt:0,hexSlow:0,angle:0,spell:{fire:3,ice:3,storm:3,veil:3,chain:3,rift:3},distance:0};hero.position.set(player.x,0,player.z);camTarget.set(player.x,0,player.z);createCompanion();updateCamera(1);}
@@ -309,11 +311,24 @@ function enemyPounce(e,dt){const ox=e.x,oz=e.z,base=e.role==='wolf'?14:10,durati
 function updateWaterActor(p,model,dt,speed,isPlayer=false){
  const terrain=terrainAt(world,p.x,p.z,isPlayer?'hero':p.kind),before=p.waterDepth||0;p.waterDepth=terrain.depth;model.userData.waterDepth=terrain.depth;model.userData.waterFloating=terrain.floating;
  if(isPlayer&&terrain.depth>0&&before===0)introduce('terrain:water','浅水涉行，深水游泳','越靠近池心，行动越慢；岸边逐渐恢复。地面怪物同样受水阻，浮霜晶核可掠过水面。游侠在水中短距离划水，霜影和影裔仍可瞬移。');
+ if(isPlayer)return; // Player effects use this frame's solved hand positions, after animation.
  p.waterFX=Math.max(0,(p.waterFX||0)-dt);
- const phase=model.userData.swimPhase||0,stroke=terrain.depth<.55||!isPlayer||(phase>.27&&phase<.60);
- if(terrain.depth>0&&!terrain.floating&&speed>.15&&stroke&&p.waterFX===0&&(isPlayer||Math.hypot(p.x-player.x,p.z-player.z)<14)){
-  p.waterFX=isPlayer?(terrain.depth>.55?.7:.32):.48;let x=p.x,z=p.z;const d=model.userData,hand=d.skinned?d.support?.hand:d.weaponId==='grimoire'?d.rightHand:d.leftHand;if(isPlayer&&terrain.depth>.55&&hand){hand.getWorldPosition(temp);x=temp.x;z=temp.z;}vfx.water(x,z,model.rotation.y,isPlayer?.85:Math.min(1.4,p.size||1));if(isPlayer)sound.water(terrain.depth>.55);
+ if(terrain.depth>0&&!terrain.floating&&speed>.15&&p.waterFX===0&&Math.hypot(p.x-player.x,p.z-player.z)<14){
+  p.waterFX=.48;vfx.water(p.x,p.z,model.rotation.y,Math.min(1.4,p.size||1));
  }
+}
+function playerWaterFX(dt,speed){
+ const d=hero.userData,depth=player.waterDepth,phase=d.swimPhase||0,last=d.waterFXPhase;d.waterFXPhase=phase;
+ player.waterFX=Math.max(0,(player.waterFX||0)-dt);if(!depth||!hero.visible)return;
+ if(depth<.55){if(speed>.15&&player.waterFX===0){player.waterFX=.32;vfx.water(player.x,player.z,hero.rotation.y,.55);sound.water(false);}return;}
+ if((d.swimAim||0)>.65||player.waterFX>0)return;
+ const right=d.kind==='lingya'&&d.boomerangAway&&crossedSwimPhase(last,phase,.80),left=crossedSwimPhase(last,phase,.30);
+ if(!left&&!right)return;
+ const hand=d.skinned?(right?d.support?.rightHand:d.support?.hand):d.weaponId==='grimoire'?d.rightHand:d.leftHand;
+ if(!hand)return;hero.updateMatrixWorld(true);hand.getWorldPosition(temp);
+ if(terrainAt(world,temp.x,temp.z).depth<=0)return;
+ const strength=speed>.15?(d.kind==='guardian'?.45:.60):.28;
+ vfx.water(temp.x,temp.z,hero.rotation.y,strength);player.waterFX=.22;if(speed>.15)sound.water(true);
 }
 function updateEnemies(dt){for(const e of enemies){if(!e.alive)continue;updateStatus(e,dt);if(!e.alive)continue;e.cool-=dt;e.rage=Math.max(0,(e.rage||0)-dt);e.hurt=Math.max(0,e.hurt-dt);e.slow=Math.max(0,e.slow-dt);e.stagger=Math.max(0,(e.stagger||0)-dt);const focus=enemyTarget(e),startX=e.x,startZ=e.z,dx=focus.x-e.x,dz=focus.z-e.z,d=Math.hypot(dx,dz),a=Math.atan2(dx,dz);let moving=0;
  if(e.stagger>0){e.mesh.userData.cancelled=true;e.wind=0;e.pounce=0;if(e.marker){e.marker.life=0;e.marker=null;}e.cool=Math.max(e.cool,.3);}
@@ -407,7 +422,7 @@ function update(dt){const rollStart=heroId==='scout'?player.dashTime:0,guardianD
  hero.rotation.y+=turn;hero.position.set(player.x,0,player.z);
  Object.assign(hero.userData,{companionAngle:companion?Math.atan2(companion.x-player.x,companion.z-player.z):undefined,dashAngle:player.dashAngle,dashTime:player.dashTime,travelAngle,aimActive:aimInput.held||!!autoTarget||player.aimTime>0,aimAngle:aimInput.hasAim?aimInput.angle:player.aimTime>0?player.aimAngle:undefined,turnRate:turn/Math.max(dt,.001),reloadPhase:hero.userData.reloadDuration?1-player.attack/hero.userData.reloadDuration:1});
  const cues=weaponCuePhases(player.weaponId,hero.userData.reloadDuration||1);while(hero.userData.shotSerial&&player.weaponCue<cues.length&&hero.userData.reloadPhase>=cues[player.weaponCue]){if(player.dashTime<=0)sound.mechanism(player.weaponId,player.weaponCue);player.weaponCue++;}
- const heldBone=bullets.find(b=>b.kind==='boomerang'&&b.life>0&&b.releaseDelay<=0);hero.userData.boomerangAway=!!heldBone;hero.userData.catchReady=heldBone?.returning?T.MathUtils.clamp(1-(Math.hypot(heldBone.x-player.x,heldBone.z-player.z)-.6)/2.5,0,1):0;hero.userData.shoot=Math.max(0,(hero.userData.shoot||0)-dt);updateWaterActor(player,hero,dt,actualSpeed,true);hero.userData.waterDash=player.waterDash&&player.dashTime>0;animateActor(hero,time,actualSpeed,hero.userData.shoot,player.hurt);updateGuardianTrail();
+ const heldBone=bullets.find(b=>b.kind==='boomerang'&&b.life>0&&b.releaseDelay<=0);hero.userData.boomerangAway=!!heldBone;hero.userData.catchReady=heldBone?.returning?T.MathUtils.clamp(1-(Math.hypot(heldBone.x-player.x,heldBone.z-player.z)-.6)/2.5,0,1):0;hero.userData.shoot=Math.max(0,(hero.userData.shoot||0)-dt);updateWaterActor(player,hero,dt,actualSpeed,true);hero.userData.waterDash=player.waterDash&&player.dashTime>0;animateActor(hero,time,actualSpeed,hero.userData.shoot,player.hurt);playerWaterFX(dt,actualSpeed);updateGuardianTrail();
  if(heroId==='silver'&&player.dashTime>0)hero.scale.setScalar(.65+.35*(1-player.dashTime/.24));else hero.scale.setScalar(1);
  const aimOffset=Math.abs(Math.atan2(Math.sin(aimInput.angle-hero.rotation.y),Math.cos(aimInput.angle-hero.rotation.y))),aligned=aimOffset<.26;
  if((attackMode==='auto'?!!autoTarget&&aligned:aimInput.held&&(!['crossbow','hammer','harpoon'].includes(player.weaponId)||aligned))&&player.attack<=0&&player.dashTime===0)shoot(dt);if(state!=='playing')return;updateMelee(dt);if(state!=='playing')return;updateBattleFlow(dt);if(state!=='playing')return;

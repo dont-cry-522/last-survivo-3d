@@ -9,6 +9,16 @@ export function swimStroke(phase){
 // Normalized limb targets: the heavy swimmer sculls, the hunter glides,
 // and the keeper makes compact strokes with a delayed frog kick.
 export const HERO_SWIM={guardian:{pace:.57,lean:.62,sink:.45},tide:{pace:.65,lean:.90,sink:.35},lingya:{pace:.72,lean:.74,sink:.24}};
+// Detect a stroke once even when its phase wraps or frames are dropped.
+export function crossedSwimPhase(previous,current,mark=.30){
+ if(!Number.isFinite(previous)||!Number.isFinite(current)||previous===current)return false;
+ const distance=(current-previous+1)%1,toMark=(mark-previous+1)%1;
+ return distance<.5&&toMark>0&&toMark<=distance;
+}
+export function swimTravel(facing,travel){
+ const relative=Number.isFinite(travel)?travel-facing:0,forward=Math.cos(relative);
+ return{lean:.3+.7*Math.max(0,forward),bank:-Math.sin(relative)*.14,kick:Math.max(-.65,forward)};
+}
 export function heroSwimPose(kind,phase,moving,attacking=0){
  const profile=HERO_SWIM[kind];if(!profile)return null;
  const u=((phase%1)+1)%1,a=u*Math.PI*2,m=T.MathUtils.clamp(moving,0,1),stroke=swimStroke(u),lift=(1-Math.cos(a-.65))*.5;

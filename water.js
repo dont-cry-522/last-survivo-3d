@@ -1,7 +1,7 @@
-import{onBridge}from'./coast.js?v=68';
-import{MAP_SCALE}from'./map-layout.js?v=68';
-import{swimStroke,swimLimb,HERO_SWIM,heroSwimPose}from'./swim-motion.js?v=68';
-import{newHeroAttack}from'./new-hero-motion.js?v=68';
+import{onBridge}from'./coast.js?v=69';
+import{MAP_SCALE}from'./map-layout.js?v=69';
+import{swimStroke,swimLimb,HERO_SWIM,heroSwimPose,swimTravel}from'./swim-motion.js?v=69';
+import{newHeroAttack}from'./new-hero-motion.js?v=69';
 import * as T from './vendor/three.module.js';
 const clamp=T.MathUtils.clamp;
 const shore=a=>1+.07*Math.sin(a*3)+.045*Math.cos(a*5);
@@ -80,11 +80,12 @@ export function animateWaterPose(g,t,speed){
  d.swimPace=ease(d.swimPace||.5,profile?.38+(profile.pace-.38)*d.swimMove:.48+d.swimMove*.32+(d.waterDash?.42:0),5);
  d.swimPhase=((d.swimPhase||0)+dt*d.swimPace)%1;
  d.swimBank=ease(d.swimBank||0,clamp(-(d.turnRate||0)*.012,-.1,.1),5);
- const phase=d.swimPhase*Math.PI*2,stroke=Math.sin(phase),moving=d.swimMove,aim=d.swimAim,pose=profile?heroSwimPose(d.kind,d.swimPhase,moving,aim):null;
+ const phase=d.swimPhase*Math.PI*2,stroke=Math.sin(phase),moving=d.swimMove,aim=d.swimAim,pose=profile?heroSwimPose(d.kind,d.swimPhase,moving,aim):null,travel=swimTravel(g.rotation.y,d.travelAngle);
+ d.swimTravelBank=ease(d.swimTravelBank||0,profile?travel.bank*moving*(1-aim):0,5);
  save(d.rig);d.rig.position.y-=depth*(profile?profile.sink+moving*.035:hero?.38+moving*.06:heavy?.22:.24);d.rig.position.y+=(pose?pose.bob:Math.sin(phase*2-.5)*.025)*depth;
  if(hero){
   const held=d.hammer||d.gun||d.book||d.weapon,heldWorld=held?.getWorldQuaternion(new T.Quaternion()),shieldWorld=d.shield?.getWorldQuaternion(new T.Quaternion());
-  const leanTarget=swim*(pose?pose.lean:.08+.82*moving)*(1-aim*.86);d.swimLean=ease(d.swimLean||0,leanTarget,8);const lean=profile?d.swimLean:leanTarget;d.rig.rotation.x+=lean;d.rig.rotation.z+=swim*((pose?pose.bank:stroke*.045*moving)*(1-aim)+d.swimBank);
+  const leanTarget=swim*(pose?pose.lean*travel.lean:.08+.82*moving)*(1-aim*.86);d.swimLean=ease(d.swimLean||0,leanTarget,8);const lean=profile?d.swimLean:leanTarget;d.rig.rotation.x+=lean;d.rig.rotation.z+=swim*((pose?pose.bank:stroke*.045*moving)*(1-aim)+d.swimBank+d.swimTravelBank);
   const head=d.swimHead||d.head;if(head){save(head);head.rotateX(-lean*(profile?.72:.5));head.rotateZ(-d.swimBank*.6);}
   g.updateMatrixWorld(true);
   const left=d.skinned?[d.offArm,d.offForearm,d.support?.hand]:[d.leftArm,d.leftElbow,d.leftHand];
@@ -97,6 +98,7 @@ export function animateWaterPose(g,t,speed){
   swimLimb(g,...grip,emptyStroke?{x:-emptyStroke.x*.78,y:emptyStroke.y*.85,z:emptyStroke.z*.78}:pose?pose.right:{x:side*.14,y:-.30,z:.43},[-side,-.6,-.15],swim*(1-aim),save);
   for(const [leg,knee,foot,sign]of d.skinned?[[d.swimLeftLeg,d.swimLeftKnee,d.swimLeftFoot,1],[d.swimRightLeg,d.swimRightKnee,d.swimRightFoot,-1]]:[[d.leftLeg,d.leftKnee,d.leftFoot,1],[d.rightLeg,d.rightKnee,d.rightFoot,-1]]){
    const kick=Math.sin(phase*2+sign*Math.PI/2),target=pose?pose.legs[sign===1?0:1]:{x:sign*(.06+.06*(1-moving)),y:-.86+Math.max(0,kick)*.08,z:-.35*moving+kick*(.11+.09*moving)};
+   if(pose)target.z*=travel.kick;
    swimLimb(g,leg,knee,foot,target,[0,.1,1],swim,save);if(foot){save(foot);foot.rotateX((pose?pose.foot:.18+kick*.12)*swim);}
   }
   // Rate-limit joint changes at aim/recovery boundaries, independently of frame rate.

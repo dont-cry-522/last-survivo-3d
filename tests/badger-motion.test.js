@@ -11,3 +11,17 @@ test('standing has quiet holds, occasional glances and blinks without shuffling 
 
 
 test('downed pose settles and revival restores feet and rig without preserving the fallen rotation',()=>{const pet=makeBadger();for(let i=0;i<120;i++)animateBadger(pet,i/60,0,'down');assert(pet.userData.rig.rotation.z>1.1);for(let i=120;i<240;i++)animateBadger(pet,i/60,0,'look');pet.updateMatrixWorld(true);assert(Math.abs(pet.userData.rig.rotation.z)<.02);for(const l of pet.userData.legs)assert(Math.abs(l.paw.getWorldPosition(new T.Vector3()).y-.06)<.01);pet.traverse(o=>assert(o.matrixWorld.elements.every(Number.isFinite)));});
+
+test('water paddling keeps the badger afloat, alternates paws and restores planted feet on shore',()=>{
+ for(const fps of [30,60,120]){
+  const pet=makeBadger(),d=pet.userData;let minZ=99,maxZ=-99,maxStep=0,previous=null;
+  for(let i=0;i<fps*8;i++){
+   const t=i/fps;d.waterDepth=t<1||t>5?0:1;const state=t>3&&t<3.3?'pounce':'look';animateBadger(pet,t,t<4?1.5:0,state,state==='pounce'?(t-3)/.3:0);
+   pet.updateMatrixWorld(true);const paw=d.legs.find(l=>l.front).paw.getWorldPosition(new T.Vector3());
+   if(previous)maxStep=Math.max(maxStep,paw.distanceTo(previous));previous=paw.clone();
+   if(t>2&&t<3){assert(d.waterBlend>.99);assert(!d.legs.some(l=>l.planted));assert(d.head.getWorldPosition(new T.Vector3()).y>.25);minZ=Math.min(minZ,paw.z);maxZ=Math.max(maxZ,paw.z);}
+   pet.traverse(o=>assert(o.matrixWorld.elements.every(Number.isFinite)));
+  }
+  assert(maxZ-minZ>.15,'paws do not paddle');assert(maxStep<.28,'paw snaps at entry/attack/shore');assert(d.waterBlend<.001);assert(Math.abs(d.rig.position.y)<.01);for(const l of d.legs){assert(l.planted);assert(Math.abs(l.paw.getWorldPosition(new T.Vector3()).y-.06)<.01);}
+ }
+});

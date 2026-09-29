@@ -1,9 +1,15 @@
 import{test}from'node:test';import assert from'node:assert/strict';
-import{swimStroke,heroSwimPose}from'../swim-motion.js';
+import{swimStroke,heroSwimPose,crossedSwimPhase,swimTravel}from'../swim-motion.js';
 test('paddling traces a continuous reach, pull and recovery instead of a pendulum',()=>{
  const reach=swimStroke(.2),pull=swimStroke(.62);assert(reach.z>.7);assert(pull.z<0&&pull.y<reach.y&&pull.x>reach.x);
  const a=swimStroke(.99999),b=swimStroke(.00001);assert(Math.hypot(a.x-b.x,a.y-b.y,a.z-b.z)<.001);
  let last=swimStroke(0);for(let i=1;i<=1000;i++){const p=swimStroke(i/1000);assert(Math.hypot(p.x-last.x,p.y-last.y,p.z-last.z)<.015);assert(Math.hypot(p.x,p.y,p.z)<1);last=p;}
+});
+test('stroke contacts fire once across frame rates and cycle boundaries',()=>{
+ for(const fps of [15,30,60,120]){let p=0,count=0;for(let i=0;i<fps*10;i++){const next=(p+.7/fps)%1;if(crossedSwimPhase(p,next))count++;p=next;}assert.equal(count,7);}
+ assert(crossedSwimPhase(.98,.04,.02));assert(!crossedSwimPhase(.3,.3));assert(!crossedSwimPhase(undefined,.4));assert(!crossedSwimPhase(.3,.31));assert(!crossedSwimPhase(.1,.9));
+ const forward=swimTravel(0,0),back=swimTravel(0,Math.PI),left=swimTravel(0,-Math.PI/2),right=swimTravel(0,Math.PI/2);
+ assert.equal(forward.lean,1);assert(back.lean<.4&&back.kick<0);assert.equal(left.bank,-right.bank);assert.deepEqual(swimTravel(.7,.7),forward);
 });
 test('three swimming styles loop smoothly, stay within limb reach and tread while attacking',()=>{
  for(const kind of ['guardian','tide','lingya'])for(const moving of [0,.5,1])for(const attack of [0,1]){

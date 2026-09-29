@@ -1,5 +1,5 @@
-import{badgerAttack,badgerCadence,badgerIdle,smooth}from'./badger-motion.js?v=68';
-import{swimLimb as placeLimb}from'./swim-motion.js?v=68';
+import{badgerAttack,badgerCadence,badgerIdle,smooth}from'./badger-motion.js?v=69';
+import{swimLimb as placeLimb}from'./swim-motion.js?v=69';
 import * as T from './vendor/three.module.js';
 const geo=new Map(),mats=new Map();
 function material(c){if(!mats.has(c))mats.set(c,new T.MeshStandardMaterial({color:c,roughness:.84}));return mats.get(c);}
@@ -32,6 +32,8 @@ const footOrigin=new T.Vector3(),footOffset=new T.Vector3(),footTarget=new T.Vec
 export function animateBadger(g,t,speed,state='look',progress=0,turnRate=0){
  const d=g.userData,dt=d.last===undefined?1/60:Math.max(0,Math.min(.05,t-d.last));d.last=t;
  const blend=1-Math.exp(-dt*18),ease=(o,key,target)=>o[key]+=(target-o[key])*blend;
+ d.waterBlend=(d.waterBlend||0)+(T.MathUtils.smoothstep(d.waterDepth||0,.25,.80)-(d.waterBlend||0))*(1-Math.exp(-dt*7));const wet=d.waterBlend;
+ d.swimPhase=((d.swimPhase||0)+dt*(.65+Math.min(speed,4)*.12))%1;
  if(state==='down'){d.wasDown=true;ease(d.rig.rotation,'z',1.2);ease(d.rig.position,'y',-.06);ease(d.head.rotation,'x',.22);for(const eye of d.eyes)eye.scale.y=.1;return;}
  if(d.wasDown){d.wasDown=false;d.rig.rotation.set(0,0,0);d.rig.position.y=0;d.motionSpeed=0;for(const leg of d.legs){leg.ready=false;leg.swinging=false;}}
 
@@ -40,13 +42,13 @@ export function animateBadger(g,t,speed,state='look',progress=0,turnRate=0){
  const sway=Math.sin(d.phase*Math.PI*2),stride=Math.min(1,d.motionSpeed/1.2);
  d.idleClock=(d.idleClock||0)+(moving||attacking?0:dt);const idle=badgerIdle(d.idleClock),rest=(1-stride)*(attacking?0:1);
  d.sniffBlend=(d.sniffBlend||0)+(((state==='sniff'?1:0)*rest)-(d.sniffBlend||0))*(1-Math.exp(-dt*4));const sniff=d.sniffBlend;
- ease(d.rig.position,'y',pose.air-pose.crouch+(attacking?0:Math.sin(d.phase*Math.PI*4)*.010*stride));
+ ease(d.rig.position,'y',(pose.air-pose.crouch)*(1-wet*.65)+(attacking?0:Math.sin(d.phase*Math.PI*4)*.010*stride)*(1-wet)-wet*.16+Math.sin(d.swimPhase*Math.PI*4)*.008*wet);
  ease(d.rig.rotation,'z',attacking?0:sway*.018*stride-T.MathUtils.clamp(turnRate*.009,-.055,.055)+idle.shift*rest);
  ease(d.rig.rotation,'x',state==='pounce'?-.07*Math.sin(progress*Math.PI*2):state==='recover'?.08*Math.sin(progress*Math.PI):(d.hurt||0)*.35);
  d.shoulders.position.y=.42+sway*.012*stride-pose.crouch*.35;d.haunch.position.y=.43-sway*.008*stride-pose.crouch*.18;
  d.body.scale.y=.27*(1+Math.sin(t*1.8)*.009);d.body.scale.z=.53*(1+pose.reach*.035);
- ease(d.head.position,'z',.40+sniff*(.055+idle.sniff*.009)+pose.impact*.045);ease(d.head.position,'y',.45-sniff*.085-pose.crouch*.3+idle.shift*rest*.4);
- ease(d.head.rotation,'x',sniff*(.24+idle.sniff*.025)-pose.reach*.08+pose.impact*.12);
+ ease(d.head.position,'z',.40+sniff*(.055+idle.sniff*.009)*(1-wet)+pose.impact*.045);ease(d.head.position,'y',.45-sniff*.085*(1-wet)-pose.crouch*.3+idle.shift*rest*.4+wet*.035);
+ ease(d.head.rotation,'x',sniff*(.24+idle.sniff*.025)*(1-wet)-pose.reach*.08+pose.impact*.12-wet*.10);
  ease(d.head.rotation,'y',idle.look*rest*(1-sniff*.7)+T.MathUtils.clamp(-turnRate*.018,-.13,.13)*(1-rest));
  ease(d.jaw.rotation,'x',pose.jaw);ease(d.tail.rotation,'y',sway*.07*stride+idle.tail*rest);d.tail.rotation.x=-pose.crouch*2+pose.reach*.14;
  d['ear-1'].rotation.z=idle.leftEar*rest+sway*.012*stride;d.ear1.rotation.z=-idle.rightEar*rest-sway*.012*stride;for(const eye of d.eyes)eye.scale.y=1-(1-idle.blink)*rest;
@@ -71,9 +73,14 @@ export function animateBadger(g,t,speed,state='look',progress=0,turnRate=0){
    else l.current.copy(l.anchor);
   }
   l.wasSwing=wantsSwing;l.planted=!attacking&&!l.swinging;
+  if(wet>.001){
+   const cycle=(d.swimPhase+(l.front?(l.side>0?.5:0):(l.side>0?.15:.65)))%1,a=cycle*Math.PI*2;
+   const paddle=l.home.clone();paddle.y+=.11+Math.sin(a)*.065;paddle.z+=Math.cos(a)*(l.front?.17:.12);paddle.x+=l.side*.035;
+   g.localToWorld(paddle);l.current.lerp(paddle,wet*(attacking?.45:1));l.anchor.copy(l.current);l.swinging=false;l.planted=false;l.ready=true;
+  }
   l.joint.getWorldPosition(footOrigin);footOffset.copy(l.current).sub(footOrigin).applyQuaternion(inverseBody).divideScalar(.46);
   placeLimb(g,l.joint,l.knee,l.paw,footOffset,[0,.1,l.front?-1:1],1,()=>{});
   // Keep the sole level while the shoulder and elbow absorb the body's movement.
-  g.getWorldQuaternion(footOrientation);l.paw.parent.getWorldQuaternion(parentOrientation).invert();l.paw.quaternion.copy(parentOrientation.multiply(footOrientation));l.paw.rotateX(l.swinging?-.12*Math.sin(Math.PI*Math.min(1,(t-l.swingStart)/l.swingDuration)):0);
+  g.getWorldQuaternion(footOrientation);l.paw.parent.getWorldQuaternion(parentOrientation).invert();l.paw.quaternion.copy(parentOrientation.multiply(footOrientation));l.paw.rotateX(wet>.001?Math.sin((d.swimPhase+l.phase)*Math.PI*2)*.22*wet:l.swinging?-.12*Math.sin(Math.PI*Math.min(1,(t-l.swingStart)/l.swingDuration)):0);
  }
 }
