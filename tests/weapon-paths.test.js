@@ -2,10 +2,10 @@ import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {WEAPONS,WEAPON_PATHS,chooseUpgrades,takeUpgrade,weaponStats} from '../rules.js';
 const player=(weaponId,level=3)=>({weaponId,level,upgrades:{},hp:50,maxHp:120});
-test('all weapons offer exactly their two routes at level 3',()=>{
+test('all weapons randomly offer one matching route at level 3',()=>{
   for(const id of Object.keys(WEAPONS)){
     const p=player(id),paths=chooseUpgrades(p,()=>.3).filter(c=>c.category==='weapon');
-    assert.equal(paths.length,2);assert(paths.every(c=>WEAPON_PATHS[c.pathId].weapon===id));
+    assert.equal(paths.length,1);assert(paths.every(c=>WEAPON_PATHS[c.pathId].weapon===id));
     assert(!chooseUpgrades({...p,level:2}).some(c=>c.category==='weapon'));
   }
 });
@@ -14,7 +14,7 @@ test('shadow sickle returns by default and grimoire has delayed area upgrades',(
  const tome=player('grimoire',8),base=weaponStats(tome);assert.equal(base.id,'grimoire');assert(base.radius>0);
  takeUpgrade(tome,'path:grimoire_echo');assert(weaponStats(tome).echo>0);
 });
-test('shadow weapons keep separate branching upgrades',()=>{for(const id of ['shade','shadowblade']){const p=player(id),options=chooseUpgrades(p,()=>.3).filter(c=>c.category==='weapon');assert.equal(options.length,2);assert(options.every(c=>WEAPON_PATHS[c.pathId].weapon===id));p.level=8;for(const choice of options){const selected=player(id,8);for(let rank=0;rank<3;rank++)assert(takeUpgrade(selected,choice.id));const upgraded=weaponStats(selected);assert.equal(upgraded.id,id);assert.notDeepEqual(upgraded,weaponStats(player(id)));}}});
+test('shadow weapons keep separate branching upgrades',()=>{for(const id of ['shade','shadowblade']){const p=player(id),options=Object.entries(WEAPON_PATHS).filter(([,v])=>v.weapon===id).map(([pathId])=>({id:'path:'+pathId}));assert.equal(options.length,2);p.level=8;for(const choice of options){const selected=player(id,8);for(let rank=0;rank<3;rank++)assert(takeUpgrade(selected,choice.id));const upgraded=weaponStats(selected);assert.equal(upgraded.id,id);assert.notDeepEqual(upgraded,weaponStats(player(id)));}}});
 test('routes are exclusive, gated at levels 3/5/8, and reject foreign upgrades',()=>{
   const p=player('crossbow');assert.equal(takeUpgrade(p,'path:rifle_pierce'),false);
   assert(takeUpgrade(p,'path:crossbow_hunt'));assert.equal(takeUpgrade(p,'path:crossbow_pierce'),false);

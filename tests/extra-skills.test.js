@@ -1,19 +1,19 @@
 import{test}from'node:test';import assert from'node:assert/strict';
 import{EXTRA_SKILLS}from'../skill-catalog.js';
 import{HeroSkills}from'../hero-skills.js';
-import{chooseUpgrades,takeUpgrade,UPGRADES}from'../rules.js';
+import{chooseUpgrades,takeUpgrade,UPGRADES,seeded}from'../rules.js';
 function rig(hero='scout'){
  const p={heroId:hero,x:0,z:0,hp:50,maxHp:120,upgrades:{}},foes=[],events=[];let active=true;
  const api={player:()=>p,foes:()=>foes.filter(e=>e.alive),active:()=>active,blocked:()=>false,damage:(e,n)=>{e.hp-=n;if(e.hp<=0)e.alive=false;},knock:(e,n)=>{e.z+=n;},fx:e=>events.push(e)};
  const skills=new HeroSkills(api);const foe=(x,z)=>{const e={x,z,hp:1000,alive:true,size:.5};foes.push(e);return e;};
  return{p,foes,events,api,skills,foe,advance:(n)=>{for(let t=0;t<n;t+=.02)skills.update(.02);},pause:()=>active=false};
 }
-test('each hero gains three exclusive, capped skills and can discover one immediately',()=>{
+test('each hero gains three exclusive, capped skills in a mixed random skill pool',()=>{
  assert.equal(EXTRA_SKILLS.length,18);assert.equal(new Set(EXTRA_SKILLS.map(s=>s.id)).size,18);
  for(const hero of ['scout','silver','wraith','guardian','tide','lingya']){
   const own=EXTRA_SKILLS.filter(s=>s.hero===hero);assert.equal(own.length,3);
   const p={heroId:hero,weaponId:hero==='scout'?'rifle':hero==='silver'?'crossbow':'shade',level:2,upgrades:{}};
-  for(let i=0;i<50;i++)assert(chooseUpgrades(p).some(s=>own.some(o=>o.id===s.id)));
+  const seen=new Set(),random=seeded(621);for(let i=0;i<50;i++)for(const s of chooseUpgrades(p,random))seen.add(s.id);assert(own.every(s=>seen.has(s.id)));
   for(const s of EXTRA_SKILLS){assert(UPGRADES.some(u=>u.id===s.id));if(s.hero!==hero)assert.equal(takeUpgrade(p,s.id),false);else{for(let i=0;i<3;i++)assert(takeUpgrade(p,s.id));assert.equal(takeUpgrade(p,s.id),false);}}
  }
 });

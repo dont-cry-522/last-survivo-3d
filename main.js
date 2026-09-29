@@ -1,41 +1,41 @@
-import{observePlayer}from'./target-awareness.js?v=73';
-import{TERRAIN_TIPS,onIce,iceMotion,damageTerrain,updateTactics,terrainMesh}from'./map-tactics.js?v=73';
-import{advanceRoaming,roamingHint,courierDirection}from'./roaming-events.js?v=73';
-import{SMALL_FINDS,advanceDiscovery,discoveryHint,animateDiscoveries}from'./map-discoveries.js?v=73';
-import{recordEnemyHit,EnemyDeaths}from'./enemy-feedback.js?v=73';
-import{sandWeather}from'./sand-weather.js?v=73';
-import{HERO_DODGES,HERO_ABILITY_TEXT}from'./hero-dodge.js?v=73';
-import{LINGYA_HOP_DURATION,lingyaHopScale,planLingyaHop,steerLingyaHop}from'./lingya-motion.js?v=73';
-import{BeastCompanion,PET_TIMING,sideHopTravel}from'./beast-companion.js?v=73';
-import{makeBadger,animateBadger}from'./beast-model.js?v=73';
-import{updateTide,harpoonHit,tideDashTravel,HARPOON_ATTACKS}from'./coast.js?v=73';
-import{GUARDIAN_ATTACKS,GUARDIAN_DASH,guardianDashTravel,nextGuardianAttack}from'./guardian-motion.js?v=73';
-import{tickBoss}from'./boss-combat.js?v=73';
-import{inMeleeArc,canParry,meleeDamageScale}from'./melee.js?v=73';
-import{discoverSite}from'./site-discovery.js?v=73';
-import{MAP_EVENTS,createMapEvent,advanceMapEvent,eventProgress}from'./map-events.js?v=73';
-import{MAP_HALF,MINIMAP_SCALE,mapPixel}from'./map-layout.js?v=73';
-import{terrainAt}from'./water.js?v=73';
-import{crossedSwimPhase}from'./swim-motion.js?v=73';
-import{RELICS,relicChoices,equipRelic,relicEvent,incomingRelicDamage,readJournal,writeJournal,recordDiscovery,recordVictory}from'./expedition.js?v=73';
-import{encounterPhase,enemyGrowth,encounterRole,HUNT_SQUAD,huntFormation,HUNT_BOONS,takeHuntBoon,enemyApproach,separation,attackSlotAvailable}from'./encounters.js?v=73';
-import{setupMobileDisplay}from'./mobile-display.js?v=73';
-import{weaponCuePhases}from'./weapon-performance.js?v=73';
-import{ENEMY_VOICES}from'./enemy-audio.js?v=73';
-import{ENEMY_MOTION,gaitPace}from'./enemy-motion.js?v=73';
-import{MAP_ROSTERS,REGIONAL_ENEMIES,regionalEnemy}from'./map-enemies.js?v=73';
-import{HeroSkills}from'./hero-skills.js?v=73';
-import{EXTRA_BY_ID,skillPairState,skillPairHint}from'./skill-catalog.js?v=73';
-import{SCOUT_ROLL_DURATION,rollTravel}from'./dodge-motion.js?v=73';
-import{renderPixelRatio,RenderBudget}from'./render-budget.js?v=73';
-import{groundCue,disposeCue}from'./ground-cues.js?v=73';
-import{SkillVFX}from'./skill-vfx.js?v=73';
-import{loadHeroAssets,disposeHero}from'./skinned-hero.js?v=73';
-import{GameAudio}from'./audio.js?v=73';
-import{ENEMY_GUIDE,CIRCLE_GUIDE}from'./battle-guide.js?v=73';
+import{observePlayer}from'./target-awareness.js?v=74';
+import{TERRAIN_TIPS,onIce,iceMotion,damageTerrain,updateTactics,terrainMesh}from'./map-tactics.js?v=74';
+import{advanceRoaming,roamingHint,courierDirection}from'./roaming-events.js?v=74';
+import{SMALL_FINDS,advanceDiscovery,discoveryHint,animateDiscoveries}from'./map-discoveries.js?v=74';
+import{recordEnemyHit,EnemyDeaths}from'./enemy-feedback.js?v=74';
+import{sandWeather}from'./sand-weather.js?v=74';
+import{HERO_DODGES,HERO_ABILITY_TEXT}from'./hero-dodge.js?v=74';
+import{LINGYA_HOP_DURATION,lingyaHopScale,planLingyaHop,steerLingyaHop}from'./lingya-motion.js?v=74';
+import{BeastCompanion,PET_TIMING,sideHopTravel}from'./beast-companion.js?v=74';
+import{makeBadger,animateBadger}from'./beast-model.js?v=74';
+import{updateTide,harpoonHit,tideDashTravel,HARPOON_ATTACKS}from'./coast.js?v=74';
+import{GUARDIAN_ATTACKS,GUARDIAN_DASH,guardianDashTravel,nextGuardianAttack}from'./guardian-motion.js?v=74';
+import{tickBoss}from'./boss-combat.js?v=74';
+import{inMeleeArc,canParry,meleeDamageScale}from'./melee.js?v=74';
+import{discoverSite}from'./site-discovery.js?v=74';
+import{MAP_EVENTS,createMapEvent,advanceMapEvent,eventProgress}from'./map-events.js?v=74';
+import{MAP_HALF,MINIMAP_SCALE,mapPixel}from'./map-layout.js?v=74';
+import{terrainAt}from'./water.js?v=74';
+import{crossedSwimPhase}from'./swim-motion.js?v=74';
+import{RELICS,relicChoices,equipRelic,relicEvent,incomingRelicDamage,readJournal,writeJournal,recordDiscovery,recordVictory}from'./expedition.js?v=74';
+import{encounterPhase,enemyGrowth,encounterRole,HUNT_SQUAD,huntFormation,HUNT_BOONS,takeHuntBoon,enemyApproach,separation,attackSlotAvailable}from'./encounters.js?v=74';
+import{setupMobileDisplay}from'./mobile-display.js?v=74';
+import{weaponCuePhases}from'./weapon-performance.js?v=74';
+import{ENEMY_VOICES}from'./enemy-audio.js?v=74';
+import{ENEMY_MOTION,gaitPace}from'./enemy-motion.js?v=74';
+import{MAP_ROSTERS,REGIONAL_ENEMIES,regionalEnemy}from'./map-enemies.js?v=74';
+import{HeroSkills}from'./hero-skills.js?v=74';
+import{EXTRA_BY_ID,skillPairState,skillPairHint}from'./skill-catalog.js?v=74';
+import{SCOUT_ROLL_DURATION,rollTravel}from'./dodge-motion.js?v=74';
+import{renderPixelRatio,RenderBudget}from'./render-budget.js?v=74';
+import{groundCue,disposeCue}from'./ground-cues.js?v=74';
+import{SkillVFX}from'./skill-vfx.js?v=74';
+import{loadHeroAssets,disposeHero}from'./skinned-hero.js?v=74';
+import{GameAudio}from'./audio.js?v=74';
+import{ENEMY_GUIDE,CIRCLE_GUIDE}from'./battle-guide.js?v=74';
 import * as T from './vendor/three.module.js';
-import{MAPS,WEAPONS,ENEMIES,HERO_LOADOUTS,heroHealth,weaponFor,experienceNeeded,grantExperience,chooseUpgrades,takeUpgrade,weaponStats,weaponReachText,WEAPON_PATHS,segmentDistance,registerCrossbowHit,registerShadowHit,UPGRADES}from'./rules.js?v=73';
-import{actor,animateActor,animateWorld,buildWorld,clearAt,moveActor,mesh,mat}from'./world.js?v=73';
+import{MAPS,WEAPONS,ENEMIES,HERO_LOADOUTS,heroHealth,weaponFor,experienceNeeded,grantExperience,chooseUpgrades,takeUpgrade,weaponStats,weaponReachText,WEAPON_PATHS,segmentDistance,registerCrossbowHit,registerShadowHit,UPGRADES}from'./rules.js?v=74';
+import{actor,animateActor,animateWorld,buildWorld,clearAt,moveActor,mesh,mat}from'./world.js?v=74';
 const $=s=>document.querySelector(s),touch=matchMedia('(pointer:coarse)').matches;
 document.body.classList.toggle('touch',touch);
 const canvas=$('#world');let renderer;
@@ -106,13 +106,17 @@ $('#pause').onclick=pause;$('#dialog').addEventListener('cancel',e=>{e.preventDe
 $('#battle-guide').onclick=()=>{const playing=state==='playing';if(!playing&&state!=='menu')return;if(playing){sound.stopWeapons();sound.stopCreatures();state='paused';keys.clear();releaseStick();clearAttack();}dialog('战场说明','图片使用实战模型；首领实际体型更大。新物种首次出现时也会显示对应图片和介绍。',[[playing?'继续远征':'返回准备',playing?resume:()=>$('#dialog').close()]]);
  const panel=document.createElement('section');panel.className='guide-content';const renderGuide=id=>{panel.innerHTML='<div class=guide-biomes>'+Object.entries(MAPS).map(([key,m])=>`<button data-guide-map="${key}" aria-pressed="${key===id}">${m.name}</button>`).join('')+'</div><h3>怪物图鉴 · 图片与实战一致</h3><small>图片按展示空间缩放，首领在实战中远大于普通怪物。</small>'+Object.values(MAP_ROSTERS[id]).map(kind=>{const info=ENEMY_GUIDE[kind];return `<article class=enemy-entry data-enemy="${kind}"><img src="${info.image}?v=42" alt="${info.name}的游戏模型" width=112 height=112><div><h4>${info.name}${kind===MAP_ROSTERS[id].boss?'<small>首领</small>':''}</h4><dl><dt>识别与特点</dt><dd>${info.traits}</dd><dt>攻击方式</dt><dd>${info.attack}</dd><dt>应对方法</dt><dd>${info.tip}</dd></dl></div></article>`;}).join('')+'<h3>地形互动</h3><p>幽潮遗港每 28 秒涨落一次潮水：涨潮前提前 3 秒提示，潮水扩大；栈桥上不受水阻，潮行者涉水移速至少 72%。修复灯塔需清除守卫，并在退潮时累计停留 8 秒。青色水爆会伤害并减速，预告后侧移。</p><p>幽林与雪地有蓝绿色水池，小地图同色标出。浅水涉行、深水划水；越深越慢，池心移速约为陆地 48%。地面怪物也减速，重型怪物水阻较小，浮霜晶核不受水阻。游侠水中闪避变成短距离划水，瞬移仍可穿越水池；水中可继续攻击，没有溺水惩罚。赤烬荒原保留地火与灰烬地形。</p><h3>地图专属事件</h3>'+Object.values(MAP_EVENTS).map(e=>'<p><b>'+e.name+'</b><br>'+e.tip+'</p>').join('')+'<p>开局不标出全部事件。先沿附近小径探索，走到约 16 米内才会发现可用地点，并将名称记在小地图上；已发现的地点不会因离开而消失。技能事件约半分钟后出现，伏击约一分钟后出现，远处祭坛约一分半后出现，具体时间每局略有变化。靠近已发现事件会显示玩法和实时进度。事件完成后仍需靠近中心领取原有技能或治疗奖励；撤退保留已完成进度，暂停时事件与危险一起暂停。</p><h3>利用地形战斗</h3><p>'+TERRAIN_TIPS[id]+'</p><h3>随机小遭遇</h3><p>金色宝袋标出携宝猎物：靠近 8 米或先命中后开始追击，18 秒内击败，再靠近掉落的宝袋领取 30 经验。它不会攻击，也可以不追。补给营地靠近 6 米才惊动三名守卫；清理后靠近领取 40 经验和 18% 治疗。营地有不同守卫组合，可绕行离开，奖励每局一次。首领出现后不再触发新遭遇。</p><h3>沿途小发现 · '+MAPS[id].name+'</h3><p><b>'+SMALL_FINDS[id].name+'</b> · +'+SMALL_FINDS[id].xp+' 经验'+(SMALL_FINDS[id].heal?' / 恢复 '+Math.round(SMALL_FINDS[id].heal*100)+'% 生命':'')+'<br>'+SMALL_FINDS[id].tip+'</p><p>每局三处，约 10 / 45 / 80 秒后可发现；进入附近 9 米才会显露。浅黄色小方点是已发现且未领取的小补给，靠近会提示做法。奖励每处只能领取一次，领取后保留景物；附近有敌人时暂停采集，不需要额外按键。</p><h3>探索与遗物</h3><p>可探索范围约 164 × 164。出生区域附近仍有遗物遗迹，外围还会逐步出现补给和技能祭坛，发现后才显示小地图标记。</p><p>地图金色“遗物”标记是一处随机位置的遗迹。靠近唤醒四名守卫，清理后从三件遗物中选择一件；选择时战斗暂停，不消耗升级。遗物只在本局生效，发现记录保留在远征手册。武器每次发射算一次攻击，霰弹与多枚飞镖不重复计数；点击技能栏的遗物可查看具体效果。</p><h3>战斗节奏与经验</h3><p>精锐围猎有 5 秒预告；金色晶冠标出领队。狼群绕两侧，重甲正面推进，远程怪借它掩护。清理整队获得额外经验与 8% 治疗，随后有短暂喘息。林地会交替出现岩甲护送与獠牙穿插小队；首次清队可选择追猎纹章或林卫护符，仅本局生效。喘息期暂停增援，已有怪物仍会攻击。</p><p>越后期的怪物掉落越多经验。灵光靠近即拾取；附近灵光停留 12 秒、远处灵光停留 24 秒后自动回收，喘息时统一回收。手动和自动攻击使用相同经验与怪物强度。</p><h3>地面提示代表什么</h3>'+CIRCLE_GUIDE.map(info=>`<p><b>${info.color} · ${info.name}</b><br><small>${info.meaning}</small></p>`).join('');};renderGuide(mapId);panel.onclick=e=>{const id=e.target.closest('[data-guide-map]')?.dataset.guideMap;if(MAPS[id])renderGuide(id);};$('#dialog-content').insertBefore(panel,$('#dialog-content .dialog-actions'));};
 $('#sound').onclick=()=>{if(sound.ctx?.state==='running')sound.setMuted(!sound.muted);else sound.setMuted(false);unlockAudio();syncAudioUI();};
-function upgrade(){if(player.pending<=0||state!=='playing')return;state='upgrade';keys.clear();releaseStick();clearAttack();const choices=chooseUpgrades(player);if(!choices.length){player.pending=0;state='playing';return;}
+function upgrade(){if(player.pending<=0||state!=='playing')return;state='upgrade';keys.clear();releaseStick();clearAttack();
+ const opening=!player.upgradeDraft,openingKey='forest-echoes-opening:'+heroId+':'+player.weaponId;
+ if(opening)try{const shown=JSON.parse(storage.getItem(openingKey));if(Array.isArray(shown))player.upgradeDraft={shown:shown.filter(id=>typeof id==='string').slice(0,3),routeMisses:0};}catch{}
+ const choices=chooseUpgrades(player);if(!choices.length){player.pending=0;state='playing';return;}
+ if(opening)try{storage.setItem(openingKey,JSON.stringify(choices.map(u=>u.id)));}catch{}
  const path=WEAPON_PATHS[player.weaponPath?.id],weapon=weaponFor(heroId,weaponIndex);
  dialog('灵光汇聚 · 选择成长','Lv.'+player.level+' · '+weapon.name+(path?' / '+path.name+' '+player.weaponPath.rank+'阶':' · 3 级起可选专属路线'));
  const cards=document.createElement('div');cards.className='cards';for(const u of choices){const b=document.createElement('button'),weaponCard=u.category==='weapon',rank=weaponCard?u.rank:player.upgrades[u.id]||0;b.dataset.upgrade=u.id;b.className=weaponCard?'weapon-upgrade':'';
  b.innerHTML='<span class="upgrade-kind">'+(weaponCard?'武器路线 · '+(rank+1)+' 阶':u.category==='skill'?'角色技能':['fire','ice','storm','veil','chain','rift'].includes(u.id)?'独立法术':'生存强化')+'</span><em>'+u.icon+'</em><strong>'+u.name+'</strong><small>'+u.text+(skillPairHint(player,u.id)?'<br><b class=pair-hint>'+skillPairHint(player,u.id)+'</b>':'')+'<br><span class="upgrade-rank">'+(weaponCard&&rank===0?'选定后锁定本路线':'当前 '+rank+' / '+u.max+(weaponCard?' · 继承已有路线效果':''))+'</span></small>';
  b.onclick=()=>{if(!takeUpgrade(player,u.id))return;player.pending--;state='playing';$('#dialog').close();sound.level();impactChips(player.x,player.z,0xbfffe7,4);if(player.pending)upgrade();};cards.append(b);}$('#dialog-content').append(cards);
- const note=document.createElement('p');note.className='upgrade-note';note.textContent=['guardian','tide','lingya'].includes(heroId)?'武器路线在 3 / 5 / 8 级可进阶。通过专属武器分支与生存能力成长。':heroId==='wraith'?'武器路线在 3 / 5 / 8 级可进阶。暗幕、缚影、裂隙是独立暗影法术。':'武器路线在 3 / 5 / 8 级可进阶。火、冰、雷是独立法术，不会把火杖改成冰武器。';$('#dialog-content').append(note);
+ const note=document.createElement('p');note.className='upgrade-note';note.textContent='每轮随机抽取，优先展示上一轮未出现的选项；武器路线每轮最多一项。'+(['guardian','tide','lingya'].includes(heroId)?'武器路线在 3 / 5 / 8 级可进阶。通过专属武器分支与生存能力成长。':heroId==='wraith'?'武器路线在 3 / 5 / 8 级可进阶。暗幕、缚影、裂隙是独立暗影法术。':'武器路线在 3 / 5 / 8 级可进阶。火、冰、雷是独立法术，不会把火杖改成冰武器。');$('#dialog-content').append(note);
 }
 function saveJournal(){journalSaved=writeJournal(storage,journal);renderJournalSummary();}
 function renderJournalSummary(){$('#journal-open').textContent='远征手册 · 遗物 '+journal.relics.length+'/6 · 通关印记 '+journal.wins.length+'/60';}
