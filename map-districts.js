@@ -14,7 +14,7 @@ export function buildDistricts(world,id,layouts,mesh,rnd){
   if(id==='sand'){
    // Asymmetric ruined gateway, a broken lintel and two open courtyard wings.
    for(const side of[-1,1])place(side*3.6,0,g=>{pier(g,side<0?3.4:2.8);if(side<0){const top=box(g,edge,.7,3.55,0,2.4,.42,1.15);top.rotation.z=-.08;}},.82);
-   for(const side of[-1,1])for(let i=0;i<4;i++)place(side*(4.7+i*1.05),i>1?-2:0,g=>{const h=.65+rnd()*1.25;box(g,stone,0,h/2,0,.94,h,.85);box(g,edge,0,h+.07,0,1.04,.15,.95);},.62);
+   for(const side of[-1,1])for(let i=0;i<4;i++)place(side*(4.7+i*1.05),i>1?-2:0,g=>{g.userData.fragile=true;const h=.65+rnd()*1.25;box(g,stone,0,h/2,0,.94,h,.85);box(g,edge,0,h+.07,0,1.04,.15,.95);},.62);
    for(let i=0;i<7;i++)place(-5+rnd()*10,4+rnd()*2,g=>{const rock=mesh('DodecahedronGeometry',[.45,0],stone,0,.25,0,g);rock.scale.set(1.5,.7,1);},.42);
   }else if(l.kind==='warehouse'){
    // Open-front storehouse: weathered uprights, pitched roof strips, cargo below.

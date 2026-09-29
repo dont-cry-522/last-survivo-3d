@@ -1,22 +1,24 @@
-import{installDiscoveries}from'./map-discoveries.js?v=71';
-import{restoreEnemyHit,animateEnemyHit}from'./enemy-feedback.js?v=71';
-import{groveCenters,installScenery,animateScenery}from'./biome-scenery.js?v=71';
-import{districtLayout,buildDistricts}from'./map-districts.js?v=71';
-import{makeCoastEnemy,animateCoastEnemy,coastProp}from'./coast-models.js?v=71';
-import{installCoast}from'./coast.js?v=71';
-import{makeBoss,animateBoss,makeSandEnemy,animateSandEnemy}from'./expansion-models.js?v=71';
-import{siteSchedule}from'./site-discovery.js?v=71';
-import{MAP_EVENTS,biomeEvent,eventNodes}from'./map-events.js?v=71';
-import{MAP_HALF,MAP_SCALE}from'./map-layout.js?v=71';
-import{buildPonds,animateWater,waterDepth,restoreWaterPose,animateWaterPose}from'./water.js?v=71';
-import{ENEMY_MOTION,animateEnemyIdentity}from'./enemy-motion.js?v=71';
-import{REGIONAL_ENEMIES}from'./map-enemies.js?v=71';
-import{groundCue}from'./ground-cues.js?v=71';
-import{heroesReady,createSkinnedHero,animateSkinnedHero}from'./skinned-hero.js?v=71';
+import{installTactics}from'./map-tactics.js?v=72';
+import{installRoaming}from'./roaming-events.js?v=72';
+import{installDiscoveries}from'./map-discoveries.js?v=72';
+import{restoreEnemyHit,animateEnemyHit}from'./enemy-feedback.js?v=72';
+import{groveCenters,installScenery,animateScenery}from'./biome-scenery.js?v=72';
+import{districtLayout,buildDistricts}from'./map-districts.js?v=72';
+import{makeCoastEnemy,animateCoastEnemy,coastProp}from'./coast-models.js?v=72';
+import{installCoast}from'./coast.js?v=72';
+import{makeBoss,animateBoss,makeSandEnemy,animateSandEnemy}from'./expansion-models.js?v=72';
+import{siteSchedule}from'./site-discovery.js?v=72';
+import{MAP_EVENTS,biomeEvent,eventNodes}from'./map-events.js?v=72';
+import{MAP_HALF,MAP_SCALE}from'./map-layout.js?v=72';
+import{buildPonds,animateWater,waterDepth,restoreWaterPose,animateWaterPose}from'./water.js?v=72';
+import{ENEMY_MOTION,animateEnemyIdentity}from'./enemy-motion.js?v=72';
+import{REGIONAL_ENEMIES}from'./map-enemies.js?v=72';
+import{groundCue}from'./ground-cues.js?v=72';
+import{heroesReady,createSkinnedHero,animateSkinnedHero}from'./skinned-hero.js?v=72';
 import * as T from './vendor/three.module.js';
-import{makeHero,animateHero}from'./hero-model.js?v=71';
-import{makeWraith,animateWraith}from'./wraith-model.js?v=71';
-import{MAPS,seeded}from'./rules.js?v=71';
+import{makeHero,animateHero}from'./hero-model.js?v=72';
+import{makeWraith,animateWraith}from'./wraith-model.js?v=72';
+import{MAPS,seeded}from'./rules.js?v=72';
 const geo=new Map(),materials=new Map(),terrainMaterials=new Map(),detailMaterials=new Map(),weatherMaterials=new Map();
 function geometry(kind,args){const key=kind+args.join(',');if(!geo.has(key))geo.set(key,new T[kind](...args));return geo.get(key);}
 export function mat(color,glow=false){const key=color+':'+glow;if(!materials.has(key))materials.set(key,new T.MeshStandardMaterial({color,roughness:glow?.35:.86,metalness:glow?.25:.08,emissive:glow?color:0,emissiveIntensity:glow?.9:0,flatShading:true}));return materials.get(key);}
@@ -208,7 +210,7 @@ export function buildWorld(id,seed=1){const theme=MAPS[id],rnd=seeded(seed),grou
  const light=new T.PointLight(0xffa85c,6.5,9,2);light.position.set(campX,1.25,campZ);group.add(light);for(let i=0;i<6;i++){const a=i*Math.PI/3;const log=mesh('CylinderGeometry',[.09,.14,1.1,6],0x624c3d,campX+Math.cos(a)*.23,.14,campZ+Math.sin(a)*.23,group);log.rotation.z=Math.PI/2;log.rotation.y=a;}
  const motes=[];for(let i=0;i<18;i++){const m=orb(group,theme.accent,spawn.x+(rnd()-.5)*20,1+rnd()*3,spawn.z+(rnd()-.5)*20,.035,true);motes.push(m);}
  const weather=makeWeather(id,rnd,group,spawn);
- const result={group,ground,groves,obstacles,patches,ponds,sites,spawn,theme,fire,light,motes,foliage,weather};if(id==='coast')installCoast(result);if(districts.length)buildDistricts(result,id,districts,mesh,rnd);installDiscoveries(result,id,rnd);installScenery(result,id,rnd);return result;
+ const result={group,ground,groves,obstacles,patches,ponds,sites,spawn,theme,fire,light,motes,foliage,weather};if(id==='coast')installCoast(result);if(districts.length)buildDistricts(result,id,districts,mesh,rnd);installDiscoveries(result,id,rnd);installTactics(result,id,rnd);installRoaming(result,id,rnd);installScenery(result,id,rnd);return result;
 }
 export function animateWorld(world,t,focusX=world.spawn.x,focusZ=world.spawn.z){
  animateWater(world.weather.kind,t);animateScenery(world,t,focusX,focusZ);

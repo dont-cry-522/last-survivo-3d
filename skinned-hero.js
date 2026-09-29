@@ -1,18 +1,18 @@
-import{tideHarness}from'./tide-appearance.js?v=71';
-import{newHeroAttack,heroCarryPose,committedWeaponYaw}from'./new-hero-motion.js?v=71';
-import{heroDodgePose}from'./hero-dodge.js?v=71';
-import{lingyaHopPose}from'./lingya-motion.js?v=71';
-import{lingyaOutfit,lingyaAccessories,lingyaLegs}from'./lingya-appearance.js?v=71';
-import{boneBoomerang}from'./beast-model.js?v=71';
-import{makeHarpoon}from'./coast-models.js?v=71';
-import{guardianOutfit,guardianHair}from'./guardian-appearance.js?v=71';
-import{equipGuardian,animateGuardian}from'./guardian-model.js?v=71';
-import{weaponGesture,shotStarted}from'./weapon-performance.js?v=71';
-import{rollProgress,rollWeight}from'./dodge-motion.js?v=71';
+import{tideHarness}from'./tide-appearance.js?v=72';
+import{newHeroAttack,heroCarryPose,committedWeaponYaw}from'./new-hero-motion.js?v=72';
+import{heroDodgePose}from'./hero-dodge.js?v=72';
+import{lingyaHopPose}from'./lingya-motion.js?v=72';
+import{lingyaOutfit,lingyaAccessories,lingyaLegs}from'./lingya-appearance.js?v=72';
+import{boneBoomerang}from'./beast-model.js?v=72';
+import{makeHarpoon}from'./coast-models.js?v=72';
+import{guardianOutfit,guardianHair}from'./guardian-appearance.js?v=72';
+import{equipGuardian,animateGuardian}from'./guardian-model.js?v=72';
+import{weaponGesture,shotStarted}from'./weapon-performance.js?v=72';
+import{rollProgress,rollWeight}from'./dodge-motion.js?v=72';
 import * as T from './vendor/three.module.js';
 import {clone} from './vendor/SkeletonUtils.js';
-import {loadCharacterData} from './character-loader.js?v=71';
-import {makeHero as makePrototype} from './hero-model.js?v=71';
+import {loadCharacterData} from './character-loader.js?v=72';
+import {makeHero as makePrototype} from './hero-model.js?v=72';
 
 const templates=new Map(),clips=new Map();
 

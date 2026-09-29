@@ -1,7 +1,8 @@
-import{onBridge}from'./coast.js?v=71';
-import{MAP_SCALE}from'./map-layout.js?v=71';
-import{swimStroke,swimLimb,HERO_SWIM,heroSwimPose,swimTravel}from'./swim-motion.js?v=71';
-import{newHeroAttack}from'./new-hero-motion.js?v=71';
+import{onIce,onFord}from'./map-tactics.js?v=72';
+import{onBridge}from'./coast.js?v=72';
+import{MAP_SCALE}from'./map-layout.js?v=72';
+import{swimStroke,swimLimb,HERO_SWIM,heroSwimPose,swimTravel}from'./swim-motion.js?v=72';
+import{newHeroAttack}from'./new-hero-motion.js?v=72';
 import * as T from './vendor/three.module.js';
 const clamp=T.MathUtils.clamp;
 const shore=a=>1+.07*Math.sin(a*3)+.045*Math.cos(a*5);
@@ -11,6 +12,8 @@ export function waterDepth(p,x,z){
 }
 export function terrainAt(world,x,z,kind='hero'){
  if(onBridge(world,x,z))return{kind:'bridge',depth:0,floating:false,speed:1};
+ if(onFord(world,x,z))return{kind:'ford',depth:.12,floating:false,speed:.94};
+ if(onIce(world,x,z))return{kind:'ice',depth:0,floating:false,speed:1.04};
  let depth=0;for(const p of world.patches)if(p.kind==='water')depth=Math.max(depth,waterDepth(p,x,z));
  const floating=['snowtotem','cinderwisp','jellyseer'].includes(kind),heavy=['golem','yeti','lavabrute','boss','frostking','cinderlord','reefturtle','wreckwarden'].includes(kind);
  if(depth>0)return{kind:'water',depth,floating,speed:floating?1:(1-depth*(heavy?.24:.52))*(world.tide?.high?1-.18*depth:1)};
