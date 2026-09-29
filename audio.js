@@ -1,7 +1,7 @@
-import{instrumentSample,scoreBiome}from'./biome-music.js?v=61';
-import{companionSample}from'./companion-audio.js?v=61';
-import{weaponSample}from'./weapon-audio.js?v=61';
-import{creatureSample,creatureSpatial,ENEMY_VOICES}from'./enemy-audio.js?v=61';
+import{instrumentSample,scoreBiome}from'./biome-music.js?v=62';
+import{companionSample}from'./companion-audio.js?v=62';
+import{weaponSample}from'./weapon-audio.js?v=62';
+import{creatureSample,creatureSpatial,ENEMY_VOICES}from'./enemy-audio.js?v=62';
 // Original procedural score and sound design. No external audio downloads.
 const midi=n=>440*2**((n-69)/12);
 const THEMES={coast:{arrangement:'coast',bpm:96,root:50,chords:[0,3,7,5],lead:[19,0,0,17,15,0,12,0,10,0,12,15,17,0,0,0,22,0,19,0,17,15,0,12,15,0,10,0,7,0,12,0]},sand:{arrangement:'sand',bpm:106,root:55,chords:[0,1,5,7],lead:[12,0,13,0,19,17,0,13,12,0,7,0,8,12,13,0,19,0,20,19,17,0,13,0,12,13,0,7,8,0,12,0]},

@@ -2,7 +2,7 @@ const {chromium}=require(process.env.PLAYWRIGHT_MODULE||'playwright'),assert=req
 (async()=>{const browser=await chromium.launch({executablePath:process.env.BROWSER_EXECUTABLE||'C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe',headless:true});try{
  const page=await browser.newPage();await page.goto(process.env.TEST_URL||'http://127.0.0.1:8899/');
  const result=await page.evaluate(async()=>{
-  const {GameAudio}=await import('./audio.js?v=61'),results=[];
+  const {GameAudio}=await import('./audio.js?v=62'),results=[];
   for(const map of ['forest','snow','ash','sand','coast']){
    const energies=[];
    for(const pressure of [.06,.85]){

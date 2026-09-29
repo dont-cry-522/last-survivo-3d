@@ -18,6 +18,15 @@ test('elemental impacts have a readable core and distinct secondary shapes',()=>
  for(let i=0;i<90;i++)vfx.update(1/60);assert.equal(vfx.active.length,0);
 });
 test('ordinary fire and dark hits do not draw range circles',()=>{const vfx=new SkillVFX(new T.Scene());vfx.fire(0,0,1);vfx.dark(0,0,1);assert(!vfx.active.some(p=>p.shape==='ring'));});
+test('erupting ice stays rooted and grows before sinking without a spawn-frame pop',()=>{
+ const v=new SkillVFX(new T.Scene());v.ice(0,0,4);const p=v.active.find(p=>p.shape==='shard'),base=p.mesh.position.clone(),start=p.mesh.scale.y;
+ const positions=p.mesh.geometry.getAttribute('position');for(let i=0;i<positions.count;i++)assert(positions.getY(i)>=0,'geometry must grow from its base');
+ v.update(p.max*.25);const peak=p.mesh.scale.y;assert(peak>start*10);assert(p.mesh.position.equals(base));v.update(p.max*.6);assert(p.mesh.scale.y<peak*.5);assert(p.mesh.position.equals(base));v.update(1);assert.equal(v.active.length,0);
+});
+test('reused meshes reset faceted shading, texture, rotation and erupt animation',()=>{
+ const v=new SkillVFX(new T.Scene());const old=v.particle('shard',0xffffff,0,0,0,{motion:'erupt',size:[1,2,1],spin:4});assert(old.material.vertexColors);old.rotation.set(1,2,3);v.clear();
+ const reused=v.particle('ember',0xff0000,2,3,4,{size:[1,1,1]});assert.equal(old,reused);assert.equal(reused.material.vertexColors,false);assert.equal(reused.material.map,null);assert.deepEqual(reused.rotation.toArray().slice(0,3),[0,0,0]);v.update(.1);assert.equal(reused.scale.x,reused.scale.y);assert.equal(v.active[0].motion,'');
+});
 test('lightning cores remain visible through a full mobile elemental combo',()=>{const vfx=new SkillVFX(new T.Scene(),{mobile:true});vfx.ice(0,0,5);for(let i=0;i<5;i++)vfx.lightning(i*2,0,(i+1)*2,0,i===0);assert(vfx.active.length<=vfx.limit);assert(vfx.active.filter(p=>p.shape==='ray'&&p.mesh.material.color.getHex()===0xe1f4ff).length>=35,'some lightning cores disappeared at the particle cap');});
 test('mobile effects expire and reuse their pool through three minutes of casting',()=>{const scene=new T.Scene(),vfx=new SkillVFX(scene,{mobile:true});for(let frame=0;frame<10800;frame++){if(frame%36===0)vfx.fire(0,0,2,true);if(frame%47===0)vfx.ice(0,0,5);if(frame%23===0)vfx.lightning(0,0,2,1,true);if(frame%29===0)vfx.dark(0,0,2,true);vfx.update(1/60);assert(vfx.active.length<=vfx.limit);assert.equal(scene.children.length,vfx.active.length);assert(vfx.active.length+vfx.pool.length<=vfx.limit);}for(let frame=0;frame<90;frame++)vfx.update(1/60);assert.equal(vfx.active.length,0);assert.equal(scene.children.length,0);});
 
