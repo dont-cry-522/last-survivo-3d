@@ -1,1 +1,10 @@
-{"name":"last-survivo-3d","private":true,"type":"module","scripts":{"test":"node --test tests/*.test.js"}}
+{
+  "name": "last-survivo-3d",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test tests/*.test.js",
+    "offline:build": "node scripts/build-offline.mjs",
+    "offline:check": "node scripts/build-offline.mjs --check"
+  }
+}

@@ -1,0 +1,26 @@
+import {readFile,writeFile,readdir} from 'node:fs/promises';
+import {createHash} from 'node:crypto';
+import {CHARACTER_ASSETS as assets} from '../character-assets.js';
+const root=new URL('../',import.meta.url),read=path=>readFile(new URL(path,root));
+const html=(await read('index.html')).toString(),version=html.match(/main\.js\?v=(\d+)/)?.[1];
+if(!version)throw Error('Missing release version');
+const files=['index.html','style.css','manifest.webmanifest'];
+for(const f of await readdir(root))if(f.endsWith('.js')&&f!=='sw.js')files.push(f);
+for(const dir of ['vendor','assets/bestiary','assets/icons'])for(const f of await readdir(new URL(dir+'/',root)))if(/\.(js|png)$/.test(f))files.push(dir+'/'+f);
+const characterFiles=[...assets.textures,assets.motion.file,assets.motionFallback.file];
+for(const [name,model] of Object.entries(assets.models)){
+ characterFiles.push(model.file,name+'.gltf');
+ const gltf=JSON.parse(await read('assets/characters/'+name+'.gltf'));
+ for(const item of [...gltf.buffers||[],...gltf.images||[]])if(item.uri&&!item.uri.startsWith('data:'))characterFiles.push(item.uri);
+}
+files.push(...new Set(characterFiles.map(f=>'assets/characters/'+f)));
+files.sort();const hash=createHash('sha256');let bytes=0;
+const template=await read('scripts/offline-worker.txt');hash.update(template);
+for(const file of files){const content=await read(file);hash.update(file);hash.update(content);bytes+=content.length;}
+const build=version+'-'+hash.digest('hex').slice(0,12);
+const worker=template.toString().replace('__VERSION__',JSON.stringify(version)).replace('__BUILD__',JSON.stringify(build)).replace('__FILES__',JSON.stringify(files)).replace('__BYTES__',String(bytes));
+const out=new URL('sw.js',root);
+if(process.argv.includes('--check')){
+ if(await readFile(out,'utf8')!==worker)throw Error('Offline resource list is stale. Run npm run offline:build.');
+}else await writeFile(out,worker);
+console.log(`${build}: ${files.length} resources, ${(bytes/1048576).toFixed(1)} MiB${process.argv.includes('--check')?' verified':''}`);

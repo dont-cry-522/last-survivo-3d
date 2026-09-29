@@ -111,3 +111,5 @@ body.playing #hint{background:#102b28d9;padding:5px 8px;border-radius:6px;max-wi
 [data-hunt-boon]{min-width:0;text-align:left;border-color:#d8bd7b90;padding:16px;line-height:1.5}
 [data-hunt-boon] small{display:block;color:#c5d4c0;font-size:12px;line-height:1.65;margin-top:8px}
 @media(max-width:600px){.dialog-actions:has([data-hunt-boon]){grid-template-columns:1fr}}
+
+#offline-panel{margin-top:12px;border:1px solid #89bca45c;background:#102f2ac9;border-radius:9px;padding:10px 12px;font-size:12px}#offline-panel summary{cursor:pointer;color:#e6d6ab;padding:3px 0;touch-action:manipulation}#offline-panel p{line-height:1.65;color:#c9dfcd;margin:10px 0}#offline-panel button{font-size:12px;padding:10px 12px;margin:0 6px 8px 0}#offline-panel small{display:block;font-size:10px;line-height:1.6;color:#abc4b4}#offline-panel button[hidden]{display:none}
