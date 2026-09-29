@@ -1,10 +1,10 @@
-import{instrumentSample,scoreBiome}from'./biome-music.js?v=64';
-import{companionSample}from'./companion-audio.js?v=64';
-import{weaponSample}from'./weapon-audio.js?v=64';
-import{creatureSample,creatureSpatial,ENEMY_VOICES}from'./enemy-audio.js?v=64';
+import{BIOME_THEMES,instrumentSample,scoreBiome,biomeThreat}from'./biome-music.js?v=65';
+import{companionSample}from'./companion-audio.js?v=65';
+import{weaponSample}from'./weapon-audio.js?v=65';
+import{creatureSample,creatureSpatial,ENEMY_VOICES}from'./enemy-audio.js?v=65';
 // Original procedural score and sound design. No external audio downloads.
 const midi=n=>440*2**((n-69)/12);
-const THEMES={coast:{arrangement:'coast',bpm:96,root:50,chords:[0,3,7,5],lead:[19,0,0,17,15,0,12,0,10,0,12,15,17,0,0,0,22,0,19,0,17,15,0,12,15,0,10,0,7,0,12,0]},sand:{arrangement:'sand',bpm:106,root:55,chords:[0,1,5,7],lead:[12,0,13,0,19,17,0,13,12,0,7,0,8,12,13,0,19,0,20,19,17,0,13,0,12,13,0,7,8,0,12,0]},
+const THEMES={...BIOME_THEMES,
   forest:{bpm:104,root:57,chords:[0,5,3,7],lead:[12,0,19,17,15,0,12,10,12,15,19,0,22,19,17,0,15,0,12,10,7,10,12,0,15,17,19,15,12,10,7,0]},
   snow:{bpm:90,root:62,chords:[0,3,5,7],lead:[19,0,22,0,24,22,19,0,17,0,15,17,19,0,12,0,15,0,19,0,22,19,17,15,12,0,10,12,15,0,17,0]},
   ash:{bpm:116,root:50,chords:[0,0,5,7],lead:[12,7,12,0,15,12,17,15,12,0,10,7,10,12,15,0,19,17,15,12,17,15,12,10,7,10,12,15,12,0,7,0]}
@@ -26,6 +26,7 @@ export class GameAudio{
     this.room=c.createConvolver();const impulse=c.createBuffer(2,c.sampleRate*1.25,c.sampleRate);
     for(let ch=0;ch<2;ch++){const d=impulse.getChannelData(ch);for(let i=0;i<d.length;i++)d[i]=(Math.random()*2-1)*Math.pow(1-i/d.length,3)*.28;}
     this.room.buffer=impulse;const wet=c.createGain();wet.gain.value=.24;this.room.connect(wet);wet.connect(this.music);
+    this.instrumentRoom=c.createGain();this.instrumentRoom.gain.value=.32;this.instrumentRoom.connect(this.room);
     this.noiseBuffer=c.createBuffer(1,c.sampleRate*2,c.sampleRate);const d=this.noiseBuffer.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=Math.random()*2-1;
     this.ready=true;this.next=c.currentTime+.04;this.applyVolumes(true);
   }
@@ -56,7 +57,7 @@ export class GameAudio{
     if(!this.available()||this.musicSources.size>=32)return;const c=this.ctx,key=kind+':'+note;let buffer=this.musicBuffers.get(key);
     if(!buffer){const rate=Math.min(22050,c.sampleRate),data=instrumentSample(kind,note,rate);buffer=c.createBuffer(1,data.length,rate);buffer.copyToChannel(data,0);if(this.musicBuffers.size>=48)this.musicBuffers.delete(this.musicBuffers.keys().next().value);this.musicBuffers.set(key,buffer);}
     const source=c.createBufferSource(),gain=c.createGain(),p=c.createStereoPanner(),end=at+Math.min(1.75,duration);source.buffer=buffer;p.pan.value=pan;
-    gain.gain.setValueAtTime(volume,at);gain.gain.setTargetAtTime(.0001,Math.max(at+.01,end-.12),.025);source.connect(gain);gain.connect(p);p.connect(this.music);gain.connect(this.room);
+    gain.gain.setValueAtTime(volume,at);gain.gain.setTargetAtTime(.0001,Math.max(at+.01,end-.12),.025);source.connect(gain);gain.connect(p);p.connect(this.music);gain.connect(this.instrumentRoom);
     source.musicEnvelope=gain;this.nodes++;this.musicSources.add(source);source.onended=()=>{source.disconnect();gain.disconnect();p.disconnect();this.musicSources.delete(source);this.nodes--;};source.start(at);source.stop(end+.02);
   }
   stopCreatures(){for(const s of this.creatureSources)s.stop();}
@@ -91,7 +92,7 @@ export class GameAudio{
   shot(id,variant=0){if(this.allow('shot',.045))this.weapon(id,'shot',variant);}
   mechanism(id,stage=0){if(this.allow('mechanism',.065))this.weapon(id,'mechanism',stage);}
   impact(id,strong=false,variant=strong?1:0){if(this.allow(strong?'impact-strong':'impact',.085))this.weapon(id,'impact',variant);}
-  threat(kind='wave'){if(!this.allow('threat',2))return;const t=this.ctx.currentTime,deep=kind==='boss';this.voice(deep?58:82,.9,deep?.15:.105,'sawtooth',deep?35:48,t,'music',.04);this.noise(deep?.75:.42,deep?.16:.085,1400,170,t,'music');for(let i=0;i<(deep?4:3);i++)this.voice((deep?147:196)*2**(i/12),.19,.052,'triangle',null,t+i*.105,'music',.008);}
+  threat(kind='wave'){if(!this.allow('threat',2))return;const t=this.ctx.currentTime,deep=kind==='boss';if(BIOME_THEMES[this.map]){biomeThreat(this,BIOME_THEMES[this.map],this.beat,t,deep);return;}this.voice(deep?58:82,.9,deep?.15:.105,'sawtooth',deep?35:48,t,'music',.04);this.noise(deep?.75:.42,deep?.16:.085,1400,170,t,'music');for(let i=0;i<(deep?4:3);i++)this.voice((deep?147:196)*2**(i/12),.19,.052,'triangle',null,t+i*.105,'music',.008);}
   spell(kind){if(!this.allow('spell-'+kind,.11))return;const t=this.ctx.currentTime;
     if(kind==='ice'){this.noise(.36,.24,4800,1400);[2100,3150,4100,2700].forEach((f,i)=>this.voice(f,.18,.035,'sine',f*.85,t+i*.035));}
     else if(kind==='storm'){this.noise(.22,.45,4200,300);this.voice(64,.4,.21,'sine',26);this.noise(.045,.23,6200,1800,t+.07);}

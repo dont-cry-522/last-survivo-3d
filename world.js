@@ -1,20 +1,20 @@
-import{groveCenters,installScenery}from'./biome-scenery.js?v=64';
-import{districtLayout,buildDistricts}from'./map-districts.js?v=64';
-import{makeCoastEnemy,animateCoastEnemy,coastProp}from'./coast-models.js?v=64';
-import{installCoast}from'./coast.js?v=64';
-import{makeBoss,animateBoss,makeSandEnemy,animateSandEnemy}from'./expansion-models.js?v=64';
-import{siteSchedule}from'./site-discovery.js?v=64';
-import{MAP_EVENTS,biomeEvent,eventNodes}from'./map-events.js?v=64';
-import{MAP_HALF,MAP_SCALE}from'./map-layout.js?v=64';
-import{buildPonds,animateWater,waterDepth,restoreWaterPose,animateWaterPose}from'./water.js?v=64';
-import{ENEMY_MOTION,animateEnemyIdentity}from'./enemy-motion.js?v=64';
-import{REGIONAL_ENEMIES}from'./map-enemies.js?v=64';
-import{groundCue}from'./ground-cues.js?v=64';
-import{heroesReady,createSkinnedHero,animateSkinnedHero}from'./skinned-hero.js?v=64';
+import{groveCenters,installScenery}from'./biome-scenery.js?v=65';
+import{districtLayout,buildDistricts}from'./map-districts.js?v=65';
+import{makeCoastEnemy,animateCoastEnemy,coastProp}from'./coast-models.js?v=65';
+import{installCoast}from'./coast.js?v=65';
+import{makeBoss,animateBoss,makeSandEnemy,animateSandEnemy}from'./expansion-models.js?v=65';
+import{siteSchedule}from'./site-discovery.js?v=65';
+import{MAP_EVENTS,biomeEvent,eventNodes}from'./map-events.js?v=65';
+import{MAP_HALF,MAP_SCALE}from'./map-layout.js?v=65';
+import{buildPonds,animateWater,waterDepth,restoreWaterPose,animateWaterPose}from'./water.js?v=65';
+import{ENEMY_MOTION,animateEnemyIdentity}from'./enemy-motion.js?v=65';
+import{REGIONAL_ENEMIES}from'./map-enemies.js?v=65';
+import{groundCue}from'./ground-cues.js?v=65';
+import{heroesReady,createSkinnedHero,animateSkinnedHero}from'./skinned-hero.js?v=65';
 import * as T from './vendor/three.module.js';
-import{makeHero,animateHero}from'./hero-model.js?v=64';
-import{makeWraith,animateWraith}from'./wraith-model.js?v=64';
-import{MAPS,seeded}from'./rules.js?v=64';
+import{makeHero,animateHero}from'./hero-model.js?v=65';
+import{makeWraith,animateWraith}from'./wraith-model.js?v=65';
+import{MAPS,seeded}from'./rules.js?v=65';
 const geo=new Map(),materials=new Map(),terrainMaterials=new Map(),detailMaterials=new Map(),weatherMaterials=new Map();
 function geometry(kind,args){const key=kind+args.join(',');if(!geo.has(key))geo.set(key,new T[kind](...args));return geo.get(key);}
 export function mat(color,glow=false){const key=color+':'+glow;if(!materials.has(key))materials.set(key,new T.MeshStandardMaterial({color,roughness:glow?.35:.86,metalness:glow?.25:.08,emissive:glow?color:0,emissiveIntensity:glow?.9:0,flatShading:true}));return materials.get(key);}

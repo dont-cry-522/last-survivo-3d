@@ -1,6 +1,6 @@
 import{test}from'node:test';import assert from'node:assert/strict';
 import{sandWeather}from'../sand-weather.js';import{terrainAt}from'../water.js';import{buildWorld}from'../world.js';
-import{createMapEvent,advanceMapEvent}from'../map-events.js';import{newWeaponSample}from'../new-weapon-audio.js';import{instrumentSample,scoreBiome}from'../biome-music.js';
+import{createMapEvent,advanceMapEvent}from'../map-events.js';import{newWeaponSample}from'../new-weapon-audio.js';import{BIOME_THEMES,instrumentSample,scoreBiome}from'../biome-music.js';
 globalThis.document={createElement:()=>({width:256,height:256,getContext:()=>({fillRect(){}})})};
 test('sand warning precedes the storm; wet currents and quicksand affect heroes and monsters, bridges stay safe',()=>{
  assert(sandWeather(18).warning);assert(!sandWeather(18).active);assert(sandWeather(22).active);assert(!sandWeather(29).active);assert.deepEqual(sandWeather(60),sandWeather(22));
@@ -20,6 +20,6 @@ test('new hero samples have distinct attacks, impacts and combo strokes without 
  for(const event of ['shot','impact']){const a=newWeaponSample('harpoon',event,22050,0),b=newWeaponSample('harpoon',event,22050,1),c=newWeaponSample('harpoon',event,22050,2);assert.notDeepEqual(a,b);assert.notDeepEqual(b,c);}
 });
 test('new map instruments and arrangements differ beyond tempo and melody',()=>{
- const samples=new Set();for(const kind of ['lute','reed','wood','bow']){const s=instrumentSample(kind,62,22050);assert(s.every(v=>Number.isFinite(v)&&Math.abs(v)<.9));assert(Math.abs(s[0])<.001);assert(Math.abs(s.at(-1))<.001);samples.add(Array.from(s.slice(100,120)).join(','));}assert.equal(samples.size,4);
- const voices=[];const api={musicNote:(...v)=>voices.push(v),voice:()=>{},noise:()=>{}};for(const arrangement of ['sand','coast']){voices.length=0;scoreBiome(api,{arrangement,root:50,chords:[0,5,3,7],lead:[12]},0,0,.3,.1);assert(voices.some(v=>v[0]===(arrangement==='sand'?'lute':'wood')));assert(voices.some(v=>v[0]===(arrangement==='sand'?'reed':'bow')));}
+ const samples=new Set();for(const kind of ['lute','reed','wood','bow','flute']){const s=instrumentSample(kind,62,22050);assert(s.every(v=>Number.isFinite(v)&&Math.abs(v)<.9));assert(Math.abs(s[0])<.001);assert(Math.abs(s.at(-1))<.001);samples.add(Array.from(s.slice(100,120)).join(','));}assert.equal(samples.size,5);
+ const voices=[];const api={musicNote:(...v)=>voices.push(v),voice:()=>{},noise:()=>{}};for(const arrangement of ['sand','coast']){voices.length=0;scoreBiome(api,BIOME_THEMES[arrangement],0,0,.3,.1);assert(voices.some(v=>v[0]===(arrangement==='sand'?'lute':'wood')));assert(voices.some(v=>v[0]===(arrangement==='sand'?'reed':'flute')));}
 });
