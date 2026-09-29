@@ -1,3 +1,4 @@
+import{observePlayer}from'./target-awareness.js?v=73';
 // A locked target and a readable anticipation precede every damaging attack.
 export const BOSS_STYLES={
  wreckwarden:{name:'沉舟寄居王',speed:1.8,wind:1.25,recovery:1.7,color:0x82d7da,moves:['claws','surge','anchors']},
@@ -26,17 +27,18 @@ export function bossAttackPlan(kind,move,b,target){
  return{angle:a,zones,duration:Math.max(...zones.map(z=>z.delay))-wind+.3};
 }
 export function tickBoss(b,p,dt,io){
- const style=BOSS_STYLES[b.kind],d=b.mesh.userData;
+ const style=BOSS_STYLES[b.kind],d=b.mesh.userData,focus=observePlayer(b,p,dt);
+ if(b.reacquired)b.cool=Math.max(b.cool||0,.45);
  b.slow=Math.max(0,(b.slow||0)-dt);b.hurt=Math.max(0,(b.hurt||0)-dt);
  if(b.hp<b.maxHp*.5&&b.phase===1){b.phase=2;io.notice(style.name+'进入狂暴 · 留意扩大的攻击范围');}
  if(!b.stage){b.stage='walk';b.cool=2;}
  const oldX=b.x,oldZ=b.z;
  if(b.stage==='walk'){
-  b.cool-=dt;const a=Math.atan2(p.x-b.x,p.z-b.z),distance=Math.hypot(p.x-b.x,p.z-b.z);
-  const orbit=b.kind==='cinderlord'?(distance<8?1.15:.4):0;
+  b.cool-=dt;const a=Math.atan2(focus.x-b.x,focus.z-b.z),distance=Math.hypot(focus.x-b.x,focus.z-b.z);
+  const orbit=!b.targetLost&&b.kind==='cinderlord'?(distance<8?1.15:.4):0;
   if(distance>(b.kind==='cinderlord'?5:3))io.move(b,Math.sin(a+orbit)*style.speed*dt*(b.slow>0?.6:1),Math.cos(a+orbit)*style.speed*dt*(b.slow>0?.6:1));
-  b.angle=a;
-  if(b.cool<=0&&io.visible(b)){
+  b.angle=b.targetLost&&distance<=3?b.searchHeading+Math.sin(b.searchTime*2)*.4:a;
+  if(!b.targetLost&&b.cool<=0&&io.visible(b)){
    b.move=style.moves[(b.turn||0)%style.moves.length];b.turn=(b.turn||0)+1;
    const distance=Math.hypot(p.x-b.x,p.z-b.z),limit=b.move==='tail'?4.2:12,k=Math.min(1,limit/Math.max(distance,.01));
    b.target=io.landing({x:b.x+(p.x-b.x)*k,z:b.z+(p.z-b.z)*k},b);
