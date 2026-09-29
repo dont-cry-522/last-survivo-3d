@@ -3,10 +3,10 @@ const {chromium}=require(process.env.PLAYWRIGHT_MODULE||'playwright'),assert=req
  for(const viewport of [{width:1440,height:900},{width:844,height:390},{width:390,height:844}]){
   const page=await browser.newPage({viewport,hasTouch:viewport.width<1000}),errors=[];page.on('pageerror',e=>errors.push(e.message));
   await page.addInitScript(()=>{const raf=requestAnimationFrame;window.requestAnimationFrame=cb=>{window.renderNext=cb;return raf(t=>{if(!window.freezeGame)cb(t);});};});
-  await page.goto(process.env.TEST_URL||'http://127.0.0.1:8897/');await page.waitForFunction(()=>window.game3d);await page.locator('#start').click();await page.evaluate(()=>freezeGame=true);await page.waitForTimeout(50);
+  await page.goto(process.env.TEST_URL||'http://127.0.0.1:8899/');await page.waitForFunction(()=>window.game3d,null,{polling:200,timeout:60000});await page.locator('#start').click();await page.evaluate(()=>freezeGame=true);await page.waitForTimeout(50);
   const result=await page.evaluate(async()=>{
    const g=game3d,{experienceNeeded,seeded}=await import('./rules.js?v=33');Math.random=seeded(3301);g.audio.setMuted(true);
-   const choose=()=>{let guard=0;while(g.state==='upgrade'&&guard++<60)document.querySelector('[data-upgrade]').click();};
+   const choose=()=>{document.querySelector('[data-hunt-boon="rush"]')?.click();let guard=0;while(g.state==='upgrade'&&guard++<60)document.querySelector('[data-upgrade]').click();};
    const advance=seconds=>{for(let i=0;i<seconds*30;i++){g.step(1/30);g.vfx.update(1/30);choose();}};
    const total=()=>{let n=g.player.xp;for(let l=1;l<g.player.level;l++)n+=experienceNeeded(l);return n;};
    const reset=()=>{g.start();g.world.obstacles.length=0;g.world.patches.length=0;g.world.sites.length=0;g.player.inv=10000;g.player.attack=10000;};

@@ -53,3 +53,21 @@ export function attackSlotAvailable(e,enemies){
  const ranged=['spitter','shaman'].includes(e.role);
  return enemies.filter(q=>q!==e&&q.alive&&(q.wind>0||q.pounce>0)&&['spitter','shaman'].includes(q.role)===ranged).length<(ranged?2:3);
 }
+
+export function huntFormation(map,cycle){
+ if(map==='forest'&&cycle%2===1)return{name:'獠牙穿插',tip:'晶冠头狼带队绕侧，远程怪压住后方；优先拦截侧面的狼群。',squad:[
+  {role:'wolf',offset:-.8,flank:-1,elite:true},{role:'wolf',offset:1.1,flank:1},
+  {role:'golem',offset:0},{role:'spitter',offset:-.3},{role:'shaman',offset:.4},{role:'mushroom',offset:.7}
+ ]};
+ return{name:map==='forest'?'岩甲护送':'精锐围猎',tip:'晶冠重甲正面推进，狼群绕侧，远程怪跟随重甲；绕开领队可先清后排。',squad:HUNT_SQUAD};
+}
+export const HUNT_BOONS={
+ rush:{name:'追猎纹章',text:'使用角色闪避能力后，4 秒内武器和伙伴的直接伤害 +25%。再次使用刷新时间，不叠加。'},
+ shelter:{name:'林卫护符',text:'本局生命上限 +20，并恢复 20 生命；铃芽伙伴的生命上限额外 +30。适合稳住近身战。'}
+};
+export function takeHuntBoon(p,id){
+ if(!p.huntRewardPending||p.huntBoon||!Object.hasOwn(HUNT_BOONS,id))return false;
+ p.huntBoon=id;p.huntRewardPending=false;
+ if(id==='shelter'){p.maxHp+=20;p.hp=Math.min(p.maxHp,p.hp+20);}
+ return true;
+}

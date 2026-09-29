@@ -106,3 +106,8 @@ body.has-companion #hint{top:279px}body.touch.has-companion #hint{top:253px}
 .cards .pair-hint{display:block;color:#d5e8a5;font-size:11px;line-height:1.5;margin-top:6px}#pair-state{color:#d5e8a5}#skills [data-pair-detail]{border-color:#a9c87b99}
 
 body.playing #hint{background:#102b28d9;padding:5px 8px;border-radius:6px;max-width:420px;line-height:1.5}body.touch.playing #hint{max-width:205px}
+
+.dialog-actions:has([data-hunt-boon]){display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+[data-hunt-boon]{min-width:0;text-align:left;border-color:#d8bd7b90;padding:16px;line-height:1.5}
+[data-hunt-boon] small{display:block;color:#c5d4c0;font-size:12px;line-height:1.65;margin-top:8px}
+@media(max-width:600px){.dialog-actions:has([data-hunt-boon]){grid-template-columns:1fr}}
