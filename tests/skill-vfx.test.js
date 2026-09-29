@@ -54,3 +54,9 @@ test('pair feedback is visible individually and charged stone and claws differ f
  v.skill({kind:'fault',x:0,z:0});const height=v.active.find(p=>p.shape==='stone').size[1];v.clear();v.skill({kind:'fault',x:0,z:0,charged:true});assert(v.active.find(p=>p.shape==='stone').size[1]>height);
  v.clear();v.skill({kind:'bond',x:0,z:0,linked:true});assert(v.active.some(p=>p.shape==='crystal'));assert(v.active.some(p=>p.priority===1));
 });
+
+test('gun contacts distinguish hard fragments from soft puffs and stay within the mobile pool',()=>{
+ const v=new SkillVFX(new T.Scene(),{mobile:true});
+ for(const [texture,shape]of [['stone','stone'],['wood','crystal'],['ice','crystal'],['wet','smoke'],['growl','smoke']]){v.clear();v.enemyContact(texture,0x99aa88,1,2,.5,true);assert(v.active.some(p=>p.shape===shape));assert(!v.active.some(p=>p.shape==='waterArc'));assert(v.active.every(p=>p.max<=.24));}
+ for(let i=0;i<180;i++){for(let j=0;j<10;j++)v.enemyContact('stone',0xaabbcc,0,0,0,true);v.update(1/60);assert(v.active.length+v.pool.length<=110);}v.update(1);assert.equal(v.active.length,0);
+});

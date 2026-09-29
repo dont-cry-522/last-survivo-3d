@@ -1,20 +1,21 @@
-import{groveCenters,installScenery}from'./biome-scenery.js?v=69';
-import{districtLayout,buildDistricts}from'./map-districts.js?v=69';
-import{makeCoastEnemy,animateCoastEnemy,coastProp}from'./coast-models.js?v=69';
-import{installCoast}from'./coast.js?v=69';
-import{makeBoss,animateBoss,makeSandEnemy,animateSandEnemy}from'./expansion-models.js?v=69';
-import{siteSchedule}from'./site-discovery.js?v=69';
-import{MAP_EVENTS,biomeEvent,eventNodes}from'./map-events.js?v=69';
-import{MAP_HALF,MAP_SCALE}from'./map-layout.js?v=69';
-import{buildPonds,animateWater,waterDepth,restoreWaterPose,animateWaterPose}from'./water.js?v=69';
-import{ENEMY_MOTION,animateEnemyIdentity}from'./enemy-motion.js?v=69';
-import{REGIONAL_ENEMIES}from'./map-enemies.js?v=69';
-import{groundCue}from'./ground-cues.js?v=69';
-import{heroesReady,createSkinnedHero,animateSkinnedHero}from'./skinned-hero.js?v=69';
+import{restoreEnemyHit,animateEnemyHit}from'./enemy-feedback.js?v=70';
+import{groveCenters,installScenery}from'./biome-scenery.js?v=70';
+import{districtLayout,buildDistricts}from'./map-districts.js?v=70';
+import{makeCoastEnemy,animateCoastEnemy,coastProp}from'./coast-models.js?v=70';
+import{installCoast}from'./coast.js?v=70';
+import{makeBoss,animateBoss,makeSandEnemy,animateSandEnemy}from'./expansion-models.js?v=70';
+import{siteSchedule}from'./site-discovery.js?v=70';
+import{MAP_EVENTS,biomeEvent,eventNodes}from'./map-events.js?v=70';
+import{MAP_HALF,MAP_SCALE}from'./map-layout.js?v=70';
+import{buildPonds,animateWater,waterDepth,restoreWaterPose,animateWaterPose}from'./water.js?v=70';
+import{ENEMY_MOTION,animateEnemyIdentity}from'./enemy-motion.js?v=70';
+import{REGIONAL_ENEMIES}from'./map-enemies.js?v=70';
+import{groundCue}from'./ground-cues.js?v=70';
+import{heroesReady,createSkinnedHero,animateSkinnedHero}from'./skinned-hero.js?v=70';
 import * as T from './vendor/three.module.js';
-import{makeHero,animateHero}from'./hero-model.js?v=69';
-import{makeWraith,animateWraith}from'./wraith-model.js?v=69';
-import{MAPS,seeded}from'./rules.js?v=69';
+import{makeHero,animateHero}from'./hero-model.js?v=70';
+import{makeWraith,animateWraith}from'./wraith-model.js?v=70';
+import{MAPS,seeded}from'./rules.js?v=70';
 const geo=new Map(),materials=new Map(),terrainMaterials=new Map(),detailMaterials=new Map(),weatherMaterials=new Map();
 function geometry(kind,args){const key=kind+args.join(',');if(!geo.has(key))geo.set(key,new T[kind](...args));return geo.get(key);}
 export function mat(color,glow=false){const key=color+':'+glow;if(!materials.has(key))materials.set(key,new T.MeshStandardMaterial({color,roughness:glow?.35:.86,metalness:glow?.25:.08,emissive:glow?color:0,emissiveIntensity:glow?.9:0,flatShading:true}));return materials.get(key);}
@@ -82,6 +83,9 @@ function regionalActor(id){
  return g;
 }
 export function animateActor(g,t,speed=0,attack=0,hurt=0){
+ const d=g.userData,dt=d.feedbackTime===undefined?1/60:Math.max(0,Math.min(.1,t-d.feedbackTime));d.feedbackTime=t;restoreEnemyHit(g);animateBaseActor(g,t,speed,attack,d.hitReaction?0:hurt);animateEnemyHit(g,dt);
+}
+function animateBaseActor(g,t,speed=0,attack=0,hurt=0){
  const special=g.userData;if(special.coastModel){const dt=special.lastTime===undefined?1/60:Math.max(0,Math.min(.05,t-special.lastTime));special.lastTime=t;restoreWaterPose(g);animateCoastEnemy(g,t,speed,attack,dt);animateWaterPose(g,t,speed);return;}if(special.bossModel||special.sandModel){const dt=special.lastTime===undefined?1/60:Math.max(0,Math.min(.05,t-special.lastTime));special.lastTime=t;if(special.bossModel)animateBoss(g,t,speed,dt);else animateSandEnemy(g,t,speed,attack,dt);return;}
  if(!g.userData.rig)return;restoreWaterPose(g);const d=g.userData,landSpeed=speed*(1-.9*T.MathUtils.smoothstep(d.waterBlend??d.waterDepth??0,.42,.85));if(d.wraith){animateWraith(g,t,landSpeed,attack,hurt);animateWaterPose(g,t,speed);return;}if(d.skinned){animateSkinnedHero(g,t,landSpeed,attack,hurt);animateWaterPose(g,t,speed);return;}if(d.leftKnee){animateHero(g,t,landSpeed,attack);animateWaterPose(g,t,speed);return;}
  if(d.satellites){d.satellites.rotation.y=t*.9;d.satellites.position.y=Math.sin(t*3)*.08;}

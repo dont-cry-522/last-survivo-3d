@@ -8,8 +8,8 @@ const assert=require('node:assert/strict');
   await page.goto(process.env.TEST_URL||'http://127.0.0.1:8897/');await page.waitForFunction(()=>window.game3d);await page.locator('#start').click();await page.evaluate(()=>window.freezeGame=true);
   const result=await page.evaluate(()=>{
    const g=game3d;g.world.obstacles.length=0;g.world.patches.length=0;g.player.inv=100;g.spawnBoss();const b=g.boss;
-   b.wind=1.2;b.cool=10;for(let i=0;i<35;i++)g.step(1/60);const windStride=b.mesh.userData.stride;
-   b.wind=0;b.recover=0;b.cool=10;b.charge=0;g.player.x=b.x+7;g.player.z=b.z;const before=b.mesh.rotation.y;g.step(1/60);const first=b.mesh.rotation.y;
+   b.stage='wind';b.elapsed=0;b.angle=b.mesh.rotation.y;b.move='branches';b.actionDuration=1.4;b.wind=1.2;b.cool=10;const phase=b.mesh.userData.phase;for(let i=0;i<35;i++)g.step(1/60);const windStride=Math.abs(b.mesh.userData.phase-phase);
+   b.stage='walk';b.wind=0;b.recover=0;b.cool=10;b.charge=0;g.player.x=b.x+7;g.player.z=b.z;const before=b.mesh.rotation.y;g.step(1/60);const first=b.mesh.rotation.y;
    for(let i=0;i<45;i++)g.step(1/60);const final=b.mesh.rotation.y;
    return{windStride,firstTurn:Math.abs(Math.atan2(Math.sin(first-before),Math.cos(first-before))),remaining:Math.abs(Math.atan2(Math.sin(Math.PI/2-final),Math.cos(Math.PI/2-final)))};
   });

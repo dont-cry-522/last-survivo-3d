@@ -1,7 +1,7 @@
-import{boneBoomerang}from'./beast-model.js?v=69';
+import{boneBoomerang}from'./beast-model.js?v=70';
 import * as T from './vendor/three.module.js';
-import{shadowCrescentGeometry}from'./shadow-weapons.js?v=69';
-import{spellShapes,streakTexture,crestTexture}from'./spell-shapes.js?v=69';
+import{shadowCrescentGeometry}from'./shadow-weapons.js?v=70';
+import{spellShapes,streakTexture,crestTexture}from'./spell-shapes.js?v=70';
 
 function flameTexture(){
  if(typeof document==='undefined')return null;
@@ -47,6 +47,11 @@ export class SkillVFX{
   }this.active.length=n;
  }
  clear(){for(const p of this.active){this.scene.remove(p.mesh);this.pool.push(p.mesh);}this.active.length=0;}
+ enemyContact(texture,color,x,z,angle,strong=false){
+  const hard=['stone','wood','ice'].includes(texture),shape=texture==='stone'?'stone':hard?'crystal':'smoke',count=strong?4:2;
+  for(let i=0;i<count;i++){const a=angle+(i-(count-1)/2)*.55,s=strong?.065:.045;this.particle(shape,color,x,.72,z,{life:hard?.24:.20,size:[s,s*(hard?1.7:1.1),s],velocity:[Math.sin(a)*(strong?2:1.3),hard?1.1:.35,Math.cos(a)*(strong?2:1.3)],gravity:hard?5:0,spin:hard?5:0,opacity:hard?.8:.5,additive:false});}
+  if(hard)this.segment(new T.Vector3(x,.75,z),new T.Vector3(x-Math.sin(angle)*.22,.85,z-Math.cos(angle)*.22),0xf4d4a2,.018,.09,false);
+ }
  dive(x,z,angle){
   this.particle('veil',0x3e989c,x,.09,z,{life:.22,size:[.85,.66,1],opacity:.55,additive:false});
   const dx=Math.sin(angle),dz=Math.cos(angle);for(const side of[-1,1]){this.segment(new T.Vector3(x+Math.cos(angle)*side*.28,.12,z-Math.sin(angle)*side*.28),new T.Vector3(x-dx*.65+Math.cos(angle)*side*.5,.10,z-dz*.65-Math.sin(angle)*side*.5),0xa1dbd4,.022,.2,false,1,.65);}
