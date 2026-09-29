@@ -4,7 +4,7 @@ const{chromium}=require(process.env.PLAYWRIGHT_MODULE||'playwright'),assert=requ
  await p.addInitScript(()=>{const raf=requestAnimationFrame;window.requestAnimationFrame=cb=>{window.nextFrame=cb;return raf(t=>{if(!window.freezeGame)cb(t)})}});
  await p.goto(process.env.TEST_URL||'http://127.0.0.1:8899/',{waitUntil:'domcontentloaded',timeout:60000});await p.waitForFunction(()=>window.game3d&&!document.querySelector('#start').disabled,null,{polling:200,timeout:60000});await p.locator('#start').click();await p.evaluate(()=>freezeGame=true);await p.waitForTimeout(60);
  for(const id of['forest','snow','ash','sand','coast']){
-  const result=await p.evaluate(async id=>{const g=game3d,{animateWorld}=await import('./world.js?v=75'),{SMALL_FINDS}=await import('./map-discoveries.js?v=75'),check=(v,m)=>{if(!v)throw Error(id+': '+m)};
+  const result=await p.evaluate(async id=>{const g=game3d,{animateWorld}=await import('./world.js?v=76'),{SMALL_FINDS}=await import('./map-discoveries.js?v=76'),check=(v,m)=>{if(!v)throw Error(id+': '+m)};
    g.select('lingya',id,0);g.start();g.player.inv=999;g.player.attack=999;g.controls.held=false;g.player.level=10;g.player.xp=0;g.player.pending=0;g.player.hp=g.player.maxHp/2;
    const n=g.world.discoveries[0];check(g.world.discoveries.length===3,'find count');g.player.x=n.x+5;g.player.z=n.z;g.step(.02);check(!n.discovered,'time gate');n.availableAt=0;n.phase=0;g.step(.02);check(n.discovered&&n.mesh.visible&&!n.claimed,'proximity reveal');
    g.pause();const progress=n.progress;g.player.x=n.x;g.step(3);check(n.progress===progress&&!n.claimed,'pause');g.resume();

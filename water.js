@@ -1,8 +1,8 @@
-import{onIce,onFord}from'./map-tactics.js?v=75';
-import{onBridge}from'./coast.js?v=75';
-import{MAP_SCALE}from'./map-layout.js?v=75';
-import{swimStroke,swimLimb,HERO_SWIM,heroSwimPose,swimTravel}from'./swim-motion.js?v=75';
-import{newHeroAttack}from'./new-hero-motion.js?v=75';
+import{onIce,onFord}from'./map-tactics.js?v=76';
+import{onBridge}from'./coast.js?v=76';
+import{MAP_SCALE}from'./map-layout.js?v=76';
+import{swimStroke,swimLimb,HERO_SWIM,heroSwimPose,swimTravel}from'./swim-motion.js?v=76';
+import{newHeroAttack}from'./new-hero-motion.js?v=76';
 import * as T from './vendor/three.module.js';
 const clamp=T.MathUtils.clamp;
 const shore=a=>1+.07*Math.sin(a*3)+.045*Math.cos(a*5);
