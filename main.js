@@ -1,35 +1,35 @@
-import{sandWeather}from'./sand-weather.js?v=62';
-import{HERO_DODGES,HERO_ABILITY_TEXT}from'./hero-dodge.js?v=62';
-import{LINGYA_HOP_DURATION,lingyaHopScale}from'./lingya-motion.js?v=62';
-import{BeastCompanion,PET_TIMING,sideHopTravel}from'./beast-companion.js?v=62';
-import{makeBadger,animateBadger}from'./beast-model.js?v=62';
-import{updateTide,harpoonHit,tideDashTravel,HARPOON_ATTACKS}from'./coast.js?v=62';
-import{GUARDIAN_ATTACKS,GUARDIAN_DASH,guardianDashTravel,nextGuardianAttack}from'./guardian-motion.js?v=62';
-import{tickBoss}from'./boss-combat.js?v=62';
-import{inMeleeArc,canParry}from'./melee.js?v=62';
-import{discoverSite}from'./site-discovery.js?v=62';
-import{MAP_EVENTS,createMapEvent,advanceMapEvent,eventProgress}from'./map-events.js?v=62';
-import{MAP_HALF,MINIMAP_SCALE,mapPixel}from'./map-layout.js?v=62';
-import{terrainAt}from'./water.js?v=62';
-import{RELICS,relicChoices,equipRelic,relicEvent,incomingRelicDamage,readJournal,writeJournal,recordDiscovery,recordVictory}from'./expedition.js?v=62';
-import{encounterPhase,enemyGrowth,encounterRole,HUNT_SQUAD,enemyApproach,separation,attackSlotAvailable}from'./encounters.js?v=62';
-import{setupMobileDisplay}from'./mobile-display.js?v=62';
-import{weaponCuePhases}from'./weapon-performance.js?v=62';
-import{ENEMY_VOICES}from'./enemy-audio.js?v=62';
-import{ENEMY_MOTION,gaitPace}from'./enemy-motion.js?v=62';
-import{MAP_ROSTERS,REGIONAL_ENEMIES,regionalEnemy}from'./map-enemies.js?v=62';
-import{HeroSkills}from'./hero-skills.js?v=62';
-import{EXTRA_BY_ID,skillPairState,skillPairHint}from'./skill-catalog.js?v=62';
-import{SCOUT_ROLL_DURATION,rollTravel}from'./dodge-motion.js?v=62';
-import{renderPixelRatio,RenderBudget}from'./render-budget.js?v=62';
-import{groundCue,disposeCue}from'./ground-cues.js?v=62';
-import{SkillVFX}from'./skill-vfx.js?v=62';
-import{loadHeroAssets,disposeHero}from'./skinned-hero.js?v=62';
-import{GameAudio}from'./audio.js?v=62';
-import{ENEMY_GUIDE,CIRCLE_GUIDE}from'./battle-guide.js?v=62';
+import{sandWeather}from'./sand-weather.js?v=63';
+import{HERO_DODGES,HERO_ABILITY_TEXT}from'./hero-dodge.js?v=63';
+import{LINGYA_HOP_DURATION,lingyaHopScale,planLingyaHop,steerLingyaHop}from'./lingya-motion.js?v=63';
+import{BeastCompanion,PET_TIMING,sideHopTravel}from'./beast-companion.js?v=63';
+import{makeBadger,animateBadger}from'./beast-model.js?v=63';
+import{updateTide,harpoonHit,tideDashTravel,HARPOON_ATTACKS}from'./coast.js?v=63';
+import{GUARDIAN_ATTACKS,GUARDIAN_DASH,guardianDashTravel,nextGuardianAttack}from'./guardian-motion.js?v=63';
+import{tickBoss}from'./boss-combat.js?v=63';
+import{inMeleeArc,canParry}from'./melee.js?v=63';
+import{discoverSite}from'./site-discovery.js?v=63';
+import{MAP_EVENTS,createMapEvent,advanceMapEvent,eventProgress}from'./map-events.js?v=63';
+import{MAP_HALF,MINIMAP_SCALE,mapPixel}from'./map-layout.js?v=63';
+import{terrainAt}from'./water.js?v=63';
+import{RELICS,relicChoices,equipRelic,relicEvent,incomingRelicDamage,readJournal,writeJournal,recordDiscovery,recordVictory}from'./expedition.js?v=63';
+import{encounterPhase,enemyGrowth,encounterRole,HUNT_SQUAD,enemyApproach,separation,attackSlotAvailable}from'./encounters.js?v=63';
+import{setupMobileDisplay}from'./mobile-display.js?v=63';
+import{weaponCuePhases}from'./weapon-performance.js?v=63';
+import{ENEMY_VOICES}from'./enemy-audio.js?v=63';
+import{ENEMY_MOTION,gaitPace}from'./enemy-motion.js?v=63';
+import{MAP_ROSTERS,REGIONAL_ENEMIES,regionalEnemy}from'./map-enemies.js?v=63';
+import{HeroSkills}from'./hero-skills.js?v=63';
+import{EXTRA_BY_ID,skillPairState,skillPairHint}from'./skill-catalog.js?v=63';
+import{SCOUT_ROLL_DURATION,rollTravel}from'./dodge-motion.js?v=63';
+import{renderPixelRatio,RenderBudget}from'./render-budget.js?v=63';
+import{groundCue,disposeCue}from'./ground-cues.js?v=63';
+import{SkillVFX}from'./skill-vfx.js?v=63';
+import{loadHeroAssets,disposeHero}from'./skinned-hero.js?v=63';
+import{GameAudio}from'./audio.js?v=63';
+import{ENEMY_GUIDE,CIRCLE_GUIDE}from'./battle-guide.js?v=63';
 import * as T from './vendor/three.module.js';
-import{MAPS,WEAPONS,ENEMIES,HERO_LOADOUTS,weaponFor,experienceNeeded,grantExperience,chooseUpgrades,takeUpgrade,weaponStats,weaponReachText,WEAPON_PATHS,segmentDistance,registerCrossbowHit,registerShadowHit,UPGRADES}from'./rules.js?v=62';
-import{actor,animateActor,animateWorld,buildWorld,clearAt,moveActor,mesh,mat}from'./world.js?v=62';
+import{MAPS,WEAPONS,ENEMIES,HERO_LOADOUTS,weaponFor,experienceNeeded,grantExperience,chooseUpgrades,takeUpgrade,weaponStats,weaponReachText,WEAPON_PATHS,segmentDistance,registerCrossbowHit,registerShadowHit,UPGRADES}from'./rules.js?v=63';
+import{actor,animateActor,animateWorld,buildWorld,clearAt,moveActor,mesh,mat}from'./world.js?v=63';
 const $=s=>document.querySelector(s),touch=matchMedia('(pointer:coarse)').matches;
 document.body.classList.toggle('touch',touch);
 const canvas=$('#world');let renderer;
@@ -82,7 +82,7 @@ function updateCompanion(dt){if(!companion)return;companion.update(dt);companion
 }
 function clearObjects(){if(companionMesh)scene.remove(companionMesh);companion=companionMesh=null;document.body.classList.remove('has-companion');$('#companion-status').hidden=true;relicBurst=false;heroSkills.reset();vfx.clear();fields=[];riftStrikes=[];for(const list of [enemies,bullets,orbs,effects,zones])for(const o of list){scene.remove(o.mesh);disposeCue(o.mesh);if(o.kind==='line'){o.mesh.geometry.dispose();o.mesh.material.dispose();}}if(boss)scene.remove(boss.mesh);enemies=[];bullets=[];orbs=[];effects=[];zones=[];boss=null;}
 function build(){renderer.shadowMap.needsUpdate=true;renderBudget.reset();clearObjects();if(world){scene.remove(world.group);world.group.traverse(o=>{if(o.isInstancedMesh)o.dispose();disposeCue(o);if(o.userData.ownedGeometry)o.geometry.dispose();});}if(hero){disposeHero(hero);scene.remove(hero);}world=buildWorld(mapId,Math.floor(Math.random()*1e8));scene.add(world.group);scene.background=new T.Color(world.theme.fog);scene.fog=new T.FogExp2(world.theme.fog,.014);hero=actor(heroId,weaponFor(heroId,weaponIndex).id);scene.add(hero);player={...world.spawn,heroId,weaponId:weaponFor(heroId,weaponIndex).id,weaponPath:null,hp:heroId==='guardian'?150:120,maxHp:heroId==='guardian'?150:120,level:1,xp:0,pending:0,upgrades:{},attack:0,dash:0,dashTime:0,inv:0,hurt:0,hexSlow:0,angle:0,spell:{fire:3,ice:3,storm:3,veil:3,chain:3,rift:3},distance:0};hero.position.set(player.x,0,player.z);camTarget.set(player.x,0,player.z);createCompanion();updateCamera(1);}
-function renderChoices(){renderJournalSummary();for(const b of document.querySelectorAll('[data-hero]'))b.classList.toggle('selected',b.dataset.hero===heroId);for(const b of document.querySelectorAll('[data-map]'))b.classList.toggle('selected',b.dataset.map===mapId);const box=$('#weapons');box.replaceChildren();for(let i=0;i<HERO_LOADOUTS[heroId].length;i++){const w=weaponFor(heroId,i),b=document.createElement('button');b.textContent=w.name;b.classList.toggle('selected',i===weaponIndex);b.onclick=()=>{weaponIndex=i;renderChoices();build();};box.append(b);}const selectedWeapon=weaponFor(heroId,weaponIndex),selected=selectedWeapon.id,identity={boomerang:'骨镖去程与回程均能命中；獾兽会在附近游走、嗅探，优先扑击瞄准目标，超出活动范围再归队。普通移动和燕步不会打断伙伴作战，落后超过 18 米才优先归队；主动换位则会命令伙伴撤回。闪避会向 4—9 米内的伙伴侧跃，伙伴撤向起点；伙伴倒地、距离或通路不合适时使用普通燕步，冷却 3.6 秒。伙伴有独立生命，倒地 18 秒后复活。',harpoon:'直刺→近身横扫→回钩牵引，第三击拉近普通怪物并减速；潜潮持续最多 2 秒，期间无敌、可移动但不能攻击，再按闪避或重新按攻击提前浮出；冷却 6.5 秒。',hammer:'盾击→横锤→下砸，连续按住攻击；铁壁持续 1.2 秒，正面减伤 75%，可缓慢移动，冷却 4.2 秒；起手精准格挡后，4 秒内下一击伤害 +60%。',rifle:'细长高速枪弹，快速连续射击。',shotgun:'一枪多颗短弹，近距离扇面散射。',fire:'较大的火球，较慢飞行并留下火焰，命中爆燃。',crossbow:'细长箭杆与箭头，快速直射、三连命中击退。',shuriken:'旋转三刃飞镖，可穿过敌人。',dark:'较大的暗紫法球，缓慢飞行、命中散开暗雾。',shade:'掌心发射中型影脉，三次命中引爆刻印。',shadowblade:'投出宽弧影镰，飞回时可再次命中。',grimoire:'在瞄准方向撕开延迟裂口，不发射子弹。'};$('#weapon-preview').textContent=identity[selected]+weaponReachText(weaponStats({weaponId:selected}))+' · 基础频率 '+selectedWeapon.rate+' 次/秒 · '+(selectedWeapon.count>1?'每次 '+selectedWeapon.count+' 发 · ':'')+'成长路线：'+Object.values(WEAPON_PATHS).filter(p=>p.weapon===selected).map(p=>p.name).join(' / ')+' · 3 级起二选一'+({guardian:' · 专属技能：裂岩重击 / 铁壁回响 / 卸势震荡',tide:' · 专属技能：破浪锋 / 盐蚀印记 / 潜潮余流',lingya:' · 专属技能：同猎追击 / 燕返藤绊 / 归镖抚慰'}[heroId]||'');$('.menu-caption span').textContent=heroId==='lingya'?'铃芽 / BEAST KEEPER':heroId==='tide'?'潮行者 / TIDE HUNTER':heroId==='guardian'?'磐山 / STONE WARDEN':heroId==='wraith'?'影裔 / SHADOW WRAITH':heroId==='silver'?'霜影 / SILVER VEIL':'游侠 / WOODLAND RANGER';}
+function renderChoices(){renderJournalSummary();for(const b of document.querySelectorAll('[data-hero]'))b.classList.toggle('selected',b.dataset.hero===heroId);for(const b of document.querySelectorAll('[data-map]'))b.classList.toggle('selected',b.dataset.map===mapId);const box=$('#weapons');box.replaceChildren();for(let i=0;i<HERO_LOADOUTS[heroId].length;i++){const w=weaponFor(heroId,i),b=document.createElement('button');b.textContent=w.name;b.classList.toggle('selected',i===weaponIndex);b.onclick=()=>{weaponIndex=i;renderChoices();build();};box.append(b);}const selectedWeapon=weaponFor(heroId,weaponIndex),selected=selectedWeapon.id,identity={boomerang:'骨镖去程与回程均能命中；獾兽会在附近游走、嗅探，优先扑击瞄准目标，超出活动范围再归队。普通移动和燕步不会打断伙伴作战，落后超过 18 米才优先归队；主动换位则会命令伙伴撤回。按住方向时优先向该方向燕步，途中可小幅转向；不按方向时向 4—9 米内的伙伴换位，伙伴侧向撤回起点。距离或通路不合适时使用普通燕步，冷却 3.6 秒。伙伴有独立生命，倒地 18 秒后复活。',harpoon:'直刺→近身横扫→回钩牵引，第三击拉近普通怪物并减速；潜潮持续最多 2 秒，期间无敌、可移动但不能攻击，再按闪避或重新按攻击提前浮出；冷却 6.5 秒。',hammer:'盾击→横锤→下砸，连续按住攻击；铁壁持续 1.2 秒，正面减伤 75%，可缓慢移动，冷却 4.2 秒；起手精准格挡后，4 秒内下一击伤害 +60%。',rifle:'细长高速枪弹，快速连续射击。',shotgun:'一枪多颗短弹，近距离扇面散射。',fire:'较大的火球，较慢飞行并留下火焰，命中爆燃。',crossbow:'细长箭杆与箭头，快速直射、三连命中击退。',shuriken:'旋转三刃飞镖，可穿过敌人。',dark:'较大的暗紫法球，缓慢飞行、命中散开暗雾。',shade:'掌心发射中型影脉，三次命中引爆刻印。',shadowblade:'投出宽弧影镰，飞回时可再次命中。',grimoire:'在瞄准方向撕开延迟裂口，不发射子弹。'};$('#weapon-preview').textContent=identity[selected]+weaponReachText(weaponStats({weaponId:selected}))+' · 基础频率 '+selectedWeapon.rate+' 次/秒 · '+(selectedWeapon.count>1?'每次 '+selectedWeapon.count+' 发 · ':'')+'成长路线：'+Object.values(WEAPON_PATHS).filter(p=>p.weapon===selected).map(p=>p.name).join(' / ')+' · 3 级起二选一'+({guardian:' · 专属技能：裂岩重击 / 铁壁回响 / 卸势震荡',tide:' · 专属技能：破浪锋 / 盐蚀印记 / 潜潮余流',lingya:' · 专属技能：同猎追击 / 燕返藤绊 / 归镖抚慰'}[heroId]||'');$('.menu-caption span').textContent=heroId==='lingya'?'铃芽 / BEAST KEEPER':heroId==='tide'?'潮行者 / TIDE HUNTER':heroId==='guardian'?'磐山 / STONE WARDEN':heroId==='wraith'?'影裔 / SHADOW WRAITH':heroId==='silver'?'霜影 / SILVER VEIL':'游侠 / WOODLAND RANGER';}
 function setAttackMode(mode){if(mode!=='manual'&&mode!=='auto')return;clearAttack();attackMode=mode;document.body.classList.toggle('auto-attack',mode==='auto');for(const button of document.querySelectorAll('[data-attack-mode]'))button.setAttribute('aria-pressed',String(button.dataset.attackMode===mode));$('#control-help').innerHTML=mode==='auto'?'靠近怪物后自动瞄准并攻击 · 电脑 WASD / 方向键移动，Shift 闪避<br>手机左摇杆移动、按钮闪避 · 点击顶部「横屏」可全屏游玩':'电脑 WASD / 方向键移动 · 鼠标瞄准并按住左键攻击 · Shift 闪避<br>手机左摇杆移动、右摇杆拖动瞄准并射击 · 点击顶部「横屏」可全屏游玩';try{localStorage.setItem('forest-echoes-attack-mode',mode);}catch{}}
 for(const button of document.querySelectorAll('[data-attack-mode]'))button.onclick=()=>setAttackMode(button.dataset.attackMode);
 for(const b of document.querySelectorAll('[data-hero]'))b.onclick=()=>{heroId=b.dataset.hero;weaponIndex=0;for(const q of document.querySelectorAll('[data-hero]'))q.classList.toggle('selected',q===b);renderChoices();build();};
@@ -253,7 +253,11 @@ function dash(){
  renderer.shadowMap.needsUpdate=true;const input=movement();let angle=Math.hypot(input.x,input.z)>.1?Math.atan2((input.x+input.z)*.7071,(input.z-input.x)*.7071):hero.rotation.y+(heroId==='lingya'?Math.PI/2:0);
  if(heroId==='guardian')angle=aimInput.hasAim?aimInput.angle:hero.rotation.y;
  player.hopDistance=6.2;player.cooperativeHop=false;
- if(heroId==='lingya'&&companion?.alive){const d=Math.hypot(companion.x-player.x,companion.z-player.z);if(d>=4&&d<=9&&clearAt(world,companion.x,companion.z,.45)&&companion.api.clear(player.x,player.z,companion.x,companion.z)){angle=Math.atan2(companion.x-player.x,companion.z-player.z);player.hopDistance=Math.min(6.2,d);player.cooperativeHop=true;companion.cover(player.x,player.z);toast('换位掩护 · 伙伴撤向你的起点');}}
+ if(heroId==='lingya'){
+  const plan=planLingyaHop(player,companion,Math.hypot(input.x,input.z)>.1?angle:null,hero.rotation.y,(x,z)=>clearAt(world,x,z,.45));
+  if(plan.distance<.3)return;angle=plan.angle;player.hopDistance=plan.distance;player.cooperativeHop=plan.cooperative;player.hopInitialAngle=angle;
+  if(plan.cooperative){companion.cover(player.x,player.z);toast('换位掩护 · 方向可微调，伙伴侧向撤回');}
+ }
  player.dashFacing=hero.rotation.y;player.waterDash=heroId==='scout'&&terrainAt(world,player.x,player.z).depth>.42;
  player.dash=(HERO_DODGES[heroId]?.cooldown||2.3)/(1+.12*(player.upgrades.stride||0));player.inv=heroId==='guardian'?0:heroId==='tide'?2:.32;
  player.dashTime=HERO_DODGES[heroId]?.duration||(heroId==='scout'?SCOUT_ROLL_DURATION:.24);player.diveCancelArmed=!aimInput.held;player.diveWantsExit=false;
@@ -376,7 +380,12 @@ function updateSites(dt){for(const s of world.sites){
 function update(dt){const rollStart=heroId==='scout'?player.dashTime:0,guardianDashStart=heroId==='guardian'?player.dashTime:0,tideDashStart=heroId==='tide'?player.dashTime:0,lingyaHopStart=heroId==='lingya'?player.dashTime:0;time+=dt;updateTide(world,time);if(mapId==='sand'){world.sandstorm=sandWeather(time);if(world.sandstorm.warning&&!world.sandWarned){toast('沙暴将至 · 人和怪物踏入流沙会更慢，沿石路绕行');sound.threat('wind');}world.sandWarned=world.sandstorm.warning;}if(world.tide?.warning&&!world.tideWarned){world.tideWarned=true;toast('涨潮将至 · 水域扩大且水流减速，木栈桥不减速');sound.water(true);}if(world.tide&&!world.tide.warning)world.tideWarned=false;updateBiomeVisuals(dt);simTimer+=dt;player.xpFlash=Math.max(0,(player.xpFlash||0)-dt);player.attack=Math.max(0,player.attack-dt);player.dash=Math.max(0,player.dash-dt);player.inv=Math.max(0,player.inv-dt);player.hurt=Math.max(0,player.hurt-dt);player.hexSlow=Math.max(0,player.hexSlow-dt);player.dashTime=Math.max(0,player.dashTime-dt);player.aimTime=Math.max(0,(player.aimTime||0)-dt);if(attackMode==='manual'&&!touch&&mouseAim.valid)refreshMouseAim();const input=movement(),moving=Math.hypot(input.x,input.z),slow=heroId==='tide'?Math.max(.72,terrainAt(world,player.x,player.z).speed):terrainAt(world,player.x,player.z).speed,speed=(heroId==='guardian'?5.8:6.5)*(1+.08*(player.upgrades.stride||0))*slow*(player.hexSlow>0?.78:1);
  // Camera-oriented input keeps up/down aligned with the screen.
  const dx=(input.x+input.z)*.7071,dz=(input.z-input.x)*.7071,oldX=player.x,oldZ=player.z;
- if(lingyaHopStart>0){if(lingyaHopStart>LINGYA_HOP_DURATION*.26&&player.dashTime<=LINGYA_HOP_DURATION*.26){sound.companion('dodgeLand');vfx.dust(player.x,player.z,.35);}const distance=(sideHopTravel(player.dashTime)-sideHopTravel(lingyaHopStart))*lingyaHopScale(slow,terrainAt(world,player.x,player.z).depth)*(player.hopDistance||6.2)/6.2,steps=Math.max(1,Math.ceil(distance/.2));for(let i=0;i<steps;i++)moveActor(world,player,Math.sin(player.dashAngle)*distance/steps,Math.cos(player.dashAngle)*distance/steps);}else if(tideDashStart>0){
+ if(lingyaHopStart>0){
+  const beforeAngle=player.dashAngle;player.dashAngle=steerLingyaHop(beforeAngle,player.hopInitialAngle??beforeAngle,moving>.1?Math.atan2(dx,dz):null,player.dashTime,dt);player.dashFacing+=Math.atan2(Math.sin(player.dashAngle-beforeAngle),Math.cos(player.dashAngle-beforeAngle))*.7;
+  if(lingyaHopStart>LINGYA_HOP_DURATION*.26&&player.dashTime<=LINGYA_HOP_DURATION*.26){sound.companion('dodgeLand');vfx.dust(player.x,player.z,.35);}
+  const distance=(sideHopTravel(player.dashTime)-sideHopTravel(lingyaHopStart))*lingyaHopScale(slow,terrainAt(world,player.x,player.z).depth)*(player.hopDistance||6.2)/6.2,steps=Math.max(1,Math.ceil(distance/.15));
+  for(let i=0;i<steps;i++)moveActor(world,player,Math.sin(player.dashAngle)*distance/steps,Math.cos(player.dashAngle)*distance/steps);
+ }else if(tideDashStart>0){
   if(player.diveWantsExit&&player.dashTime<=1.82)emerge();if(!aimInput.held)player.diveCancelArmed=true;if(attackMode==='manual'&&aimInput.held&&player.diveCancelArmed&&player.dashTime<1.8)emerge();
   moveActor(world,player,dx*speed*dt*.85,dz*speed*dt*.85);player.divePulse=(player.divePulse||0)-dt;
   if(player.divePulse<=0){player.divePulse=.09;vfx.dive(player.x,player.z,moving>.1?Math.atan2(dx,dz):hero.rotation.y);}
@@ -419,7 +428,7 @@ function update(dt){const rollStart=heroId==='scout'?player.dashTime:0,guardianD
 function collectExperience(n){const previous=player.level;player.xpGain=(player.xpFlash>0?player.xpGain:0)+n;player.xpFlash=.9;grantExperience(player,n);if(player.level>previous){sound.level();vfx.rise(player.x,player.z,0x8ef9ff,2.2);toast('升级至 Lv.'+player.level+' · 选择新的力量');}else sound.pickup();}
 function updateEffects(dt){vfx.update(dt);for(const e of effects){e.life-=dt;const p=1-e.life/e.max;if(e.kind==='line')continue;if(e.kind==='lane'){e.mesh.material.opacity=.5+.15*p;continue;}if(e.kind==='cue'||e.kind==='target')e.mesh.material.opacity=.48+.2*p;const scale=e.telegraph?e.r:e.kind==='spike'?e.r*Math.sin(Math.PI*Math.min(.99,p)):e.r*(1-p*.7);e.mesh.scale.setScalar(Math.max(.001,scale));if(e.vy)e.mesh.position.y+=dt*e.vy;if(e.vx)e.mesh.position.x+=dt*e.vx;if(e.vz)e.mesh.position.z+=dt*e.vz;}effects=effects.filter(e=>{if(e.life>0)return true;scene.remove(e.mesh);disposeCue(e.mesh);if(e.kind==='line'){e.mesh.geometry.dispose();e.mesh.material.dispose();}return false;});}
 function updateCamera(dt){const menuMode=state==='menu',target=new T.Vector3(player.x+(menuMode?-2:0),menuMode?1.1:.5,player.z+(menuMode?2:0));camTarget.lerp(target,1-Math.exp(-dt*8));const distance=menuMode?8.5:touch&&innerHeight>innerWidth?27:touch?20:24;camera.position.set(camTarget.x+distance*.7,camTarget.y+distance*(menuMode?.48:1),camTarget.z+distance*.7);if(shake>0){camera.position.x+=(Math.random()-.5)*shake;camera.position.y+=(Math.random()-.5)*shake;}camera.lookAt(camTarget);camera.updateMatrixWorld(true);sun.position.set(player.x+15,30,player.z+12);sun.target.position.set(player.x,0,player.z);}
-function companionStateText(){if(!companion)return '';if(!companion.alive)return companion.reviveLeft>0?'倒地 · '+Math.ceil(companion.reviveLeft)+' 秒复活':'等待安全位置';return({return:'归队',approach:'追击',wind:'蓄势',pounce:'扑击',recover:'收招',roam:'探索',sniff:'嗅探',look:'待命'})[companion.state]||'跟随';}
+function companionStateText(){if(!companion)return '';if(!companion.alive)return companion.reviveLeft>0?'倒地 · '+Math.ceil(companion.reviveLeft)+' 秒复活':'等待安全位置';return({cover:'掩护撤回',return:'归队',approach:'追击',wind:'蓄势',pounce:'扑击',recover:'收招',roam:'探索',sniff:'嗅探',look:'待命'})[companion.state]||'跟随';}
 function updateCompanionHUD(){const box=$('#companion-status');box.hidden=!companion;if(!companion)return;const p=companion,ratio=p.hp/p.maxHp;
  box.dataset.state=p.state;box.dataset.low=String(p.alive&&ratio<.3);$('#companion-state').textContent=companionStateText();const hp=box.querySelector('.companion-hp');hp.setAttribute('aria-valuenow',Math.ceil(p.hp));hp.setAttribute('aria-valuemax',p.maxHp);hp.querySelector('i').style.width=ratio*100+'%';hp.querySelector('b').textContent=Math.ceil(p.hp)+' / '+p.maxHp;
 

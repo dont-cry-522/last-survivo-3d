@@ -24,7 +24,10 @@ export class BeastCompanion{
   if(!thrown)return;
   const w=this.api.stats();this.throwCount++;if(w.trapRank&&this.throwCount%3===0){if(this.traps.length>=3)this.traps.shift();this.traps.push({x:p.x,z:p.z,life:8,arm:.45,rank:w.trapRank,pulse:0});this.api.fx('trapSet',p.x,p.z);}
  }
- cover(x,z){if(!this.alive)return;this.coverGoal={x,z};this.coverUntil=this.now+1.7;this.target=this.command=null;this.forcedReturn=false;this.inv=Math.max(this.inv,.45);this.change('cover');}
+ cover(x,z){if(!this.alive)return;this.coverGoal={x,z};this.coverWaypoint=null;
+  const dx=x-this.x,dz=z-this.z,d=Math.hypot(dx,dz)||1;
+  for(const side of [1,-1]){const q={x:(this.x+x)/2+dz/d*1.3*side,z:(this.z+z)/2-dx/d*1.3*side};if(this.api.clear(this.x,this.z,q.x,q.z)&&this.api.clear(q.x,q.z,x,z)){this.coverWaypoint=q;break;}}
+  this.coverUntil=this.now+1.7;this.target=this.command=this.roamGoal=null;this.forcedReturn=false;this.inv=Math.max(this.inv,.45);this.change('cover');}
  recall(){if(!this.alive)return;this.forcedReturn=true;this.change('return');this.target=this.command=null;this.roamGoal=null;this.recallUntil=this.now+1.1;this.cool=Math.max(this.cool,1.1);}
  marked(e){e.lingyaMark=this.now+2.5;}
  updateTraps(dt){for(const trap of this.traps){trap.life-=dt;trap.arm-=dt;trap.pulse-=dt;if(trap.life<=0)continue;
@@ -57,7 +60,11 @@ export class BeastCompanion{
   }
   if(ownerDistance>PET_LEASH.follow&&['sniff','look','roam','follow'].includes(this.state)){this.change('return');this.roamGoal=null;}
   let goal,moveSpeed=0;
-  if(this.state==='cover'){goal=this.coverGoal;moveSpeed=7;if(!goal||dist(this,goal)<.5||this.now>=this.coverUntil){this.coverGoal=null;goal=null;this.change('look');this.decisionAt=this.now+.35;}}else if(this.state==='approach'){
+  if(this.state==='cover'){
+   if(this.coverWaypoint&&dist(this,this.coverWaypoint)<.65)this.coverWaypoint=null;
+   goal=this.coverWaypoint||this.coverGoal;moveSpeed=8;
+   if(!this.coverGoal||dist(this,this.coverGoal)<.4||this.now>=this.coverUntil){this.coverGoal=this.coverWaypoint=null;goal=null;this.change('look');this.decisionAt=this.now+.35;}
+  }else if(this.state==='approach'){
    const e=this.target;if(!e){this.recall();return;}const a=Math.atan2(e.x-p.x,e.z-p.z),offset=w.pincerRank?1.35:0;goal={x:e.x+Math.cos(a)*offset,z:e.z-Math.sin(a)*offset};moveSpeed=5.1;
    if(dist(e,this)<2.35){this.change('wind');this.attackAngle=Math.atan2(e.x-this.x,e.z-this.z);goal=null;}
    else if(this.elapsed>2){this.change('return');this.target=null;}
@@ -94,4 +101,4 @@ export class BeastCompanion{
   this.angle+=angleDiff(desired,this.angle)*(1-Math.exp(-dt*(['wind','pounce'].includes(this.state)?16:7)));this.turnRate=angleDiff(this.angle,oldAngle)/dt;
  }
 }
-export {sideHopTravel} from './lingya-motion.js?v=62';
+export {sideHopTravel} from './lingya-motion.js?v=63';

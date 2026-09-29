@@ -1,6 +1,6 @@
-import{onBridge}from'./coast.js?v=62';
-import{MAP_SCALE}from'./map-layout.js?v=62';
-import{swimStroke,swimLimb}from'./swim-motion.js?v=62';
+import{onBridge}from'./coast.js?v=63';
+import{MAP_SCALE}from'./map-layout.js?v=63';
+import{swimStroke,swimLimb}from'./swim-motion.js?v=63';
 import * as T from './vendor/three.module.js';
 const clamp=T.MathUtils.clamp;
 const shore=a=>1+.07*Math.sin(a*3)+.045*Math.cos(a*5);

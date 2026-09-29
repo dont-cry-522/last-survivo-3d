@@ -1,5 +1,5 @@
-import{NewHeroSkills}from'./new-hero-skills.js?v=62';
-import{segmentDistance}from'./rules.js?v=62';
+import{NewHeroSkills}from'./new-hero-skills.js?v=63';
+import{segmentDistance}from'./rules.js?v=63';
 // Gameplay records are bounded and independent from the recycled visual particles.
 export class HeroSkills{
  constructor(api){this.api=api;this.reset();}
