@@ -1,10 +1,33 @@
 import * as T from './vendor/three.module.js';
-import{MAP_HALF}from'./map-layout.js?v=70';
+import{MAP_HALF}from'./map-layout.js?v=71';
 // Shared geometry and instanced details: decoration stays low, leaving combat and collision legible.
 const geometries={stone:new T.DodecahedronGeometry(1,1),snow:new T.SphereGeometry(1,12,6),chip:new T.DodecahedronGeometry(1,0),wood:new T.CylinderGeometry(.10,.15,1,7),leaf:null,ice:new T.ConeGeometry(1,1,5),frond:null},materials=new Map();
 function leafGeometry(){const pos=[],idx=[];for(let i=0;i<=5;i++){const t=i/5,w=Math.sin(Math.PI*t)*.14;pos.push(-w,t*.48,t*t*.7,w,t*.48,t*t*.7);if(i<5){const a=i*2;idx.push(a,a+1,a+2,a+1,a+3,a+2);}}const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute(pos,3));g.setIndex(idx);g.computeVertexNormals();return g;}geometries.leaf=leafGeometry();
 function frondGeometry(){const p=[],ix=[];for(let i=0;i<7;i++){const t=.10+i*.12,y=t*.48,z=t*t*.7,w=Math.sin(Math.PI*t)*.23;for(const side of[-1,1]){const n=p.length/3;p.push(0,y-.025,z-.015,side*w,y+.025,z+.045,side*w*.35,y+.065,z+.10);ix.push(n,n+1,n+2);}}const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute(p,3));g.setIndex(ix);g.computeVertexNormals();return g;}geometries.frond=frondGeometry();
-function material(kind){if(!materials.has(kind))materials.set(kind,new T.MeshStandardMaterial({color:0xffffff,roughness:1,side:['leaf','frond'].includes(kind)?T.DoubleSide:T.FrontSide}));return materials.get(kind);}
+function material(kind){if(!materials.has(kind)){
+ const m=new T.MeshStandardMaterial({color:0xffffff,roughness:1,side:['leaf','frond'].includes(kind)?T.DoubleSide:T.FrontSide});
+ if(['leaf','frond','ice'].includes(kind)){
+  const clock={value:0},gust={value:1},focus={value:new T.Vector2()};m.userData.motion={clock,gust,focus};
+  m.onBeforeCompile=s=>{Object.assign(s.uniforms,{sceneryTime:clock,sceneryGust:gust,sceneryFocus:focus});
+   s.vertexShader='uniform float sceneryTime; uniform float sceneryGust; uniform vec2 sceneryFocus; varying vec3 sceneryWorld;\n'+s.vertexShader;
+   s.vertexShader=s.vertexShader.replace('#include <begin_vertex>',`#include <begin_vertex>
+    vec4 sceneryPoint=vec4(position,1.0);
+    #ifdef USE_INSTANCING
+     sceneryPoint=instanceMatrix*sceneryPoint;
+    #endif
+    sceneryWorld=(modelMatrix*sceneryPoint).xyz;
+    ${kind==='ice'?'':`float rooted=pow(clamp(position.y/.5,0.0,1.0),2.0);float wind=sin(sceneryTime*1.6+sceneryWorld.x*.63+sceneryWorld.z*.44)*.055*sceneryGust;vec2 away=sceneryWorld.xz-sceneryFocus;float brush=1.0-smoothstep(.25,1.25,length(away));vec3 bend=vec3(normalize(away+vec2(.001)).x,0.0,normalize(away+vec2(.001)).y);
+    #ifdef USE_INSTANCING
+     mat3 plant=mat3(modelMatrix*instanceMatrix);bend=vec3(dot(bend,normalize(plant[0])),dot(bend,normalize(plant[1])),dot(bend,normalize(plant[2])));
+    #endif
+    transformed.xz+=(vec2(wind,wind*.4)+bend.xz*.11*brush)*rooted;`}
+   `);
+   if(kind==='ice'){s.fragmentShader='uniform float sceneryTime; varying vec3 sceneryWorld;\n'+s.fragmentShader;s.fragmentShader=s.fragmentShader.replace('#include <color_fragment>','#include <color_fragment>\nfloat glint=pow(max(0.0,sin(sceneryTime*.65+sceneryWorld.x*.7+sceneryWorld.z*.3)),18.0);diffuseColor.rgb+=vec3(.045,.065,.075)*glint;');}
+  };m.customProgramCacheKey=()=> 'scenery-motion-'+kind;
+ }
+ materials.set(kind,m);
+}return materials.get(kind);}
+export function animateScenery(w,t,x,z){for(const m of w.scenery?.batches||[]){const p=m.material.userData.motion;if(!p)continue;p.clock.value=t;p.gust.value=1+(w.sandstorm?.strength||0)*1.8+(w.tide?.high?.3:0);p.focus.value.set(x,z);}}
 export function groveCenters(spawn,rnd){return Array.from({length:22},(_,i)=>i<4?{x:spawn.x+Math.sin(i*1.9+.4)*16,z:spawn.z+Math.cos(i*1.9+.4)*16}:{x:(rnd()-.5)*144,z:(rnd()-.5)*144});}
 export function sceneryAllowed(w,x,z){return Math.abs(x)<MAP_HALF-2&&Math.abs(z)<MAP_HALF-2&&Math.hypot(x-w.spawn.x,z-w.spawn.z)>3.5&&!w.sites.some(s=>Math.hypot(x-s.x,z-s.z)<4.8)&&!w.bridges?.some(b=>Math.abs(x-b.x)<b.width/2+.6&&Math.abs(z-b.z)<b.length/2+.8)&&!w.patches.some(p=>p.kind==='vent'&&Math.hypot(x-p.x,z-p.z)<p.r+1)&&!w.ponds.some(p=>{const a=p.angle||0,dx=x-p.x,dz=z-p.z;return Math.hypot((Math.cos(a)*dx-Math.sin(a)*dz)/p.rx,(Math.sin(a)*dx+Math.cos(a)*dz)/p.rz)<1.11;});}
 function groundColors(w,id){
@@ -20,7 +43,7 @@ function groundColors(w,id){
 }
 export function installScenery(w,id,rnd){
  groundColors(w,id);const batches=new Map(),dummy=new T.Object3D(),records=[];
- const add=(kind,color,x,y,z,sx,sy,sz,angle=0,tilt=0)=>{dummy.position.set(x,y,z);dummy.scale.set(sx,sy,sz);dummy.rotation.set(tilt,angle,0);dummy.updateMatrix();if(!batches.has(kind))batches.set(kind,[]);batches.get(kind).push({matrix:dummy.matrix.clone(),color:new T.Color(color)});};
+ const add=(kind,color,x,y,z,sx,sy,sz,angle=0,tilt=0)=>{dummy.position.set(x,y,z);dummy.scale.set(sx,sy,sz);dummy.rotation.set(0,angle,0);dummy.rotateX(tilt);dummy.updateMatrix();if(!batches.has(kind))batches.set(kind,[]);batches.get(kind).push({matrix:dummy.matrix.clone(),color:new T.Color(color)});};
  const palette={forest:[0x48754a,0x6b914f,0x315c3d],snow:[0xd8e6e5,0xa6c3cb,0x7d9ea9],ash:[0x3e393a,0x584948,0x71584a],sand:[0x9b895d,0xb6a275,0x857654],coast:[0x647e64,0x8eab7e,0x49685c]}[id];
  // Most plants grow around existing trees/rocks or along the banks; open areas stay sparse.
  for(let i=0;i<235;i++){
