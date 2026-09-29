@@ -23,7 +23,7 @@ export function installTactics(w,id,rnd){
  }
  if(id==='snow')for(let i=0;i<3;i++)for(let attempt=0;attempt<450;attempt++){
   const angle=rnd()*Math.PI*2,d=18+i*15+rnd()*8,r=2.7+rnd()*.8,x=w.spawn.x+Math.sin(angle)*d,z=w.spawn.z+Math.cos(angle)*d;
-  if(Math.abs(x)>76||Math.abs(z)>76||w.obstacles.some(o=>Math.hypot(o.x-x,o.z-z)<r+o.r+.6)||w.sites.some(s=>Math.hypot(s.x-x,s.z-z)<r+6)||w.ponds.some(p=>Math.hypot(p.x-x,p.z-z)<p.r+r+1)||[...w.discoveries,...w.ice].some(p=>Math.hypot(p.x-x,p.z-z)<r+4))continue;
+  if((w.contains&&!w.contains(x,z))||Math.abs(x)>(w.half||82)-6||Math.abs(z)>(w.half||82)-6||w.obstacles.some(o=>Math.hypot(o.x-x,o.z-z)<r+o.r+.6)||w.sites.some(s=>Math.hypot(s.x-x,s.z-z)<r+6)||w.ponds.some(p=>Math.hypot(p.x-x,p.z-z)<p.r+r+1)||[...w.discoveries,...w.ice].some(p=>Math.hypot(p.x-x,p.z-z)<r+4))continue;
   const p={x,z,r,kind:'ice',rx:r,rz:r*.76};w.patches.push(p);
   const g=new T.Group();g.position.set(p.x,.07,p.z);g.scale.set(p.r,1,p.r*.76);w.group.add(g);const surface=terrainMesh(g,'CircleGeometry',[1,15],0x8ab5c1);surface.rotation.x=-Math.PI/2;surface.castShadow=false;surface.material.transparent=true;surface.material.opacity=.68;surface.material.depthWrite=false;surface.material.roughness=.35;if(!surface.geometry.userData.irregular){const a=surface.geometry.attributes.position;for(let i=1;i<a.count;i++){const t=Math.atan2(a.getY(i),a.getX(i)),k=1+.1*Math.sin(t*3)+.06*Math.cos(t*5);a.setXY(i,a.getX(i)*k,a.getY(i)*k);}a.needsUpdate=true;surface.geometry.userData.irregular=true;}
   for(let i=0;i<5;i++){const crack=terrainMesh(g,'BoxGeometry',[.02,.009,.42],0xc0d9da,Math.sin(i*2.4)*.48,.012,Math.cos(i*2.4)*.48);crack.rotation.y=i*.9;crack.castShadow=false;}

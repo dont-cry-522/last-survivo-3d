@@ -1,24 +1,25 @@
-import{installTactics}from'./map-tactics.js?v=74';
-import{installRoaming}from'./roaming-events.js?v=74';
-import{installDiscoveries}from'./map-discoveries.js?v=74';
-import{restoreEnemyHit,animateEnemyHit}from'./enemy-feedback.js?v=74';
-import{groveCenters,installScenery,animateScenery}from'./biome-scenery.js?v=74';
-import{districtLayout,buildDistricts}from'./map-districts.js?v=74';
-import{makeCoastEnemy,animateCoastEnemy,coastProp}from'./coast-models.js?v=74';
-import{installCoast}from'./coast.js?v=74';
-import{makeBoss,animateBoss,makeSandEnemy,animateSandEnemy}from'./expansion-models.js?v=74';
-import{siteSchedule}from'./site-discovery.js?v=74';
-import{MAP_EVENTS,biomeEvent,eventNodes}from'./map-events.js?v=74';
-import{MAP_HALF,MAP_SCALE}from'./map-layout.js?v=74';
-import{buildPonds,animateWater,waterDepth,restoreWaterPose,animateWaterPose}from'./water.js?v=74';
-import{ENEMY_MOTION,animateEnemyIdentity}from'./enemy-motion.js?v=74';
-import{REGIONAL_ENEMIES}from'./map-enemies.js?v=74';
-import{groundCue}from'./ground-cues.js?v=74';
-import{heroesReady,createSkinnedHero,animateSkinnedHero}from'./skinned-hero.js?v=74';
+import{buildConfluence,biomeWeights}from'./confluence.js?v=75';
+import{installTactics}from'./map-tactics.js?v=75';
+import{installRoaming}from'./roaming-events.js?v=75';
+import{installDiscoveries}from'./map-discoveries.js?v=75';
+import{restoreEnemyHit,animateEnemyHit}from'./enemy-feedback.js?v=75';
+import{groveCenters,installScenery,animateScenery}from'./biome-scenery.js?v=75';
+import{districtLayout,buildDistricts}from'./map-districts.js?v=75';
+import{makeCoastEnemy,animateCoastEnemy,coastProp}from'./coast-models.js?v=75';
+import{installCoast}from'./coast.js?v=75';
+import{makeBoss,animateBoss,makeSandEnemy,animateSandEnemy}from'./expansion-models.js?v=75';
+import{siteSchedule}from'./site-discovery.js?v=75';
+import{MAP_EVENTS,biomeEvent,eventNodes}from'./map-events.js?v=75';
+import{MAP_HALF,MAP_SCALE}from'./map-layout.js?v=75';
+import{buildPonds,animateWater,waterDepth,restoreWaterPose,animateWaterPose}from'./water.js?v=75';
+import{ENEMY_MOTION,animateEnemyIdentity}from'./enemy-motion.js?v=75';
+import{REGIONAL_ENEMIES}from'./map-enemies.js?v=75';
+import{groundCue}from'./ground-cues.js?v=75';
+import{heroesReady,createSkinnedHero,animateSkinnedHero}from'./skinned-hero.js?v=75';
 import * as T from './vendor/three.module.js';
-import{makeHero,animateHero}from'./hero-model.js?v=74';
-import{makeWraith,animateWraith}from'./wraith-model.js?v=74';
-import{MAPS,seeded}from'./rules.js?v=74';
+import{makeHero,animateHero}from'./hero-model.js?v=75';
+import{makeWraith,animateWraith}from'./wraith-model.js?v=75';
+import{MAPS,seeded}from'./rules.js?v=75';
 const geo=new Map(),materials=new Map(),terrainMaterials=new Map(),detailMaterials=new Map(),weatherMaterials=new Map();
 function geometry(kind,args){const key=kind+args.join(',');if(!geo.has(key))geo.set(key,new T[kind](...args));return geo.get(key);}
 export function mat(color,glow=false){const key=color+':'+glow;if(!materials.has(key))materials.set(key,new T.MeshStandardMaterial({color,roughness:glow?.35:.86,metalness:glow?.25:.08,emissive:glow?color:0,emissiveIntensity:glow?.9:0,flatShading:true}));return materials.get(key);}
@@ -144,7 +145,7 @@ function trail(group,spawn,site,id,rnd){
 }
 function placeWeatherParticle(weather,p,x,z,initial=false){
  const random=weather.random,angle=random()*Math.PI*2,radius=Math.sqrt(random())*(initial?16:24);
- p.x=T.MathUtils.clamp(x+Math.sin(angle)*radius,-MAP_HALF+1,MAP_HALF-1);p.z=T.MathUtils.clamp(z+Math.cos(angle)*radius,-MAP_HALF+1,MAP_HALF-1);
+ p.x=T.MathUtils.clamp(x+Math.sin(angle)*radius,-(weather.half||MAP_HALF)+1,(weather.half||MAP_HALF)-1);p.z=T.MathUtils.clamp(z+Math.cos(angle)*radius,-(weather.half||MAP_HALF)+1,(weather.half||MAP_HALF)-1);
  if(weather.kind==='forest')p.y=1+random()*2.6;
  else if(weather.kind==='snow')p.y=initial?0.4+random()*3.6:3.6+random()*0.5;
  else p.y=initial?0.3+random()*3.5:0.3+random()*0.6;
@@ -156,17 +157,31 @@ function placeWeatherParticle(weather,p,x,z,initial=false){
  if(weather.kind==='sand'){p.vx=1.2+random();p.vz=.2;p.y=.35+random()*1.5;}
  p.vy=weather.kind==='snow'?-1-random()*.6:weather.kind==='ash'?.65+random()*.5:weather.kind==='sand'?.04:(random()-.5)*.2;
 }
-function makeWeather(id,rnd,group,spawn){
+function makeWeather(id,rnd,group,spawn,half=MAP_HALF){
  const count=id==='snow'?72:id==='ash'?54:42,colors=id==='snow'?[0xf5ffff,0xc9eafa,0xffffff]:id==='ash'?[0xffaa60,0xf7d39a,0xcb6e51]:id==='coast'?[0xc0d5d0,0x8cbabf,0xa4c7c5]:id==='sand'?[0xdac699,0xc0ac7f,0xe1d4af]:[0xffe9a0,0xc5ef9c,0x95dcc1];
  if(!weatherMaterials.has(id))weatherMaterials.set(id,new T.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:id==='forest'?.72:.82,depthWrite:false,blending:['snow','sand'].includes(id)?T.NormalBlending:T.AdditiveBlending}));
  const material=weatherMaterials.get(id);
  const cloud=new T.InstancedMesh(geometry('DodecahedronGeometry',[id==='snow'?.115:id==='forest'?.085:.075,0]),material,count);
  cloud.castShadow=false;cloud.receiveShadow=false;cloud.frustumCulled=false;cloud.instanceMatrix.setUsage(T.DynamicDrawUsage);
- const weather={kind:id,mesh:cloud,particles:[],dummy:new T.Object3D(),random:rnd,lastTime:undefined};
+ const weather={kind:id,half,mesh:cloud,particles:[],dummy:new T.Object3D(),random:rnd,lastTime:undefined};
  for(let i=0;i<count;i++){const p={};placeWeatherParticle(weather,p,spawn.x,spawn.z,true);weather.particles.push(p);cloud.setColorAt(i,new T.Color(colors[i%colors.length]));}
  cloud.instanceColor.needsUpdate=true;group.add(cloud);return weather;
 }
-export function buildWorld(id,seed=1){const theme=MAPS[id],rnd=seeded(seed),group=new T.Group(),obstacles=[],patches=[],sites=[{x:24+rnd()*10,z:-32+rnd()*10,type:'altar',claimed:false},{x:-34+rnd()*10,z:23+rnd()*10,type:'supply',claimed:false},{x:-25-rnd()*8,z:-5-rnd()*8,type:'relic',claimed:false}],spawn={x:-12,z:9};
+function buildSites(group,sites,theme){
+ for(const site of sites){const g=new T.Group();g.position.set(site.x,0,site.z);group.add(g);g.visible=false;site.mesh=g;const base=mesh('CylinderGeometry',[2,2.3,.25,8],0x68796b,0,.12,0,g);if(site.type==='relic'){for(let i=0;i<3;i++){const a=i*Math.PI*2/3;const prong=mesh('ConeGeometry',[.28,1.5,5],0xb19a65,Math.sin(a)*1.15,.8,Math.cos(a)*1.15,g);prong.rotation.z=Math.sin(a)*.2;}site.crystal=mesh('OctahedronGeometry',[.8],0xffd572,0,1.1,0,g,true);box(g,0xd9ba78,0,.35,0,1.3,.3,1.3);}else if(site.type==='altar'){for(const side of [-1,1])box(g,0x8d9b88,side*1.3,1.1,0,.42,2.2,.5);box(g,0xabb398,0,2.35,0,3.2,.4,.7);const crystal=mesh('OctahedronGeometry',[.65],theme.accent,0,1.1,0,g,true);site.crystal=crystal;}else{box(g,0x99724c,0,.62,0,1.4,.8,.9);box(g,0xd6b571,0,1.04,0,1.5,.18,1);box(g,0xebd595,0,.72,.48,.18,.45,.07);}const ring=groundCue(theme.accent,2,'glow',.2);ring.position.set(0,.28,0);g.add(ring);site.ring=ring;
+  if(site.event){const color=MAP_EVENTS[site.event].color;site.eventGlow=mesh('OctahedronGeometry',[.3],color,0,2.8,0,g,true);
+   if(site.event==='lighthouse'){mesh('CylinderGeometry',[.65,1.05,2.5,12],0x9fada3,0,1.25,0,g);mesh('CylinderGeometry',[.9,.9,.18,12],0x6b888a,0,2.55,0,g);site.lantern=mesh('SphereGeometry',[.4,12,8],0x77c7cb,0,2.9,0,g,true);cone(g,0x5b777b,0,3.45,0,1,.65);}
+   if(site.event==='excavation'){const mound=mesh('DodecahedronGeometry',[1.6,1],0xb7a079,0,.14,0,g);mound.scale.set(1,.18,.8);const lid=box(g,0x695849,0,.4,0,1.3,.4,.8);lid.rotation.z=.15;for(const x of[-.4,.4])box(g,0xc5a064,x,.64,0,.1,.06,.85);}
+   if(site.event==='salvage'){for(const x of[-.7,.65]){const crate=box(g,0x766c55,x,.4,0,.95,.8,.9);crate.rotation.z=x*.16;for(const z of[-.4,.4])box(g,0x96aaa1,x,.46,z,1,.1,.08);}for(let i=0;i<3;i++){const plank=box(g,0x587d78,-1+i,.08,.8+i*.25,1.7,.12,.22);plank.rotation.y=i*.6;}}
+   if(site.event==='mechanism'){const wheel=mesh('TorusGeometry',[.65,.12,6,14],0xb19761,0,1.2,.55,g);site.wheel=wheel;box(g,0xa2987b,0,.7,0,1.3,1.2,.7);}
+   if(site.event==='purify'){for(let j=0;j<5;j++){const a=j*1.26;const root=mesh('CapsuleGeometry',[.12,1.6,3,5],0x507953,Math.sin(a)*1.2,.65,Math.cos(a)*1.2,g);root.rotation.z=Math.sin(a)*.5;orb(g,0x8fbd7c,Math.sin(a)*.8,1.6,Math.cos(a)*.8,.25);}}
+   if(site.event==='beacons'){site.nodes=eventNodes(site.x,site.z,site.eventAngle);for(const n of site.nodes){mesh('CylinderGeometry',[.4,.55,.18,6],0x708c97,n.x-site.x,.1,n.z-site.z,g);n.mesh=mesh('OctahedronGeometry',[.5],0x4b778a,n.x-site.x,.75,n.z-site.z,g);n.mesh.scale.y=1.7;}}
+   if(site.event==='forge'){for(let j=0;j<4;j++){const a=j*Math.PI/2;const pipe=mesh('CylinderGeometry',[.3,.4,.85,6],0x796253,Math.sin(a)*1.9,.45,Math.cos(a)*1.9,g);pipe.rotation.z=Math.sin(a)*.3;}site.furnace=mesh('SphereGeometry',[.65,8,6],0xff9c50,0,.55,0,g,true);}
+   if(site.event==='ambush')for(const side of [-1,1]){mesh('CylinderGeometry',[.07,.1,2.3,5],0x76624e,side*1.9,1.15,0,g);const banner=box(g,0x9d5d4b,side*1.9,1.75,0,.6,.65,.06);banner.rotation.z=side*.1;}
+  }
+ }
+}
+export function buildWorld(id,seed=1){if(id==='confluence')return buildConfluence(seed,{mesh,trail,makeWeather,buildSites,groundShape});const theme=MAPS[id],rnd=seeded(seed),group=new T.Group(),obstacles=[],patches=[],sites=[{x:24+rnd()*10,z:-32+rnd()*10,type:'altar',claimed:false},{x:-34+rnd()*10,z:23+rnd()*10,type:'supply',claimed:false},{x:-25-rnd()*8,z:-5-rnd()*8,type:'relic',claimed:false}],spawn={x:-12,z:9};
  const bearing=rnd()*Math.PI*2;for(const site of sites.slice(0,2)){const x=site.x,z=site.z;site.x=x*Math.cos(bearing)-z*Math.sin(bearing);site.z=x*Math.sin(bearing)+z*Math.cos(bearing);}
  // Place the early relic in a different direction, clear of the central ruin and other landmarks.
  for(let attempt=0;attempt<24;attempt++){const a=rnd()*Math.PI*2,r=20+rnd()*8,x=spawn.x+Math.sin(a)*r,z=spawn.z+Math.cos(a)*r;if(Math.hypot(x,z)>11&&sites.slice(0,2).every(s=>Math.hypot(s.x-x,s.z-z)>15)){Object.assign(sites[2],{x,z});break;}}
@@ -191,18 +206,7 @@ export function buildWorld(id,seed=1){const theme=MAPS[id],rnd=seeded(seed),grou
  }
  if(id==='sand')for(let i=0;i<18;i++){const x=(rnd()-.5)*140,z=(rnd()-.5)*140;for(const [offset,color]of [[0,0xd5c099],[1.7,0x928469]]){const dune=groundShape(x,z+offset,2.5+rnd()*1.5,rnd,color);dune.scale.set(2.8,1,.7);dune.rotation.y=.25+Math.sin(i)*.2;group.add(dune);}}
  const foliage=[];if(!['ash','sand','coast'].includes(id))for(const o of obstacles)for(const leaf of o.mesh.children)if(leaf.geometry?.type===(id==='snow'?'ConeGeometry':'DodecahedronGeometry'))foliage.push({leaf,x:leaf.position.x,z:leaf.position.z,phase:o.x*.17+o.z*.13});
- for(const site of sites){const g=new T.Group();g.position.set(site.x,0,site.z);group.add(g);g.visible=false;site.mesh=g;const base=mesh('CylinderGeometry',[2,2.3,.25,8],0x68796b,0,.12,0,g);if(site.type==='relic'){for(let i=0;i<3;i++){const a=i*Math.PI*2/3;const prong=mesh('ConeGeometry',[.28,1.5,5],0xb19a65,Math.sin(a)*1.15,.8,Math.cos(a)*1.15,g);prong.rotation.z=Math.sin(a)*.2;}site.crystal=mesh('OctahedronGeometry',[.8],0xffd572,0,1.1,0,g,true);box(g,0xd9ba78,0,.35,0,1.3,.3,1.3);}else if(site.type==='altar'){for(const side of [-1,1])box(g,0x8d9b88,side*1.3,1.1,0,.42,2.2,.5);box(g,0xabb398,0,2.35,0,3.2,.4,.7);const crystal=mesh('OctahedronGeometry',[.65],theme.accent,0,1.1,0,g,true);site.crystal=crystal;}else{box(g,0x99724c,0,.62,0,1.4,.8,.9);box(g,0xd6b571,0,1.04,0,1.5,.18,1);box(g,0xebd595,0,.72,.48,.18,.45,.07);}const ring=groundCue(theme.accent,2,'glow',.2);ring.position.set(0,.28,0);g.add(ring);site.ring=ring;
-  if(site.event){const color=MAP_EVENTS[site.event].color;site.eventGlow=mesh('OctahedronGeometry',[.3],color,0,2.8,0,g,true);
-   if(site.event==='lighthouse'){mesh('CylinderGeometry',[.65,1.05,2.5,12],0x9fada3,0,1.25,0,g);mesh('CylinderGeometry',[.9,.9,.18,12],0x6b888a,0,2.55,0,g);site.lantern=mesh('SphereGeometry',[.4,12,8],0x77c7cb,0,2.9,0,g,true);cone(g,0x5b777b,0,3.45,0,1,.65);}
-   if(site.event==='excavation'){const mound=mesh('DodecahedronGeometry',[1.6,1],0xb7a079,0,.14,0,g);mound.scale.set(1,.18,.8);const lid=box(g,0x695849,0,.4,0,1.3,.4,.8);lid.rotation.z=.15;for(const x of[-.4,.4])box(g,0xc5a064,x,.64,0,.1,.06,.85);}
-   if(site.event==='salvage'){for(const x of[-.7,.65]){const crate=box(g,0x766c55,x,.4,0,.95,.8,.9);crate.rotation.z=x*.16;for(const z of[-.4,.4])box(g,0x96aaa1,x,.46,z,1,.1,.08);}for(let i=0;i<3;i++){const plank=box(g,0x587d78,-1+i,.08,.8+i*.25,1.7,.12,.22);plank.rotation.y=i*.6;}}
-   if(site.event==='mechanism'){const wheel=mesh('TorusGeometry',[.65,.12,6,14],0xb19761,0,1.2,.55,g);site.wheel=wheel;box(g,0xa2987b,0,.7,0,1.3,1.2,.7);}
-   if(site.event==='purify'){for(let j=0;j<5;j++){const a=j*1.26;const root=mesh('CapsuleGeometry',[.12,1.6,3,5],0x507953,Math.sin(a)*1.2,.65,Math.cos(a)*1.2,g);root.rotation.z=Math.sin(a)*.5;orb(g,0x8fbd7c,Math.sin(a)*.8,1.6,Math.cos(a)*.8,.25);}}
-   if(site.event==='beacons'){site.nodes=eventNodes(site.x,site.z,site.eventAngle);for(const n of site.nodes){mesh('CylinderGeometry',[.4,.55,.18,6],0x708c97,n.x-site.x,.1,n.z-site.z,g);n.mesh=mesh('OctahedronGeometry',[.5],0x4b778a,n.x-site.x,.75,n.z-site.z,g);n.mesh.scale.y=1.7;}}
-   if(site.event==='forge'){for(let j=0;j<4;j++){const a=j*Math.PI/2;const pipe=mesh('CylinderGeometry',[.3,.4,.85,6],0x796253,Math.sin(a)*1.9,.45,Math.cos(a)*1.9,g);pipe.rotation.z=Math.sin(a)*.3;}site.furnace=mesh('SphereGeometry',[.65,8,6],0xff9c50,0,.55,0,g,true);}
-   if(site.event==='ambush')for(const side of [-1,1]){mesh('CylinderGeometry',[.07,.1,2.3,5],0x76624e,side*1.9,1.15,0,g);const banner=box(g,0x9d5d4b,side*1.9,1.75,0,.6,.65,.06);banner.rotation.z=side*.1;}
-  }
- }
+ buildSites(group,sites,theme);
  if(id==='sand'){const s=sites[0],a=Math.atan2(s.x-spawn.x,s.z-spawn.z);s.gates=[];for(let i=-1;i<=1;i++){const x=s.x-Math.sin(a)*11+Math.cos(a)*i*1.75,z=s.z-Math.cos(a)*11-Math.sin(a)*i*1.75,g=new T.Group();g.position.set(x,0,z);box(g,0x847f6b,0,1.25,0,1.7,2.5,.8);g.rotation.y=a;group.add(g);const gate={x,z,r:.95,mesh:g};obstacles.push(gate);s.gates.push(gate);}}
 
  const campX=spawn.x-2.5,campZ=spawn.z+1.5,fire=new T.Group();fire.position.set(campX,.18,campZ);group.add(fire);
@@ -213,6 +217,7 @@ export function buildWorld(id,seed=1){const theme=MAPS[id],rnd=seeded(seed),grou
  const result={group,ground,groves,obstacles,patches,ponds,sites,spawn,theme,fire,light,motes,foliage,weather};if(id==='coast')installCoast(result);if(districts.length)buildDistricts(result,id,districts,mesh,rnd);installDiscoveries(result,id,rnd);installTactics(result,id,rnd);installRoaming(result,id,rnd);installScenery(result,id,rnd);return result;
 }
 export function animateWorld(world,t,focusX=world.spawn.x,focusZ=world.spawn.z){
+ if(world.regions){for(const r of world.regions){r.sandstorm=r.id==='sand'?world.sandstorm:null;r.tide=r.id==='coast'?world.tide:null;animateWorld(r,t,focusX,focusZ);}animateScenery(world,t,focusX,focusZ);return;}
  animateWater(world.weather.kind,t);animateScenery(world,t,focusX,focusZ);
  for(const f of world.foliage){const sway=Math.sin(t*1.35+f.phase)*.026+Math.sin(t*2.7+f.phase)*.008;f.leaf.rotation.z=sway;f.leaf.position.x=f.x+sway*1.3;f.leaf.position.z=f.z+Math.cos(t*1.1+f.phase)*.015;}
  const weather=world.weather,dt=weather.lastTime===undefined?0:Math.max(0,Math.min(.05,t-weather.lastTime));weather.lastTime=t;
@@ -221,9 +226,9 @@ export function animateWorld(world,t,focusX=world.spawn.x,focusZ=world.spawn.z){
   const gust=weather.kind==='sand'?1+3*(world.sandstorm?.strength||0):weather.kind==='coast'&&world.tide?.high?1.8:1;p.x+=p.vx*dt*gust;p.z+=p.vz*dt;p.y+=p.vy*dt;p.life-=dt;
   if(p.life<=0||p.y<.3||p.y>4.3||Math.hypot(p.x-focusX,p.z-focusZ)>30)placeWeatherParticle(weather,p,focusX,focusZ);
   d.position.set(p.x+Math.sin(t*1.3+p.phase)*.05,weather.kind==='forest'?p.y+Math.sin(t*2+p.phase)*.16:p.y,p.z);
-  d.scale.setScalar(p.scale*(weather.kind==='snow'?1:.8)*Math.min(1,p.life*1.5));d.rotation.set(0,t*.6+p.phase,0);if(weather.kind==='sand'&&world.sandstorm?.active){d.scale.x*=3;d.scale.y*=.5;d.rotation.y=0;}d.updateMatrix();weather.mesh.setMatrixAt(i,d.matrix);
+  d.scale.setScalar(p.scale*(weather.kind==='snow'?1:.8)*Math.min(1,p.life*1.5)*(world.regional?(biomeWeights(p.x,p.z)[weather.kind]||0):1));d.rotation.set(0,t*.6+p.phase,0);if(weather.kind==='sand'&&world.sandstorm?.active){d.scale.x*=3;d.scale.y*=.5;d.rotation.y=0;}d.updateMatrix();weather.mesh.setMatrixAt(i,d.matrix);
  }
  weather.mesh.instanceMatrix.needsUpdate=true;
 }
-export function clearAt(world,x,z,r=.45){return Math.abs(x)<MAP_HALF-r&&Math.abs(z)<MAP_HALF-r&&!world.obstacles.some(o=>Math.hypot(x-o.x,z-o.z)<r+o.r);}
+export function clearAt(world,x,z,r=.45){return Math.abs(x)<(world.half||MAP_HALF)-r&&Math.abs(z)<(world.half||MAP_HALF)-r&&!world.obstacles.some(o=>Math.hypot(x-o.x,z-o.z)<r+o.r);}
 export function moveActor(world,p,dx,dz,r=.45){let x=p.x+dx,z=p.z+dz;if(clearAt(world,x,z,r)){p.x=x;p.z=z;return;}if(clearAt(world,x,p.z,r))p.x=x;if(clearAt(world,p.x,z,r))p.z=z;}

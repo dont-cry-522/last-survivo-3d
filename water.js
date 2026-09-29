@@ -1,8 +1,8 @@
-import{onIce,onFord}from'./map-tactics.js?v=74';
-import{onBridge}from'./coast.js?v=74';
-import{MAP_SCALE}from'./map-layout.js?v=74';
-import{swimStroke,swimLimb,HERO_SWIM,heroSwimPose,swimTravel}from'./swim-motion.js?v=74';
-import{newHeroAttack}from'./new-hero-motion.js?v=74';
+import{onIce,onFord}from'./map-tactics.js?v=75';
+import{onBridge}from'./coast.js?v=75';
+import{MAP_SCALE}from'./map-layout.js?v=75';
+import{swimStroke,swimLimb,HERO_SWIM,heroSwimPose,swimTravel}from'./swim-motion.js?v=75';
+import{newHeroAttack}from'./new-hero-motion.js?v=75';
 import * as T from './vendor/three.module.js';
 const clamp=T.MathUtils.clamp;
 const shore=a=>1+.07*Math.sin(a*3)+.045*Math.cos(a*5);
@@ -16,8 +16,9 @@ export function terrainAt(world,x,z,kind='hero'){
  if(onIce(world,x,z))return{kind:'ice',depth:0,floating:false,speed:1.04};
  let depth=0;for(const p of world.patches)if(p.kind==='water')depth=Math.max(depth,waterDepth(p,x,z));
  const floating=['snowtotem','cinderwisp','jellyseer'].includes(kind),heavy=['golem','yeti','lavabrute','boss','frostking','cinderlord','reefturtle','wreckwarden'].includes(kind);
- if(depth>0)return{kind:'water',depth,floating,speed:floating?1:(1-depth*(heavy?.24:.52))*(world.tide?.high?1-.18*depth:1)};
- const slow=world.patches.some(p=>p.kind==='slow'&&Math.hypot(p.x-x,p.z-z)<p.r);return{kind:slow?'slow':'land',depth:0,floating,speed:slow?(kind==='hero'?.72:.75)*(world.sandstorm?.active?.72:1):1};
+ const tidal=!world.regions||world.patches.some(p=>p.kind==='water'&&p.baseRx!==undefined&&waterDepth(p,x,z)>0);
+ if(depth>0)return{kind:'water',depth,floating,speed:floating?1:(1-depth*(heavy?.24:.52))*(world.tide?.high&&tidal?1-.18*depth:1)};
+ const slow=world.patches.find(p=>p.kind==='slow'&&Math.hypot(p.x-x,p.z-z)<p.r);return{kind:slow?'slow':'land',depth:0,floating,speed:slow?(kind==='hero'?.72:.75)*(world.sandstorm?.active&&(!slow.biome||slow.biome==='sand')?.72:1):1};
 }
 let surfaceGeometry;const reedGeometry=new T.ConeGeometry(1,1,3),stoneGeometry=new T.DodecahedronGeometry(1,0),surfaces=new Map();
 function waterSurface(id){
@@ -47,14 +48,15 @@ function waterSurface(id){
  }
  return surfaces.get(id);
 }
-export function buildPonds(group,id,rnd,spawn,sites){
- if(id==='ash')return[];const ponds=[],surface=waterSurface(id);
- for(let i=0;i<180&&ponds.length<6;i++){
-  const a=rnd()*Math.PI*2,d=18+rnd()*8,rx=(id==='coast'?9:4.7)+rnd()*2.2,rz=(id==='coast'?16:3.7)+rnd()*1.6;
+export function buildPonds(group,id,rnd,spawn,sites,locations=null){
+ if(id==='ash'||locations?.length===0)return[];const ponds=[],surface=waterSurface(id);
+ for(let i=0;i<(locations?.length||180)&&ponds.length<(locations?.length||6);i++){
+  const a=rnd()*Math.PI*2,d=18+rnd()*8,rx=locations?.[i]?.rx??((id==='coast'?9:4.7)+rnd()*2.2),rz=locations?.[i]?.rz??((id==='coast'?16:3.7)+rnd()*1.6);
   let x=ponds.length? (rnd()-.5)*96*MAP_SCALE:spawn.x+Math.sin(a)*d,z=ponds.length?(rnd()-.5)*96*MAP_SCALE:spawn.z+Math.cos(a)*d,r=Math.max(rx,rz)*1.12;
-  if(id==='coast'){x=4+Math.sin(ponds.length*.7)*1.5;z=-62+ponds.length*24;}
-  if(id!=='coast'&&(Math.hypot(x-spawn.x,z-spawn.z)<r+6||Math.hypot(x,z)<r+9||sites.some(s=>Math.hypot(x-s.x,z-s.z)<r+8)||ponds.some(p=>Math.hypot(x-p.x,z-p.z)<r+p.r+4)))continue;
-  const p={kind:'water',x,z,rx,rz,r,angle:id==='coast'?0:rnd()*Math.PI*2},bank=new T.Mesh(surfaceGeometry,surface.bank);bank.position.set(x,.045,z);bank.rotation.y=p.angle;bank.scale.set(rx*1.12,1,rz*1.12);bank.receiveShadow=true;group.add(bank);const m=new T.Mesh(surfaceGeometry,surface.material);m.position.set(x,.075,z);m.rotation.y=p.angle;m.scale.set(rx,1,rz);m.receiveShadow=true;group.add(m);p.mesh=m;p.bank=bank;ponds.push(p);
+  if(locations){x=locations[i].x;z=locations[i].z;}
+  else if(id==='coast'){x=4+Math.sin(ponds.length*.7)*1.5;z=-62+ponds.length*24;}
+  if(!locations&&id!=='coast'&&(Math.hypot(x-spawn.x,z-spawn.z)<r+6||Math.hypot(x,z)<r+9||sites.some(s=>Math.hypot(x-s.x,z-s.z)<r+8)||ponds.some(p=>Math.hypot(x-p.x,z-p.z)<r+p.r+4)))continue;
+  const p={kind:'water',x,z,rx,rz,r,biome:id,angle:locations?.[i]?.angle??(id==='coast'?0:rnd()*Math.PI*2)},bank=new T.Mesh(surfaceGeometry,surface.bank);bank.position.set(x,.045,z);bank.rotation.y=p.angle;bank.scale.set(rx*1.12,1,rz*1.12);bank.receiveShadow=true;group.add(bank);const m=new T.Mesh(surfaceGeometry,surface.material);m.position.set(x,.075,z);m.rotation.y=p.angle;m.scale.set(rx,1,rz);m.receiveShadow=true;group.add(m);p.mesh=m;p.bank=bank;ponds.push(p);
  }
  const reeds=new T.InstancedMesh(reedGeometry,surface.reeds,ponds.length*24),stones=new T.InstancedMesh(stoneGeometry,surface.stones,ponds.length*6),dummy=new T.Object3D();let ri=0,si=0;
  for(const pond of ponds){const c=Math.cos(pond.angle),s=Math.sin(pond.angle),at=(a,r)=>{const k=shore(a)*r,lx=Math.cos(a)*pond.rx*k,lz=Math.sin(a)*pond.rz*k;return{x:pond.x+c*lx+s*lz,z:pond.z-s*lx+c*lz};};

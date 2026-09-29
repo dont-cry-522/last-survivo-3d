@@ -1,5 +1,5 @@
-import{badgerAttack,badgerCadence,badgerIdle,smooth}from'./badger-motion.js?v=74';
-import{swimLimb as placeLimb}from'./swim-motion.js?v=74';
+import{badgerAttack,badgerCadence,badgerIdle,smooth}from'./badger-motion.js?v=75';
+import{swimLimb as placeLimb}from'./swim-motion.js?v=75';
 import * as T from './vendor/three.module.js';
 const geo=new Map(),mats=new Map();
 function material(c){if(!mats.has(c))mats.set(c,new T.MeshStandardMaterial({color:c,roughness:.84}));return mats.get(c);}

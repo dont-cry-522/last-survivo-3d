@@ -1,7 +1,7 @@
-import{BIOME_THEMES,instrumentSample,scoreBiome,biomeThreat}from'./biome-music.js?v=74';
-import{companionSample}from'./companion-audio.js?v=74';
-import{weaponSample}from'./weapon-audio.js?v=74';
-import{creatureSample,creatureSpatial,ENEMY_VOICES}from'./enemy-audio.js?v=74';
+import{BIOME_THEMES,instrumentSample,scoreBiome,biomeThreat}from'./biome-music.js?v=75';
+import{companionSample}from'./companion-audio.js?v=75';
+import{weaponSample}from'./weapon-audio.js?v=75';
+import{creatureSample,creatureSpatial,ENEMY_VOICES}from'./enemy-audio.js?v=75';
 // Original procedural score and sound design. No external audio downloads.
 const midi=n=>440*2**((n-69)/12);
 const THEMES={...BIOME_THEMES,
@@ -124,8 +124,8 @@ export class GameAudio{
   pickup(){if(!this.allow('pickup',.09))return;this.voice(780+(this.beat%4)*110,.075,.035,'sine',1100);}
   level(){if(!this.allow('level',.35))return;[523.25,659.25,783.99,1046.5].forEach((f,i)=>this.voice(f,.5,.075,'triangle',null,this.ctx.currentTime+i*.085));}
   resolve(){if(!this.allow('resolve',2))return;[293.66,369.99,440].forEach((f,i)=>this.voice(f,.65,.055,'triangle',null,this.ctx.currentTime+i*.12,'music',.025));}
-  update(dt,{map='forest',mode='playing',boss=false,pressure=0}={}){
-    const previousMode=this.mode;this.mode=mode;if(map!==this.map)this.reset(map);if(!this.ready)return;
+  update(dt,{map='forest',mode='playing',boss=false,pressure=0,seamless=false}={}){
+    const previousMode=this.mode;this.mode=mode;if(map!==this.map){if(seamless)this.map=map;else this.reset(map);}if(!this.ready)return;
     const c=this.ctx,paused=mode==='paused'||mode==='event-choice'||mode==='lost'||mode==='won';
     this.music.gain.setTargetAtTime(paused?0:this.musicVolume*(mode==='upgrade'?.3:mode==='menu'?.6:1),c.currentTime,.2);
     if(paused){if(!['paused','event-choice','lost','won'].includes(previousMode))this.stopMusic();this.next=c.currentTime+.05;return;}
