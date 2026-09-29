@@ -1,35 +1,35 @@
-import{sandWeather}from'./sand-weather.js?v=63';
-import{HERO_DODGES,HERO_ABILITY_TEXT}from'./hero-dodge.js?v=63';
-import{LINGYA_HOP_DURATION,lingyaHopScale,planLingyaHop,steerLingyaHop}from'./lingya-motion.js?v=63';
-import{BeastCompanion,PET_TIMING,sideHopTravel}from'./beast-companion.js?v=63';
-import{makeBadger,animateBadger}from'./beast-model.js?v=63';
-import{updateTide,harpoonHit,tideDashTravel,HARPOON_ATTACKS}from'./coast.js?v=63';
-import{GUARDIAN_ATTACKS,GUARDIAN_DASH,guardianDashTravel,nextGuardianAttack}from'./guardian-motion.js?v=63';
-import{tickBoss}from'./boss-combat.js?v=63';
-import{inMeleeArc,canParry}from'./melee.js?v=63';
-import{discoverSite}from'./site-discovery.js?v=63';
-import{MAP_EVENTS,createMapEvent,advanceMapEvent,eventProgress}from'./map-events.js?v=63';
-import{MAP_HALF,MINIMAP_SCALE,mapPixel}from'./map-layout.js?v=63';
-import{terrainAt}from'./water.js?v=63';
-import{RELICS,relicChoices,equipRelic,relicEvent,incomingRelicDamage,readJournal,writeJournal,recordDiscovery,recordVictory}from'./expedition.js?v=63';
-import{encounterPhase,enemyGrowth,encounterRole,HUNT_SQUAD,enemyApproach,separation,attackSlotAvailable}from'./encounters.js?v=63';
-import{setupMobileDisplay}from'./mobile-display.js?v=63';
-import{weaponCuePhases}from'./weapon-performance.js?v=63';
-import{ENEMY_VOICES}from'./enemy-audio.js?v=63';
-import{ENEMY_MOTION,gaitPace}from'./enemy-motion.js?v=63';
-import{MAP_ROSTERS,REGIONAL_ENEMIES,regionalEnemy}from'./map-enemies.js?v=63';
-import{HeroSkills}from'./hero-skills.js?v=63';
-import{EXTRA_BY_ID,skillPairState,skillPairHint}from'./skill-catalog.js?v=63';
-import{SCOUT_ROLL_DURATION,rollTravel}from'./dodge-motion.js?v=63';
-import{renderPixelRatio,RenderBudget}from'./render-budget.js?v=63';
-import{groundCue,disposeCue}from'./ground-cues.js?v=63';
-import{SkillVFX}from'./skill-vfx.js?v=63';
-import{loadHeroAssets,disposeHero}from'./skinned-hero.js?v=63';
-import{GameAudio}from'./audio.js?v=63';
-import{ENEMY_GUIDE,CIRCLE_GUIDE}from'./battle-guide.js?v=63';
+import{sandWeather}from'./sand-weather.js?v=64';
+import{HERO_DODGES,HERO_ABILITY_TEXT}from'./hero-dodge.js?v=64';
+import{LINGYA_HOP_DURATION,lingyaHopScale,planLingyaHop,steerLingyaHop}from'./lingya-motion.js?v=64';
+import{BeastCompanion,PET_TIMING,sideHopTravel}from'./beast-companion.js?v=64';
+import{makeBadger,animateBadger}from'./beast-model.js?v=64';
+import{updateTide,harpoonHit,tideDashTravel,HARPOON_ATTACKS}from'./coast.js?v=64';
+import{GUARDIAN_ATTACKS,GUARDIAN_DASH,guardianDashTravel,nextGuardianAttack}from'./guardian-motion.js?v=64';
+import{tickBoss}from'./boss-combat.js?v=64';
+import{inMeleeArc,canParry}from'./melee.js?v=64';
+import{discoverSite}from'./site-discovery.js?v=64';
+import{MAP_EVENTS,createMapEvent,advanceMapEvent,eventProgress}from'./map-events.js?v=64';
+import{MAP_HALF,MINIMAP_SCALE,mapPixel}from'./map-layout.js?v=64';
+import{terrainAt}from'./water.js?v=64';
+import{RELICS,relicChoices,equipRelic,relicEvent,incomingRelicDamage,readJournal,writeJournal,recordDiscovery,recordVictory}from'./expedition.js?v=64';
+import{encounterPhase,enemyGrowth,encounterRole,HUNT_SQUAD,enemyApproach,separation,attackSlotAvailable}from'./encounters.js?v=64';
+import{setupMobileDisplay}from'./mobile-display.js?v=64';
+import{weaponCuePhases}from'./weapon-performance.js?v=64';
+import{ENEMY_VOICES}from'./enemy-audio.js?v=64';
+import{ENEMY_MOTION,gaitPace}from'./enemy-motion.js?v=64';
+import{MAP_ROSTERS,REGIONAL_ENEMIES,regionalEnemy}from'./map-enemies.js?v=64';
+import{HeroSkills}from'./hero-skills.js?v=64';
+import{EXTRA_BY_ID,skillPairState,skillPairHint}from'./skill-catalog.js?v=64';
+import{SCOUT_ROLL_DURATION,rollTravel}from'./dodge-motion.js?v=64';
+import{renderPixelRatio,RenderBudget}from'./render-budget.js?v=64';
+import{groundCue,disposeCue}from'./ground-cues.js?v=64';
+import{SkillVFX}from'./skill-vfx.js?v=64';
+import{loadHeroAssets,disposeHero}from'./skinned-hero.js?v=64';
+import{GameAudio}from'./audio.js?v=64';
+import{ENEMY_GUIDE,CIRCLE_GUIDE}from'./battle-guide.js?v=64';
 import * as T from './vendor/three.module.js';
-import{MAPS,WEAPONS,ENEMIES,HERO_LOADOUTS,weaponFor,experienceNeeded,grantExperience,chooseUpgrades,takeUpgrade,weaponStats,weaponReachText,WEAPON_PATHS,segmentDistance,registerCrossbowHit,registerShadowHit,UPGRADES}from'./rules.js?v=63';
-import{actor,animateActor,animateWorld,buildWorld,clearAt,moveActor,mesh,mat}from'./world.js?v=63';
+import{MAPS,WEAPONS,ENEMIES,HERO_LOADOUTS,weaponFor,experienceNeeded,grantExperience,chooseUpgrades,takeUpgrade,weaponStats,weaponReachText,WEAPON_PATHS,segmentDistance,registerCrossbowHit,registerShadowHit,UPGRADES}from'./rules.js?v=64';
+import{actor,animateActor,animateWorld,buildWorld,clearAt,moveActor,mesh,mat}from'./world.js?v=64';
 const $=s=>document.querySelector(s),touch=matchMedia('(pointer:coarse)').matches;
 document.body.classList.toggle('touch',touch);
 const canvas=$('#world');let renderer;
@@ -153,7 +153,7 @@ function showRunResult(win,first=false){
  const found=world.sites.filter(s=>s.claimed).length,relic=RELICS[player.relic?.id];
  dialog(win?'林心重归宁静':'这一程，暂告段落',`${MAPS[mapId].name} · 存活 ${Math.floor(time/60)} 分 ${Math.floor(time%60)} 秒<br>击败 ${kills} · 等级 ${player.level} · 探索 ${found}/${world.sites.length}<br>${relic?'本局遗物：'+relic.name:'未取得遗物：下次试着寻找金色遗迹。'}<br>${first?'新通关印记！这张地图与这把武器的组合已记入手册。':win?'再试另一件遗物或武器，走一条不同的成长路线。':'已发现的遗物仍保留在手册，下局可以寻找不同搭配。'}${journalSaved?'':'<br>浏览器未能保存记录；当前页面内仍保留。'}`,[['再次远征',start],['选择角色与地图',menu],['远征手册',()=>showJournal(()=>showRunResult(win,first))]]);
 }
-function hitPlayer(n,x,z){if(state!=='playing')return;if(canParry(player,x,z,.18+(weaponStats(player).guardWindow||0))){player.counterUntil=time+4;impactChips(player.x,player.z,0xffe3a5,6);sound.impact('shield',true);toast('精准格挡 · 下一锤强化');heroSkills.newHeroes.parry();return;}if(player.inv>0)return;if(heroId==='guardian'&&player.dashTime>0&&inMeleeArc(player,{x,z},player.dashAngle,1000,Math.PI*.36))n*=.25;player.hp=Math.max(0,player.hp-incomingRelicDamage(player,n));player.inv=.7;player.hurt=.35;shake=.16;$('#damage-edge').style.opacity=.7;impactChips(player.x,player.z,0xf49c85,5);sound.hurt();if(player.hp<=0)finish(false);}
+function hitPlayer(n,x,z){if(state!=='playing')return;if(canParry(player,x,z,.18+(weaponStats(player).guardWindow||0))){player.counterUntil=time+4;hero.userData.guardFlinch=.18;impactChips(player.x,player.z,0xffe3a5,6);sound.impact('shield',true);toast('精准格挡 · 下一锤强化');heroSkills.newHeroes.parry();return;}if(player.inv>0)return;if(heroId==='guardian'&&player.dashTime>0&&inMeleeArc(player,{x,z},player.dashAngle,1000,Math.PI*.36)){n*=.25;hero.userData.guardFlinch=.18;sound.impact('shield',false);}player.hp=Math.max(0,player.hp-incomingRelicDamage(player,n));player.inv=.7;player.hurt=.35;shake=.16;$('#damage-edge').style.opacity=.7;impactChips(player.x,player.z,0xf49c85,5);sound.hurt();if(player.hp<=0)finish(false);}
 function spawn(kind,x=null,z=null,site=null){kind=regionalEnemy(mapId,kind);if(!ENEMIES[kind])return null;if(!site&&enemies.filter(e=>e.alive).length>=60)return null;if(x===null){for(let i=0;i<25;i++){const a=Math.random()*Math.PI*2,d=19+Math.random()*7;const nx=player.x+Math.cos(a)*d,nz=player.z+Math.sin(a)*d;if(clearAt(world,nx,nz,1)){x=nx;z=nz;break;}}}if(x===null||!clearAt(world,x,z,.65))return null;const cfg=ENEMIES[kind],growth=enemyGrowth(time,cfg.xp),e={...cfg,xp:growth.xp,x,z,kind,role:cfg.role||kind,id:++enemyId,alive:true,hp:cfg.hp*growth.health,maxHp:cfg.hp*growth.health,packAngle:Math.atan2(x-player.x,z-player.z),cool:1+Math.random(),wind:0,hurt:0,slow:0,site};e.mesh=actor(kind);e.mesh.position.set(x,0,z);scene.add(e.mesh);enemies.push(e);introduceEnemy(kind);return e;}
 function spawnHunt(cycle){
  const angle=Math.hypot(player.x,player.z)>35?Math.atan2(-player.x,-player.z):Math.random()*Math.PI*2,members=[];
@@ -200,6 +200,7 @@ function shoot(dt){if(player.weaponId==='boomerang'&&bullets.some(b=>b.kind==='b
  if(w.id==='dark'&&player.weaponPath?.id==='dark_seek')for(const e of targets){const n=Math.hypot(e.x-player.x,e.z-player.z),direction=Math.atan2(e.x-player.x,e.z-player.z),diff=Math.atan2(Math.sin(direction-angle),Math.cos(direction-angle));if(n<d&&Math.abs(diff)<.26){nearest=e;d=n;}}
  const relicShot=relicEvent(player,'shot',time);if(relicShot?.kind==='power'){w.damage*=relicShot.multiplier;impactChips(player.x,player.z,0xffe3a3,2);}
  player.aimAngle=angle;player.attack=1/w.rate;player.aimTime=player.attack+.16;hero.userData.shoot=w.id==='grimoire'?.32:w.id==='shade'?.20:.16;hero.userData.reloadPhase=0;hero.userData.reloadDuration=player.attack;hero.userData.shotSerial=(hero.userData.shotSerial||0)+1;player.weaponCue=0;
+ if(['harpoon','boomerang','hammer'].includes(w.id))hero.userData.attackAngle=angle;
  if(w.id==='harpoon'){const combo=(player.harpoonCount||0)%3,move=HARPOON_ATTACKS[combo];player.harpoonCount=(player.harpoonCount||0)+1;hero.userData.harpoonCombo=combo;player.melee={angle,hitAt:time+Math.min(.48,.9/w.rate)*.34,w:{...w,range:w.range*move.reach},harpoon:true,combo,tow:combo===2};sound.shot('harpoon',combo);resolveRelic(relicShot,player.x,player.z,angle,w.range);return;}
  if(w.melee){const combo=nextGuardianAttack(player,time),move=GUARDIAN_ATTACKS[combo];player.meleeCombo=combo;player.lastMeleeAt=time;hero.userData.meleeCombo=combo;player.melee={angle,delay:move.impact/w.rate,hitAt:time+move.impact/w.rate,w:{...w,damage:w.damage*move.damage,range:w.range*move.reach},combo,arc:move.arc,empowered:player.counterUntil>time};player.counterUntil=0;sound.shot(move.sound,combo===2?1:0);resolveRelic(relicShot,player.x,player.z,angle,w.range);return;}
  if(w.id==='grimoire'){
@@ -213,13 +214,13 @@ function shoot(dt){if(player.weaponId==='boomerang'&&bullets.some(b=>b.kind==='b
  vfx.muzzle(w,player.x,player.z,angle);if(w.id!=='boomerang')sound.shot(w.id);heroSkills.onShot(angle,dt);resolveRelic(relicShot,player.x,player.z,angle,w.range);
 }
 function updateMelee(dt){const strike=player.melee;if(!strike)return;strike.delay=strike.hitAt-time;if(strike.delay>0)return;player.melee=null;const w=strike.w;if(strike.harpoon){resolveHarpoon(strike);return;}let hits=0;
- for(const e of [...enemies,...(boss?.alive?[boss]:[])]){if(!visibleEnemy(e)||!inMeleeArc(player,e,strike.angle,w.range,strike.arc)||world.obstacles.some(o=>segmentDistance(o.x,o.z,player.x,player.z,e.x,e.z)<o.r))continue;hurtEnemy(e,w.damage*(strike.empowered?1.6+(w.counterBonus||0):1));heroSkills.onHit(e);hits++;const length=Math.hypot(e.x-player.x,e.z-player.z)||1,hx=e.x-(e.x-player.x)/length*e.size*.7,hz=e.z-(e.z-player.z)/length*e.size*.7;impactChips(hx,hz,strike.combo===0?0xb7cfcc:0xe4d1a4,strike.combo===2?7:4);vfx.particle('ember',0xffdf9c,hx,.9,hz,{life:.1,size:[.12,.12,.12],opacity:.75});if(e.alive&&e!==boss){const a=Math.atan2(e.x-player.x,e.z-player.z);moveActor(world,e,Math.sin(a)*(strike.combo===0?.85:.35),Math.cos(a)*(strike.combo===0?.85:.35),e.size*.6);e.stagger=.18;}if(state!=='playing')return;}
+ for(const e of [...enemies,...(boss?.alive?[boss]:[])]){if(!visibleEnemy(e)||!inMeleeArc(player,e,strike.angle,w.range,strike.arc)||world.obstacles.some(o=>segmentDistance(o.x,o.z,player.x,player.z,e.x,e.z)<o.r))continue;hurtEnemy(e,w.damage*(strike.empowered?1.6+(w.counterBonus||0):1));heroSkills.onHit(e);hits++;const length=Math.hypot(e.x-player.x,e.z-player.z)||1,hx=e.x-(e.x-player.x)/length*e.size*.7,hz=e.z-(e.z-player.z)/length*e.size*.7;vfx.weaponContact(strike.combo===0?'shield':'hammer',hx,hz,strike.angle,strike.combo);if(e.alive&&e!==boss){const a=Math.atan2(e.x-player.x,e.z-player.z);moveActor(world,e,Math.sin(a)*(strike.combo===0?.85:.35),Math.cos(a)*(strike.combo===0?.85:.35),e.size*.6);e.stagger=.18;}if(state!=='playing')return;}
  heroSkills.newHeroes.strike(strike.angle,'hammer',strike.combo===2);
  if(hits){hero.userData.impactHold=strike.combo===2?.065:.035;hero.userData.impactPhase=GUARDIAN_ATTACKS[strike.combo].impact;sound.impact(GUARDIAN_ATTACKS[strike.combo].sound,strike.empowered||strike.combo===2);if(strike.combo===2)shake=Math.max(shake,.055);}else if(strike.combo===2){hero.updateMatrixWorld(true);const point=hero.userData.hammerContact.getWorldPosition(new T.Vector3());vfx.dust(point.x,point.z,.65);}
 
 }
 function resolveHarpoon(strike){const w=strike.w,a=strike.angle,reach=visibleWeaponRange(a,w.range),tip={x:player.x+Math.sin(a)*reach,z:player.z+Math.cos(a)*reach};let hits=0;
- for(const e of [...enemies,...(boss?.alive?[boss]:[])]){if(!visibleEnemy(e)||!(strike.combo===1?inMeleeArc(player,e,a,w.range,HARPOON_ATTACKS[1].arc):harpoonHit(player,e,a,w.range,w.width))||world.obstacles.some(o=>segmentDistance(o.x,o.z,player.x,player.z,e.x,e.z)<o.r))continue;hurtEnemy(e,w.damage);heroSkills.onHit(e);hits++;if(e.alive&&strike.tow){const distance=Math.hypot(e.x-player.x,e.z-player.z);if(e!==boss){const pull=Math.min(w.pull,Math.max(0,distance-1.4)),towAngle=Math.atan2(player.x-e.x,player.z-e.z);moveActor(world,e,Math.sin(towAngle)*pull,Math.cos(towAngle)*pull,e.size*.6);e.stagger=.12;}e.slow=Math.max(e.slow||0,w.slow);vfx.water(e.x,e.z,a,.8);}if(state!=='playing')return;}
+ for(const e of [...enemies,...(boss?.alive?[boss]:[])]){if(!visibleEnemy(e)||!(strike.combo===1?inMeleeArc(player,e,a,w.range,HARPOON_ATTACKS[1].arc):harpoonHit(player,e,a,w.range,w.width))||world.obstacles.some(o=>segmentDistance(o.x,o.z,player.x,player.z,e.x,e.z)<o.r))continue;hurtEnemy(e,w.damage);heroSkills.onHit(e);hits++;vfx.weaponContact('harpoon',e.x,e.z,a,strike.combo);if(e.alive&&strike.tow){const distance=Math.hypot(e.x-player.x,e.z-player.z);if(e!==boss){const pull=Math.min(w.pull,Math.max(0,distance-1.4)),towAngle=Math.atan2(player.x-e.x,player.z-e.z);moveActor(world,e,Math.sin(towAngle)*pull,Math.cos(towAngle)*pull,e.size*.6);e.stagger=.12;}e.slow=Math.max(e.slow||0,w.slow);vfx.water(e.x,e.z,a,.8);}if(state!=='playing')return;}
  heroSkills.newHeroes.strike(a,'harpoon',strike.tow);
  if(strike.combo===1){for(let i=0;i<6;i++){const a0=a-.7+i*.23,a1=a0+.23;vfx.segment(new T.Vector3(player.x+Math.sin(a0)*reach,.85,player.z+Math.cos(a0)*reach),new T.Vector3(player.x+Math.sin(a1)*reach,.85,player.z+Math.cos(a1)*reach),0x9dbab7,.025,.12,false,0,.35);}}else vfx.segment(new T.Vector3(player.x,.85,player.z),new T.Vector3(tip.x,.85,tip.z),strike.tow?0x86ded8:0xcadbd0,.04,.12,false,0,.40);if(hits)sound.impact('harpoon',strike.tow,strike.combo);
 }
@@ -400,7 +401,7 @@ function update(dt){const rollStart=heroId==='scout'?player.dashTime:0,guardianD
  hero.rotation.y+=turn;hero.position.set(player.x,0,player.z);
  Object.assign(hero.userData,{companionAngle:companion?Math.atan2(companion.x-player.x,companion.z-player.z):undefined,dashAngle:player.dashAngle,dashTime:player.dashTime,travelAngle,aimActive:aimInput.held||!!autoTarget||player.aimTime>0,aimAngle:aimInput.hasAim?aimInput.angle:player.aimTime>0?player.aimAngle:undefined,turnRate:turn/Math.max(dt,.001),reloadPhase:hero.userData.reloadDuration?1-player.attack/hero.userData.reloadDuration:1});
  const cues=weaponCuePhases(player.weaponId,hero.userData.reloadDuration||1);while(hero.userData.shotSerial&&player.weaponCue<cues.length&&hero.userData.reloadPhase>=cues[player.weaponCue]){if(player.dashTime<=0)sound.mechanism(player.weaponId,player.weaponCue);player.weaponCue++;}
- hero.userData.boomerangAway=bullets.some(b=>b.kind==='boomerang'&&b.life>0&&b.releaseDelay<=0);hero.userData.shoot=Math.max(0,(hero.userData.shoot||0)-dt);updateWaterActor(player,hero,dt,actualSpeed,true);hero.userData.waterDash=player.waterDash&&player.dashTime>0;animateActor(hero,time,actualSpeed,hero.userData.shoot,player.hurt);updateGuardianTrail();
+ const heldBone=bullets.find(b=>b.kind==='boomerang'&&b.life>0&&b.releaseDelay<=0);hero.userData.boomerangAway=!!heldBone;hero.userData.catchReady=heldBone?.returning?T.MathUtils.clamp(1-(Math.hypot(heldBone.x-player.x,heldBone.z-player.z)-.6)/2.5,0,1):0;hero.userData.shoot=Math.max(0,(hero.userData.shoot||0)-dt);updateWaterActor(player,hero,dt,actualSpeed,true);hero.userData.waterDash=player.waterDash&&player.dashTime>0;animateActor(hero,time,actualSpeed,hero.userData.shoot,player.hurt);updateGuardianTrail();
  if(heroId==='silver'&&player.dashTime>0)hero.scale.setScalar(.65+.35*(1-player.dashTime/.24));else hero.scale.setScalar(1);
  const aimOffset=Math.abs(Math.atan2(Math.sin(aimInput.angle-hero.rotation.y),Math.cos(aimInput.angle-hero.rotation.y))),aligned=aimOffset<.26;
  if((attackMode==='auto'?!!autoTarget&&aligned:aimInput.held&&(!['crossbow','hammer','harpoon'].includes(player.weaponId)||aligned))&&player.attack<=0&&player.dashTime===0)shoot(dt);if(state!=='playing')return;updateMelee(dt);if(state!=='playing')return;updateBattleFlow(dt);
@@ -411,7 +412,7 @@ function update(dt){const rollStart=heroId==='scout'?player.dashTime:0,guardianD
  else if(b.kind==='dark'&&b.target?.alive){const a=Math.atan2(b.target.x-b.x,b.target.z-b.z),blend=1-Math.exp(-dt*6);b.vx=T.MathUtils.lerp(b.vx,Math.sin(a)*b.speed,blend);b.vz=T.MathUtils.lerp(b.vz,Math.cos(a)*b.speed,blend);}
  b.x+=b.vx*travelDt;b.z+=b.vz*travelDt;b.mesh.position.set(b.x,b.kind==='boomerang'?(b.height??.82):1.15,b.z);if(['shuriken','shadowblade','boomerang'].includes(b.kind)){b.mesh.rotation.y+=dt*(b.kind==='boomerang'?(b.returning?-22:26):24);if(b.kind==='boomerang')b.mesh.rotation.z=Math.sin(b.elapsed*7)*.12;}else b.mesh.rotation.y=Math.atan2(b.vx,b.vz);const blocked=!b.returning&&!clearAt(world,b.x,b.z,b.hitRadius);if(blocked){b.life=0;if(b.kind==='boomerang'){b.x=ox;b.z=oz;beginReturn(b);continue;}}
  vfx.flight(b,dt);
- for(const e of targets()){if(!visibleEnemy(e)||b.hits.has(e.id??'boss')||b.life<=0||b.pierce<=0)continue;if(segmentDistance(e.x,e.z,ox,oz,b.x,b.z)<e.size+b.hitRadius){b.hits.add(e.id??'boss');const strong=b.kind==='crossbow'&&registerCrossbowHit(player,e.id??'boss',time);hurtEnemy(e,b.damage*(strong?1.35:1));heroSkills.onHit(e);if(b.kind==='boomerang'){companion?.marked(e);impactChips(e.x,e.z,0xdfc89b,3);}inflictStatus(e,b);sound.impact(b.kind,strong,b.kind==='boomerang'&&b.returning?1:strong?1:0);if(b.kind==='shuriken'||b.kind==='shadowblade')vfx.bladeImpact(e.x,e.z,Math.atan2(b.vx,b.vz),b.kind==='shadowblade');else if(b.kind==='rifle'||b.kind==='shotgun')impactChips(e.x,e.z,0xffdf97,2);if(b.kind==='crossbow'){vfx.boltImpact(e.x,e.z,strong);if(strong&&e.alive&&e!==boss){const d=Math.hypot(e.x-player.x,e.z-player.z)||1;moveActor(world,e,(e.x-player.x)/d*1.8,(e.z-player.z)/d*1.8,e.size*.6);e.mesh.position.set(e.x,0,e.z);e.stagger=Math.max(e.stagger||0,.3);e.hurt=.3;}}
+ for(const e of targets()){if(!visibleEnemy(e)||b.hits.has(e.id??'boss')||b.life<=0||b.pierce<=0)continue;if(segmentDistance(e.x,e.z,ox,oz,b.x,b.z)<e.size+b.hitRadius){b.hits.add(e.id??'boss');const strong=b.kind==='crossbow'&&registerCrossbowHit(player,e.id??'boss',time);hurtEnemy(e,b.damage*(strong?1.35:1));heroSkills.onHit(e);if(b.kind==='boomerang'){companion?.marked(e);vfx.weaponContact('boomerang',e.x,e.z,Math.atan2(b.vx,b.vz),b.returning?2:0);}inflictStatus(e,b);sound.impact(b.kind,strong,b.kind==='boomerang'&&b.returning?1:strong?1:0);if(b.kind==='shuriken'||b.kind==='shadowblade')vfx.bladeImpact(e.x,e.z,Math.atan2(b.vx,b.vz),b.kind==='shadowblade');else if(b.kind==='rifle'||b.kind==='shotgun')impactChips(e.x,e.z,0xffdf97,2);if(b.kind==='crossbow'){vfx.boltImpact(e.x,e.z,strong);if(strong&&e.alive&&e!==boss){const d=Math.hypot(e.x-player.x,e.z-player.z)||1;moveActor(world,e,(e.x-player.x)/d*1.8,(e.z-player.z)/d*1.8,e.size*.6);e.mesh.position.set(e.x,0,e.z);e.stagger=Math.max(e.stagger||0,.3);e.hurt=.3;}}
  if(b.kind==='shade'){const marked=registerShadowHit(e,time);vfx.shadowMark(e.x,e.z,marked);if(marked){sound.spell('rift');hurtEnemy(e,b.markDamage);for(const other of targets())if(other!==e&&visibleEnemy(other)&&Math.hypot(other.x-e.x,other.z-e.z)<b.markRadius)hurtEnemy(other,b.markDamage*.5);}}
  if(['fire','dark'].includes(b.kind)){if(b.kind==='fire')vfx.fire(e.x,e.z,b.radius);else vfx.dark(e.x,e.z,b.radius);if(b.gravity)addGravity(e.x,e.z,b.gravity);for(const other of targets())if(other!==e&&visibleEnemy(other)&&Math.hypot(other.x-e.x,other.z-e.z)<b.radius){hurtEnemy(other,b.damage*.65);inflictStatus(other,b);}}
  if(b.bounces>0){const next=targets().filter(q=>visibleEnemy(q)&&!b.hits.has(q.id??'boss')&&Math.hypot(q.x-e.x,q.z-e.z)<7).sort((a,c)=>Math.hypot(a.x-e.x,a.z-e.z)-Math.hypot(c.x-e.x,c.z-e.z))[0];if(next){const a=Math.atan2(next.x-e.x,next.z-e.z);b.x=e.x;b.z=e.z;b.vx=Math.sin(a)*b.speed;b.vz=Math.cos(a)*b.speed;b.damage*=.75;b.bounces--;b.life=Math.min(7,visibleWeaponRange(a,7,b.x,b.z))/b.speed;redirected=true;b.mesh.position.set(b.x,b.kind==='boomerang'?(b.height??.82):1.15,b.z);break;}}

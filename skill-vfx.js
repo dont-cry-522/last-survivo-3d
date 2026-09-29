@@ -1,7 +1,7 @@
-import{boneBoomerang}from'./beast-model.js?v=63';
+import{boneBoomerang}from'./beast-model.js?v=64';
 import * as T from './vendor/three.module.js';
-import{shadowCrescentGeometry}from'./shadow-weapons.js?v=63';
-import{spellShapes,streakTexture,crestTexture}from'./spell-shapes.js?v=63';
+import{shadowCrescentGeometry}from'./shadow-weapons.js?v=64';
+import{spellShapes,streakTexture,crestTexture}from'./spell-shapes.js?v=64';
 
 function flameTexture(){
  if(typeof document==='undefined')return null;
@@ -159,6 +159,16 @@ export class SkillVFX{
   if(kind==='burn')this.particle('flame',0xff8734,x+(Math.random()-.5)*size,.45,z+(Math.random()-.5)*size,{life:.32,size:[.16,.28,.1],velocity:[0,1,0],grow:true,additive:false});
   else if(kind==='frost')this.particle('crystal',0xa5e8ff,x+(Math.random()-.5)*size,.18,z+(Math.random()-.5)*size,{life:.38,size:[.055,.22,.055],grow:true});
   else this.particle('ember',0xbb9eff,x+(Math.random()-.5)*size,.45,z+(Math.random()-.5)*size,{life:.4,size:[.065,.09,.065],velocity:[0,.6,0]});
+ }
+ weaponContact(kind,x,z,angle,combo=0){
+  const dx=Math.sin(angle),dz=Math.cos(angle);
+  if(kind==='harpoon'||kind==='boomerang'){
+   const color=kind==='harpoon'?0xa4ded5:0xe1cb97,m=this.particle('sweep',color,x,.8,z,{life:.17,size:kind==='harpoon'?[.52,.32,1]:[.34,.23,1],motion:'lash',opacity:.7,roll:combo===2?-3:3,priority:1});if(m)m.rotation.set(-.65,angle,kind==='boomerang'?.8:combo===1?.2:1.2);
+   for(let i=0;i<3;i++)this.particle('crystal',color,x,.8,z,{life:.23,size:[.025,.075,.025],velocity:[dx*(combo===2?-1:1)+(i-1)*.5,.7,dz*(combo===2?-1:1)],gravity:4,spin:6,additive:false});
+  }else{
+   const shield=kind==='shield';for(let i=0;i<5;i++){const a=angle+(i-2)*.45;this.particle(shield?'crystal':'stone',shield?0xc8d3b9:0xc4a16b,x,shield?.9:.22,z,{life:shield?.19:.32,size:shield?[.025,.09,.025]:[.065,.07,.065],velocity:[Math.sin(a)*2,shield?.2:1.5,Math.cos(a)*2],gravity:shield?1:7,spin:8,additive:shield});}
+   if(!shield&&combo===2)this.dust(x,z,.65);
+  }
  }
  boltImpact(x,z,strong=false){
   const count=strong?12:5;

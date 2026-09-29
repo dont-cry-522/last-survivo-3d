@@ -1,6 +1,6 @@
-import{heroDodgePose}from'./hero-dodge.js?v=63';
+import{heroDodgePose}from'./hero-dodge.js?v=64';
 import * as T from './vendor/three.module.js';
-import {guardianPose} from './guardian-motion.js?v=63';
+import {guardianPose} from './guardian-motion.js?v=64';
 const geo=new Map(),mats=new Map();
 function material(color,metal=0){const key=color+':'+metal;if(!mats.has(key))mats.set(key,new T.MeshStandardMaterial({color,metalness:metal,roughness:metal?.46:.82,side:T.DoubleSide}));return mats.get(key);}
 function geometry(key,create){if(!geo.has(key))geo.set(key,create());return geo.get(key);}
@@ -56,17 +56,17 @@ export function animateGuardian(g,t,speed,dt){
  const d=g.userData;let u=d.shotSerial?T.MathUtils.clamp(d.reloadPhase??1,0,1):1;if(d.cancelAttack||d.dashTime>0)d.impactHold=0;if(d.impactHold>0){u=d.impactPhase;d.impactHold=Math.max(0,d.impactHold-dt);}let pose=guardianPose(d.meleeCombo||0,u);
  if(d.cancelAttack){d.cancelAttack=false;d.cancelPose=d.lastPose?.slice();d.cancelTime=0;}
  if(d.cancelPose){d.cancelTime+=dt;const k=Math.min(1,d.cancelTime/.16),blend=k*k*(3-2*k);pose=pose.map((v,i)=>d.cancelPose[i]+(v-d.cancelPose[i])*blend);if(k===1)d.cancelPose=null;}d.lastPose=pose.slice();
- const dodge=heroDodgePose('guardian',d.dashTime||0);d.brace=dodge.weight;
+ const dodge=heroDodgePose('guardian',d.dashTime||0);d.brace=dodge.weight;d.guardFlinch=Math.max(0,(d.guardFlinch||0)-dt);const block=Math.sin(Math.PI*d.guardFlinch/.18);
  const carry=(1-(d.readyBlend||0))*(1-d.brace),step=Math.sin(d.gaitPhase*Math.PI*2)*d.blend;
  d.rig.position.z=pose[14]*.65;d.rig.position.y=pose[15]*.45;
  // Mix weight transfer into the authored pelvis/spine while keeping the walking footfall.
- d.spine.rotateY(pose[12]*.85+step*.035*carry);d.spine.rotateX(pose[13]*.55+d.brace*.17);d.rig.rotation.x+=dodge.brace*.5;
+ d.spine.rotateY(pose[12]*.85+step*.035*carry);d.spine.rotateX(pose[13]*.55+d.brace*.17+(d.presence?.breath||0));d.spine.rotateZ((d.presence?.shoulder||0)*carry);d.rig.rotation.x+=dodge.brace*.5-block*.045;d.rig.position.z-=block*.035;
  g.updateMatrixWorld(true);const yaw=g.getWorldQuaternion(new T.Quaternion()),chest=d.aimArm.getWorldPosition(new T.Vector3()).add(d.offArm.getWorldPosition(new T.Vector3())).multiplyScalar(.5);
  for(let i=0;i<2;i++){
   const offset=i*6,hand=i?d.support.rightHand:d.support.hand,upper=i?d.aimArm:d.offArm,lower=i?d.firingForearm:d.offForearm;
   const v=new T.Vector3(-pose[offset]*.7,(pose[offset+1]-.6)*.7,pose[offset+2]*.75);
-  if(i===0){v.z+=d.brace*.22;v.y+=d.brace*.10;}else if(d.brace>0){v.z-=d.brace*.15;v.y-=d.brace*.08;}else if(u===1)v.z+=Math.sin(d.gaitPhase*Math.PI*2)*.025*d.blend;
-  v.y-=carry*(i?.17:.10);v.z+=step*(i?.095:-.05)*carry;v.x+=carry*(i?-.035:.06);
+  if(i===0){v.z+=d.brace*.22-block*.085;v.y+=d.brace*.10+block*.025;}else if(d.brace>0){v.z-=d.brace*.15;v.y-=d.brace*.08;}else if(u===1)v.z+=Math.sin(d.gaitPhase*Math.PI*2)*.025*d.blend;
+  v.y-=carry*(i?.20:.12);v.y+=(d.presence?.breath||0)*.5;v.z+=(d.presence?.hand||0)*(i?1:-.4);v.z+=step*(i?.095:-.05)*carry;v.x+=carry*(i?-.035:.06);
   const desired=yaw.clone().multiply(new T.Quaternion().setFromEuler(new T.Euler(pose[offset+3]+carry*(i?-.55:.10)+step*.045*carry,-pose[offset+4],-pose[offset+5]+carry*(i?.14:-.12))));
   const previous=d.guardianPrevious[i]||(d.guardianPrevious[i]=[]);
   arm(upper,lower,hand,chest.clone().add(v.applyQuaternion(yaw)),new T.Vector3(i?-.6:.6,-1,-.2).applyQuaternion(yaw),d.grips[i],desired,previous,dt);

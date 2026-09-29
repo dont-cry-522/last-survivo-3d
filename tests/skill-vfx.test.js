@@ -18,6 +18,10 @@ test('elemental impacts have a readable core and distinct secondary shapes',()=>
  for(let i=0;i<90;i++)vfx.update(1/60);assert.equal(vfx.active.length,0);
 });
 test('ordinary fire and dark hits do not draw range circles',()=>{const vfx=new SkillVFX(new T.Scene());vfx.fire(0,0,1);vfx.dark(0,0,1);assert(!vfx.active.some(p=>p.shape==='ring'));});
+test('new weapon contacts keep distinct small silhouettes and remain pooled during a melee crowd',()=>{
+ const v=new SkillVFX(new T.Scene(),{mobile:true});for(const kind of ['shield','hammer','harpoon','boomerang']){v.clear();v.weaponContact(kind,0,0,.4,2);assert(v.active.some(p=>p.shape===(kind==='shield'?'crystal':kind==='hammer'?'stone':'sweep')));assert(!v.active.some(p=>['ring','disc'].includes(p.shape)));}
+ for(let i=0;i<600;i++){for(const kind of ['shield','hammer','harpoon','boomerang'])v.weaponContact(kind,0,0,.4,2);v.update(1/60);assert(v.active.length+v.pool.length<=110);}v.update(2);assert.equal(v.active.length,0);
+});
 test('erupting ice stays rooted and grows before sinking without a spawn-frame pop',()=>{
  const v=new SkillVFX(new T.Scene());v.ice(0,0,4);const p=v.active.find(p=>p.shape==='shard'),base=p.mesh.position.clone(),start=p.mesh.scale.y;
  const positions=p.mesh.geometry.getAttribute('position');for(let i=0;i<positions.count;i++)assert(positions.getY(i)>=0,'geometry must grow from its base');
