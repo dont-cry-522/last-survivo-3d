@@ -1,21 +1,19 @@
-import {GRIP_POINTS,primaryGripFrame,fitWeaponToPalm,createHandGrips,restoreGripWrists,captureGripWrists,aimGrip,supportGripTarget,aimSupportGrip,poseGripFingers} from './weapon-grips.js?v=86';
-import {refineLingyaHead,lingyaHeadY} from './lingya-face.js?v=86';
-import {finishHeroSurface,smoothSeams} from './hero-finish.js?v=86';
-import{tideHarness}from'./tide-appearance.js?v=86';
-import{newHeroAttack,heroCarryPose,committedWeaponYaw}from'./new-hero-motion.js?v=86';
-import{heroDodgePose}from'./hero-dodge.js?v=86';
-import{lingyaHopPose}from'./lingya-motion.js?v=86';
-import{lingyaOutfit,lingyaAccessories,lingyaLegs}from'./lingya-appearance.js?v=86';
-import{boneBoomerang}from'./beast-model.js?v=86';
-import{makeHarpoon}from'./coast-models.js?v=86';
-import{guardianOutfit,guardianHair}from'./guardian-appearance.js?v=86';
-import{equipGuardian,animateGuardian}from'./guardian-model.js?v=86';
-import{weaponGesture,shotStarted}from'./weapon-performance.js?v=86';
-import{rollProgress,rollWeight}from'./dodge-motion.js?v=86';
+import {GRIP_POINTS,primaryGripFrame,fitWeaponToPalm,createHandGrips,restoreGripWrists,captureGripWrists,aimGrip,supportGripTarget,aimSupportGrip,poseGripFingers} from './weapon-grips.js?v=87';
+import {refineLingyaHead,lingyaHeadY} from './lingya-face.js?v=87';
+import {finishHeroSurface,smoothSeams} from './hero-finish.js?v=87';
+import{tideHarness}from'./tide-appearance.js?v=87';
+import{newHeroAttack,heroCarryPose,committedWeaponYaw}from'./new-hero-motion.js?v=87';
+import{heroDodgePose}from'./hero-dodge.js?v=87';
+import{lingyaHopPose}from'./lingya-motion.js?v=87';
+import{lingyaOutfit,lingyaAccessories,lingyaLegs}from'./lingya-appearance.js?v=87';
+import{boneBoomerang}from'./beast-model.js?v=87';
+import{makeHarpoon}from'./coast-models.js?v=87';
+import{weaponGesture,shotStarted}from'./weapon-performance.js?v=87';
+import{rollProgress,rollWeight}from'./dodge-motion.js?v=87';
 import * as T from './vendor/three.module.js';
 import {clone} from './vendor/SkeletonUtils.js';
-import {loadCharacterData} from './character-loader.js?v=86';
-import {makeHero as makePrototype} from './hero-model.js?v=86';
+import {loadCharacterData} from './character-loader.js?v=87';
+import {makeHero as makePrototype} from './hero-model.js?v=87';
 
 const templates=new Map(),clips=new Map();
 let lingyaFace;
@@ -106,9 +104,6 @@ export async function loadHeroAssets(onProgress=()=>{}){
     }else o.material.color.set(0x58402e);}});bindParts(root,hair);
     root.updateMatrixWorld(true);templates.set(kind,root);
   }
-  const guardian=clone(templates.get('scout'));guardian.skeleton=firstSkin(guardian).skeleton;guardianOutfit(guardian);
-  for(const role of ['hair','beard']){const detail=assets['guardian-'+role].scene;guardianHair(detail,role);bindParts(guardian,detail);}
-  guardian.updateMatrixWorld(true);templates.set('guardian',guardian);
   const tide=assets['tide-outfit'].scene;tide.skeleton=firstSkin(tide).skeleton;
   tide.traverse(o=>{if(o.isMesh){o.material=o.material.clone();if(o.material.name.includes('Regular'))skinTone(o.material,'tide');else{const tint=o.name.includes('Feet')?'.20,.13,.075':o.name.includes('Legs')?'.022,.052,.068':'.035,.12,.16';o.material.color.set(0xffffff);o.material.roughness=.9;o.material.onBeforeCompile=s=>{s.fragmentShader=s.fragmentShader.replace('#include <map_fragment>',`#include <map_fragment>
 float weave=dot(diffuseColor.rgb,vec3(.21,.72,.07));diffuseColor.rgb=vec3(${tint})*(.6+weave*1.8);`);};o.material.customProgramCacheKey=()=> 'tide-coat-'+tint;}}});
@@ -128,7 +123,7 @@ function attachAtRest(bone,object,root){
 }
 function capeMesh(kind){
   const pos=[],uv=[],colors=[],ix=[],cols=24,rows=28;
-  for(let y=0;y<=rows;y++)for(let x=0;x<=cols;x++){const u=x/cols,v=y/rows,w=.22+.13*Math.sin(v*Math.PI*.86),split=.10*Math.exp(-(((u-.5)/.065)**2))*v**8;if(kind==='lingya'){const a=.56+u*(Math.PI*2-1.12),r=.12+.145*Math.sin(v*Math.PI/2);pos.push(Math.sin(a)*r,-v*.25+Math.sin(a*7)*.007*v,Math.cos(a)*r);}else pos.push((u-.5)*w*2,-v*.86+split+Math.cos(u*Math.PI*4)*.013*v,-.12*v-.04*Math.sin(u*Math.PI)+Math.sin(u*Math.PI*8)*.016*v);uv.push(u,v);const edge=x===0||x===cols||y===rows,color=new T.Color(kind==='lingya'?(edge?0xd7c8a5:0x688a74):kind==='tide'?(edge?0xbba879:0x3b686e):kind==='guardian'?(edge?0xc6a464:0x852b37):(edge?0x65727d:0x252936));colors.push(color.r,color.g,color.b);}
+  for(let y=0;y<=rows;y++)for(let x=0;x<=cols;x++){const u=x/cols,v=y/rows,w=.22+.13*Math.sin(v*Math.PI*.86),split=.10*Math.exp(-(((u-.5)/.065)**2))*v**8;if(kind==='lingya'){const a=.56+u*(Math.PI*2-1.12),r=.12+.145*Math.sin(v*Math.PI/2);pos.push(Math.sin(a)*r,-v*.25+Math.sin(a*7)*.007*v,Math.cos(a)*r);}else pos.push((u-.5)*w*2,-v*.86+split+Math.cos(u*Math.PI*4)*.013*v,-.12*v-.04*Math.sin(u*Math.PI)+Math.sin(u*Math.PI*8)*.016*v);uv.push(u,v);const edge=x===0||x===cols||y===rows,color=new T.Color(kind==='lingya'?(edge?0xd7c8a5:0x688a74):kind==='tide'?(edge?0xbba879:0x3b686e):(edge?0x65727d:0x252936));colors.push(color.r,color.g,color.b);}
   for(let y=0;y<rows;y++)for(let x=0;x<cols;x++){const a=y*(cols+1)+x;ix.push(a,a+cols+1,a+1,a+1,a+cols+1,a+cols+2);}
   const geometry=new T.BufferGeometry();geometry.setAttribute('position',new T.Float32BufferAttribute(pos,3));geometry.setAttribute('uv',new T.Float32BufferAttribute(uv,2));geometry.setAttribute('color',new T.Float32BufferAttribute(colors,3));geometry.setIndex(ix);geometry.computeVertexNormals();
   const material=new T.MeshStandardMaterial({color:0xffffff,vertexColors:true,roughness:.87,side:T.DoubleSide}),wind={time:{value:0},run:{value:0},turn:{value:0}};
@@ -178,28 +173,27 @@ export function createSkinnedHero(kind,weapon){
   const layer=(clip,name,top)=>{const c=clip.clone();c.name=name;c.tracks=c.tracks.filter(t=>isUpper(t)===top);return mixer.clipAction(c);};
   const idle=layer(idleClip,'idle-lower',false),run=layer(clips.get('Jog_Fwd_Loop'),'run-lower',false),upperIdle=layer(idleClip,'idle-upper',true),upperRun=layer(clips.get('Jog_Fwd_Loop'),'run-upper',true);
   const walk=layer(clips.get('Walk_Loop'),'walk-lower',false),upperWalk=layer(clips.get('Walk_Loop'),'walk-upper',true),backRun=layer(reverseClip(clips.get('Jog_Fwd_Loop')),'back-run',false),backWalk=layer(reverseClip(clips.get('Walk_Loop')),'back-walk',false);
-  const dodgeActions=['guardian','tide','lingya'].includes(kind)?Object.fromEntries(['Jump_Start','Jump_Loop','Jump_Land'].map(name=>{const a=layer(clips.get(name),'dodge-'+name,false);a.play().setEffectiveWeight(0);a.paused=true;return[name,a];})):null;
-  const kineticActions=['guardian','tide','lingya'].includes(kind)?Object.fromEntries(['Punch_Cross','Sword_Attack'].map(name=>{const a=layer(clips.get(name),'kinetic-'+name,false);a.play().setEffectiveWeight(0);a.paused=true;return[name,a];})):null;
+  const dodgeActions=['tide','lingya'].includes(kind)?Object.fromEntries(['Jump_Start','Jump_Loop','Jump_Land'].map(name=>{const a=layer(clips.get(name),'dodge-'+name,false);a.play().setEffectiveWeight(0);a.paused=true;return[name,a];})):null;
+  const kineticActions=['tide','lingya'].includes(kind)?Object.fromEntries(['Punch_Cross','Sword_Attack'].map(name=>{const a=layer(clips.get(name),'kinetic-'+name,false);a.play().setEffectiveWeight(0);a.paused=true;return[name,a];})):null;
   const aimName=['fire','dark','shuriken','boomerang'].includes(weapon)?'Spell_Simple_Idle_Loop':'Pistol_Aim_Neutral';
   const upperClip=clips.get(aimName).clone();upperClip.tracks=upperClip.tracks.filter(isUpper);upperClip.name='upper-aim';
   const aim=mixer.clipAction(upperClip);aim.play();aim.setEffectiveWeight(0);
   // Calibrate the authored weapon grip in the actual aiming pose, then return to idle.
   const fullAim=actions.Pistol_Aim_Neutral;fullAim.play();mixer.update(0);model.updateMatrixWorld(true);
   const handGrips=createHandGrips(bones);
-  const guardianGrips=kind==='guardian'?[bones.get('hand_l'),bones.get('hand_r')].map(b=>b.getWorldQuaternion(new T.Quaternion())):null;
-  const hand=bones.get('hand_r'),gun=kind==='guardian'?new T.Group():weapon==='boomerang'?boneBoomerang():weapon==='harpoon'?makeHarpoon():makePrototype(kind,weapon).userData.weapon;gun.removeFromParent();gun.position.set(0,.045,0);gun.scale.setScalar(weapon==='harpoon'?1.05:weapon==='crossbow'||weapon==='boomerang'?.72:.65);gun.quaternion.copy(primaryGripFrame(weapon).invert());fitWeaponToPalm(gun,GRIP_POINTS[weapon]||[0,0,0]);hand.add(gun);
+  const hand=bones.get('hand_r'),gun=weapon==='boomerang'?boneBoomerang():weapon==='harpoon'?makeHarpoon():makePrototype(kind,weapon).userData.weapon;gun.removeFromParent();gun.position.set(0,.045,0);gun.scale.setScalar(weapon==='harpoon'?1.05:weapon==='crossbow'||weapon==='boomerang'?.72:.65);gun.quaternion.copy(primaryGripFrame(weapon).invert());fitWeaponToPalm(gun,GRIP_POINTS[weapon]||[0,0,0]);hand.add(gun);
   fullAim.stop();idle.play();upperIdle.play();run.play().setEffectiveWeight(0);upperRun.play().setEffectiveWeight(0);mixer.update(0);
   for(const a of[walk,upperWalk,backRun,backWalk])a.play().setEffectiveWeight(0);
   model.skeleton.pose();model.updateMatrixWorld(true);
   const owned=[];let cape;
-  if(['silver','guardian','tide','lingya'].includes(kind)){
-    cape=capeMesh(kind);if(kind==='guardian')cape.scale.set(1.14,1.06,1);if(kind==='tide')cape.scale.set(1.02,.40,1);if(kind==='lingya')cape.scale.set(1,1,1);owned.push(cape);attachAtRest(bones.get('spine_03'),cape,model);
+  if(['silver','tide','lingya'].includes(kind)){
+    cape=capeMesh(kind);if(kind==='tide')cape.scale.set(1.02,.40,1);if(kind==='lingya')cape.scale.set(1,1,1);owned.push(cape);attachAtRest(bones.get('spine_03'),cape,model);
     if(kind==='silver'){const mask=faceMask(model);owned.push(mask);attachAtRest(bones.get('Head'),mask,model);}
   }
   if(kind==='tide')attachAtRest(bones.get('spine_03'),tideHarness(),model);
   if(kind==='lingya'){const face=lingyaFace.clone(true);face.name='Lingya_authored_face';attachAtRest(bones.get('Head'),face,model);g.userData.face=face;g.userData.faceEyes=face.getObjectByName('Lingya-eyes_viewport');g.userData.faceEyeRest=g.userData.faceEyes.position.z;g.userData.faceMorphs=[];face.traverse(o=>{if(o.morphTargetInfluences)g.userData.faceMorphs.push(o);});const a=lingyaAccessories();for(const ear of a.hood.children)ear.position.y=lingyaHeadY(ear.position.y);const bagPivot=new T.Group();bagPivot.position.set(.24,1,-.10);a.bag.position.set(-.24,-1,.10);bagPivot.add(a.bag);g.userData.satchel=bagPivot;g.userData.skirt=a.skirt;owned.push(a.skirt.children[0]);attachAtRest(bones.get('pelvis'),a.skirt,model);attachAtRest(bones.get('Head'),a.hood,model);attachAtRest(bones.get('spine_03'),a.chest,model);attachAtRest(bones.get('pelvis'),bagPivot,model);g.userData.satchelRest=bagPivot.quaternion.clone();}
   // Slightly larger head silhouette remains legible from the elevated game camera.
-  bones.get('Head')?.scale.setScalar(kind==='silver'?1.035:kind==='guardian'?1.04:1.055);
+  bones.get('Head')?.scale.setScalar(kind==='silver'?1.035:1.055);
   if(kind==='lingya')bones.get('Head')?.scale.set(1.28,1.28*1.02/.73,1.28);
   mixer.update(0);const restCape=cape?.quaternion.clone();
   Object.assign(g.userData,{skinned:true,handGrips,kind,weaponId:weapon,dodgeActions,kineticActions,rig,model,mixer,actions,idle,run,walk,upperIdle,upperRun,upperWalk,backRun,backWalk,aim,gun,gunRest:gun.quaternion.clone(),aimArm:bones.get('upperarm_r'),firingForearm:bones.get('lowerarm_r'),offArm:bones.get('upperarm_l'),offForearm:bones.get('lowerarm_l'),swimHead:bones.get('Head'),swimLeftKnee:bones.get('calf_l'),swimRightKnee:bones.get('calf_r'),swimLeftFoot:bones.get('foot_l'),swimRightFoot:bones.get('foot_r'),swimLeftLeg:bones.get('thigh_l'),swimRightLeg:bones.get('thigh_r'),pelvis:bones.get('pelvis'),spine:bones.get('spine_01'),cape,restCape,owned,blend:0,aimBlend:0,aimHold:0,smoothedSpeed:0,backBlend:0,gaitYaw:0,gaitPhase:0,reloadPhase:1});
@@ -208,10 +202,6 @@ export function createSkinnedHero(kind,weapon){
   else g.userData.attackBase=[g.userData.aimArm,g.userData.firingForearm,g.userData.offArm,g.userData.offForearm].map(bone=>[bone,new T.Quaternion()]);
   if(kind==='tide')g.userData.attackBase.push(...[g.userData.spine,g.userData.swimHead].map(bone=>[bone,bone.quaternion.clone()]));
   if(kind==='lingya')g.userData.lingyaPoseBase=[g.userData.spine,g.userData.swimHead,g.userData.swimLeftLeg,g.userData.swimRightLeg,g.userData.swimLeftKnee,g.userData.swimRightKnee,g.userData.swimLeftFoot,g.userData.swimRightFoot,g.userData.aimArm,g.userData.offArm,g.userData.firingForearm,g.userData.offForearm].map(b=>[b,b.quaternion.clone()]);
-  if(kind==='guardian'){
-    gun.removeFromParent();equipGuardian(g,guardianGrips);
-    g.userData.attackBase=[g.userData.aimArm,g.userData.firingForearm,g.userData.offArm,g.userData.offForearm,g.userData.support.hand,g.userData.support.rightHand,g.userData.spine,g.userData.swimHead].map(bone=>[bone,bone.quaternion.clone()]);
-  }
   return g;
 }
 export function animateSkinnedHero(g,t,speed,attack,hurt){
@@ -224,7 +214,7 @@ export function animateSkinnedHero(g,t,speed,attack,hurt){
   const dodge=heroDodgePose(d.kind,d.dashTime||0),gaitSpeed=dodge?.weight>.01?Math.min(speed,6):speed;
   d.smoothedSpeed+=(gaitSpeed-d.smoothedSpeed)*(1-Math.exp(-dt*(speed>0?15:22)));
   d.blend+=(Math.min(1,speed/1.6)-d.blend)*(1-Math.exp(-dt*(speed>0?14:18)));
-  d.aimHold=['guardian','tide','lingya'].includes(d.kind)||attack>0||d.aimActive?.45:Math.max(0,d.aimHold-dt);d.aimBlend+=((d.aimHold>0?(d.kind==='lingya'&&d.boomerangAway&&d.attackAge>.55?.25+.75*(d.catchReady||0):1):0)-d.aimBlend)*(1-Math.exp(-dt*(d.weaponId==='crossbow'?8:20)));
+  d.aimHold=['tide','lingya'].includes(d.kind)||attack>0||d.aimActive?.45:Math.max(0,d.aimHold-dt);d.aimBlend+=((d.aimHold>0?(d.kind==='lingya'&&d.boomerangAway&&d.attackAge>.55?.25+.75*(d.catchReady||0):1):0)-d.aimBlend)*(1-Math.exp(-dt*(d.weaponId==='crossbow'?8:20)));
   const relative=Number.isFinite(d.travelAngle)?angleDelta(d.travelAngle,g.rotation.y):0,backward=Math.abs(relative)>Math.PI*.55;
   d.backBlend+=((backward?1:0)-d.backBlend)*(1-Math.exp(-dt*12));
   const travelYaw=newHero?T.MathUtils.lerp(T.MathUtils.clamp(relative,-.85,.85),T.MathUtils.clamp(angleDelta(relative,Math.PI),-.85,.85),d.backBlend):T.MathUtils.clamp(angleDelta(relative,backward?Math.PI:0),-.85,.85);
@@ -240,18 +230,17 @@ export function animateSkinnedHero(g,t,speed,attack,hurt){
   if(d.dodgeActions){
     for(const action of Object.values(d.dodgeActions))action.setEffectiveWeight(0);
     if(dodge.weight>0){
-      const w=dodge.weight*(d.kind==='guardian'?1-Math.min(speed/1.4,1):1);for(const a of[d.idle,d.run,d.walk,d.backRun,d.backWalk])a.setEffectiveWeight(a.getEffectiveWeight()*(1-w));
+      const w=dodge.weight;for(const a of[d.idle,d.run,d.walk,d.backRun,d.backWalk])a.setEffectiveWeight(a.getEffectiveWeight()*(1-w));
       const set=(name,weight,time)=>{const action=d.dodgeActions[name];action.time=Math.min(action.getClip().duration-.001,Math.max(0,time));action.setEffectiveWeight(weight*w);};
-      if(d.kind==='guardian'||d.kind==='tide')set('Jump_Start',1,.035);
+      if(d.kind==='tide')set('Jump_Start',1,.035);
       else{set('Jump_Start',dodge.launch,dodge.startTime);set('Jump_Loop',dodge.air,dodge.airTime);set('Jump_Land',dodge.land,dodge.landTime);}
     }
   }
   if(d.kineticActions){
-    const u=T.MathUtils.clamp(d.reloadPhase??1,0,1),guardWeight=d.shotSerial?T.MathUtils.smoothstep(u,0,.12)*(1-T.MathUtils.smoothstep(u,.76,1)):0;
-    const amount=(d.kind==='guardian'?guardWeight:action.weight)*(1-T.MathUtils.smoothstep(d.smoothedSpeed,.4,2.5))*(1-(dodge?.weight||0))*(1-(d.waterBlend||0));
+    const amount=action.weight*(1-T.MathUtils.smoothstep(d.smoothedSpeed,.4,2.5))*(1-(dodge?.weight||0))*(1-(d.waterBlend||0));
     for(const a of Object.values(d.kineticActions))a.setEffectiveWeight(0);
     if(amount>0){for(const a of[d.idle,d.run,d.walk,d.backRun,d.backWalk])a.setEffectiveWeight(a.getEffectiveWeight()*(1-amount));
-      const a=d.kineticActions[d.kind==='guardian'&&d.meleeCombo>0||d.kind==='lingya'||d.kind==='tide'&&d.harpoonCombo===1?'Sword_Attack':'Punch_Cross'];a.time=(d.kind==='guardian'?u:action.clipPhase)*(a.getClip().duration-.001);a.setEffectiveWeight(amount*.85);d.idle.setEffectiveWeight(d.idle.getEffectiveWeight()+amount*.15);
+      const a=d.kineticActions[d.kind==='lingya'||d.kind==='tide'&&d.harpoonCombo===1?'Sword_Attack':'Punch_Cross'];a.time=action.clipPhase*(a.getClip().duration-.001);a.setEffectiveWeight(amount*.85);d.idle.setEffectiveWeight(d.idle.getEffectiveWeight()+amount*.15);
     }
   }
   d.presence=heroCarryPose(d.kind,t,d.gaitPhase,d.blend,d.readyBlend);d.carryTurn=(d.carryTurn||0)+((newHero?T.MathUtils.clamp((d.turnRate||0)*.045,-.18,.18):0)-(d.carryTurn||0))*(1-Math.exp(-dt*5));
@@ -279,7 +268,6 @@ export function animateSkinnedHero(g,t,speed,attack,hurt){
   d.gun.quaternion.copy(d.gunRest);
   if(d.attackBase){
     for(const [bone,rotation]of d.attackBase)rotation.copy(bone.quaternion);d.attackBaseReady=true;
-    if(d.kind==='guardian'){animateGuardian(g,t,speed,dt);if(d.cape){d.cape.quaternion.copy(d.restCape);d.cape.rotateX(.06+d.blend*.10-d.motionLean*.6);d.cape.rotateZ(-d.carryTurn*.45);d.cape.userData.wind.time.value=t;d.cape.userData.wind.run.value=d.blend;d.cape.userData.wind.turn.value=d.carryTurn;}g.visible=!(hurt>0&&Math.floor(hurt*28)%2===0);return;}
     const gesture=isRoll?0:kick;
     if(d.weaponId==='harpoon'){
       // Rear-hand thrust, torso weight transfer and the gaze staying on the target.

@@ -3,7 +3,7 @@ const{chromium}=require(process.env.PLAYWRIGHT_MODULE||'playwright'),assert=requ
  const p=await b.newPage({viewport:{width,height},hasTouch:width<1000}),errors=[];p.on('pageerror',e=>errors.push(e.message));
  await p.addInitScript(()=>{const raf=requestAnimationFrame;window.requestAnimationFrame=cb=>{window.nextFrame=cb;return raf(t=>{if(!window.freezeGame)cb(t)})}});
  await p.goto(process.env.TEST_URL||'http://127.0.0.1:8899/',{waitUntil:'domcontentloaded',timeout:60000});await p.waitForFunction(()=>window.game3d&&!document.querySelector('#start').disabled,null,{timeout:60000});await p.locator('#start').click();await p.evaluate(()=>freezeGame=true);await p.waitForTimeout(70);
- for(const hero of['scout','silver','wraith','guardian','tide','lingya']){
+ for(const hero of['scout','silver','wraith','tide','lingya']){
   await p.evaluate(hero=>{const g=game3d;g.select(hero,'forest',0);g.start();g.player.inv=999;g.player.attack=999;g.world.obstacles=[];g.world.sites=[];g.world.discoveries=[];g.world.roaming=[];},hero);
   let previous=[];
   for(let level=2;level<=9;level++){

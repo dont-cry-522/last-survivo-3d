@@ -10,7 +10,7 @@ const {chromium}=require(process.env.PLAYWRIGHT_MODULE||'../../mobile-check/node
    previewChecks.push({hero:game3d.player.heroId,weapon:game3d.player.weaponId,max,worldVisible:scene.children.includes(game3d.world.group)&&game3d.world.group.visible,background:scene.background?.getHexString()});
   }return render(scene,camera);};
  });
- for(const id of ['scout','silver','guardian','wraith','tide','lingya']){
+ for(const id of ['scout','silver','wraith','tide','lingya']){
   await p.locator('[data-hero='+id+']').click();const count=await p.locator('#weapons button').count();
   for(let i=0;i<count;i++){
    await p.locator('#weapons button').nth(i).click();await p.evaluate(()=>previewChecks.length=0);await p.waitForFunction(()=>previewChecks.length>=8,null,{polling:100});

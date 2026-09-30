@@ -40,7 +40,8 @@ const { chromium } = require(process.env.PLAYWRIGHT_MODULE || '../../mobile-chec
         const rules = await import('./rules.js' + version);
         const { WEAPON_ROUTE_LOOKS } = await import('./weapon-route-vfx.js' + version);
         const check = (value, message) => { if (!value) throw Error(message); };
-        check(Object.keys(rules.WEAPON_PATHS).length === 24, 'expected all 24 current weapon routes');
+        check(Object.keys(rules.HERO_LOADOUTS).length === 5 && Object.keys(rules.WEAPONS).length === 11, 'expected five heroes and eleven weapons');
+        check(Object.keys(rules.WEAPON_PATHS).length === 22, 'expected all 22 current weapon routes');
         check(JSON.stringify(Object.keys(WEAPON_ROUTE_LOOKS).sort()) === JSON.stringify(Object.keys(rules.WEAPON_PATHS).sort()), 'route visual catalog differs from gameplay catalog');
         let record, fixtures = [];
         const particle = g.vfx.particle.bind(g.vfx);
@@ -148,21 +149,16 @@ const { chromium } = require(process.env.PLAYWRIGHT_MODULE || '../../mobile-chec
         const result = await page.evaluate(route => {
           const h = routeHarness, { g, check, setup, foe, step, shoot } = h;
           const r = setup(route);
-          const target = foe(0, route === 'boomerang_snare' ? 1.1 : route === 'hammer_guard' ? 1.9 : ['hammer', 'harpoon'].includes(r.weapon) ? 2.6 : 3.6);
+          const target = foe(0, route === 'boomerang_snare' ? 1.1 : r.weapon === 'harpoon' ? 2.6 : 3.6);
           let bounced;
           if (route === 'shade_echo') bounced = foe(1.6, 4.5);
-          if (route === 'hammer_guard') {
-            g.player.inv = 0; g.dash(); g.damage(20, 0, 2);
-            check(g.player.counterUntil > g.time, 'actual precise parry did not grant counter');
-            g.player.inv = 999; step(75);
-          }
           if (route === 'harpoon_tow') g.player.harpoonCount = 2;
           if (route === 'boomerang_pincer') g.companion.cool = 0;
           const shots = route === 'boomerang_snare' || route === 'crossbow_hunt' || route === 'shade_blight' ? 3 : 1;
           for (let shot = 0; shot < shots; shot++) { shoot(); step(r.weapon === 'boomerang' ? 85 : 65); }
           check(target.hp < target.maxHp, route + ': real attack dealt no damage');
           check(r.routeRequests > 0 && r.routeRendered > 0, route + ': real combat emitted no route particles');
-          if (!['hammer', 'harpoon', 'grimoire'].includes(r.weapon)) {
+          if (!['harpoon', 'grimoire'].includes(r.weapon)) {
             check(r.projectiles.length > 0, route + ': no real projectile creation');
             check(r.projectiles.every(w => w.id === r.weapon && w.pathId === route && w.pathRank === 3), route + ': projectile factory received wrong route');
           }
@@ -222,7 +218,7 @@ const { chromium } = require(process.env.PLAYWRIGHT_MODULE || '../../mobile-chec
         check(g.state === 'playing', 'resume failed');
         g.start();
         check(g.vfx.active.length === 0 && g.bullets.length === 0 && g.fields.length === 0 && g.riftStrikes.length === 0, 'restart retained prior combat visuals');
-        check(!g.player.weaponPath && !g.player.counterUntil, 'restart retained route or counter state');
+        check(!g.player.weaponPath, 'restart retained route state');
         return { cancelledRelease: true, saturatedPool: stress.maxActive, normalLimit, paused: true, reset: true };
       });
       await page.evaluate(() => {
@@ -241,9 +237,9 @@ const { chromium } = require(process.env.PLAYWRIGHT_MODULE || '../../mobile-chec
       await page.locator('#dialog button').filter({ hasText: '继续远征' }).click();
       assert.equal(await page.evaluate(() => game3d.state), 'playing');
       assert.deepEqual(errors, [], 'browser or shader errors');
-      assert.equal(results.length, 24);
+      assert.equal(results.length, 22);
       if (output) fs.writeFileSync(path.join(output, `weapon-route-vfx-${width}.json`), JSON.stringify({ viewport: { width, height }, results, lifecycle }, null, 2));
-      console.log(`PASS ${width}x${height}: 24 real routes, contacts/returns, marked pet, trap, parry, rift echo, cancel, pool, pause/reset, details UI ${JSON.stringify(lifecycle)}`);
+      console.log(`PASS ${width}x${height}: 22 real routes, contacts/returns, marked pet, trap, rift echo, cancel, pool, pause/reset, details UI ${JSON.stringify(lifecycle)}`);
       await page.close();
     }
   } finally {

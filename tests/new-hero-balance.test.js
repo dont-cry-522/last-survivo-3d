@@ -3,8 +3,8 @@ import{weaponStats,heroHealth}from'../rules.js';import{meleeDamageScale}from'../
 test('new hero damage and ranged cadence improve without increasing offscreen range',()=>{
  const bone=weaponStats({weaponId:'boomerang'}),quick=weaponStats({weaponId:'boomerang',upgrades:{haste:3}});
  assert.equal(bone.damage,23);assert.equal(bone.petDamage,30);assert.equal(bone.range,9);assert.equal(bone.pierce,3);assert(quick.speed>bone.speed);assert.equal(quick.range,bone.range);
- assert.equal(weaponStats({weaponId:'harpoon'}).damage,36);assert.equal(weaponStats({weaponId:'hammer'}).damage,48);
- assert.deepEqual(['guardian','tide','lingya','scout'].map(heroHealth),[170,140,120,120]);
+ assert.equal(weaponStats({weaponId:'harpoon'}).damage,36);
+ assert.deepEqual(['tide','lingya','scout','silver','wraith'].map(heroHealth),[140,120,120,120,120]);
 });
 test('melee protection respects facing, attack windows, ground hazards and guard non-stacking',()=>{
  const p={heroId:'guardian',x:0,z:0,dashTime:0};assert.equal(meleeDamageScale(p,0,2,0,1),.75);assert.equal(meleeDamageScale(p,0,-2,0,1),1);assert.equal(meleeDamageScale(p,0,0,0,1),1);

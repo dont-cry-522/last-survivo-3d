@@ -20,8 +20,6 @@ export const WEAPON_ROUTE_LOOKS=Object.freeze({
  shadowblade_return:look('shadowblade','追魂弧刃','折返镰影拖出暗色回声，返程留下反向裂痕',['turn','hit','catch']),
  grimoire_wide:look('grimoire','裂界之页','裂口两翼向外展开的裂页和碎纸',['cast','hit']),
  grimoire_echo:look('grimoire','复诵禁咒','窄裂页留下余痕，二次爆发重新撕开双层裂缝',['cast','hit','echo']),
- hammer_break:look('hammer','碎甲重锤','接触处棱角甲片崩裂，石屑沿锤击方向弹出',['hit']),
- hammer_guard:look('hammer','守势反击','精准格挡亮起短盾纹，强化命中迸开金色裂痕',['parry','cast','hit']),
  harpoon_reef:look('harpoon','破礁长锋','三叉形窄穿刺与低位礁石碎片',['hit']),
  harpoon_tow:look('harpoon','回潮牵引','第三击接触处的水痕与水珠向持叉者倒流',['hit']),
  boomerang_pincer:look('boomerang','同心夹击','伙伴扑击留下并列爪痕，标记目标呈浅绿夹击亮锋',['pet']),
@@ -31,7 +29,7 @@ export const WEAPON_ROUTE_LOOKS=Object.freeze({
 /**
  * x/z is the actual contact, turn, field or rift point; cast is the release point.
  * combo: 0..2 melee combo, or 1..2 accumulated crossbow/shadow hits.
- * empowered: confirmed third hit, precise counter, or marked companion strike.
+ * empowered: confirmed third hit or marked companion strike.
  * returning: true only on the return leg. radius: actual field/rift radius.
  * bounce x2/z2 is a PREVIOUS contact, only after the next hit has happened.
  * trap stage: 'set', 'idle', 'snap'. No timers or live gameplay objects are retained.
@@ -182,23 +180,6 @@ export function weaponRouteEffect(vfx,w,phase,x,z,angle=0,detail={}){
   else if(release)particle('veil',0x3e314d,0,0,.05,{life:.31,size:[.43,.33,1],opacity:.21});
   break;
  }
- case'hammer_break':
-  for(let i=-1;i<=1;i++)chip(i===0?'shard':'stone',i===0?0xb9a079:0x81725b,.03,i*.15,.5,[.09,(i===0?.16:.09)*level,.07],1.1,detail.combo===2?1.8:1.15);
-  line([0,0,.15],[.28,-.22,.10],0xc1a16f,.031,.22,1,.75);
-  line([0,0,.15],[.40,.14,.10],0x8f7959,.022,.27,0,.55);
-  break;
- case'hammer_guard':
-  if(phase!=='parry'&&!detail.empowered)return false;
-  if(phase==='parry'){
-   line([.5,-.27,.8],[.54,0,1.35],0xddc493,.045,.23,1,.85);
-   line([.54,0,1.35],[.5,.27,.8],0xa39b7d,.03,.29,0,.64);
-   chip('crystal',0xd0b581,.55,0,1,[.045,.12,.045],.55,.75);
-  }else if(phase==='cast')curl(0xbba574,.25,0,1,.35,.3,{rotation:-.7,roll:2,opacity:.5,priority:1});
-  else{
-   for(const side of[-1,1])line([0,0,.6],[.25,side*.33,1.14],0xddbd7f,.046*level,.24,side<0?1:0,.81);
-   chip('shard',0xa4926d,.02,0,.42,[.12,.2,.1],1.25,1.65);
-  }
-  break;
  case'harpoon_reef':
   line([-.15,0,.84],[target+.33,0,.86],0x9abfba,.032*level,.18,1,.75);
   for(const side of[-1,1]){

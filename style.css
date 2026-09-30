@@ -83,7 +83,7 @@ body.touch header{top:max(10px,env(safe-area-inset-top));left:max(14px,env(safe-
 @media(max-height:500px){#dialog:has(.journal-panel) h2{font-size:20px;margin-bottom:5px}#dialog:has(.journal-panel) #dialog-content>p{font-size:11px;line-height:1.45;margin:4px 0 8px}}
 
 /* Four readable choices on narrow screens and short landscape windows. */
-.hero-options,.map-options{flex-wrap:wrap}.hero-options button{flex:1 1 42%;min-width:0}.map-options button{flex:1 1 42%}.hero-options button[data-hero="guardian"].selected{background:#505849;border-color:#dcc796}@media(max-height:600px){.hero-options{gap:5px}.hero-options button{padding:7px 9px}.map-options{gap:5px}.map-options button{padding:7px 9px}#weapon-preview{margin:6px 0}}
+.hero-options,.map-options{flex-wrap:wrap}.hero-options button{flex:1 1 42%;min-width:0}.map-options button{flex:1 1 42%}@media(max-height:600px){.hero-options{gap:5px}.hero-options button{padding:7px 9px}.map-options{gap:5px}.map-options button{padding:7px 9px}#weapon-preview{margin:6px 0}}
 
 @media(min-width:901px){.hero-options button{flex:1 1 20%;font-size:14px;padding:12px 7px}.hero-options small{font-size:9px}.map-options button{flex:1 1 20%;padding:10px 6px}}
 

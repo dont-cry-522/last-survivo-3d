@@ -7,7 +7,7 @@ import {GLTFLoader} from '../vendor/GLTFLoader.js';
 import {retargetClip} from '../vendor/SkeletonUtils.js';
 import {AnimationClip} from '../vendor/three.module.js';
 const dir=new URL('../assets/characters/',import.meta.url);
-const names=['silver-outfit','scout-outfit','silver-base','scout-base','silver-hair','scout-hair','guardian-hair','guardian-beard','tide-outfit','tide-hair','lingya-face'];
+const names=['silver-outfit','scout-outfit','silver-base','scout-base','silver-hair','scout-hair','tide-outfit','tide-hair','lingya-face'];
 const manifest={models:{},textures:[]};
 async function writeHashed(stem,data,extension){
   const hash=createHash('sha256').update(data).digest('hex').slice(0,12),file=`${stem}-${hash}.${extension}`;

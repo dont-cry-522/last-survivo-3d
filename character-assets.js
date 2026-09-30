@@ -25,14 +25,6 @@ export const CHARACTER_ASSETS={
       "file": "scout-hair-818c31a15ae2.glb.gz",
       "bytes": 35716
     },
-    "guardian-hair": {
-      "file": "guardian-hair-db31085079bf.glb.gz",
-      "bytes": 23336
-    },
-    "guardian-beard": {
-      "file": "guardian-beard-87dc189f1ed9.glb.gz",
-      "bytes": 24155
-    },
     "tide-outfit": {
       "file": "tide-outfit-8b38785bdea6.glb.gz",
       "bytes": 285743

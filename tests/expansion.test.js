@@ -1,9 +1,7 @@
-import{GUARDIAN_DASH}from'../guardian-motion.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {BOSS_STYLES,bossAttackPlan,tickBoss} from '../boss-combat.js';
 import {actor,animateActor,buildWorld,clearAt} from '../world.js';
-import {inMeleeArc,canParry} from '../melee.js';
 import {createMapEvent,advanceMapEvent} from '../map-events.js';
 import {recordVictory,readJournal,writeJournal} from '../expedition.js';
 import {weaponStats,takeUpgrade,chooseUpgrades,HERO_LOADOUTS} from '../rules.js';
@@ -30,11 +28,9 @@ test('boss threat patterns have guaranteed escape space and different silhouette
  const shapes=new Set();for(const kind of Object.keys(BOSS_STYLES))shapes.add(transforms(actor(kind)).join(','));assert.equal(shapes.size,5);
  for(const[kind,cfg]of Object.entries(BOSS_STYLES))for(const move of cfg.moves){const plan=bossAttackPlan(kind,move,b,p);assert(plan.duration>0);assert(plan.zones.length<=9);}
 });
-test('hammer hits a short front cone; shield only parries the opening frontal window',()=>{
- const p={x:0,z:0,heroId:'guardian',dashTime:GUARDIAN_DASH.duration-.08,dashAngle:0};assert(inMeleeArc(p,{x:0,z:2},0,3));assert(!inMeleeArc(p,{x:0,z:-2},0,3));assert(!inMeleeArc(p,{x:0,z:5},0,3));
- assert(canParry(p,0,2));assert(!canParry(p,0,-2));assert(!canParry({...p,dashTime:.05},0,2));assert(!canParry({...p,heroId:'scout'},0,2));
- const player={heroId:'guardian',weaponId:'hammer',level:8,upgrades:{}};assert.deepEqual(HERO_LOADOUTS.guardian,['hammer']);
- assert(!chooseUpgrades(player).some(s=>['fire','ice','storm','veil'].includes(s.id)));takeUpgrade(player,'path:hammer_guard');assert(weaponStats(player).guardWindow>0);assert(!takeUpgrade(player,'path:hammer_break'));
+test('remaining public loadouts and weapon routes are playable without guardian entries',()=>{
+ assert.equal(HERO_LOADOUTS.guardian,undefined);assert.equal(Object.keys(HERO_LOADOUTS).length,5);
+ const player={heroId:'tide',weaponId:'harpoon',level:8,upgrades:{}};assert(!chooseUpgrades(player).some(s=>['fire','ice','storm','veil'].includes(s.id)));assert(takeUpgrade(player,'path:harpoon_tow'));assert(weaponStats(player).pull>1);assert(!takeUpgrade(player,'path:harpoon_reef'));assert(!takeUpgrade(player,'path:hammer_guard'));
 });
 test('desert generates dry terrain, visible destructible gate and accessible landmarks',()=>{
  for(let seed=1;seed<21;seed++){const w=buildWorld('sand',seed);assert.equal(w.ponds.length,0);assert.equal(w.sites[0].event,'mechanism');assert.equal(w.sites[0].gates.length,3);assert(clearAt(w,w.spawn.x,w.spawn.z,1));for(const s of w.sites)assert(clearAt(w,s.x,s.z,3));assert(w.weather.particles.every(p=>p.vx>0&&p.y>0));w.group.traverse(o=>{if(o.isInstancedMesh)o.dispose();});}

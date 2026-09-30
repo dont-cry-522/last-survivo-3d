@@ -2,16 +2,16 @@ const {chromium}=require(process.env.PLAYWRIGHT_MODULE||'playwright'),assert=req
 (async()=>{const b=await chromium.launch({executablePath:process.env.BROWSER_EXECUTABLE||'C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe',headless:true});try{
  const page=await b.newPage({viewport:{width:1440,height:900}}),errors=[];page.on('pageerror',e=>errors.push(e.message));
  await page.addInitScript(()=>{const raf=requestAnimationFrame;window.requestAnimationFrame=cb=>raf(t=>{if(!window.freezeGame)cb(t);});});
- await page.goto(process.env.TEST_URL||'http://127.0.0.1:8897/');await page.waitForFunction(()=>window.game3d);await page.locator('#start').click();await page.evaluate(()=>window.freezeGame=true);await page.waitForTimeout(50);
+ await page.goto(process.env.TEST_URL||'http://127.0.0.1:8897/');await page.waitForFunction(()=>window.game3d&&!document.querySelector('#start').disabled);await page.locator('#start').click();await page.evaluate(()=>window.freezeGame=true);await page.waitForTimeout(50);
  const results=await page.evaluate(async()=>{
-  const {WEAPON_PATHS,takeUpgrade,WEAPONS}=await import('./rules.js?v=31'),g=game3d,out=[];
+  const {WEAPON_PATHS,takeUpgrade,WEAPONS,HERO_LOADOUTS}=await import('./rules.js?v=31'),g=game3d,out=[];
   const setup=(hero,index,path)=>{g.select(hero,'forest',index);g.start();g.controls.angle=0;g.controls.hasAim=true;g.world.obstacles.length=0;g.world.patches.length=0;g.player.level=8;for(let i=0;i<3;i++)if(!takeUpgrade(g.player,'path:'+path))throw Error('route rejected');};
   const target=(x,z)=>{const e=g.spawn('golem',g.player.x+x,g.player.z+z);e.hp=e.maxHp=10000;e.cool=99;e.speed=0;return e;};
   const advance=(seconds)=>{for(let i=0;i<seconds*60;i++){g.step(1/60);g.vfx.update(1/60);}};
   const once=()=>{g.controls.held=true;g.step(1/60);g.controls.held=false;g.player.attack=99;};
   for(const [id,path]of Object.entries(WEAPON_PATHS)){
-   const hero=['shade','shadowblade','grimoire'].includes(path.weapon)?'wraith':['crossbow','shuriken','dark'].includes(path.weapon)?'silver':'scout',index=(hero==='wraith'?['shade','shadowblade','grimoire']:hero==='silver'?['crossbow','shuriken','dark']:['rifle','shotgun','fire']).indexOf(path.weapon);
-   setup(hero,index,id);const e=target(0,4);once();advance(.7);if(e.hp===e.maxHp)throw Error(id+' did not damage target');out.push(id);
+   const hero=Object.keys(HERO_LOADOUTS).find(hero=>HERO_LOADOUTS[hero].includes(path.weapon)),index=HERO_LOADOUTS[hero].indexOf(path.weapon);
+   setup(hero,index,id);const e=target(0,path.weapon==='harpoon'?2.6:4);once();advance(.7);if(e.hp===e.maxHp)throw Error(id+' did not damage target');out.push(id);
   }
   setup('silver',0,'crossbow_pierce');const bolts=[target(0,4),target(0,6),target(0,8)];once();advance(.8);if(!bolts.every(e=>e.hp<e.maxHp))throw Error('Crossbow pierce missed aligned targets');
   setup('silver',1,'shuriken_return');const far=target(0,WEAPONS.shuriken.range-2);once();advance(2);if(far.maxHp-far.hp<20)throw Error('Returning blade failed outbound/return hits at full targeting range');
@@ -30,13 +30,13 @@ const {chromium}=require(process.env.PLAYWRIGHT_MODULE||'playwright'),assert=req
   if(g.vfx.active.length>g.vfx.limit)throw Error('VFX exceeded budget');g.vfx.clear();if(g.vfx.active.length)throw Error('VFX cleanup failed');
   return out;
  });
- assert.equal(results.length,18);assert.deepEqual(errors,[]);console.log('PASS all 18 routes; pierce, return, burn, pull; base shadow sickle return; delayed rift, echo, pause and restart; VFX cap');
+ assert.equal(results.length,22);assert.deepEqual(errors,[]);console.log('PASS all 22 routes; pierce, return, burn, pull; base shadow sickle return; delayed rift, echo, pause and restart; VFX cap');
  await page.close();
  for(const viewport of [{width:1440,height:900},{width:844,height:390},{width:390,height:844}]){
-  const p=await b.newPage({viewport,hasTouch:viewport.width<1000});await p.goto(process.env.TEST_URL||'http://127.0.0.1:8897/');await p.waitForFunction(()=>window.game3d);await p.locator('#start').click();
-  await p.evaluate(()=>{game3d.player.level=3;game3d.player.pending=1;game3d.grant(0);});assert.equal(await p.locator('.weapon-upgrade').count(),2);
-  await p.locator('[data-upgrade="path:crossbow_hunt"]').click();assert.equal(await p.evaluate(()=>game3d.player.weaponPath.id),'crossbow_hunt');
-  await p.evaluate(()=>{game3d.player.level=5;game3d.player.pending=1;game3d.grant(0);});assert.equal(await p.locator('.weapon-upgrade').count(),1);await p.locator('.weapon-upgrade').click();
+  const p=await b.newPage({viewport,hasTouch:viewport.width<1000});await p.goto(process.env.TEST_URL||'http://127.0.0.1:8897/');await p.waitForFunction(()=>window.game3d&&!document.querySelector('#start').disabled);await p.locator('#start').click();
+  await p.evaluate(()=>{game3d.player.level=3;game3d.player.upgradeDraft={shown:[],routeMisses:2};game3d.player.pending=1;game3d.grant(0);});assert.equal(await p.locator('.weapon-upgrade').count(),1);
+  const chosen=(await p.locator('.weapon-upgrade').getAttribute('data-upgrade')).slice(5);await p.locator('.weapon-upgrade').click();assert.equal(await p.evaluate(()=>game3d.player.weaponPath.id),chosen);
+  await p.evaluate(()=>{game3d.player.level=5;game3d.player.upgradeDraft.routeMisses=2;game3d.player.pending=1;game3d.grant(0);});assert.equal(await p.locator('.weapon-upgrade').count(),1);await p.locator('.weapon-upgrade').click();
   assert.equal(await p.evaluate(()=>game3d.state),'playing');assert.equal(await p.evaluate(()=>game3d.player.weaponPath.rank),2);await p.close();console.log('PASS route UI '+viewport.width+'x'+viewport.height);
  }
 }finally{await b.close();}})().catch(e=>{console.error(e);process.exit(1);});
