@@ -5,6 +5,7 @@ export class HeroPreview {
  constructor(renderer,element){
   this.renderer=renderer;this.element=element;
   this.camera=new T.PerspectiveCamera(35,1,.1,180);
+  this.fill=new T.PointLight(0xfff2ea,3,4,2);
  }
  render(scene,hero,pet){
   const rect=this.element.getBoundingClientRect(),width=innerWidth,height=innerHeight;
@@ -32,8 +33,10 @@ export class HeroPreview {
    // with the hero still centered in the reserved area (including mobile scroll).
    this.camera.setViewOffset(rect.width,rect.height,-rect.left,-rect.top,width,height);
    this.camera.updateMatrixWorld(true);
+   if(hero.userData.kind==='silver'){this.fill.position.copy(center).addScaledVector(direction,1.8);this.fill.position.y+=.65;scene.add(this.fill);}
    this.renderer.render(scene,this.camera);
   }finally{
+   this.fill.removeFromParent();
    if(pet){pet.position.copy(petPosition);pet.updateMatrixWorld(true);}
   }
  }

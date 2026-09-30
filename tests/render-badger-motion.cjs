@@ -1,7 +1,7 @@
 const {chromium}=require(process.env.PLAYWRIGHT_MODULE||'playwright');
 (async()=>{const b=await chromium.launch({executablePath:'C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe',headless:true});try{
  const p=await b.newPage({viewport:{width:1440,height:1280}});await p.goto(process.env.TEST_URL||'http://127.0.0.1:8899/');
- const frames=await p.evaluate(async()=>{const T=await import('./vendor/three.module.js'),{makeBadger,animateBadger}=await import('./beast-model.js?v=80');
+ const frames=await p.evaluate(async()=>{const T=await import('./vendor/three.module.js'),{makeBadger,animateBadger}=await import('./beast-model.js?v=81');
   const scene=new T.Scene(),r=new T.WebGLRenderer({antialias:true});r.setSize(360,290);r.toneMapping=T.ACESFilmicToneMapping;scene.background=new T.Color(0x29453c);scene.add(new T.HemisphereLight(0xe6f3de,0x3d3b32,2.6));const light=new T.DirectionalLight(0xffedcf,3);light.position.set(3,6,4);scene.add(light);
   const floor=new T.Mesh(new T.PlaneGeometry(200,200),new T.MeshStandardMaterial({color:0x29453c,roughness:1}));floor.rotation.x=-Math.PI/2;scene.add(floor);
   const c=new T.PerspectiveCamera(31,360/290,.1,300),out=[];

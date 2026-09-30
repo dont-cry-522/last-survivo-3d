@@ -1,18 +1,18 @@
-import{tideHarness}from'./tide-appearance.js?v=80';
-import{newHeroAttack,heroCarryPose,committedWeaponYaw}from'./new-hero-motion.js?v=80';
-import{heroDodgePose}from'./hero-dodge.js?v=80';
-import{lingyaHopPose}from'./lingya-motion.js?v=80';
-import{lingyaOutfit,lingyaAccessories,lingyaLegs}from'./lingya-appearance.js?v=80';
-import{boneBoomerang}from'./beast-model.js?v=80';
-import{makeHarpoon}from'./coast-models.js?v=80';
-import{guardianOutfit,guardianHair}from'./guardian-appearance.js?v=80';
-import{equipGuardian,animateGuardian}from'./guardian-model.js?v=80';
-import{weaponGesture,shotStarted}from'./weapon-performance.js?v=80';
-import{rollProgress,rollWeight}from'./dodge-motion.js?v=80';
+import{tideHarness}from'./tide-appearance.js?v=81';
+import{newHeroAttack,heroCarryPose,committedWeaponYaw}from'./new-hero-motion.js?v=81';
+import{heroDodgePose}from'./hero-dodge.js?v=81';
+import{lingyaHopPose}from'./lingya-motion.js?v=81';
+import{lingyaOutfit,lingyaAccessories,lingyaLegs}from'./lingya-appearance.js?v=81';
+import{boneBoomerang}from'./beast-model.js?v=81';
+import{makeHarpoon}from'./coast-models.js?v=81';
+import{guardianOutfit,guardianHair}from'./guardian-appearance.js?v=81';
+import{equipGuardian,animateGuardian}from'./guardian-model.js?v=81';
+import{weaponGesture,shotStarted}from'./weapon-performance.js?v=81';
+import{rollProgress,rollWeight}from'./dodge-motion.js?v=81';
 import * as T from './vendor/three.module.js';
 import {clone} from './vendor/SkeletonUtils.js';
-import {loadCharacterData} from './character-loader.js?v=80';
-import {makeHero as makePrototype} from './hero-model.js?v=80';
+import {loadCharacterData} from './character-loader.js?v=81';
+import {makeHero as makePrototype} from './hero-model.js?v=81';
 
 const templates=new Map(),clips=new Map();
 
@@ -57,7 +57,7 @@ function palette(material,color){
   material.customProgramCacheKey=()=>String(color);
 }
 function skinTone(material,kind){
-  material.color.set(0xffffff);material.metalness=0;material.roughness=.86;material.normalScale.set(kind==='lingya'?.12:.28,kind==='lingya'?.12:.28);
+  material.color.set(0xffffff);material.metalness=0;material.roughness=.86;material.normalScale.set(kind==='silver'?.10:kind==='lingya'?.12:.28,kind==='silver'?.10:kind==='lingya'?.12:.28);
   material.onBeforeCompile=shader=>{shader.fragmentShader=shader.fragmentShader.replace('#include <map_fragment>',`#include <map_fragment>
     float skinShade=dot(diffuseColor.rgb,vec3(.2126,.7152,.0722));
     diffuseColor.rgb=vec3(${kind==='silver'?'.80,.66,.60':kind==='lingya'?'.78,.60,.47':'.63,.43,.32'})*(.72+skinShade*.42)+diffuseColor.rgb*.09;`);};
@@ -132,11 +132,24 @@ function capeMesh(kind){
     transformed.z+=sin(position.x*14.0+position.y*7.0-capeTime*3.0)*capeRun*.009*freeHem;`);};
   material.customProgramCacheKey=()=> 'hero-cape-'+kind;const m=new T.Mesh(geometry,material);m.userData.wind=wind;m.position.set(0,kind==='lingya'?1.49:1.43,kind==='lingya'?-.025:-.14);m.castShadow=true;m.receiveShadow=true;return m;
 }
-function faceMask(){
-  const pos=[],ix=[],cols=16,rows=6;
-  for(let y=0;y<=rows;y++)for(let x=0;x<=cols;x++){const u=x/cols*2-1,v=y/rows,top=1.635-Math.abs(u)*.02,bottom=1.552+Math.abs(u)*.014;pos.push(u*.077*(1-v*.1),top+(bottom-top)*v, .080+.063*Math.sqrt(1-u*u)+Math.sin(v*Math.PI)*.008);}
+function faceMask(model){
+  let skin;model.traverse(o=>{if(o.isSkinnedMesh&&o.material.name.includes('Superhero'))skin=o;});
+  const material=new T.MeshStandardMaterial({color:0x0c1118,roughness:.94,side:T.DoubleSide});
+  // Fit to the actual rest-pose face instead of suspending a flat shell in front.
+  const probe=new T.Mesh(skin.geometry,material),ray=new T.Raycaster(),pos=[],ix=[],cols=24,rows=10;
+  probe.updateMatrixWorld(true);
+  for(let row=0;row<=rows;row++)for(let col=0;col<=cols;col++){
+    const u=col/cols*2-1,v=row/rows,top=1.650-Math.abs(u)*.020,bottom=1.565+Math.abs(u)*.045;
+    let x=u*.070*(1-v*.30);const y=top+(bottom-top)*v;let hit;
+    for(let attempt=0;attempt<12;attempt++){
+      ray.set(new T.Vector3(x,y,1),new T.Vector3(0,0,-1));hit=ray.intersectObject(probe,false)[0];
+      if(hit)break;x*=.96;
+    }
+    pos.push(x,y,(hit?.point.z??.08)+.0045);
+  }
   for(let y=0;y<rows;y++)for(let x=0;x<cols;x++){const a=y*(cols+1)+x;ix.push(a,a+1,a+cols+1,a+1,a+cols+2,a+cols+1);}
-  const geometry=new T.BufferGeometry();geometry.setAttribute('position',new T.Float32BufferAttribute(pos,3));geometry.setIndex(ix);geometry.computeVertexNormals();const m=new T.Mesh(geometry,new T.MeshStandardMaterial({color:0x11191f,roughness:.98,side:T.DoubleSide}));m.castShadow=true;return m;
+  const geometry=new T.BufferGeometry();geometry.setAttribute('position',new T.Float32BufferAttribute(pos,3));geometry.setIndex(ix);geometry.computeVertexNormals();
+  const mask=new T.Mesh(geometry,material);mask.name='silver-face-mask';mask.castShadow=true;return mask;
 }
 const stringUp=new T.Vector3(0,1,0);
 function drawCrossbow(gun,pull,phase){
@@ -171,7 +184,7 @@ export function createSkinnedHero(kind,weapon){
   const owned=[];let cape;
   if(['silver','guardian','tide','lingya'].includes(kind)){
     cape=capeMesh(kind);if(kind==='guardian')cape.scale.set(1.14,1.06,1);if(kind==='tide')cape.scale.set(1.02,.40,1);if(kind==='lingya')cape.scale.set(1,1,1);owned.push(cape);attachAtRest(bones.get('spine_03'),cape,model);
-    if(kind==='silver'){const mask=faceMask();owned.push(mask);attachAtRest(bones.get('Head'),mask,model);}
+    if(kind==='silver'){const mask=faceMask(model);owned.push(mask);attachAtRest(bones.get('Head'),mask,model);}
   }
   if(kind==='tide')attachAtRest(bones.get('spine_03'),tideHarness(),model);
   if(kind==='lingya'){const a=lingyaAccessories(),bagPivot=new T.Group();bagPivot.position.set(.24,1,-.10);a.bag.position.set(-.24,-1,.10);bagPivot.add(a.bag);g.userData.satchel=bagPivot;g.userData.skirt=a.skirt;owned.push(a.skirt.children[0]);attachAtRest(bones.get('pelvis'),a.skirt,model);attachAtRest(bones.get('Head'),a.hood,model);attachAtRest(bones.get('spine_03'),a.chest,model);attachAtRest(bones.get('pelvis'),bagPivot,model);g.userData.satchelRest=bagPivot.quaternion.clone();}

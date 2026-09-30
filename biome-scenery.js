@@ -1,5 +1,5 @@
 import * as T from './vendor/three.module.js';
-import{MAP_HALF}from'./map-layout.js?v=80';
+import{MAP_HALF}from'./map-layout.js?v=81';
 // Shared geometry and instanced details: decoration stays low, leaving combat and collision legible.
 const geometries={stone:new T.DodecahedronGeometry(1,1),snow:new T.SphereGeometry(1,12,6),chip:new T.DodecahedronGeometry(1,0),wood:new T.CylinderGeometry(.10,.15,1,7),leaf:null,ice:new T.ConeGeometry(1,1,5),frond:null},materials=new Map();
 function leafGeometry(){const pos=[],idx=[];for(let i=0;i<=5;i++){const t=i/5,w=Math.sin(Math.PI*t)*.14;pos.push(-w,t*.48,t*t*.7,w,t*.48,t*t*.7);if(i<5){const a=i*2;idx.push(a,a+1,a+2,a+1,a+3,a+2);}}const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute(pos,3));g.setIndex(idx);g.computeVertexNormals();return g;}geometries.leaf=leafGeometry();
