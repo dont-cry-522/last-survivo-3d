@@ -63,3 +63,11 @@ if(!('serviceWorker' in navigator)||!isSecureContext){button.disabled=true;show(
 else navigator.serviceWorker.getRegistration('./').then(async reg=>{
  registration=reg;if(reg){observe(reg.installing);reg.addEventListener('updatefound',()=>observe(reg.installing));await check();}
 }).catch(()=>{show('暂时无法读取离线资源，仍可在线游玩；稍后点击下载重试。');});
+
+const offlinePanel=document.querySelector('#offline-panel'),audioPanel=document.querySelector('#audio-settings');
+if(offlinePanel){
+ offlinePanel.addEventListener('toggle',()=>{if(offlinePanel.open&&audioPanel)audioPanel.open=false;});
+ audioPanel?.addEventListener('toggle',()=>{if(audioPanel.open)offlinePanel.open=false;});
+ document.addEventListener('click',e=>{if(!offlinePanel.contains(e.target))offlinePanel.open=false;});
+ document.addEventListener('keydown',e=>{if(e.key==='Escape'&&offlinePanel.open){offlinePanel.open=false;offlinePanel.querySelector('summary').focus();e.preventDefault();e.stopImmediatePropagation();}},true);
+}

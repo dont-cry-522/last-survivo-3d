@@ -5,7 +5,7 @@ for(const [width,height]of [[1440,900],[844,390],[390,844]]){
  await p.addInitScript(()=>{const raf=requestAnimationFrame;window.requestAnimationFrame=cb=>{window.nextFrame=cb;return raf(t=>{if(!window.freezeGame)cb(t)})}});
  await p.goto(process.env.TEST_URL||'http://127.0.0.1:8899/',{waitUntil:'domcontentloaded',timeout:60000});await p.waitForFunction(()=>window.game3d&&!document.querySelector('#start').disabled,null,{polling:200,timeout:60000});await p.locator('[data-attack-mode=manual]').click();await p.locator('#start').click();await p.evaluate(()=>freezeGame=true);await p.waitForTimeout(60);
  const rows=await p.evaluate(async width=>{
- const {animateActor}=await import('./world.js?v=77'),g=game3d,rows=[],check=(v,m)=>{if(!v)throw Error(m)};
+ const {animateActor}=await import('./world.js?v=78'),g=game3d,rows=[],check=(v,m)=>{if(!v)throw Error(m)};
  for(const hero of ['guardian','tide','lingya'])for(const fps of width===1440?[15,30,60,120]:[60]){
   g.select(hero,'forest',0);g.start();const d=g.hero.userData,joints=[d.offArm,d.aimArm,d.offForearm,d.firingForearm,d.swimLeftLeg,d.swimRightLeg,d.swimLeftKnee,d.swimRightKnee];let previous=null,maxJoint=0,maxBody=0,minHand=99,maxHand=-99;
   for(let i=0;i<fps*9;i++){
@@ -30,7 +30,7 @@ for(const [width,height]of [[1440,900],[844,390],[390,844]]){
  if(process.env.OUTPUT_DIR&&width===1440){
   await p.addStyleTag({content:'body > :not(canvas){visibility:hidden!important}'});
   for(const hero of ['guardian','tide','lingya'])for(const phase of [0,.3,.65]){
-   await p.evaluate(async({hero,phase})=>{const {animateActor}=await import('./world.js?v=77'),g=game3d;g.select(hero,'forest',0);g.start();const pond=g.world.ponds[0];g.hero.position.set(pond.x,0,pond.z);g.hero.rotation.y=0;const d=g.hero.userData;d.waterDepth=1;d.aimActive=true;for(let i=0;i<120;i++)animateActor(g.hero,i/60,3,0,0);const frames=Math.round(((phase-d.swimPhase+1)%1)/d.swimPace*60);for(let i=1;i<=frames;i++)animateActor(g.hero,(119+i)/60,3,0,0);g.camera.position.set(pond.x+5,4,pond.z+6);g.camera.lookAt(pond.x,.65,pond.z);g.camera.updateMatrixWorld(true);g.hero.updateMatrixWorld(true);g.hero.traverse(o=>{if(o.isSkinnedMesh)o.skeleton.update()});g.renderer.render(g.vfx.scene,g.camera);},{hero,phase});
+   await p.evaluate(async({hero,phase})=>{const {animateActor}=await import('./world.js?v=78'),g=game3d;g.select(hero,'forest',0);g.start();const pond=g.world.ponds[0];g.hero.position.set(pond.x,0,pond.z);g.hero.rotation.y=0;const d=g.hero.userData;d.waterDepth=1;d.aimActive=true;for(let i=0;i<120;i++)animateActor(g.hero,i/60,3,0,0);const frames=Math.round(((phase-d.swimPhase+1)%1)/d.swimPace*60);for(let i=1;i<=frames;i++)animateActor(g.hero,(119+i)/60,3,0,0);g.camera.position.set(pond.x+5,4,pond.z+6);g.camera.lookAt(pond.x,.65,pond.z);g.camera.updateMatrixWorld(true);g.hero.updateMatrixWorld(true);g.hero.traverse(o=>{if(o.isSkinnedMesh)o.skeleton.update()});g.renderer.render(g.vfx.scene,g.camera);},{hero,phase});
    await p.screenshot({path:process.env.OUTPUT_DIR+'/swim-v68-'+hero+'-'+phase+'.png'});
   }
  }await p.close();

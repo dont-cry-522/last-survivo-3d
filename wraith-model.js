@@ -1,6 +1,6 @@
-import{weaponGesture,shotStarted}from'./weapon-performance.js?v=77';
+import{weaponGesture,shotStarted}from'./weapon-performance.js?v=78';
 import * as T from './vendor/three.module.js';
-import{shadowCrescentGeometry,shadowCrescentEdge}from'./shadow-weapons.js?v=77';
+import{shadowCrescentGeometry,shadowCrescentEdge}from'./shadow-weapons.js?v=78';
 
 // Continuous cloth surfaces share geometry; each actor owns its pose and morph weights.
 const geometry=new Map(),materials=new Map();

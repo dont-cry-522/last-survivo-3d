@@ -12,7 +12,7 @@ const saved=p=>p.waitForFunction(()=>document.querySelector('#offline-status').t
   await p.evaluate(async()=>{const name=(await caches.keys()).find(n=>n.startsWith('forest3d-offline:')),c=await caches.open(name);await c.delete(new URL('assets/bestiary/mushroom.png',location.href));});
   await p.reload({waitUntil:'domcontentloaded'});await ready(p);await p.waitForFunction(()=>document.querySelector('#offline-status').textContent.includes('不完整'));
   await p.locator('#offline-panel summary').click();await p.locator('#offline-download').click();await saved(p);
-  await p.screenshot({path:output+`/v77-offline-ready-${width}.png`});
+  await p.screenshot({path:output+`/v78-offline-ready-${width}.png`});
   await p.evaluate(async()=>{await caches.delete('forest3d-character-assets-v1');localStorage.setItem('forest3d-offline-test','preserved');});
   await context.close();context=null;
   // A new browser process, no HTTP memory cache, and networking disabled before navigation.
@@ -30,8 +30,8 @@ const saved=p=>p.waitForFunction(()=>document.querySelector('#offline-status').t
    assert.equal(result.state,'playing');assert(result.paused);assert(result.meshes>0);assert.equal(result.audio,'running');
   }
   await p.evaluate(()=>{game3d.player.level=2;game3d.player.pending=1;game3d.grant(0);});assert.equal(await p.locator('[data-upgrade]').count(),3);await p.locator('[data-upgrade]').first().click();assert.equal(await p.evaluate(()=>game3d.state),'playing');
-  const portraits=await p.evaluate(async()=>{const {ENEMY_GUIDE}=await import('./battle-guide.js?v=77');for(const e of Object.values(ENEMY_GUIDE)){const image=new Image();image.src=e.image;await image.decode();}return Object.keys(ENEMY_GUIDE).length;});assert.equal(portraits,30);
-  await p.screenshot({path:output+`/v77-offline-playing-${width}.png`});
+  const portraits=await p.evaluate(async()=>{const {ENEMY_GUIDE}=await import('./battle-guide.js?v=78');for(const e of Object.values(ENEMY_GUIDE)){const image=new Image();image.src=e.image;await image.decode();}return Object.keys(ENEMY_GUIDE).length;});assert.equal(portraits,30);
+  await p.screenshot({path:output+`/v78-offline-playing-${width}.png`});
   await p.reload({waitUntil:'domcontentloaded'});await ready(p);assert.deepEqual(errors,[]);assert.deepEqual(failed,[]);assert(responses.length>80);assert(responses.every(r=>r.sw),'network used during cold offline run');
   console.log(`PASS ${width}x${height}: full download, missing-file repair, browser restart offline, six heroes/maps, audio, upgrade/pause, 30 portraits, offline reload${width===390?', uncompressed compatibility assets':''}`);
  }finally{
