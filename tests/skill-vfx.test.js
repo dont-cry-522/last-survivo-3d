@@ -2,6 +2,7 @@ import{test}from'node:test';
 import assert from'node:assert/strict';
 import*as T from'../vendor/three.module.js';
 import{SkillVFX}from'../skill-vfx.js';
+import{WEAPONS,WEAPON_PATHS,weaponStats}from'../rules.js';
 
 test('elemental impacts have a readable core and distinct secondary shapes',()=>{
  const vfx=new SkillVFX(new T.Scene(),{mobile:true});
@@ -59,4 +60,44 @@ test('gun contacts distinguish hard fragments from soft puffs and stay within th
  const v=new SkillVFX(new T.Scene(),{mobile:true});
  for(const [texture,shape]of [['stone','stone'],['wood','crystal'],['ice','crystal'],['wet','smoke'],['growl','smoke']]){v.clear();v.enemyContact(texture,0x99aa88,1,2,.5,true);assert(v.active.some(p=>p.shape===shape));assert(!v.active.some(p=>p.shape==='waterArc'));assert(v.active.every(p=>p.max<=.24));}
  for(let i=0;i<180;i++){for(let j=0;j<10;j++)v.enemyContact('stone',0xaabbcc,0,0,0,true);v.update(1/60);assert(v.active.length+v.pool.length<=110);}v.update(1);assert.equal(v.active.length,0);
+});
+
+test('projectiles retain shared geometry and materials while ranged paths have distinct compact silhouettes',()=>{
+ const v=new SkillVFX(new T.Scene()),variants=new Map();
+ for(const pathId of [null,...Object.keys(WEAPON_PATHS)]){
+  const ids=pathId?[WEAPON_PATHS[pathId].weapon]:Object.keys(WEAPONS);
+  for(const id of ids){
+   const w={...weaponStats({weaponId:id,weaponPath:pathId?{id:pathId,rank:3}:null}),pathId,pathRank:pathId?3:0},a=v.projectile(w),b=v.projectile(w),parts=[],copies=[];
+   a.updateMatrixWorld(true);a.traverse(m=>{assert(m.matrixWorld.elements.every(Number.isFinite),id);if(m.isMesh)parts.push(m);});b.traverse(m=>{if(m.isMesh)copies.push(m);});assert(parts.length>0,id);
+   if(id!=='boomerang')for(let i=0;i<parts.length;i++){assert.equal(parts[i].geometry,copies[i].geometry);assert.equal(parts[i].material,copies[i].material);}
+   if(['rifle','shotgun'].includes(id)){const box=new T.Box3().setFromObject(a),size=box.getSize(new T.Vector3());assert(size.x<=w.hitRadius*2&&size.y<=w.hitRadius*2,id+' suggests a wider collision');}
+   if(pathId){const signature=parts.map(m=>[m.geometry.type,m.material.color.getHex(),...m.scale.toArray(),...m.position.toArray()]);if(!variants.has(id))variants.set(id,[]);variants.get(id).push(signature);}
+  }
+ }
+ for(const id of ['rifle','shotgun','fire','crossbow','shuriken','dark','shade','shadowblade'])assert.notDeepEqual(...variants.get(id),id+' paths should differ without widening the hitbox');
+});
+
+test('weapon launch and flight effects remain sparse and reuse the mobile and desktop pool',()=>{
+ for(const mobile of [true,false]){
+  const scene=new T.Scene(),v=new SkillVFX(scene,{mobile}),shots=Object.entries(WEAPON_PATHS).map(([pathId,{weapon}])=>{
+   const w={...weaponStats({weaponId:weapon,weaponPath:{id:pathId,rank:3}}),pathId,pathRank:3};return {w,b:{mesh:v.projectile(w),kind:weapon,pathId,pathRank:3,x:1,z:2,vx:12,vz:8,height:weapon==='boomerang'?.7:1.15,trail:0,elapsed:0}};
+  });
+  for(const {w,b}of shots){v.clear();v.muzzle(w,1,2,.4);assert(v.active.length<=3,w.id+' launch is too busy');v.clear();v.flight(b,1/60);assert(v.active.length<=2,w.id+' trail is too busy');assert(v.active.every(p=>p.max<=.3));}
+  v.clear();
+  for(let frame=0;frame<600;frame++){
+   for(const {w,b}of shots){if(frame%18===0)v.muzzle(w,1,2,.4);b.elapsed+=1/60;b.returning=frame%120>60;v.flight(b,1/60);}
+   v.update(1/60);assert(v.active.length+v.pool.length<=v.limit);assert.equal(scene.children.length,v.active.length);
+   for(const p of v.active){assert(p.mesh.position.toArray().every(Number.isFinite));assert(p.mesh.quaternion.toArray().every(Number.isFinite));assert(!['ring','disc','waterArc'].includes(p.shape));}
+  }
+  v.update(1);assert.equal(v.active.length,0);assert.equal(scene.children.length,0);
+ }
+});
+
+test('harpoon and returning bone fragments follow the strike direction',()=>{
+ const v=new SkillVFX(new T.Scene());
+ for(const kind of ['harpoon','boomerang'])for(const combo of [0,2]){
+  v.weaponContact(kind,0,0,0,combo);const front=v.active.filter(p=>p.shape==='crystal').map(p=>[...p.velocity]);v.clear();
+  v.weaponContact(kind,0,0,Math.PI/2,combo);const right=v.active.filter(p=>p.shape==='crystal');
+  for(let i=0;i<front.length;i++){assert(Math.abs(right[i].velocity[0]-front[i][2])<1e-8);assert(Math.abs(right[i].velocity[2]+front[i][0])<1e-8);}v.clear();
+ }
 });

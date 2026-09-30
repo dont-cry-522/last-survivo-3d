@@ -22,7 +22,7 @@ export class BeastCompanion{
   // An explicit aim can redirect an approach, but cannot swivel an airborne pounce.
   if(best&&this.state==='approach')this.target=best;
   if(!thrown)return;
-  const w=this.api.stats();this.throwCount++;if(w.trapRank&&this.throwCount%3===0){if(this.traps.length>=3)this.traps.shift();this.traps.push({x:p.x,z:p.z,life:8,arm:.45,rank:w.trapRank,pulse:0});this.api.fx('trapSet',p.x,p.z);}
+  const w=this.api.stats();this.throwCount++;if(w.trapRank&&this.throwCount%3===0){if(this.traps.length>=3)this.traps.shift();this.traps.push({x:p.x,z:p.z,life:8,arm:.45,rank:w.trapRank,pulse:0});this.api.fx('trapSet',p.x,p.z,{rank:w.trapRank});}
  }
  cover(x,z){if(!this.alive)return;this.coverGoal={x,z};this.coverWaypoint=null;
   const dx=x-this.x,dz=z-this.z,d=Math.hypot(dx,dz)||1;
@@ -31,9 +31,9 @@ export class BeastCompanion{
  recall(){if(!this.alive)return;this.forcedReturn=true;this.change('return');this.target=this.command=null;this.roamGoal=null;this.recallUntil=this.now+1.1;this.cool=Math.max(this.cool,1.1);}
  marked(e){e.lingyaMark=this.now+2.5;}
  updateTraps(dt){for(const trap of this.traps){trap.life-=dt;trap.arm-=dt;trap.pulse-=dt;if(trap.life<=0)continue;
-  if(trap.pulse<=0){trap.pulse=.28;this.api.fx('trap',trap.x,trap.z);}
+  if(trap.pulse<=0){trap.pulse=.28;this.api.fx('trap',trap.x,trap.z,{rank:trap.rank});}
   if(trap.arm<=0){const enemies=this.api.foes().filter(e=>e.alive&&dist(e,trap)<1.5+.15*trap.rank&&this.api.clear(trap.x,trap.z,e.x,e.z));
-   if(enemies.length){trap.life=0;this.api.fx('trapSnap',trap.x,trap.z);for(const e of enemies){if(!this.api.active())break;this.api.damage(e,10+8*trap.rank);e.slow=Math.max(e.slow||0,1+.3*trap.rank);if(!e.boss)e.stagger=Math.max(e.stagger||0,.3+.1*trap.rank);}}}}
+   if(enemies.length){trap.life=0;this.api.fx('trapSnap',trap.x,trap.z,{rank:trap.rank});for(const e of enemies){if(!this.api.active())break;this.api.damage(e,10+8*trap.rank);e.slow=Math.max(e.slow||0,1+.3*trap.rank);if(!e.boss)e.stagger=Math.max(e.stagger||0,.3+.1*trap.rank);}}}}
   this.traps=this.traps.filter(q=>q.life>0);
  }
  nearbyTarget(p){let best=null,score=Infinity;for(const e of this.api.foes()){
@@ -102,4 +102,4 @@ export class BeastCompanion{
   this.angle+=angleDiff(desired,this.angle)*(1-Math.exp(-dt*(['wind','pounce'].includes(this.state)?16:7)));this.turnRate=angleDiff(this.angle,oldAngle)/dt;
  }
 }
-export {sideHopTravel} from './lingya-motion.js?v=85';
+export {sideHopTravel} from './lingya-motion.js?v=86';

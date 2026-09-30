@@ -1,0 +1,235 @@
+// Route accents use the existing bounded pool. Call once at the real event;
+// these short silhouettes never schedule damage, alter hit tests, or draw range rings.
+const look=(weapon,name,summary,phases)=>Object.freeze({weapon,name,summary,phases:Object.freeze(phases)});
+export const WEAPON_ROUTE_LOOKS=Object.freeze({
+ rifle_pierce:look('rifle','贯穿弹道','命中后向弹道前方穿出的细金针',['hit']),
+ rifle_rapid:look('rifle','疾速机括','枪口短促余焰与后退机括火星',['cast']),
+ shotgun_fan:look('shotgun','散射风暴','开火时张开的三束碎屑，命中飞散砂石',['cast','hit']),
+ shotgun_slug:look('shotgun','独头重弹','聚束枪焰与命中后厚重的穿刺残痕',['cast','hit']),
+ fire_burn:look('fire','余烬灼烧','沿目标边缘向上舔动的暗红余焰',['hit']),
+ fire_blast:look('fire','熔核爆破','低位熔核裂开，橙红火舌向外翻卷',['hit']),
+ crossbow_pierce:look('crossbow','破甲重矢','贯穿出口留下冰蓝针线与分叉羽痕',['hit']),
+ crossbow_hunt:look('crossbow','追猎机括','前两击累积短羽痕，第三击三道羽锋迸发',['hit']),
+ shuriken_fan:look('shuriken','月刃齐发','放射形分刃切纹与交错命中痕',['cast','hit']),
+ shuriken_return:look('shuriken','回旋月刃','转向处的青绿回钩，返程命中的反向月痕',['turn','hit','catch']),
+ dark_gravity:look('dark','引力漩涡','牵引区内的暗紫碎光向核心回旋收拢',['field']),
+ dark_seek:look('dark','追魂魔矢','紫黑彗尾包住淡紫核心，命中留下短尾迹',['cast','hit']),
+ shade_echo:look('shade','残响弹射','转折碎影与已完成弹射路径的短暂连线',['bounce']),
+ shade_blight:look('shade','蚀影刻印','逐击加深的刻痕，第三击向外撕开',['mark']),
+ shadowblade_fan:look('shadowblade','双月分影','出手时分离的双层紫色镰影',['cast','hit']),
+ shadowblade_return:look('shadowblade','追魂弧刃','折返镰影拖出暗色回声，返程留下反向裂痕',['turn','hit','catch']),
+ grimoire_wide:look('grimoire','裂界之页','裂口两翼向外展开的裂页和碎纸',['cast','hit']),
+ grimoire_echo:look('grimoire','复诵禁咒','窄裂页留下余痕，二次爆发重新撕开双层裂缝',['cast','hit','echo']),
+ hammer_break:look('hammer','碎甲重锤','接触处棱角甲片崩裂，石屑沿锤击方向弹出',['hit']),
+ hammer_guard:look('hammer','守势反击','精准格挡亮起短盾纹，强化命中迸开金色裂痕',['parry','cast','hit']),
+ harpoon_reef:look('harpoon','破礁长锋','三叉形窄穿刺与低位礁石碎片',['hit']),
+ harpoon_tow:look('harpoon','回潮牵引','第三击接触处的水痕与水珠向持叉者倒流',['hit']),
+ boomerang_pincer:look('boomerang','同心夹击','伙伴扑击留下并列爪痕，标记目标呈浅绿夹击亮锋',['pet']),
+ boomerang_snare:look('boomerang','林间设伏','落地生出低矮藤芽，触发时双藤抬升收拢',['trap'])
+});
+
+/**
+ * x/z is the actual contact, turn, field or rift point; cast is the release point.
+ * combo: 0..2 melee combo, or 1..2 accumulated crossbow/shadow hits.
+ * empowered: confirmed third hit, precise counter, or marked companion strike.
+ * returning: true only on the return leg. radius: actual field/rift radius.
+ * bounce x2/z2 is a PREVIOUS contact, only after the next hit has happened.
+ * trap stage: 'set', 'idle', 'snap'. No timers or live gameplay objects are retained.
+ * Returns false for an inactive route/phase or a conditional event that did not occur.
+ */
+export function weaponRouteEffect(vfx,w,phase,x,z,angle=0,detail={}){
+ const id=w?.pathId,style=WEAPON_ROUTE_LOOKS[id],rank=Math.min(3,Math.max(0,Math.floor(w?.pathRank||0)));
+ if(!rank||!style||style.weapon!==w.id||!style.phases.includes(phase))return false;
+ const a=Number.isFinite(angle)?angle:0,dx=Math.sin(a),dz=Math.cos(a),sx=Math.cos(a),sz=-Math.sin(a),level=1+(rank-1)*.12;
+ const target=Math.max(.2,Math.min(2,detail.targetSize||.55));
+ const at=(forward=0,side=0,y=.85)=>({x:x+dx*forward+sx*side,y,z:z+dz*forward+sz*side});
+ const particle=(shape,color,forward,side,y,options={})=>{const p=at(forward,side,y);return vfx.particle(shape,color,p.x,p.y,p.z,{additive:false,opacity:.68,...options});};
+ const line=(from,to,color,width=.024,life=.19,priority=0,opacity=.65)=>vfx.segment(at(...from),at(...to),color,width,life,false,priority,opacity);
+ const velocity=(forward,side=0,up=0)=>[dx*forward+sx*side,up,dz*forward+sz*side];
+ // Yaw in world space after tilting; preserve the pool's default Euler order.
+ const orient=(m,tilt,yaw=a,roll=0)=>{if(m){m.rotation.set(tilt,0,roll);m.rotateOnWorldAxis({x:0,y:1,z:0},yaw);}return m;};
+ const curl=(color,forward,side,y,width,height,{rotation=-Math.PI/2,roll=0,...options}={})=>{
+  const m=particle('sweep',color,forward,side,y,{life:.24,size:[width,height,1],motion:'lash',roll,...options});
+  return orient(m,rotation,a,side<0?-.4:.4);
+ };
+ const chip=(shape,color,forward,side,y,size,speed,up=.7,priority=0)=>particle(shape,color,forward,side,y,{life:.25,size,velocity:velocity(speed,side*2,up),gravity:4,spin:6,priority});
+
+ switch(id){
+ case'rifle_pierce':
+  line([target*.65,0,1],[target+.45*level,0,1],0xffd28d,.027,.115,1,.8);
+  for(const side of[-1,1])chip('crystal',0xcba779,target*.72,side*.08,1,[.02,.065,.02],2.2,.18);
+  break;
+ case'rifle_rapid':
+  particle('flame',0xe8a65a,.2,0,1.13,{life:.09,size:[.07,.13,1],velocity:velocity(-.45),priority:1,opacity:.68});
+  chip('ember',0xd2ab70,.06,.11,1.08,[.025,.035,.045],-.9,.15);
+  break;
+ case'shotgun_fan':
+  if(phase==='cast')for(const side of[-1,0,1])line([.15,side*.06,1.1],[.48,side*.25,1.05],side?0xc69862:0xe7bd81,side?.024:.035,.1,side?0:1,.65);
+  else for(const side of[-1,1])chip('stone',0xb58c60,.12,side*.12,.65,[.055,.08,.045],1.1,.8,side<0?1:0);
+  break;
+ case'shotgun_slug':
+  if(phase==='cast'){
+   line([.03,0,1.1],[.48,0,1.1],0xf0c17e,.065,.105,1,.78);
+   particle('smoke',0x746754,-.03,0,1.1,{life:.18,size:[.11,.09,.16],velocity:velocity(-.3,.15,.1),grow:true,opacity:.28});
+  }else{
+   line([target*.4,0,.9],[target+.45,0,.86],0xe3ba80,.065*level,.16,1,.82);
+   for(const side of[-1,1])chip('stone',side<0?0x88745d:0xc5a476,.1,side*.14,.7,[.075,.09,.065],1.4,1.1);
+  }
+  break;
+ case'fire_burn':
+  for(const side of[-1,1])particle('flame',side<0?0xb9442d:0xe88944,0,side*target*.55,.48,{life:.46,size:[.13,.29*level,1],velocity:velocity(-.08,side*.06,.65),grow:true,priority:side<0?0:1,opacity:.63});
+  particle('ember',0x9b3927,.04,0,.28,{life:.44,size:[.08,.035,.08],opacity:.6});
+  break;
+ case'fire_blast':{
+  const r=Math.max(.5,detail.radius||w.radius||2.5+.5*rank);
+  particle('veil',0x9b422b,0,0,.055,{life:.35,size:[r*.48,r*.38,1],opacity:.16});
+  for(const side of[-1,1]){
+   curl(side<0?0xd2602f:0xeaa058,.02,side*.13,.35,r*.32,r*.25,{rotation:-.65,life:.3,velocity:velocity(.15,side*.8,.4),roll:side*1.3,priority:1,opacity:.62});
+   chip('ember',0xda9255,0,side*.12,.45,[.045,.055,.045],.4,1.4);
+  }
+  break;
+ }
+ case'crossbow_pierce':
+  line([target*.55,0,1.03],[target+.57*level,0,1.03],0xbdd8e6,.021,.17,1,.85);
+  for(const side of[-1,1]){
+   line([target*.6,0,1.03],[target*.32,side*.17,1.08],0x8cacbf,.027,.24,0,.6);
+   chip('crystal',0xa3bfcc,target*.55,side*.07,1.04,[.025,.11,.025],1.7,.18);
+  }
+  break;
+ case'crossbow_hunt':{
+  const strong=!!detail.empowered,count=strong?3:Math.max(1,Math.min(2,detail.combo||1));
+  for(let i=0;i<count;i++){
+   const side=(i-(count-1)/2)*.18;
+   line([-.16,side-.09,.73],[.12,side+.08,strong?1.35:1.06],strong?0xc3e8db:0x87b0b7,strong?.033:.024,strong?.27:.18,i===0?1:0,strong?.8:.62);
+  }
+  if(strong)chip('crystal',0x94c7bb,.1,0,1.03,[.06,.17*level,.06],2,.6);
+  break;
+ }
+ case'shuriken_fan':
+  if(phase==='cast')for(const side of[-1,0,1]){
+   const m=particle('claw',side?0x518e81:0xc5e4d4,.15,side*.18,1.1,{life:.15,size:[.65,.30,1],opacity:side?.68:.78,priority:side?0:1,velocity:velocity(.8,side*.45)});
+   orient(m,-Math.PI/2,a+side*.4,Math.PI/2);
+  }else for(const side of[-1,1])line([-.15,side*.17,.78],[.16,-side*.17,1.13],0xa1d2bd,.028,.17,side<0?1:0,.7);
+  break;
+ case'shuriken_return':
+  if(phase==='hit'&&!detail.returning)return false;
+  curl(0x72b49c,0,0,phase==='catch'?.85:1,.46*level,phase==='turn'?.6:.35,{rotation:phase==='hit'?-.6:-Math.PI/2,roll:-3,life:.24,priority:1,opacity:.8});
+  if(phase==='turn')line([-.12,.26,1],[-.32,.10,1],0x628e85,.025,.28,0,.48);
+  break;
+ case'dark_gravity':{
+  const r=Math.max(.5,detail.radius||2.3+.3*rank);
+  particle('veil',0x3d3054,0,0,.055,{life:.43,size:[r*.34,r*.3,1],opacity:.22,priority:1});
+  curl(0x6d4c85,0,0,.08,r*.42,r*.37,{life:.4,roll:-2.4,opacity:.54});
+  for(let i=0;i<3;i++){
+   const theta=a+i*2.39996,fx=Math.sin(theta)*r*.58,fz=Math.cos(theta)*r*.58;
+   vfx.particle('crystal',i===0?0xaf8ac3:0x816195,x+fx,.19,z+fz,{life:.4,size:[.028,.1*level,.028],velocity:[-fx*1.8,.12,-fz*1.8],orbit:[x,z,1.4],additive:false,opacity:.68,priority:0});
+  }
+  break;
+ }
+ case'dark_seek':
+  particle('ember',0xc6a5d7,phase==='cast'?.2:target*.75,0,1.08,{life:.17,size:[.08,.08,.14],priority:1,opacity:.8});
+  for(const side of[-1,1]){
+   const m=particle('claw',side<0?0x57376e:0x9b70b4,-.12,side*(phase==='cast'?.12:target*.75),1.06,{life:.22,size:[.7,.49*level,1],velocity:velocity(-.7,side*.15),opacity:.75});
+   orient(m,Math.PI/2);
+  }
+  break;
+ case'shade_echo':{
+  // Endpoints describe a completed flight, never a predicted next target.
+  if(Number.isFinite(detail.x2)&&Number.isFinite(detail.z2)){
+   const distance=Math.hypot(detail.x2-x,detail.z2-z);
+   if(distance>.05&&distance<=7.5)vfx.segment({x:detail.x2,y:.95,z:detail.z2},{x,y:.95,z},0x85669e,.022,.14,false,0,.43);
+  }
+  line([-.19,-.13,.88],[0,0,1.03],0xbba0d0,.036,.22,1,.8);
+  line([0,0,1.03],[.2,-.1,1.16],0x8b70a6,.024,.26,0,.6);
+  break;
+ }
+ case'shade_blight':{
+  const strong=!!detail.empowered,count=strong?3:Math.max(1,Math.min(2,detail.combo||1));
+  for(let i=0;i<count;i++){
+   const side=(i-(count-1)/2)*.18,m=particle('claw',strong?0xbd91ce:0x866197,0,side,.5,{life:strong?.34:.3,size:[strong?.75:.45,(strong?.65:.25)*level,1],velocity:strong?velocity(.15,side*2.4,.35):[0,0,0],motion:strong?'lash':'erupt',priority:i===0?1:0,opacity:strong?.76:.62});
+   orient(m,-.2,a,side*2);
+  }
+  if(strong){particle('veil',0x402545,0,0,.07,{life:.28,size:[.58,.46,1],opacity:.24});for(const side of[-1,1])chip('crystal',0x9275ac,.03,side*.15,.7,[.04,.13,.04],.6,1);}
+  break;
+ }
+ case'shadowblade_fan':
+  if(phase==='cast')for(const side of[-1,1])curl(side<0?0x745291:0xb497ce,.17,side*.25,1,.46,.38*level,{roll:side*2,velocity:velocity(.5,side*.55),priority:side<0?1:0,opacity:.76});
+  else curl(0x9778af,.02,0,.95,.38,.27,{rotation:-.5,roll:2,life:.19,priority:1,opacity:.62});
+  break;
+ case'shadowblade_return':
+  if(phase==='hit'&&!detail.returning)return false;
+  curl(0x9875b4,0,0,.95,.52*level,.42,{rotation:phase==='hit'?-.65:-Math.PI/2,roll:-2.4,priority:1,opacity:.76});
+  curl(0x4d3d65,-.14,.13,.9,.38,.3,{roll:-1.9,life:.32,opacity:.43});
+  break;
+ case'grimoire_wide':{
+  const r=Math.max(.5,detail.radius||w.radius||1.7+.4*rank),release=phase==='hit';
+  for(const side of[-1,1]){
+   const m=particle('claw',side<0?0x856b9e:0xb49acb,0,side*r*.27,.07,{life:release?.4:.28,size:[r*.45,r*(release?.55:.2),1],motion:'erupt',priority:side<0?1:0,opacity:release?.66:.44});
+   orient(m,-.3,a,side*.38);
+   if(release)chip('crystal',0x9983ae,0,side*r*.35,.3,[.10,.018,.14],.1,.9);
+  }
+  line([-.07,-r*.55,.065],[.08,r*.55,.065],0x6a587c,.045,.25,0,.5);
+  break;
+ }
+ case'grimoire_echo':{
+  const echo=phase==='echo',release=phase==='hit',r=Math.max(.5,detail.radius||w.radius||1.7),width=r*(echo?.44:.31);
+  line([0,-width,.07],[.11,0,echo?.22:.1],echo?0xb49ac7:0x6f5685,echo?.04:.027,echo?.3:.25,1,echo?.73:.46);
+  line([.11,0,echo?.22:.1],[-.08,width,.07],echo?0x9474ae:0x6f5685,echo?.034:.022,echo?.34:.25,0,.6);
+  if(echo)for(const side of[-1,1]){
+   const m=particle('claw',side<0?0x71528b:0xad8dc4,.05,side*.52,.1,{life:.38,size:[.75,.68*level,1],motion:'erupt',opacity:.76,priority:side<0?1:0});
+   orient(m,-.3,a,side*.35);
+  }
+  else if(release)particle('veil',0x3e314d,0,0,.05,{life:.31,size:[.43,.33,1],opacity:.21});
+  break;
+ }
+ case'hammer_break':
+  for(let i=-1;i<=1;i++)chip(i===0?'shard':'stone',i===0?0xb9a079:0x81725b,.03,i*.15,.5,[.09,(i===0?.16:.09)*level,.07],1.1,detail.combo===2?1.8:1.15);
+  line([0,0,.15],[.28,-.22,.10],0xc1a16f,.031,.22,1,.75);
+  line([0,0,.15],[.40,.14,.10],0x8f7959,.022,.27,0,.55);
+  break;
+ case'hammer_guard':
+  if(phase!=='parry'&&!detail.empowered)return false;
+  if(phase==='parry'){
+   line([.5,-.27,.8],[.54,0,1.35],0xddc493,.045,.23,1,.85);
+   line([.54,0,1.35],[.5,.27,.8],0xa39b7d,.03,.29,0,.64);
+   chip('crystal',0xd0b581,.55,0,1,[.045,.12,.045],.55,.75);
+  }else if(phase==='cast')curl(0xbba574,.25,0,1,.35,.3,{rotation:-.7,roll:2,opacity:.5,priority:1});
+  else{
+   for(const side of[-1,1])line([0,0,.6],[.25,side*.33,1.14],0xddbd7f,.046*level,.24,side<0?1:0,.81);
+   chip('shard',0xa4926d,.02,0,.42,[.12,.2,.1],1.25,1.65);
+  }
+  break;
+ case'harpoon_reef':
+  line([-.15,0,.84],[target+.33,0,.86],0x9abfba,.032*level,.18,1,.75);
+  for(const side of[-1,1]){
+   line([.12,side*.16,.83],[.47,side*.1,.85],0x7da2a0,.018,.16,0,.6);
+   chip('stone',0x77918a,.05,side*.13,.22,[.055,.075,.065],.75,.65);
+  }
+  break;
+ case'harpoon_tow':
+  if(detail.combo!==2&&!detail.empowered)return false;
+  for(const side of[-1,1]){
+   const m=particle('crest',side<0?0x4c9593:0xa6c9bc,.16,side*(.28+target*.35),.12,{life:.3,size:[.4,.28*level,1],motion:'erupt',velocity:velocity(-1.35,side*.12),priority:side<0?1:0,opacity:.73});
+   if(m)m.rotation.y=a+Math.PI;
+   chip('ember',0x9cbfb9,.1,side*(.28+target*.35),.45,[.026,.05,.026],-1.6,.25);
+  }
+  break;
+ case'boomerang_pincer':
+  for(let i=-1;i<=1;i++){
+   const m=particle('claw',detail.empowered?(i===0?0xd0d9a3:0x8fac79):(i===0?0xd6bb89:0xa68f69),0,i*.16,.4,{life:.27,size:[.63,(detail.empowered?.57:.42)*level,1],motion:'lash',roll:-.6,priority:i===0?1:0,opacity:detail.empowered?.78:.67});
+   orient(m,-.4,a,.45);
+  }
+  break;
+ case'boomerang_snare':{
+  const snap=detail.stage==='snap',idle=detail.stage==='idle',r=Math.max(.5,detail.radius||1.5+.15*rank),spread=r*(snap?.34:.23);
+  for(const side of[-1,1]){
+   const m=particle('claw',side<0?0x688a4b:0x9fbb71,0,side*spread,.065,{life:idle?.29:.4,size:[snap?.75:.45,(snap?.67:.14)*level,1],motion:'erupt',opacity:idle?.43:.72,priority:idle?0:side<0?1:0});
+   orient(m,-.2,a,side*-.5);
+   line([-.2,side*spread,.07],[.14,side*spread*.6,.075],0x547344,.023,snap?.28:.34,0,idle?.35:.53);
+   if(snap)chip('crystal',0xa5be7f,.05,side*.2,.36,[.075,.025,.13],-.2,.7);
+  }
+  break;
+ }
+ }
+ return true;
+}

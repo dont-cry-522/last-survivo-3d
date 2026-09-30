@@ -3,7 +3,7 @@ const template=fs.readFileSync('scripts/offline-worker.txt','utf8'),client=fs.re
 const server=http.createServer((req,res)=>{
  const pathname=new URL(req.url,'http://local').pathname;res.setHeader('Cache-Control','no-store');
  if(pathname==='/'||pathname==='/index.html'){
-  res.setHeader('Content-Type','text/html');res.end(`<body data-release="${release}"><p id="offline-status"></p><button id="offline-download">Download</button><button id="offline-install" hidden>Install</button><script type="module" src="offline.js?v=85"></script></body>`);
+  res.setHeader('Content-Type','text/html');res.end(`<body data-release="${release}"><p id="offline-status"></p><button id="offline-download">Download</button><button id="offline-install" hidden>Install</button><script type="module" src="offline.js?v=86"></script></body>`);
  }else if(pathname==='/offline.js'){res.setHeader('Content-Type','text/javascript');res.end(client);}
  else if(pathname==='/sw.js'){res.setHeader('Content-Type','text/javascript');res.end(template.replace('__VERSION__','"83"').replace('__BUILD__',JSON.stringify('fixture-'+release)).replace('__FILES__','["index.html","offline.js","resource.bin"] ').replace('__BYTES__','100'));}
  else if(pathname==='/resource.bin'){res.statusCode=broken?503:200;res.end('resource');}

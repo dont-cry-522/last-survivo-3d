@@ -2,7 +2,7 @@ const {chromium}=require(process.env.PLAYWRIGHT_MODULE||'../../mobile-check/node
 (async()=>{const b=await chromium.launch({executablePath:'C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe',headless:true});try{
  const p=await b.newPage({viewport:{width:1440,height:900}}),errors=[];p.on('pageerror',e=>errors.push(e.message));await p.goto(process.env.TEST_URL||'http://127.0.0.1:8898/');await p.waitForFunction(()=>window.game3d,null,{polling:100,timeout:90000});
  const result=await p.evaluate(async()=>{
-  const T=await import('./vendor/three.module.js'),{animateActor}=await import('./world.js?v=85');const check=(v,m)=>{if(!v)throw Error(m)},out=[];
+  const T=await import('./vendor/three.module.js'),{animateActor}=await import('./world.js?v=86');const check=(v,m)=>{if(!v)throw Error(m)},out=[];
   for(let i=0;i<3;i++){
    game3d.select('silver','forest',i);const h=game3d.hero,d=h.userData,mask=h.getObjectByName('silver-face-mask');check(mask?.parent===d.swimHead,'mask detached from head');
    let skin;h.traverse(o=>{if(o.isSkinnedMesh&&o.material.name.includes('Superhero'))skin=o});

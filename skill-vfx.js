@@ -1,7 +1,7 @@
-import{boneBoomerang}from'./beast-model.js?v=85';
+import{boneBoomerang}from'./beast-model.js?v=86';
 import * as T from './vendor/three.module.js';
-import{shadowCrescentGeometry}from'./shadow-weapons.js?v=85';
-import{spellShapes,streakTexture,crestTexture}from'./spell-shapes.js?v=85';
+import{shadowCrescentGeometry}from'./shadow-weapons.js?v=86';
+import{spellShapes,streakTexture,crestTexture}from'./spell-shapes.js?v=86';
 
 function flameTexture(){
  if(typeof document==='undefined')return null;
@@ -49,8 +49,8 @@ export class SkillVFX{
  clear(){for(const p of this.active){this.scene.remove(p.mesh);this.pool.push(p.mesh);}this.active.length=0;}
  enemyContact(texture,color,x,z,angle,strong=false){
   const hard=['stone','wood','ice'].includes(texture),shape=texture==='stone'?'stone':hard?'crystal':'smoke',count=strong?4:2;
-  for(let i=0;i<count;i++){const a=angle+(i-(count-1)/2)*.55,s=strong?.065:.045;this.particle(shape,color,x,.72,z,{life:hard?.24:.20,size:[s,s*(hard?1.7:1.1),s],velocity:[Math.sin(a)*(strong?2:1.3),hard?1.1:.35,Math.cos(a)*(strong?2:1.3)],gravity:hard?5:0,spin:hard?5:0,opacity:hard?.8:.5,additive:false});}
-  if(hard)this.segment(new T.Vector3(x,.75,z),new T.Vector3(x-Math.sin(angle)*.22,.85,z-Math.cos(angle)*.22),0xf4d4a2,.018,.09,false);
+  this.segment(new T.Vector3(x-Math.sin(angle)*.18,.84,z-Math.cos(angle)*.18),new T.Vector3(x+Math.sin(angle)*.08,.88,z+Math.cos(angle)*.08),hard?0xf4d4a2:0xe7d1ab,strong?.03:.018,.075,false,1,.8);
+  for(let i=0;i<count;i++){const a=angle+(i-(count-1)/2)*.55,s=strong?.065:.045;const chip=this.particle(shape,color,x,.80,z,{life:hard?.24:.20,size:[s,s*(hard?1.7:1.1),s*.7],velocity:[Math.sin(a)*(strong?2:1.3),hard?.6+i*.25:.35,Math.cos(a)*(strong?2:1.3)],gravity:hard?5:0,spin:hard?5:0,opacity:hard?.8:.5,additive:false});if(chip&&hard)chip.rotation.set(.45,a,.6);}
  }
  dive(x,z,angle){
   this.particle('veil',0x3e989c,x,.09,z,{life:.22,size:[.85,.66,1],opacity:.55,additive:false});
@@ -169,15 +169,17 @@ export class SkillVFX{
   const dx=Math.sin(angle),dz=Math.cos(angle);
   if(kind==='harpoon'||kind==='boomerang'){
    const color=kind==='harpoon'?0xa4ded5:0xe1cb97,m=this.particle('sweep',color,x,.8,z,{life:.17,size:kind==='harpoon'?[.52,.32,1]:[.34,.23,1],motion:'lash',opacity:.7,roll:combo===2?-3:3,priority:1});if(m)m.rotation.set(-.65,angle,kind==='boomerang'?.8:combo===1?.2:1.2);
-   for(let i=0;i<3;i++)this.particle('crystal',color,x,.8,z,{life:.23,size:[.025,.075,.025],velocity:[dx*(combo===2?-1:1)+(i-1)*.5,.7,dz*(combo===2?-1:1)],gravity:4,spin:6,additive:false});
+   for(let i=0;i<3;i++)this.particle('crystal',color,x,.8,z,{life:.23,size:[.025,.075,.025],velocity:[dx*(combo===2?-1:1)+dz*(i-1)*.5,.7,dz*(combo===2?-1:1)-dx*(i-1)*.5],gravity:4,spin:6,additive:false});
   }else{
-   const shield=kind==='shield';for(let i=0;i<5;i++){const a=angle+(i-2)*.45;this.particle(shield?'crystal':'stone',shield?0xc8d3b9:0xc4a16b,x,shield?.9:.22,z,{life:shield?.19:.32,size:shield?[.025,.09,.025]:[.065,.07,.065],velocity:[Math.sin(a)*2,shield?.2:1.5,Math.cos(a)*2],gravity:shield?1:7,spin:8,additive:shield});}
+   const shield=kind==='shield',contact=this.particle(shield?'sweep':'claw',shield?0xe3e8ca:0xe2c58d,x,shield?.8:.12,z,{life:shield?.13:.2,size:shield?[.3,.22,1]:[.32,.36,1],motion:'lash',opacity:.8,priority:1});if(contact)contact.rotation.set(shield?-.5:-.25,angle,shield?.4:-.8);
+   for(let i=0;i<4;i++){const a=angle+(i-1.5)*.45;this.particle(shield?'crystal':'stone',shield?0xc8d3b9:0xc4a16b,x,shield?.9:.22,z,{life:shield?.19:.32,size:shield?[.025,.09,.025]:[.065,.07+(i%2)*.025,.045],velocity:[Math.sin(a)*2,shield?.2:1.2+i*.2,Math.cos(a)*2],gravity:shield?1:7,spin:8,additive:shield});}
    if(!shield&&combo===2)this.dust(x,z,.65);
   }
  }
- boltImpact(x,z,strong=false){
-  const count=strong?12:5;
-  for(let i=0;i<count;i++){const a=i/count*Math.PI*2,s=strong?2.8:1.5;this.particle('crystal',i%3?0xc3e9ff:0xffffff,x,1.05,z,{life:strong?.42:.25,size:[.045,strong?.31:.16,.045],velocity:[Math.sin(a)*s,(i%3)*.7+.2,Math.cos(a)*s],gravity:4,spin:9});}
+ boltImpact(x,z,strong=false,angle=0){
+  const count=strong?10:4,dx=Math.sin(angle),dz=Math.cos(angle);
+  this.segment(new T.Vector3(x-dx*.2,.96,z-dz*.2),new T.Vector3(x+dx*.25,1.08,z+dz*.25),0xecfaff,strong?.035:.022,.11,false,1);
+  for(let i=0;i<count;i++){const a=angle+(i/count-.5)*Math.PI*1.25,s=strong?2.8:1.5;const chip=this.particle('crystal',i%3?0xc3e9ff:0xffffff,x,1.05,z,{life:strong?.42:.25,size:[.03,strong?.23:.12,.03],velocity:[Math.sin(a)*s,(i%3)*.7+.2,Math.cos(a)*s],gravity:4,spin:9});if(chip)chip.rotation.set(.7,a,.4);}
   if(strong)this.particle('ember',0x92cafa,x,1.05,z,{life:.26,size:[.32,.32,.32],grow:true,opacity:.7});
  }
  skill(e){
@@ -249,37 +251,72 @@ export class SkillVFX{
   else if(kind==='spikes'){this.riftCast(x,z,1.2,e.angle,true);for(let i=-1;i<=1;i++){const m=this.particle('crystal',0x625077,x+i*.3,.35,z,{life:.4,size:[.15,.75-Math.abs(i)*.2,.13],grow:true,additive:false,priority:1});if(m)m.rotation.z=i*.17;}}
  }
  muzzle(w,x,z,angle){
-  const dx=Math.sin(angle),dz=Math.cos(angle),px=x+dx*.65,pz=z+dz*.65;
+  const dx=Math.sin(angle),dz=Math.cos(angle),px=x+dx*.65,pz=z+dz*.65,path=w.pathId,rank=w.pathRank||0;
   if(w.id==='rifle'||w.id==='shotgun'){
-   this.segment(new T.Vector3(px,1.15,pz),new T.Vector3(px+dx*(w.id==='shotgun'?.5:.3),1.15,pz+dz*(w.id==='shotgun'?.5:.3)),0xffe4a5,w.id==='shotgun'?.10:.065,.07,false,1);
-  }else if(w.id==='fire')this.particle('flame',0xffa054,px,1.15,pz,{life:.16,size:[.15,.24,1],velocity:[dx*2,0,dz*2]});
-  else if(['dark','shade'].includes(w.id))this.particle('smoke',w.id==='dark'?0x9767c0:0x4b426c,px,1.15,pz,{life:.2,size:[.18,.15,.18],opacity:.45,additive:false,grow:true});
+   const scatter=w.id==='shotgun'&&w.count!==1,length=scatter?.22:path==='rifle_pierce'?.19+rank*.015:.16;
+   const core=this.particle('crystal',0xffedbd,px+dx*.12,1.15,pz+dz*.12,{life:.065,size:[scatter?.075:.045,length,scatter?.075:.045],opacity:.95,additive:false,priority:1});if(core)core.quaternion.setFromUnitVectors(new T.Vector3(0,1,0),new T.Vector3(dx,0,dz));
+   for(const side of [-1,1]){const a=angle+side*(scatter?.55:.35),spark=this.particle('crystal',0xeab36e,px,1.15,pz,{life:.10,size:[.017,scatter?.11:.075,.017],velocity:[Math.sin(a)*3,side*.35,Math.cos(a)*3],opacity:.8,additive:false});if(spark)spark.quaternion.setFromUnitVectors(new T.Vector3(0,1,0),new T.Vector3(Math.sin(a),0,Math.cos(a)));}
+  }else if(w.id==='crossbow'){
+   for(const side of [-1,1])this.segment(new T.Vector3(px+dz*side*.16-dx*.12,1.15,pz-dx*side*.16-dz*.12),new T.Vector3(px+dx*.24,1.15,pz+dz*.24),path==='crossbow_pierce'?0xd4e1da:0x9cc5d5,.014,.10,false,0,.55);
+  }else if(['shuriken','shadowblade','boomerang'].includes(w.id)){
+   const swipe=this.particle('sweep',w.id==='shuriken'?0xb9eedd:w.id==='boomerang'?0xe1cb97:0xaa8bd5,px,1.05,pz,{life:.14,size:[.28,.21,1],motion:'lash',roll:-4,opacity:.55});if(swipe)swipe.rotation.set(-Math.PI/2,0,-angle);
+  }else if(w.id==='fire'){
+   this.particle('flame',path==='fire_blast'?0xffd999:0xffa054,px,1.15,pz,{life:.16,size:[.14,.23,1],velocity:[dx*2,.2,dz*2],opacity:.75});
+   this.particle('ember',0xffde9e,px,1.15,pz,{life:.12,size:[.035,.06,.035],velocity:[dx*3,.4,dz*3],additive:false});
+  }else if(['dark','shade'].includes(w.id)){
+   const curl=this.particle('sweep',w.id==='dark'?0xa486c9:0x8372a7,px,1.1,pz,{life:.18,size:[.24,.19,1],velocity:[dx*.6,.1,dz*.6],motion:'lash',roll:-4,opacity:.55,additive:false});if(curl)curl.rotation.set(-.8,angle,.4);
+   this.particle('ember',w.id==='dark'?0xd3b4ed:0x9ecfd4,px,1.15,pz,{life:.12,size:[.035,.05,.035],velocity:[dx*2,0,dz*2],opacity:.8});
+  }
  }
  flight(b,dt){
-  b.trail-=dt;
-  if(b.mesh.userData.aura){const wave=1+Math.sin(b.elapsed*18)*.09;b.mesh.userData.aura.scale.setScalar(wave);}
-  if(b.trail>0)return;b.trail=['fire','dark'].includes(b.kind)?.065:.085;
-  if(b.kind==='boomerang'){const len=Math.hypot(b.vx,b.vz)||1;this.segment(new T.Vector3(b.x,b.height??.82,b.z),new T.Vector3(b.x-b.vx/len*.5,b.height??.82,b.z-b.vz/len*.5),b.returning?0xa9c995:0xe3cf9f,.026,.12,false,0,.5);}
-  else if(b.kind==='fire'){
-   this.particle('flame',0xff762b,b.x,1.17,b.z,{life:.23,size:[.19,.24,1],velocity:[-b.vx*.09,.45,-b.vz*.09],opacity:.7});
-   this.particle('ember',0xffd48b,b.x,1.15,b.z,{life:.14,size:[.06,.06,.09],velocity:[-b.vx*.15,0,-b.vz*.15]});
+  b.trail=(b.trail||0)-dt;
+  if(b.mesh.userData.aura){const aura=b.mesh.userData.aura,elapsed=b.elapsed||0,wave=1+Math.sin(elapsed*18)*.07;aura.scale.setScalar(wave);if(b.kind==='dark')aura.rotation.z=b.pathId==='dark_seek'?Math.sin(elapsed*8)*.14:elapsed*(b.pathId==='dark_gravity'?-5:2);}
+  if(b.trail>0)return;b.trail=['fire','dark'].includes(b.kind)?.075:.095;
+  const len=Math.hypot(b.vx,b.vz)||1,dx=b.vx/len,dz=b.vz/len,y=b.height??1.15,path=b.pathId;
+  if(['boomerang','shuriken','shadowblade'].includes(b.kind)){
+   const bone=b.kind==='boomerang',shadow=b.kind==='shadowblade',color=bone?(b.returning?0xa9c995:0xe3cf9f):shadow?0xa18abd:0x9bdace;
+   const arc=this.particle('sweep',color,b.x-dx*.12,bone?(b.height??.82):y,b.z-dz*.12,{life:.13,size:[bone?.28:.23,bone?.20:.17,1],opacity:b.returning?.5:.34,motion:'lash',roll:b.returning?-5:5,additive:false});if(arc)arc.rotation.set(-Math.PI/2,0,-b.mesh.rotation.y);
+  }else if(b.kind==='fire'){
+   this.particle('flame',path==='fire_blast'?0xffba68:0xff762b,b.x-dx*.18,y,b.z-dz*.18,{life:path==='fire_burn'?.27:.21,size:[.16,path==='fire_burn'?.28:.22,1],velocity:[-b.vx*.08,.4,-b.vz*.08],opacity:.65});
+   this.particle('ember',0xffd48b,b.x,y,b.z,{life:.14,size:[.035,.045,.035],velocity:[-b.vx*.12,.1,-b.vz*.12],opacity:.75,additive:false});
   }else if(b.kind==='dark'){
-   this.particle('smoke',0x5e3d82,b.x,1.15,b.z,{life:.3,size:[.17,.17,.2],grow:true,additive:false,opacity:.42,velocity:[-b.vx*.05,.1,-b.vz*.05]});
+   const curl=this.particle('sweep',path==='dark_seek'?0xab92cd:0x775a96,b.x-dx*.17,y,b.z-dz*.17,{life:.23,size:[.20,.16,1],motion:'lash',roll:path==='dark_gravity'?-5:-2,opacity:.45,additive:false,velocity:[-b.vx*.04,.06,-b.vz*.04]});if(curl)curl.rotation.set(-.9,Math.atan2(dx,dz),.5);
   }else if(b.kind==='shade'){
-   const d=Math.hypot(b.vx,b.vz)||1;this.segment(new T.Vector3(b.x,1.15,b.z),new T.Vector3(b.x-b.vx/d*.4,1.15,b.z-b.vz/d*.4),0x9781c1,.045,.16,false);
-  }else if(b.kind==='shadowblade')this.particle('crystal',0x9c86bd,b.x,1.15,b.z,{life:.18,size:[.035,.13,.035],spin:8,opacity:.55});
-  else if(b.kind==='crossbow')this.particle('ember',0xc5eaff,b.x,1.15,b.z,{life:.10,size:[.025,.025,.06],opacity:.45});
+   this.segment(new T.Vector3(b.x-dx*.12,y,b.z-dz*.12),new T.Vector3(b.x-dx*.5,y,b.z-dz*.5),path==='shade_echo'?0x88bdc9:0x9781c1,.022,.14,false,0,.58);
+  }else if(['rifle','shotgun','crossbow'].includes(b.kind)){
+   if(b.kind==='shotgun'&&path!=='shotgun_slug')return;
+   const crossbow=b.kind==='crossbow',pierce=path==='rifle_pierce'||path==='crossbow_pierce',length=pierce?.62:crossbow?.36:.43;
+   this.segment(new T.Vector3(b.x-dx*.16,y,b.z-dz*.16),new T.Vector3(b.x-dx*length,y,b.z-dz*length),crossbow?0xa2c7d6:path==='rifle_rapid'?0xdbb886:0xeed5a3,.014,.08,false,0,.42);
+  }
  }
  projectile(w){
+  const path=w.pathId,rank=w.pathRank||0;
   if(w.id==='boomerang'){const b=boneBoomerang();b.scale.setScalar(.72);return b;}
-  const g=new T.Group(),part=(shape,color,scale,z=0)=>{if(!this.materials.has(color))this.materials.set(color,new T.MeshBasicMaterial({color}));const m=new T.Mesh(this.geometry[shape],this.materials.get(color));m.scale.set(...scale);m.position.z=z;g.add(m);return m;};
-  if(w.id==='fire'){part('ember',0xffdd83,[.25,.25,.34]);const aura=new T.Group();g.add(aura);g.userData.aura=aura;const key='fire-flight';if(!this.materials.has(key))this.materials.set(key,new T.MeshBasicMaterial({map:this.flameTexture,color:0xff8a34,transparent:true,opacity:.8,depthWrite:false,side:T.DoubleSide,blending:T.AdditiveBlending}));for(const angle of [0,Math.PI/2]){const flame=new T.Mesh(this.geometry.flame,this.materials.get(key));flame.scale.set(.29,.53,1);flame.position.z=-.22;flame.rotation.set(Math.PI/2,angle,0);aura.add(flame);}}
-  else if(w.id==='shade'){part('ember',0x29223e,[.16,.16,.25]);for(const s of [-1,0,1]){const m=part('ray',s===0?0x86dcef:0x7965b0,[.035,.055,.60-Math.abs(s)*.1]);m.position.x=s*.12;m.rotation.y=s*.18;}}
-  else if(w.id==='shadowblade'){const blade=part('ember',0x9c83d2,[1,1,1]);blade.geometry=shadowCrescentGeometry;blade.rotation.x=Math.PI/2;}
-  else if(w.id==='dark'){part('ember',0x352542,[.28,.28,.33]);part('crystal',0xd2adff,[.10,.34,.1]).rotation.x=Math.PI/2;for(const s of[-1,1]){const m=part('ember',0xab80ec,[.075,.075,.15],-.16);m.position.x=s*.28;}}
-  else if(w.id==='shuriken'){for(let i=0;i<3;i++){const m=part('ray',0xa8f5e4,[.07,.045,.65]);m.rotation.y=i*Math.PI/3;}part('ember',0xe1fff3,[.07,.035,.07]);}
-  else if(w.id==='crossbow'){part('ray',0x435363,[.035,.035,.66]);part('crystal',0xd9f1ff,[.072,.16,.072],.38).rotation.x=Math.PI/2;for(const s of[-1,1]){const feather=part('ray',0xa8cee5,[.13,.015,.14],-.27);feather.position.x=s*.10;feather.rotation.y=s*.38;}}
-  else{const heavy=w.id==='shotgun'&&w.count===1,scatter=w.id==='shotgun'&&!heavy;part('ray',0xfff1c2,[heavy?.10:scatter?.055:.035,heavy?.07:.035,heavy?.56:scatter?.18:.46]);part('ray',w.color,[.022,.022,scatter?.12:.28],scatter?-.12:-.3);}
+  const g=new T.Group(),part=(shape,color,scale,z=0)=>{if(!this.materials.has(color))this.materials.set(color,new T.MeshBasicMaterial({color,side:T.DoubleSide}));const m=new T.Mesh(this.geometry[shape],this.materials.get(color));m.scale.set(...scale);m.position.z=z;g.add(m);return m;};
+  if(w.id==='fire'){
+   const blast=path==='fire_blast',burn=path==='fire_burn';part('ember',blast?0xc95328:0xe87935,[.23,.22,.30]);part('crystal',blast?0xffe0a0:0xffcf76,[.11,.25,.11],.12).rotation.x=Math.PI/2;
+   const aura=new T.Group();g.add(aura);g.userData.aura=aura;const key='fire-flight';if(!this.materials.has(key))this.materials.set(key,new T.MeshBasicMaterial({map:this.flameTexture,color:0xff8a34,transparent:true,opacity:.68,depthWrite:false,side:T.DoubleSide,blending:T.AdditiveBlending}));for(const angle of [0,Math.PI/2]){const flame=new T.Mesh(this.geometry.flame,this.materials.get(key));flame.scale.set(.24,burn?.55+rank*.025:.43,1);flame.position.z=burn?-.30:-.23;flame.rotation.set(Math.PI/2,angle,0);aura.add(flame);}
+   if(blast)for(const side of [-1,1]){const seam=part('crystal',0xffc36e,[.025,.17,.025]);seam.position.x=side*.16;seam.rotation.x=Math.PI/2;}
+  }else if(w.id==='shade'){
+   part('ember',0x29223e,[.14,.13,.23]);for(const side of [-1,0,1]){const barb=part('crystal',side===0?0x96d7dc:path==='shade_blight'?0xaf80c9:0x7965b0,[side===0?.045:.028,side===0?.28:.20,.035],side===0?.12:-.06);barb.position.x=side*.10;barb.rotation.set(Math.PI/2,0,-side*.23);}
+  }else if(w.id==='shadowblade'){
+   const blade=part('ember',0x80659f,[1,1,1]);blade.geometry=shadowCrescentGeometry;blade.rotation.x=Math.PI/2;
+   const edge=part('ember',path==='shadowblade_return'?0xc3a7dd:0xaf95cc,[.87,.87,.87]);edge.geometry=shadowCrescentGeometry;edge.rotation.x=Math.PI/2;edge.position.y=.012;
+  }else if(w.id==='dark'){
+   const seek=path==='dark_seek',gravity=path==='dark_gravity';part('ember',0x352542,seek?[.17,.17,.30]:[.25,.24,.29]);part('crystal',gravity?0xb596d6:0xd2b4ed,[.065,seek?.30:.21,.065],.09).rotation.x=Math.PI/2;
+   const aura=new T.Group();g.add(aura);g.userData.aura=aura;
+   for(const side of [-1,1]){const wing=part('crystal',gravity?0x9070ad:0xac8ac9,[seek?.065:.055,seek?.23:.14,.035],-.13);wing.position.x=side*(seek?.17:.23);wing.rotation.set(Math.PI/2,0,side*(seek?.48:.7));aura.add(wing);}
+  }else if(w.id==='shuriken'){
+   for(let i=0;i<3;i++){const a=i*Math.PI*2/3,blade=part('crystal',i?0x82c5b7:0xc0eee0,[.065,.23,.022]);blade.position.set(Math.sin(a)*.09,0,Math.cos(a)*.09);blade.rotation.set(Math.PI/2,0,-a);}
+   part('ember',path==='shuriken_return'?0xe1f4cb:0xe1fff3,[.075,.035,.075]);
+  }else if(w.id==='crossbow'){
+   const pierce=path==='crossbow_pierce';part('ray',0x435363,[.03,.03,pierce?.73:.66]);part('crystal',pierce?0xe0e2ce:0xd9f1ff,[.055,pierce?.19:.14,.045],.35).rotation.x=Math.PI/2;
+   for(const side of [-1,1]){const feather=part('crystal',path==='crossbow_hunt'?0x91c9cf:0xa8cee5,[.055,.12,.012],-.25);feather.position.x=side*.065;feather.rotation.set(Math.PI/2,0,side*.65);}
+  }else{
+   const heavy=w.id==='shotgun'&&w.count===1,scatter=w.id==='shotgun'&&!heavy,pierce=path==='rifle_pierce',length=heavy?.17:scatter?.075:pierce?.31+rank*.015:.23,width=heavy?.07:scatter?.035:.026;
+   part('crystal',heavy?0xffd094:0xffedb7,[width,length,width],.04).rotation.x=Math.PI/2;
+   part('ray',w.color??0xffdc91,[heavy?.045:.018,heavy?.04:.018,scatter?.09:heavy?.24:.26],scatter?-.08:heavy?-.17:-.22);
+  }
   return g;
  }
 }

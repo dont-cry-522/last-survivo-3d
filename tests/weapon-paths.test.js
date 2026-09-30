@@ -37,3 +37,18 @@ test('support skills remain separate from weapon identity and cannot exceed caps
   for(let i=0;i<5;i++)takeUpgrade(p,'power');assert.equal(takeUpgrade(p,'power'),false);
   const hp=p.hp;assert(takeUpgrade(p,'vitality'));assert.equal(p.hp,hp+24);
 });
+
+
+test('weapon visual routes retain their originating weapon and rank across later upgrades',()=>{
+ for(const [id,path] of Object.entries(WEAPON_PATHS)){
+  const p=player(path.weapon,8);p.weaponPath={id,rank:1};
+  const fired=weaponStats(p);p.weaponPath.rank=3;
+  assert.equal(fired.pathId,id);assert.equal(fired.pathRank,1);
+  assert.equal(weaponStats(p).pathRank,3);
+  const other=Object.keys(WEAPONS).find(key=>key!==path.weapon);
+  const foreign=weaponStats({...p,weaponId:other});
+  assert.equal(foreign.pathId,null);assert.equal(foreign.pathRank,0);
+ }
+ const base=weaponStats(player('rifle'));
+ assert.equal(base.pathId,null);assert.equal(base.pathRank,0);
+});
