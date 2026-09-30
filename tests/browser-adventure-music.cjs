@@ -3,7 +3,7 @@ const {chromium}=require(process.env.PLAYWRIGHT_MODULE||'playwright'),assert=req
  const page=await browser.newPage();await page.goto(process.env.TEST_URL||'http://127.0.0.1:8899/',{waitUntil:'domcontentloaded',timeout:60000});
  for(const map of['sand','coast']){
   const result=await page.evaluate(async map=>{
-   const {GameAudio}=await import('./audio.js?v=82'),{BIOME_THEMES}=await import('./biome-music.js?v=82'),theme=BIOME_THEMES[map];
+   const {GameAudio}=await import('./audio.js?v=83'),{BIOME_THEMES}=await import('./biome-music.js?v=83'),theme=BIOME_THEMES[map];
    const rate=22050,step=60/theme.bpm/2,beats=theme.meter*theme.bars.length,total=step*beats*2+.9,c=new OfflineAudioContext(2,Math.ceil(rate*total),rate),a=new GameAudio(c);
    a.setup();a.muted=false;a.musicVolume=.65;a.applyVolumes(true);a.available=()=>a.ready&&!a.muted&&a.nodes<100;
    let beat=0,dropped=0,peakSources=0,peakNodes=0;const musicNote=a.musicNote.bind(a);a.musicNote=(...args)=>{const old=a.musicSources.size;musicNote(...args);if(a.musicSources.size===old)dropped++;};

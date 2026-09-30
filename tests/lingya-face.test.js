@@ -1,23 +1,20 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import * as T from '../vendor/three.module.js';
-import {makeLingyaFace,animateLingyaFace,lingyaFaceDepth} from '../lingya-face.js';
+import {softenFaceSurface,lingyaHeadY} from '../lingya-face.js';
 
-test('Lingya has a continuous sculpted face and shallow, outward-facing eyes',()=>{
- const face=makeLingyaFace(),skin=face.getObjectByName('Lingya_face_surface');
- assert(skin.geometry.index.count>10000);
- face.traverse(o=>{if(!o.isMesh)return;assert(Array.from(o.geometry.attributes.position.array).every(Number.isFinite));
-  if(o.name==='Lingya_eye_white'||o.name==='Lingya_iris'||o.name==='Lingya_pupil'){
-   const p=o.geometry.attributes.position,n=o.geometry.attributes.normal;
-   for(let i=0;i<p.count;i++){const gap=p.getZ(i)-lingyaFaceDepth(p.getX(i),p.getY(i));assert(gap>0&&gap<.006,'eye floats or intersects face');assert(n.getZ(i)>=0,'eye faces inward');}
-  }
- });
- const bounds=new T.Box3().setFromObject(skin);assert(bounds.getSize(new T.Vector3()).y<.2);
+test('face refinement keeps UV seams closed and normalizes interpolated bone influences',()=>{
+ const source=new T.BufferGeometry();source.setAttribute('position',new T.Float32BufferAttribute([0,0,0,1,0,0,0,1,0,1,0,0,1,1,0,0,1,0],3));source.setIndex([0,1,2,3,4,5]);
+ source.setAttribute('uv',new T.Float32BufferAttribute([0,0,.5,0,0,.5,.6,0,1,1,0,.6],2));
+ source.setAttribute('skinIndex',new T.Uint16BufferAttribute([1,2,0,0,2,1,0,0,2,3,0,0,1,2,0,0,3,1,0,0,3,2,0,0],4));
+ source.setAttribute('skinWeight',new T.Float32BufferAttribute([.8,.2,0,0,.5,.5,0,0,.3,.7,0,0,.5,.5,0,0,.4,.6,0,0,.7,.3,0,0],4));
+ const before=source.attributes.position.array.slice(),g=softenFaceSurface(source),a=g.attributes;
+ assert.deepEqual(source.attributes.position.array,before);assert.equal(g.index.count,24);
+ for(const attribute of Object.values(a))assert(Array.from(attribute.array).every(Number.isFinite));
+ for(let i=0;i<a.skinWeight.count;i++)assert(Math.abs([0,1,2,3].reduce((s,k)=>s+a.skinWeight.array[i*4+k],0)-1)<1e-6);
+ for(const [i,j]of[[1,3],[2,5]]){assert(new T.Vector3().fromBufferAttribute(a.position,i).distanceTo(new T.Vector3().fromBufferAttribute(a.position,j))<1e-7);assert.notDeepEqual(Array.from(a.uv.array.slice(i*2,i*2+2)),Array.from(a.uv.array.slice(j*2,j*2+2)));}
 });
-test('blinking closes both eyes around their own centers and fully recovers',()=>{
- const face=makeLingyaFace(),source=face.getObjectByName('Lingya_face_surface').geometry.attributes.position.array.slice();
- animateLingyaFace(face,4.35);
- for(const eye of face.userData.blinkEyes){assert(eye.scale.y<.06);assert(Math.abs(eye.userData.centerY*eye.scale.y+eye.position.y-eye.userData.centerY)<1e-8);}
- animateLingyaFace(face,4.6);for(const eye of face.userData.blinkEyes)assert.equal(eye.scale.y,1);
- assert.deepEqual(face.getObjectByName('Lingya_face_surface').geometry.attributes.position.array,source);
+test('head lowering keeps the collar anchored and the entire head transform continuous',()=>{
+ assert.equal(lingyaHeadY(1.4),1.4);assert(Math.abs(lingyaHeadY(1.7)-1.677)<1e-8);
+ let prev=-Infinity;for(let y=1.35;y<1.8;y+=.001){const out=lingyaHeadY(y);assert(out>prev);assert(out<=y);prev=out;}
 });

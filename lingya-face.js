@@ -1,62 +1,98 @@
 import * as T from './vendor/three.module.js';
-import {smoothSeams} from './hero-finish.js?v=82';
+import {smoothSeams} from './hero-finish.js?v=83';
 
 const bell=(v,c,r)=>Math.exp(-(((v-c)/r)**2));
-const width=y=>.087*(1-.08*bell(y,1.588,.030)+.045*bell(y,1.641,.030));
-// Continuous cheeks, nose and chin are sculpted into one surface.
-export function lingyaFaceDepth(x,y){
- const yn=(y-1.660)/.097,ellipse=Math.sqrt(Math.max(0,1-yn*yn-(x/width(y))**2));
- return -.014+.085*ellipse+.013*bell(x,0,.014)*bell(y,1.637,.013)
-  +.003*bell(Math.abs(x),.045,.023)*bell(y,1.644,.024)
-  -.003*bell(Math.abs(x),.032,.022)*bell(y,1.659,.014);
-}
-export function prepareLingyaHead(mesh){
- if(mesh.name==='Eyes'||mesh.name==='Eyebrows'){mesh.visible=false;return;}
- if(!mesh.material.name.includes('Superhero'))return;
- const g=mesh.geometry.clone(),p=g.attributes.position,ix=g.index.array,keep=[];
- for(let i=0;i<ix.length;i+=3)if(Math.max(p.getY(ix[i]),p.getY(ix[i+1]),p.getY(ix[i+2]))<1.540)keep.push(ix[i],ix[i+1],ix[i+2]);
- g.setIndex(keep);for(const i of new Set(keep)){const y=p.getY(i);const f=T.MathUtils.smoothstep(y,1.49,1.54);p.setY(i,y+.052*f);p.setX(i,p.getX(i)*(1-.15*f));p.setZ(i,T.MathUtils.lerp(p.getZ(i),Math.min(.015,p.getZ(i)),f));}g.computeVertexNormals();smoothSeams(g);mesh.geometry=g;
-}
-export function makeLingyaFace(){
- const root=new T.Group();root.name='Lingya_sculpted_face';root.userData.blinkEyes=[];
- const skin=new T.MeshStandardMaterial({color:0xffffff,vertexColors:true,roughness:.85});
- const geometry=new T.SphereGeometry(1,64,48),p=geometry.attributes.position,colors=[];
- for(let i=0;i<p.count;i++){
-  const sy=p.getY(i),y=1.660+sy*.097,x=p.getX(i)*width(y),front=p.getZ(i)>0;
-  const z=front?lingyaFaceDepth(x,y):-.014+p.getZ(i)*.086;
-  p.setXYZ(i,x,y,z);
-  const color=new T.Color(0xefbda1),blush=front?.23*bell(Math.abs(x),.048,.024)*bell(y,1.645,.020):0;
-  color.lerp(new T.Color(0xe48d87),blush);colors.push(color.r,color.g,color.b);
- }
- geometry.setAttribute('color',new T.Float32BufferAttribute(colors,3));geometry.computeVertexNormals();smoothSeams(geometry);
- const head=new T.Mesh(geometry,skin);head.name='Lingya_face_surface';root.add(head);
- const makeMaterial=(color,roughness=.80)=>new T.MeshStandardMaterial({color,roughness});
- const whites=makeMaterial(0xfff3e2,.38),iris=makeMaterial(0x68462d,.35),pupil=makeMaterial(0x211c19,.28),hair=makeMaterial(0x68442e),lip=makeMaterial(0xa15f52);
- const curve=(points,radius,mat,name,parent=root)=>{const g=new T.TubeGeometry(new T.CatmullRomCurve3(points),32,radius,6,false),m=new T.Mesh(g,mat);m.name=name;parent.add(m);return m;};
- const at=(x,y,offset=0)=>new T.Vector3(x,y,lingyaFaceDepth(x,y)+offset);
- for(const sign of[-1,1]){
-  const cx=sign*.032,cy=1.659,rx=.022,ry=.0116;const eye=new T.Group();eye.userData.centerY=cy;root.add(eye);root.userData.blinkEyes.push(eye);
-  const pos=[],ix=[];const slices=48,rings=10;
-  const eyeDepth=(x,y)=>lingyaFaceDepth(x,y)+.0008+.004*Math.max(0,1-((x-cx)/rx)**2-((y-cy)/ry)**2);
-  for(let r=0;r<=rings;r++)for(let i=0;i<=slices;i++){
-   const a=i/slices*Math.PI*2,t=r/rings,x=cx+Math.cos(a)*rx*t,y=cy+Math.sin(a)*ry*t*(.78+.22*Math.abs(Math.sin(a)));
-   pos.push(x,y,eyeDepth(x,y));if(r<rings&&i<slices){const k=r*(slices+1)+i;ix.push(k,k+slices+1,k+1,k+1,k+slices+1,k+slices+2);}
+export const lingyaHeadY=y=>y-.023*T.MathUtils.smoothstep(y,1.44,1.59);
+
+// Keep the authored face topology, sockets, lips, ears and weighted neck continuous.
+export function refineLingyaHead(root){
+ let face,brows;const browVertices=[];
+ root.traverse(o=>{
+  if(!o.isSkinnedMesh)return;
+  const skin=o.material.name.includes('Superhero'),eyes=o.name==='Eyes',brow=o.name==='Eyebrows',hair=o.name==='Hair_Long',hood=o.name.includes('Head_Hood');
+  if(!skin&&!eyes&&!brow&&!hair&&!hood)return;
+  o.geometry=o.geometry.clone();const p=o.geometry.attributes.position,colors=[];
+  for(let i=0;i<p.count;i++){
+   let x=p.getX(i),y=p.getY(i),z=p.getZ(i);const ox=x,oy=y,oz=z,front=T.MathUtils.smoothstep(z,.025,.045);
+   if(skin&&y>1.53){
+    x*=1+.075*bell(y,1.605,.041);
+    y+=.012*bell(y,1.567,.044);
+    z-=.017*bell(x,0,.018)*bell(oy,1.618,.022)*front;
+    z-=.004*bell(Math.abs(x),.035,.029)*bell(oy,1.674,.015)*front;
+    const mouth=bell(oy,1.593,.012)*bell(x,0,.042)*front;
+    x*=1-.20*mouth;z-=.008*mouth;y+=(1.593-oy)*.27*mouth;
+    y+=.002*bell(Math.abs(x),.021,.010)*bell(oy,1.592,.012)*front;
+   }
+   if(skin||eyes||brow&&oy<1.666){
+    const w=bell(Math.abs(ox),.032,.027)*bell(oy,1.655,.020)*front;
+    y+=(oy-1.6535)*(eyes?.12:.70)*w;
+   }
+   if(hair){const covered=1-T.MathUtils.smoothstep(z,.005,.045);x*=1-.12*covered;z=-.025+(z+.025)*(1-.08*covered);y=1.67+(y-1.67)*(1-.06*covered);}
+   if(brow&&oy>=1.666){y=1.679+(y-1.677)*.48-.08*(Math.abs(x)-.032);x*=.97;browVertices.push(i);}
+   y=lingyaHeadY(y);p.setXYZ(i,x,y,z);
+   if(skin){
+    const lip=bell(oy,1.593,.006)*bell(ox,0,.022)*front,cheek=bell(oy,1.624,.017)*bell(Math.abs(ox),.052,.019)*front;
+    const c=new T.Color(0xffffff).lerp(new T.Color(0xcc8c81),lip*.35).lerp(new T.Color(0xe3ada0),cheek*.16);colors.push(c.r,c.g,c.b);
+   }
   }
-  const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute(pos,3));g.setIndex(ix);g.computeVertexNormals();const white=new T.Mesh(g,whites);white.name='Lingya_eye_white';eye.add(white);
-  // Irises follow the curved eye surface instead of protruding spheres.
-  for(const[radius,mat,offset,name]of [[.0095,iris,.0003,'iris'],[.0050,pupil,.0005,'pupil']]){
-   const d=new T.CircleGeometry(radius,40),dp=d.attributes.position;
-   for(let i=0;i<dp.count;i++){const x=cx+dp.getX(i),y=cy+dp.getY(i);dp.setXYZ(i,x,y,eyeDepth(x,y)+offset);}d.computeVertexNormals();const m=new T.Mesh(d,mat);m.name='Lingya_'+name;eye.add(m);
-  }
-  const glint=new T.Mesh(new T.SphereGeometry(.0018,10,8),new T.MeshBasicMaterial({color:0xfff8e8}));glint.position.set(cx-.003,cy+.004,eyeDepth(cx-.003,cy+.004)+.001);eye.add(glint);
-  const lid=[];for(let i=0;i<=12;i++){const a=i/12*Math.PI,x=cx+Math.cos(a)*rx,y=cy+Math.sin(a)*ry*(.78+.22*Math.sin(a));lid.push(at(x,y,.0011));}curve(lid,.0007,hair,'Lingya_upper_lid',eye);
-  const brow=[];for(let i=0;i<=12;i++){const u=i/12,x=cx+sign*(u-.5)*.041,y=1.682+.004*Math.sin(u*Math.PI)-.002*u;brow.push(at(x,y,.002));}curve(brow,.0013,hair,'Lingya_brow');
+  if(skin){o.geometry.setAttribute('color',new T.Float32BufferAttribute(colors,3));o.material.vertexColors=true;o.geometry=softenFaceSurface(o.geometry);face=o;}
+  if(brow){brows=o;o.material.color.set(0x765440);o.material.roughness=.92;}
+  if(eyes){o.material.roughness=.55;o.material.metalness=0;}
+  o.geometry.computeVertexNormals();smoothSeams(o.geometry);o.geometry.computeBoundingBox();o.geometry.computeBoundingSphere();
+ });
+ // Lift the relaxed eyebrows onto the forehead rather than burying their inner ends.
+ const probe=new T.Mesh(face.geometry,new T.MeshBasicMaterial({side:T.DoubleSide})),ray=new T.Raycaster(),p=brows.geometry.attributes.position;
+ probe.updateMatrixWorld();
+ for(const i of browVertices){
+  ray.set(new T.Vector3(p.getX(i),p.getY(i),1),new T.Vector3(0,0,-1));const hit=ray.intersectObject(probe)[0];
+  if(hit)p.setZ(i,hit.point.z+.0013+Math.max(0,p.getZ(i)-.06)*.07);
  }
- const mouth=[];for(let i=0;i<=16;i++){const u=i/16*2-1,x=u*.016,y=1.615+.003*u*u;mouth.push(at(x,y,.0008));}curve(mouth,.00065,lip,'Lingya_smile');
- root.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true;}});return root;
+ probe.material.dispose();brows.geometry.computeVertexNormals();smoothSeams(brows.geometry);
 }
 
-export function animateLingyaFace(face,t){
- const openness=Math.max(.055,1-Math.exp(-(((t%4.6-4.35)/.065)**2)));
- for(const eye of face.userData.blinkEyes){eye.scale.y=openness;eye.position.y=eye.userData.centerY*(1-openness);}
+// A single Loop subdivision pass, welding position seams while retaining UV seams
+// and interpolating bone influences by bone ID. Templates run this once at load.
+export function softenFaceSurface(source){
+ const p=source.attributes.position,ids=source.index.array,groups=[],weld=new Map(),groupOf=new Map(),edges=new Map();
+ for(const i of new Set(ids)){
+  const key=[p.getX(i),p.getY(i),p.getZ(i)].map(v=>Math.round(v*1e5)).join(',');
+  if(!weld.has(key)){weld.set(key,groups.length);groups.push({at:new T.Vector3().fromBufferAttribute(p,i),near:new Set(),boundary:new Set()});}
+  groupOf.set(i,weld.get(key));
+ }
+ const edgeKey=(a,b)=>a<b?a+','+b:b+','+a;
+ for(let i=0;i<ids.length;i+=3)for(let k=0;k<3;k++){
+  const a=groupOf.get(ids[i+k]),b=groupOf.get(ids[i+(k+1)%3]),c=groupOf.get(ids[i+(k+2)%3]),key=edgeKey(a,b);
+  groups[a].near.add(b);groups[b].near.add(a);if(!edges.has(key))edges.set(key,{a,b,opposite:[]});edges.get(key).opposite.push(c);
+ }
+ for(const e of edges.values()){
+  if(e.opposite.length===2)e.at=groups[e.a].at.clone().add(groups[e.b].at).multiplyScalar(3/8).addScaledVector(groups[e.opposite[0]].at,1/8).addScaledVector(groups[e.opposite[1]].at,1/8);
+  else{e.at=groups[e.a].at.clone().add(groups[e.b].at).multiplyScalar(.5);groups[e.a].boundary.add(e.b);groups[e.b].boundary.add(e.a);}
+ }
+ for(const g of groups){
+  if(g.boundary.size===2){g.refined=g.at.clone().multiplyScalar(.75);for(const i of g.boundary)g.refined.addScaledVector(groups[i].at,.125);}
+  else if(g.boundary.size)g.refined=g.at.clone();
+  else{const n=g.near.size,beta=n===3?3/16:3/(8*n);g.refined=g.at.clone().multiplyScalar(1-n*beta);for(const i of g.near)g.refined.addScaledVector(groups[i].at,beta);}
+ }
+ const data={};for(const [name,a]of Object.entries(source.attributes))if(name!=='normal'&&name!=='tangent')data[name]={size:a.itemSize,values:[]};
+ let count=0;
+ const vertex=(from,weights,at)=>{
+  const n=count++;
+  for(const [name,d]of Object.entries(data)){
+   if(name==='position'){d.values.push(at.x,at.y,at.z);continue;}
+   if(name==='skinIndex'||name==='skinWeight')continue;
+   const a=source.attributes[name];for(let k=0;k<d.size;k++)d.values.push(from.reduce((v,i,j)=>v+a.array[i*d.size+k]*weights[j],0));
+  }
+  if(data.skinIndex){
+   const influence=new Map(),indices=source.attributes.skinIndex,weightsIn=source.attributes.skinWeight;
+   from.forEach((i,j)=>{for(let k=0;k<4;k++){const bone=indices.array[i*4+k],w=weightsIn.array[i*4+k]*weights[j];influence.set(bone,(influence.get(bone)||0)+w);}});
+   const sorted=[...influence].sort((a,b)=>b[1]-a[1]).slice(0,4),total=sorted.reduce((s,v)=>s+v[1],0);
+   for(let k=0;k<4;k++){data.skinIndex.values.push(sorted[k]?.[0]||0);data.skinWeight.values.push((sorted[k]?.[1]||0)/total);}
+  }
+  return n;
+ };
+ const original=new Map(),midpoints=new Map(),out=[];
+ for(const i of new Set(ids))original.set(i,vertex([i],[1],groups[groupOf.get(i)].refined));
+ const midpoint=(a,b)=>{const key=edgeKey(a,b);if(!midpoints.has(key))midpoints.set(key,vertex([a,b],[.5,.5],edges.get(edgeKey(groupOf.get(a),groupOf.get(b))).at));return midpoints.get(key);};
+ for(let i=0;i<ids.length;i+=3){const [a,b,c]=[ids[i],ids[i+1],ids[i+2]],[ab,bc,ca]=[midpoint(a,b),midpoint(b,c),midpoint(c,a)];out.push(original.get(a),ab,ca,ab,original.get(b),bc,ca,bc,original.get(c),ab,bc,ca);}
+ const result=new T.BufferGeometry();for(const [name,d]of Object.entries(data))result.setAttribute(name,name==='skinIndex'?new T.Uint16BufferAttribute(d.values,d.size):new T.Float32BufferAttribute(d.values,d.size));result.setIndex(out);result.computeVertexNormals();smoothSeams(result);return result;
 }
