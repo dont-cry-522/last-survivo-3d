@@ -1,6 +1,6 @@
 import * as T from './vendor/three.module.js';
 import{mergeGeometries}from'./vendor/BufferGeometryUtils.js';
-import{sceneryAllowed}from'./biome-scenery.js?v=87';
+import{sceneryAllowed}from'./biome-scenery.js?v=88';
 export const SMALL_FINDS={
  forest:{name:'蜜露花丛',tip:'靠近花心采集；附近有怪物时先脱离战斗。',xp:6,heal:.12,color:0xb8dc8f},
  snow:{name:'双霜晶',tip:'分别碰触两侧霜晶，点亮后领取。',xp:18,heal:.08,color:0xa5dbea},
@@ -34,9 +34,11 @@ function terrainPiece(id){if(cache.has(id))return cache.get(id);const parts=[],o
  const result=mergeGeometries(parts);parts.forEach(g=>g.dispose());cache.set(id,result);return result;
 }
 export function installDiscoveries(w,id,rnd){
- w.discoveries=[];for(let i=0;i<3;i++)for(let attempt=0;attempt<450;attempt++){
-  const a=rnd()*Math.PI*2,r=18+i*18+rnd()*10;let x=w.spawn.x+Math.sin(a)*r,z=w.spawn.z+Math.cos(a)*r;
-  if(id==='coast'&&w.ponds.length){const p=w.ponds[Math.floor(rnd()*w.ponds.length)],dx=Math.sin(a)*p.rx*1.22,dz=Math.cos(a)*p.rz*1.22,turn=p.angle||0;x=p.x+Math.cos(turn)*dx+Math.sin(turn)*dz;z=p.z-Math.sin(turn)*dx+Math.cos(turn)*dz;}
+ w.discoveries=[];for(let i=0;i<(w.regional?3:5);i++)for(let attempt=0;attempt<700;attempt++){
+  const a=rnd()*Math.PI*2,r=(i<3?18+i*18:66+(i-3)*14)+rnd()*12;let x=w.spawn.x+Math.sin(a)*r,z=w.spawn.z+Math.cos(a)*r;
+  if(id==='coast'&&w.ponds.length){const p=w.ponds[Math.floor(rnd()*w.ponds.length)],dx=Math.sin(a)*((p.baseRx||p.rx)*1.19+1.8),dz=Math.cos(a)*((p.baseRz||p.rz)*1.19+1.8),turn=p.angle||0;x=p.x+Math.cos(turn)*dx+Math.sin(turn)*dz;z=p.z-Math.sin(turn)*dx+Math.cos(turn)*dz;}
+  if(id==='coast'&&!w.regional){const distance=Math.hypot(x-w.spawn.x,z-w.spawn.z);if(i===0&&distance>45||i>=3&&distance<(i===3?55:70))continue;}
+  if(w.coastLayout?.fords.some(f=>{const c=Math.cos(f.angle),s=Math.sin(f.angle),dx=x-f.x,dz=z-f.z;return Math.abs(c*dx-s*dz)<f.half+2&&Math.abs(s*dx+c*dz)<f.width/2+2;}))continue;
   if(!sceneryAllowed(w,x,z)||w.obstacles.some(o=>Math.hypot(x-o.x,z-o.z)<o.r+3.2)||w.sites.some(s=>Math.hypot(x-s.x,z-s.z)<11)||w.discoveries.some(n=>Math.hypot(x-n.x,z-n.z)<15))continue;
   const mesh=new T.Group();mesh.position.set(x,0,z);const base=new T.Mesh(terrainPiece(id),baseMaterial);base.rotation.y=id==='snow'?0:a;base.receiveShadow=true;mesh.add(base);const nodes=id==='snow'?[-1.25,1.25].map(dx=>({x:x+dx,z,lit:false})):[];
   const markers=(nodes.length?nodes:[{x,z}]).map(n=>{const m=new T.Mesh(id==='coast'?pearlGeometry:crystalGeometry,light(SMALL_FINDS[id].color));m.position.set(n.x-x,id==='snow'?.98:id==='forest'?.55:.25,n.z-z);mesh.add(m);return m;});

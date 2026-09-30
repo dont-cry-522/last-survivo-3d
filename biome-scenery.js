@@ -1,5 +1,6 @@
 import * as T from './vendor/three.module.js';
-import{MAP_HALF}from'./map-layout.js?v=87';
+import{MAP_HALF}from'./map-layout.js?v=88';
+import{bridgeContains}from'./coast.js?v=88';
 // Shared geometry and instanced details: decoration stays low, leaving combat and collision legible.
 const geometries={stone:new T.DodecahedronGeometry(1,1),snow:new T.SphereGeometry(1,12,6),chip:new T.DodecahedronGeometry(1,0),wood:new T.CylinderGeometry(.10,.15,1,7),leaf:null,ice:new T.ConeGeometry(1,1,5),frond:null},materials=new Map();
 function leafGeometry(){const pos=[],idx=[];for(let i=0;i<=5;i++){const t=i/5,w=Math.sin(Math.PI*t)*.14;pos.push(-w,t*.48,t*t*.7,w,t*.48,t*t*.7);if(i<5){const a=i*2;idx.push(a,a+1,a+2,a+1,a+3,a+2);}}const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute(pos,3));g.setIndex(idx);g.computeVertexNormals();return g;}geometries.leaf=leafGeometry();
@@ -28,10 +29,10 @@ function material(kind){if(!materials.has(kind)){
  materials.set(kind,m);
 }return materials.get(kind);}
 export function animateScenery(w,t,x,z){for(const m of w.scenery?.batches||[]){const p=m.material.userData.motion;if(!p)continue;p.clock.value=t;p.gust.value=1+(!w.regions||w.activeBiome==='sand'?(w.sandstorm?.strength||0)*1.8:0)+((!w.regions||w.activeBiome==='coast')&&w.tide?.high?.3:0);p.focus.value.set(x,z);}}
-export function groveCenters(spawn,rnd){return Array.from({length:22},(_,i)=>i<4?{x:spawn.x+Math.sin(i*1.9+.4)*16,z:spawn.z+Math.cos(i*1.9+.4)*16}:{x:(rnd()-.5)*144,z:(rnd()-.5)*144});}
-export function sceneryAllowed(w,x,z){return (!w.contains||w.contains(x,z))&&Math.abs(x)<(w.half||MAP_HALF)-2&&Math.abs(z)<(w.half||MAP_HALF)-2&&Math.hypot(x-w.spawn.x,z-w.spawn.z)>3.5&&!w.sites.some(s=>Math.hypot(x-s.x,z-s.z)<4.8)&&!w.bridges?.some(b=>Math.abs(x-b.x)<b.width/2+.6&&Math.abs(z-b.z)<b.length/2+.8)&&!w.patches.some(p=>p.kind==='vent'&&Math.hypot(x-p.x,z-p.z)<p.r+1)&&!w.ponds.some(p=>{const a=p.angle||0,dx=x-p.x,dz=z-p.z;return Math.hypot((Math.cos(a)*dx-Math.sin(a)*dz)/p.rx,(Math.sin(a)*dx+Math.cos(a)*dz)/p.rz)<1.11;});}
+export function groveCenters(spawn,rnd,half=MAP_HALF){return Array.from({length:22},(_,i)=>i<4?{x:spawn.x+Math.sin(i*1.9+.4)*16,z:spawn.z+Math.cos(i*1.9+.4)*16}:{x:(rnd()-.5)*(half-10)*2,z:(rnd()-.5)*(half-10)*2});}
+export function sceneryAllowed(w,x,z){return (!w.contains||w.contains(x,z))&&Math.abs(x)<(w.half||MAP_HALF)-2&&Math.abs(z)<(w.half||MAP_HALF)-2&&Math.hypot(x-w.spawn.x,z-w.spawn.z)>3.5&&!w.sites.some(s=>Math.hypot(x-s.x,z-s.z)<4.8)&&!w.bridges?.some(b=>bridgeContains(b,x,z,.9))&&!w.patches.some(p=>p.kind==='vent'&&Math.hypot(x-p.x,z-p.z)<p.r+1)&&!w.ponds.some(p=>{const a=p.angle||0,dx=x-p.x,dz=z-p.z,rx=p.baseRx===undefined?p.rx*1.11:p.baseRx*1.19+.85,rz=p.baseRz===undefined?p.rz*1.11:p.baseRz*1.19+.85;return Math.hypot((Math.cos(a)*dx-Math.sin(a)*dz)/rx,(Math.sin(a)*dx+Math.cos(a)*dz)/rz)<1;});}
 function groundColors(w,id){
- const ground=w.ground,g=new T.PlaneGeometry((MAP_HALF+8)*2,(MAP_HALF+8)*2,72,72),p=g.attributes.position,colors=[];
+ const ground=w.ground,half=w.half||MAP_HALF,g=new T.PlaneGeometry((half+8)*2,(half+8)*2,72,72),p=g.attributes.position,colors=[];
  for(let i=0;i<p.count;i++){const x=p.getX(i),z=-p.getY(i),n=Math.sin(x*.087+Math.sin(z*.05)*2)*Math.cos(z*.065-x*.025),fine=Math.sin(x*.31+z*.13)*.025;let r=1+n*.08+fine,b=r,c=r;
   if(id==='forest'){let under=0;for(const g of w.groves)under=Math.max(under,Math.max(0,1-Math.hypot(x-g.x,z-g.z)/9));r*=1-under*.13;c*=1-under*.08;b*=1-under*.17;const moss=(1+n)*.5;r*=.83+moss*.12;c*=.91+moss*.08;b*=.81+moss*.13;}
   if(id==='snow'){r*=.93+n*.035;c*=.98;b*=1.04;}
@@ -43,13 +44,13 @@ function groundColors(w,id){
 }
 export function installScenery(w,id,rnd){
  if(!w.regional)groundColors(w,id);const batches=new Map(),dummy=new T.Object3D(),records=[];
- const add=(kind,color,x,y,z,sx,sy,sz,angle=0,tilt=0)=>{dummy.position.set(x,y,z);dummy.scale.set(sx,sy,sz);dummy.rotation.set(0,angle,0);dummy.rotateX(tilt);dummy.updateMatrix();const key=w.regional?kind+':'+Math.floor(x/32)+','+Math.floor(z/32):kind;if(!batches.has(key))batches.set(key,[]);batches.get(key).push({matrix:dummy.matrix.clone(),color:new T.Color(color)});};
+ const add=(kind,color,x,y,z,sx,sy,sz,angle=0,tilt=0)=>{if(!sceneryAllowed(w,x,z))return;dummy.position.set(x,y,z);dummy.scale.set(sx,sy,sz);dummy.rotation.set(0,angle,0);dummy.rotateX(tilt);dummy.updateMatrix();const key=w.regional?kind+':'+Math.floor(x/32)+','+Math.floor(z/32):kind;if(!batches.has(key))batches.set(key,[]);batches.get(key).push({matrix:dummy.matrix.clone(),color:new T.Color(color)});};
  const palette={forest:[0x48754a,0x6b914f,0x315c3d],snow:[0xd8e6e5,0xa6c3cb,0x7d9ea9],ash:[0x3e393a,0x584948,0x71584a],sand:[0x9b895d,0xb6a275,0x857654],coast:[0x647e64,0x8eab7e,0x49685c]}[id];
  // Most plants grow around existing trees/rocks or along the banks; open areas stay sparse.
  for(let i=0;i<235;i++){
   const o=w.obstacles.length?w.obstacles[Math.floor(rnd()*w.obstacles.length)]:w.spawn,a=rnd()*Math.PI*2,r=1.1+rnd()*3;let x=o.x+Math.sin(a)*r,z=o.z+Math.cos(a)*r;
-  if(id==='coast'&&i%2===0&&w.ponds.length){const p=w.ponds[Math.floor(rnd()*w.ponds.length)],angle=rnd()*Math.PI*2;x=p.x+Math.sin(angle)*p.rx*1.2;z=p.z+Math.cos(angle)*p.rz*1.2;}
-  if(i%5===0){x=w.regional?w.spawn.x+(rnd()-.5)*110:(rnd()-.5)*156;z=w.regional?w.spawn.z+(rnd()-.5)*110:(rnd()-.5)*156;}if(!sceneryAllowed(w,x,z))continue;
+  if(id==='coast'&&i%2===0&&w.ponds.length){const p=w.ponds[Math.floor(rnd()*w.ponds.length)],t=rnd()*Math.PI*2,pa=p.angle||0,dx=Math.sin(t)*((p.baseRx||p.rx)*1.19+1.8),dz=Math.cos(t)*((p.baseRz||p.rz)*1.19+1.8);x=p.x+Math.cos(pa)*dx+Math.sin(pa)*dz;z=p.z-Math.sin(pa)*dx+Math.cos(pa)*dz;}
+  if(i%5===0){const span=((w.half||MAP_HALF)-4)*2;x=w.regional?w.spawn.x+(rnd()-.5)*110:(rnd()-.5)*span;z=w.regional?w.spawn.z+(rnd()-.5)*110:(rnd()-.5)*span;}if(!sceneryAllowed(w,x,z))continue;
   const scale=.7+rnd()*.7;records.push({x,z,kind:id});
   if(id==='forest'||id==='coast'||id==='sand'){
    for(let j=0;j<(id==='sand'?4:7);j++){const turn=a+j*2.4,h=scale*(.65+rnd()*.55),color=palette[j%3];add(id==='forest'?'frond':'leaf',color,x+(rnd()-.5)*.3,.015,z+(rnd()-.5)*.3,id==='sand'?.22:h,id==='coast'?h*1.3:h,id==='sand'?h*.75:h,turn);}

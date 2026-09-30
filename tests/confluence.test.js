@@ -1,3 +1,4 @@
+import{MAP_HALF}from'../map-layout.js';
 import{test}from'node:test';import assert from'node:assert/strict';
 import{buildWorld,clearAt,moveActor}from'../world.js';
 import{REGIONS,biomeAt,biomeWeights,biomeColor,roadDistance}from'../confluence.js';
@@ -16,8 +17,8 @@ test('ten seeds retain regional landmarks, local finds, clear loop and reachable
   assert.equal(w.regions.find(r=>r.id==='snow').ice.length,3);assert(w.patches.some(p=>p.kind==='vent'));assert(w.breakables.some(p=>p.tactic==='timber'));assert(w.breakables.some(p=>p.tactic==='wall'));assert(w.bridges.length&&w.fords.length);
  }
 });
-test('extended bounds work beyond old map edges, while original maps retain old bounds',()=>{
- const w=buildWorld('confluence',4);w.obstacles=[];const p={x:100,z:100};moveActor(w,p,5,0);assert.equal(p.x,105);moveActor(w,p,50,0);assert.equal(p.x,105);assert(!clearAt(w,141,0));assert(!clearAt({obstacles:[]},90,0));
+test('extended bounds work beyond old map edges, while independent maps use their own enlarged bounds',()=>{
+ const w=buildWorld('confluence',4);w.obstacles=[];const p={x:100,z:100};moveActor(w,p,5,0);assert.equal(p.x,105);moveActor(w,p,50,0);assert.equal(p.x,105);assert(!clearAt(w,141,0));assert(clearAt({obstacles:[]},90,0));assert(!clearAt({obstacles:[]},MAP_HALF+1,0));
 });
 test('coastal tides and desert weather do not slow unrelated regions',()=>{
  const w=buildWorld('confluence',2),forest=w.ponds.find(p=>p.biome==='forest'),coast=w.ponds.find(p=>p.biome==='coast');

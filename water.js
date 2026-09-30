@@ -1,8 +1,9 @@
-import{onIce,onFord}from'./map-tactics.js?v=87';
-import{onBridge}from'./coast.js?v=87';
-import{MAP_SCALE}from'./map-layout.js?v=87';
-import{swimStroke,swimLimb,HERO_SWIM,heroSwimPose,swimTravel}from'./swim-motion.js?v=87';
-import{newHeroAttack}from'./new-hero-motion.js?v=87';
+import{onIce,onFord}from'./map-tactics.js?v=88';
+import{onBridge}from'./coast.js?v=88';
+import{MAP_SCALE}from'./map-layout.js?v=88';
+import{coastLayout}from'./coast-layout.js?v=88';
+import{swimStroke,swimLimb,HERO_SWIM,heroSwimPose,swimTravel}from'./swim-motion.js?v=88';
+import{newHeroAttack}from'./new-hero-motion.js?v=88';
 import * as T from './vendor/three.module.js';
 const clamp=T.MathUtils.clamp;
 const shore=a=>1+.07*Math.sin(a*3)+.045*Math.cos(a*5);
@@ -21,6 +22,20 @@ export function terrainAt(world,x,z,kind='hero'){
  const slow=world.patches.find(p=>p.kind==='slow'&&Math.hypot(p.x-x,p.z-z)<p.r);return{kind:slow?'slow':'land',depth:0,floating,speed:slow?(kind==='hero'?.72:.75)*(world.sandstorm?.active&&(!slow.biome||slow.biome==='sand')?.72:1):1};
 }
 let surfaceGeometry;const reedGeometry=new T.ConeGeometry(1,1,3),stoneGeometry=new T.DodecahedronGeometry(1,0),surfaces=new Map();
+// Adjacent reaches shade as one body of water; their internal shores must not
+// fade independently into bright crossing bands.
+// ponytail: eight reaches cover this harbor; expand the uniform arrays and loop together if more are added.
+const coastUnionShader=`uniform vec4 coastPonds[8];uniform vec2 coastTurns[8];uniform int coastCount;
+float coastRadial(vec2 point,float scale,float nearest){
+ for(int i=0;i<8;i++){
+  if(i>=coastCount)break;
+  vec2 d=point-coastPonds[i].xy,t=coastTurns[i];
+  vec2 uv=vec2(t.x*d.x-t.y*d.y,t.y*d.x+t.x*d.y)/(coastPonds[i].zw*scale);
+  float radius=length(uv);if(radius>nearest*1.115)continue;
+  float a=atan(uv.y,uv.x);nearest=min(nearest,radius/(1.0+.07*sin(a*3.0)+.045*cos(a*5.0)));
+ }
+ return nearest;
+}`;
 function waterSurface(id){
  if(!surfaceGeometry){
   const points=[],colors=[],indices=[],n=48,rings=[0,.52,.82,1];
@@ -29,40 +44,50 @@ function waterSurface(id){
   surfaceGeometry=new T.BufferGeometry();surfaceGeometry.setAttribute('position',new T.Float32BufferAttribute(points,3));surfaceGeometry.setAttribute('color',new T.Float32BufferAttribute(colors,3));surfaceGeometry.setIndex(indices);surfaceGeometry.computeVertexNormals();
  }
  if(!surfaces.has(id)){
-  const clock={value:0},material=new T.MeshStandardMaterial({color:id==='snow'?0x71bdcf:0x398f91,vertexColors:true,roughness:.85,metalness:0,side:T.DoubleSide,transparent:true,depthWrite:false});
-  material.onBeforeCompile=shader=>{shader.uniforms.waterTime=clock;shader.vertexShader='varying vec3 waterWorld; varying vec2 waterLocal;\n'+shader.vertexShader;shader.vertexShader=shader.vertexShader.replace('#include <begin_vertex>','#include <begin_vertex>\nwaterWorld=(modelMatrix*vec4(position,1.0)).xyz;waterLocal=position.xz;');shader.fragmentShader='uniform float waterTime; varying vec3 waterWorld; varying vec2 waterLocal;\n'+shader.fragmentShader;shader.fragmentShader=shader.fragmentShader.replace('#include <color_fragment>',`#include <color_fragment>
+  const clock={value:0},coast=id==='coast'?{coastPonds:{value:Array.from({length:8},()=>new T.Vector4())},coastTurns:{value:Array.from({length:8},()=>new T.Vector2())},coastCount:{value:0}}:null,material=new T.MeshStandardMaterial({color:id==='snow'?0x71bdcf:0x398f91,vertexColors:true,roughness:.85,metalness:0,side:T.DoubleSide,transparent:true,depthWrite:false});
+  material.onBeforeCompile=shader=>{shader.uniforms.waterTime=clock;if(coast)Object.assign(shader.uniforms,coast);shader.vertexShader='varying vec3 waterWorld; varying vec2 waterLocal;\n'+shader.vertexShader;shader.vertexShader=shader.vertexShader.replace('#include <begin_vertex>','#include <begin_vertex>\nwaterWorld=(modelMatrix*vec4(position,1.0)).xyz;waterLocal=position.xz;');shader.fragmentShader=(coast?coastUnionShader:'')+'\nuniform float waterTime; varying vec3 waterWorld; varying vec2 waterLocal;\n'+shader.fragmentShader;shader.fragmentShader=shader.fragmentShader.replace('#include <color_fragment>',`#include <color_fragment>
     float angle=atan(waterLocal.y,waterLocal.x);
     float radial=length(waterLocal)/(1.0+.07*sin(angle*3.0)+.045*cos(angle*5.0));
+    ${coast?'float ownRadial=radial;radial=coastRadial(waterWorld.xz,1.0,radial);if(ownRadial>radial+.0001)discard;':''}
     float edge=smoothstep(.48,.98,radial);
     float wave=sin(waterWorld.x*1.4+waterWorld.z*4.8+sin(waterWorld.x*1.9-waterTime*.6)*.8-waterTime*.8);
     float light=pow(max(0.0,wave),22.0)*.012*smoothstep(.15,.85,sin(waterWorld.x*.8+waterWorld.z*.3+waterTime*.2))*(1.0-edge*.8);
     diffuseColor.rgb=mix(vec3(${id==='coast'?'.014,.048,.058':id==='snow'?'.010,.035,.055':'.006,.030,.033'}),vec3(${id==='coast'?'.042,.092,.100':id==='snow'?'.065,.105,.115':'.022,.060,.039'}),${id==='coast'?'edge*.22':'edge'})+vec3(.45,.7,.64)*light;
     diffuseColor.a*=1.0-smoothstep(.84,1.0,radial);
 `);};
-  material.customProgramCacheKey=()=> 'pond-'+id;
+  material.customProgramCacheKey=()=> 'pond-'+id+(coast?'-union':'');
   const bank=new T.MeshBasicMaterial({color:id==='snow'?0x677d80:0x263c2f,transparent:true,opacity:id==='coast'?.22:.4,depthWrite:false});
-  bank.onBeforeCompile=shader=>{shader.vertexShader='varying vec2 bankLocal;\n'+shader.vertexShader;shader.vertexShader=shader.vertexShader.replace('#include <begin_vertex>','#include <begin_vertex>\nbankLocal=position.xz;');shader.fragmentShader='varying vec2 bankLocal;\n'+shader.fragmentShader;shader.fragmentShader=shader.fragmentShader.replace('#include <color_fragment>',`#include <color_fragment>
-   float a=atan(bankLocal.y,bankLocal.x);float r=length(bankLocal)/(1.0+.07*sin(a*3.0)+.045*cos(a*5.0));diffuseColor.a*=1.0-smoothstep(.78,1.0,r);`);};
+  bank.onBeforeCompile=shader=>{if(coast)Object.assign(shader.uniforms,coast);shader.vertexShader='varying vec2 bankLocal;varying vec2 bankWorld;\n'+shader.vertexShader;shader.vertexShader=shader.vertexShader.replace('#include <begin_vertex>','#include <begin_vertex>\nbankLocal=position.xz;bankWorld=(modelMatrix*vec4(position,1.0)).xz;');shader.fragmentShader=(coast?coastUnionShader:'')+'\nvarying vec2 bankLocal;varying vec2 bankWorld;\n'+shader.fragmentShader;shader.fragmentShader=shader.fragmentShader.replace('#include <color_fragment>',`#include <color_fragment>
+   float a=atan(bankLocal.y,bankLocal.x);float r=length(bankLocal)/(1.0+.07*sin(a*3.0)+.045*cos(a*5.0));${coast?'float ownRadial=r;r=coastRadial(bankWorld,1.12,r);if(ownRadial>r+.0001)discard;':''}diffuseColor.a*=1.0-smoothstep(.78,1.0,r);`);};
+  bank.customProgramCacheKey=()=> 'pond-bank-'+id+(coast?'-union':'');
   const reeds=new T.MeshStandardMaterial({color:id==='snow'?0x849d97:0x637950,roughness:1}),stones=new T.MeshStandardMaterial({color:id==='snow'?0x9aaeb0:0x6c7a68,roughness:1});
-  surfaces.set(id,{material,bank,reeds,stones,clock});
+  surfaces.set(id,{material,bank,reeds,stones,clock,coast});
  }
  return surfaces.get(id);
 }
 export function buildPonds(group,id,rnd,spawn,sites,locations=null){
+ if(id==='coast'&&!locations)locations=coastLayout(rnd).ponds;
  if(id==='ash'||locations?.length===0)return[];const ponds=[],surface=waterSurface(id);
  for(let i=0;i<(locations?.length||180)&&ponds.length<(locations?.length||6);i++){
   const a=rnd()*Math.PI*2,d=18+rnd()*8,rx=locations?.[i]?.rx??((id==='coast'?9:4.7)+rnd()*2.2),rz=locations?.[i]?.rz??((id==='coast'?16:3.7)+rnd()*1.6);
   let x=ponds.length? (rnd()-.5)*96*MAP_SCALE:spawn.x+Math.sin(a)*d,z=ponds.length?(rnd()-.5)*96*MAP_SCALE:spawn.z+Math.cos(a)*d,r=Math.max(rx,rz)*1.12;
   if(locations){x=locations[i].x;z=locations[i].z;}
-  else if(id==='coast'){x=4+Math.sin(ponds.length*.7)*1.5;z=-62+ponds.length*24;}
   if(!locations&&id!=='coast'&&(Math.hypot(x-spawn.x,z-spawn.z)<r+6||Math.hypot(x,z)<r+9||sites.some(s=>Math.hypot(x-s.x,z-s.z)<r+8)||ponds.some(p=>Math.hypot(x-p.x,z-p.z)<r+p.r+4)))continue;
   const p={kind:'water',x,z,rx,rz,r,biome:id,angle:locations?.[i]?.angle??(id==='coast'?0:rnd()*Math.PI*2)},bank=new T.Mesh(surfaceGeometry,surface.bank);bank.position.set(x,.045,z);bank.rotation.y=p.angle;bank.scale.set(rx*1.12,1,rz*1.12);bank.receiveShadow=true;group.add(bank);const m=new T.Mesh(surfaceGeometry,surface.material);m.position.set(x,.075,z);m.rotation.y=p.angle;m.scale.set(rx,1,rz);m.receiveShadow=true;group.add(m);p.mesh=m;p.bank=bank;ponds.push(p);
  }
+ if(surface.coast){
+  // Bind on render, not generation: lobby previews and the active map share
+  // these materials but have different coastlines and tidal radii.
+  const bind=()=>{surface.coast.coastCount.value=Math.min(8,ponds.length);for(let i=0;i<Math.min(8,ponds.length);i++){const p=ponds[i];surface.coast.coastPonds.value[i].set(p.x,p.z,p.rx,p.rz);surface.coast.coastTurns.value[i].set(Math.cos(p.angle),Math.sin(p.angle));}};
+  for(const p of ponds){p.mesh.onBeforeRender=p.bank.onBeforeRender=bind;p.bank.renderOrder=-2;p.mesh.renderOrder=-1;}
+ }
  const reeds=new T.InstancedMesh(reedGeometry,surface.reeds,ponds.length*24),stones=new T.InstancedMesh(stoneGeometry,surface.stones,ponds.length*6),dummy=new T.Object3D();let ri=0,si=0;
  for(const pond of ponds){const c=Math.cos(pond.angle),s=Math.sin(pond.angle),at=(a,r)=>{const k=shore(a)*r,lx=Math.cos(a)*pond.rx*k,lz=Math.sin(a)*pond.rz*k;return{x:pond.x+c*lx+s*lz,z:pond.z-s*lx+c*lz};};
-  for(let i=0;i<8;i++){const a=rnd()*Math.PI*2,point=at(a,1.015+rnd()*.05);for(let j=0;j<3;j++){const h=.3+rnd()*.6;dummy.position.set(point.x+(rnd()-.5)*.3,h*.5,point.z+(rnd()-.5)*.3);dummy.rotation.set((rnd()-.5)*.4,rnd()*6,(rnd()-.5)*.4);dummy.scale.set(.035+rnd()*.025,h,.035);dummy.updateMatrix();reeds.setMatrixAt(ri++,dummy.matrix);}}
-  for(let i=0;i<6;i++){const point=at(rnd()*Math.PI*2,1.06),r=.16+rnd()*.3;dummy.position.set(point.x,r*.25,point.z);dummy.rotation.set(rnd()*.3,rnd()*6,rnd()*.3);dummy.scale.set(r,.15+rnd()*.12,r*.8);dummy.updateMatrix();stones.setMatrixAt(si++,dummy.matrix);}
+  const submerged=point=>id==='coast'&&ponds.some(p=>p!==pond&&waterDepth(p,point.x,point.z)>.03);
+  for(let i=0;i<8;i++){const a=rnd()*Math.PI*2,point=at(a,1.015+rnd()*.05);if(submerged(point))continue;for(let j=0;j<3;j++){const h=.3+rnd()*.6;dummy.position.set(point.x+(rnd()-.5)*.3,h*.5,point.z+(rnd()-.5)*.3);dummy.rotation.set((rnd()-.5)*.4,rnd()*6,(rnd()-.5)*.4);dummy.scale.set(.035+rnd()*.025,h,.035);dummy.updateMatrix();reeds.setMatrixAt(ri++,dummy.matrix);}}
+  for(let i=0;i<6;i++){const point=at(rnd()*Math.PI*2,1.06),r=.16+rnd()*.3;if(submerged(point))continue;dummy.position.set(point.x,r*.25,point.z);dummy.rotation.set(rnd()*.3,rnd()*6,rnd()*.3);dummy.scale.set(r,.15+rnd()*.12,r*.8);dummy.updateMatrix();stones.setMatrixAt(si++,dummy.matrix);}
  }
+ reeds.count=ri;stones.count=si;
  reeds.instanceMatrix.needsUpdate=true;stones.instanceMatrix.needsUpdate=true;reeds.receiveShadow=stones.receiveShadow=true;group.add(reeds,stones);
  return ponds;
 }

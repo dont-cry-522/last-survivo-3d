@@ -1,4 +1,5 @@
 import * as T from './vendor/three.module.js';
+import{MAP_HALF}from'./map-layout.js?v=88';
 export const TERRAIN_TIPS={
  forest:'浅色裂口的枯木可以打倒。倒木短暂挡路约 8 秒，追来的怪物也会破坏它；从两端绕行，不能永久堵怪。',
  snow:'浅蓝裂纹冰面会保留一点滑行惯性，人和地面怪物都会滑。提前转向、借冰面拉开距离；离开冰面立即恢复普通移动。',
@@ -23,19 +24,22 @@ export function installTactics(w,id,rnd){
  }
  if(id==='snow')for(let i=0;i<3;i++)for(let attempt=0;attempt<450;attempt++){
   const angle=rnd()*Math.PI*2,d=18+i*15+rnd()*8,r=2.7+rnd()*.8,x=w.spawn.x+Math.sin(angle)*d,z=w.spawn.z+Math.cos(angle)*d;
-  if((w.contains&&!w.contains(x,z))||Math.abs(x)>(w.half||82)-6||Math.abs(z)>(w.half||82)-6||w.obstacles.some(o=>Math.hypot(o.x-x,o.z-z)<r+o.r+.6)||w.sites.some(s=>Math.hypot(s.x-x,s.z-z)<r+6)||w.ponds.some(p=>Math.hypot(p.x-x,p.z-z)<p.r+r+1)||[...w.discoveries,...w.ice].some(p=>Math.hypot(p.x-x,p.z-z)<r+4))continue;
+  if((w.contains&&!w.contains(x,z))||Math.abs(x)>(w.half||MAP_HALF)-6||Math.abs(z)>(w.half||MAP_HALF)-6||w.obstacles.some(o=>Math.hypot(o.x-x,o.z-z)<r+o.r+.6)||w.sites.some(s=>Math.hypot(s.x-x,s.z-z)<r+6)||w.ponds.some(p=>Math.hypot(p.x-x,p.z-z)<p.r+r+1)||[...w.discoveries,...w.ice].some(p=>Math.hypot(p.x-x,p.z-z)<r+4))continue;
   const p={x,z,r,kind:'ice',rx:r,rz:r*.76};w.patches.push(p);
   const g=new T.Group();g.position.set(p.x,.07,p.z);g.scale.set(p.r,1,p.r*.76);w.group.add(g);const surface=terrainMesh(g,'CircleGeometry',[1,15],0x8ab5c1);surface.rotation.x=-Math.PI/2;surface.castShadow=false;surface.material.transparent=true;surface.material.opacity=.68;surface.material.depthWrite=false;surface.material.roughness=.35;if(!surface.geometry.userData.irregular){const a=surface.geometry.attributes.position;for(let i=1;i<a.count;i++){const t=Math.atan2(a.getY(i),a.getX(i)),k=1+.1*Math.sin(t*3)+.06*Math.cos(t*5);a.setXY(i,a.getX(i)*k,a.getY(i)*k);}a.needsUpdate=true;surface.geometry.userData.irregular=true;}
   for(let i=0;i<5;i++){const crack=terrainMesh(g,'BoxGeometry',[.02,.009,.42],0xc0d9da,Math.sin(i*2.4)*.48,.012,Math.cos(i*2.4)*.48);crack.rotation.y=i*.9;crack.castShadow=false;}
   w.ice.push(p);break;
  }
- if(id==='coast')for(const p of w.ponds){
-  const f={x:p.x,z:p.z+6,half:p.rx*1.3,width:1.4,mesh:new T.Group()};w.group.add(f.mesh);w.fords.push(f);
-  for(let x=-f.half;x<=f.half;x+=1.2){const rock=terrainMesh(f.mesh,'DodecahedronGeometry',[1,0],0x6f8884,f.x+x,.1,f.z+Math.sin(x*.4)*.3+(rnd()-.5)*.18);rock.scale.set(.42+rnd()*.22,.12+rnd()*.06,.34+rnd()*.22);rock.rotation.y=rnd()*6;rock.castShadow=false;}
+ if(id==='coast'){
+  const crossings=w.coastLayout?.fords||w.ponds.slice(0,3).map(p=>{const turn=(p.angle||0)+(p.rx>p.rz?Math.PI/2:0),offset=Math.min(6,Math.max(p.rx,p.rz)*.4);return{x:p.x+Math.sin(turn)*offset,z:p.z+Math.cos(turn)*offset,half:Math.min(p.rx,p.rz)*1.3,width:1.5,angle:turn};});
+  for(const crossing of crossings){
+   const f={...crossing,mesh:new T.Group()};f.mesh.position.set(f.x,0,f.z);f.mesh.rotation.y=f.angle||0;w.group.add(f.mesh);w.fords.push(f);
+   for(let x=-f.half;x<=f.half;x+=1.2){const rock=terrainMesh(f.mesh,'DodecahedronGeometry',[1,0],0x6f8884,x,.1,Math.sin(x*.4)*.25+(rnd()-.5)*.16);rock.scale.set(.42+rnd()*.22,.12+rnd()*.06,.34+rnd()*.22);rock.rotation.y=rnd()*6;rock.castShadow=false;}
+  }
  }
 }
 export const onIce=(w,x,z)=>!!w.ice?.some(p=>Math.hypot((x-p.x)/p.rx,(z-p.z)/p.rz)<1);
-export const onFord=(w,x,z)=>!w.tide?.high&&!!w.fords?.some(f=>Math.abs(x-f.x)<f.half&&Math.abs(z-f.z)<f.width/2);
+export const onFord=(w,x,z)=>!w.tide?.high&&!!w.fords?.some(f=>{const c=Math.cos(f.angle||0),s=Math.sin(f.angle||0),dx=x-f.x,dz=z-f.z;return Math.abs(c*dx-s*dz)<f.half&&Math.abs(s*dx+c*dz)<f.width/2;});
 // Integrate the exponential velocity exactly so stopping distance is independent of frame rate.
 export function iceMotion(p,vx,vz,dt,icy){
  if(!icy){p.iceVX=vx;p.iceVZ=vz;return{x:vx*dt,z:vz*dt};}
