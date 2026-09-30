@@ -15,10 +15,10 @@ const assert=require('node:assert/strict');
    });
    await p.goto(process.env.TEST_URL||'http://127.0.0.1:8897/',{waitUntil:'domcontentloaded',timeout:60000});
    await p.waitForFunction(()=>window.game3d&&!document.querySelector('#start').disabled,null,{timeout:90000});
-   assert.equal(await p.locator('[data-hero]').count(),5);
+   assert.equal(await p.locator('[data-hero]').count(),6);
    assert.equal(await p.locator('[data-hero=guardian]').count(),0);
    assert(!(await p.locator('#menu').innerText()).includes('磐山'));
-   assert((await p.locator('#journal-open').innerText()).includes('1/66'),'journal still counts retired weapons');
+   assert((await p.locator('#journal-open').innerText()).includes('1/72'),'journal still counts retired weapons');
    const history=await p.evaluate(()=>JSON.parse(localStorage.getItem('forest-echoes-expedition-v1')));
    assert.deepEqual(history.wins,['forest:hammer','forest:rifle'],'existing journal was erased');
    const fallback=await p.evaluate(()=>{game3d.select('guardian','removed-map',999);return{hero:game3d.player.heroId,weapon:game3d.player.weaponId};});
@@ -31,7 +31,7 @@ const assert=require('node:assert/strict');
     });
     return{buttons,columns,gap,x:rect.x,width:rect.width,children:root.children.length,overflow:root.scrollWidth>root.clientWidth+1};
    });
-   assert.equal(layout.children,5,'hero list retains a hidden or empty slot');
+   assert.equal(layout.children,6,'hero list retains a hidden or empty slot');
    assert(!layout.overflow,'hero list overflows horizontally');
    for(let i=0;i<layout.buttons.length;i++){
     const b=layout.buttons[i],column=i%layout.columns;
@@ -45,8 +45,8 @@ const assert=require('node:assert/strict');
     const {EXTRA_SKILLS}=await import('./skill-catalog.js'+version);
     return{loadouts:HERO_LOADOUTS,weapons:Object.keys(WEAPONS),routes:Object.keys(WEAPON_PATHS),maps:Object.keys(MAPS),skills:EXTRA_SKILLS.map(s=>({id:s.id,hero:s.hero}))};
    });
-   assert.deepEqual(Object.keys(catalog.loadouts).sort(),['lingya','scout','silver','tide','wraith']);
-   assert.equal(catalog.weapons.length,11);assert.equal(catalog.routes.length,22);
+   assert.deepEqual(Object.keys(catalog.loadouts).sort(),['lingya','scout','silver','tide','wraith','wuling']);
+   assert.equal(catalog.weapons.length,12);assert.equal(catalog.routes.length,24);
    assert(!catalog.weapons.includes('hammer')&&!catalog.routes.some(id=>id.startsWith('hammer_')));
    assert(!catalog.skills.some(s=>s.hero==='guardian'||['fault','reprisal','landing'].includes(s.id)));
    assert.deepEqual(catalog.maps.sort(),['ash','coast','confluence','forest','sand','snow']);
@@ -61,7 +61,7 @@ const assert=require('node:assert/strict');
      actualWeapons.push(selected.weapon);
     }
    }
-   assert.equal(new Set(actualWeapons).size,11,'remaining weapon buttons do not select all weapons');
+   assert.equal(new Set(actualWeapons).size,12,'remaining weapon buttons do not select all weapons');
    await p.locator('#travel-tab').click();assert.equal(await p.locator('[data-map]').count(),6);
    for(const map of['forest','sand']){await p.locator('[data-map='+map+']').click();assert(await p.locator('[data-map='+map+']').evaluate(el=>el.classList.contains('selected')));}
    await p.locator('#loadout-tab').click();await p.locator('[data-hero=tide]').click();
@@ -90,7 +90,7 @@ const assert=require('node:assert/strict');
     }
    });
    assert.deepEqual(errors,[]);
-   console.log('PASS '+width+'x'+height+': five hero buttons without gaps, eleven selectable weapons, 22 routes, retired skills absent, six maps, forest/sand bosses, pause; '+JSON.stringify(bosses));
+   console.log('PASS '+width+'x'+height+': six hero buttons without gaps, twelve selectable weapons, 24 routes, retired skills absent, six maps, forest/sand bosses, pause; '+JSON.stringify(bosses));
    await p.close();
   }
  }finally{await browser.close();}

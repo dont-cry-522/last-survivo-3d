@@ -1,4 +1,12 @@
+import{POISON}from'./poison-config.js?v=89';
+import{MIRAGE}from'./mirage-config.js?v=89';
 export const EXTRA_SKILLS=[
+ {id:'mirage_residue',hero:'mirage',name:'残蛊',icon:'♧',max:3,describe:r=>`毒团命中、扩散波及或接触己方蜃雾后，留下每秒 ${MIRAGE.residueDps[r]} 伤害、${MIRAGE.residueDuration[r]} 秒的残蛊。刷新不叠层；区域内只受最强蜃雾，区域外附毒、残蛊、诱葬只取最强一份，不触发技能或遗物连锁。`},
+ {id:'mirage_burial',hero:'mirage',name:'诱葬',icon:'❧',max:3,describe:r=>`仅替身自然结束的绽爆，为范围内存活敌人附上每秒 ${MIRAGE.burialDps[r]} 伤害、${MIRAGE.burialDuration} 秒的毒蚀并减速 ${MIRAGE.burialSlow[r]} 秒。替身被杀或被新替身替换时不触发；区域内不叠加，离区与其他附着毒取高。`},
+ {id:'mirage_mantle',hero:'mirage',name:'蜃衣',icon:'◇',max:3,describe:r=>`蜕影遁形结束并显形时，获得 ${MIRAGE.shield[r]} 点护盾，${MIRAGE.shieldDuration} 秒失效；独立间隔 ${MIRAGE.shieldCooldown} 秒。取高不相加，无回血或追加无敌；是否绽爆不影响显形护盾。`},
+ {id:'poison_linger',hero:'wuling',name:'余毒未尽',icon:'♧',max:3,describe:r=>`敌人离开己方区域毒后，余毒每秒造成 ${POISON.lingerDps[r]} 伤害，持续 ${POISON.lingerDuration[r]} 秒；重复施加不叠层。区域内优先取最强区域毒，离区后余毒与传染只结算较强的一份。`},
+ {id:'poison_spread',hero:'wuling',name:'败叶传染',icon:'❧',max:3,describe:r=>`主毒区（含同区毒核、毒幕）的持续毒伤击杀时，将传染施给 ${POISON.spreadRange} 米内最近一名敌人，每秒 ${POISON.spreadDps[r]} 伤害、持续 ${POISON.spreadDuration} 秒。每次死亡最多传播一次；传染、余毒、毒囊与毒带击杀均不再传播。`},
+ {id:'poison_guard',hero:'wuling',name:'苔衣护身',icon:'◇',max:3,describe:r=>`成功完成闪避搬运毒区后获得 ${POISON.shield[r]} 点护盾，持续 ${POISON.shieldDuration} 秒，触发间隔 ${POISON.shieldCooldown} 秒。护盾先承伤、取较高值而不相加；空闪避或站在毒区不会获得护盾。`},
  {id:'surge',hero:'tide',name:'破浪锋',icon:'≈',max:3,describe:r=>`回钩第三击向前推出三段浪锋，每段 ${10+7*r} 伤害并减速；最远 6 米，遇障碍停止。`},
  {id:'brine',hero:'tide',name:'盐蚀印记',icon:'✧',max:3,describe:r=>`同一目标 3 秒内连续被长叉命中三次，爆开盐晶，造成 ${16+10*r} 伤害；触发间隔 1 秒，首领也可生效。`},
  {id:'wake',hero:'tide',name:'潜潮余流',icon:'↝',max:3,describe:r=>`浮出后留下 3 秒水流，触碰的敌人受到 ${9+7*r} 伤害并减速；每只敌人只受伤一次，6 秒触发间隔。`},
@@ -17,8 +25,10 @@ export const EXTRA_SKILLS=[
 ];
 export const EXTRA_BY_ID=Object.fromEntries(EXTRA_SKILLS.map(s=>[s.id,s]));
 
-// Tide and Lingya add bounded interactions; the others explain existing tactical combinations.
+// Tide and Lingya add bounded interactions; the others explain tactical combinations.
 export const SKILL_PAIRS={
+ mirage:{name:'蜃影诱葬',ids:['mirage_residue','mirage_burial'],bonus:false,text:'让替身在追兵之间自然绽爆，借蜃雾控住原处，残蛊补足离区毒伤。区域毒与附着毒不叠加，替身被杀不会触发诱葬；战术搭配，无隐藏加成。',support:'幻瘴提高保住替身的收益；蚀影强化显形后的追击窗口；蜃衣仅在显形时短暂保护本体。'},
+ wuling:{name:'余毒接种',ids:['poison_linger','poison_spread'],bonus:false,text:'主毒区击杀将传染交给最近的追兵，离开毒区的敌人承受余毒。两种离区毒只取较强的一份，不叠加，也不额外触发连锁。战术配合，无隐藏加成。',support:'沉瘴适合守住落点；游瘴便于搬运毒区改变路线；苔衣护身保护成功搬运后的短暂调整。'},
  tide:{name:'盐潮共鸣',ids:['wake','brine'],bonus:true,text:'每片潜潮余流首次伤害一名敌人时，额外叠一层盐蚀；同一敌人不会被该片余流反复叠层。',support:'回潮牵引便于把怪物拉进余流；疾风节拍加快长叉叠层。'},
  lingya:{name:'藤缚合猎',ids:['briar','bond'],bonus:true,text:'藤绊命中会标记敌人 2 秒；伙伴扑中该目标可触发同猎追击，追加伤害再提高 25%。伙伴须存活。',support:'林间设伏增加控场机会；归镖抚慰照顾伙伴生命。'},
  scout:{name:'诱敌反击',ids:['mine','counter'],bonus:false,text:'在陷阱附近引怪，翻滚离开，再用强化反击把追兵挡在爆炸区域。战术配合，无额外数值加成。',support:'轻盈步伐缩短闪避冷却，霰弹枪适合近身反击。'},

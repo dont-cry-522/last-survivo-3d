@@ -1,26 +1,26 @@
-import{buildConfluence,biomeWeights}from'./confluence.js?v=88';
-import{installTactics}from'./map-tactics.js?v=88';
-import{installRoaming}from'./roaming-events.js?v=88';
-import{installDiscoveries}from'./map-discoveries.js?v=88';
-import{restoreEnemyHit,animateEnemyHit}from'./enemy-feedback.js?v=88';
-import{groveCenters,installScenery,animateScenery}from'./biome-scenery.js?v=88';
-import{districtLayout,buildDistricts}from'./map-districts.js?v=88';
-import{makeCoastEnemy,animateCoastEnemy,coastProp}from'./coast-models.js?v=88';
-import{installCoast}from'./coast.js?v=88';
-import{coastLayout as buildCoastLayout}from'./coast-layout.js?v=88';
-import{makeBoss,animateBoss,makeSandEnemy,animateSandEnemy}from'./expansion-models.js?v=88';
-import{siteSchedule}from'./site-discovery.js?v=88';
-import{MAP_EVENTS,biomeEvent,eventNodes}from'./map-events.js?v=88';
-import{MAP_HALF,MAP_SCALE}from'./map-layout.js?v=88';
-import{buildPonds,animateWater,waterDepth,restoreWaterPose,animateWaterPose}from'./water.js?v=88';
-import{ENEMY_MOTION,animateEnemyIdentity}from'./enemy-motion.js?v=88';
-import{REGIONAL_ENEMIES}from'./map-enemies.js?v=88';
-import{groundCue}from'./ground-cues.js?v=88';
-import{heroesReady,createSkinnedHero,animateSkinnedHero}from'./skinned-hero.js?v=88';
+import{buildConfluence,biomeWeights}from'./confluence.js?v=89';
+import{installTactics}from'./map-tactics.js?v=89';
+import{installRoaming}from'./roaming-events.js?v=89';
+import{installDiscoveries}from'./map-discoveries.js?v=89';
+import{restoreEnemyHit,animateEnemyHit}from'./enemy-feedback.js?v=89';
+import{groveCenters,installScenery,animateScenery}from'./biome-scenery.js?v=89';
+import{districtLayout,buildDistricts}from'./map-districts.js?v=89';
+import{makeCoastEnemy,animateCoastEnemy,coastProp}from'./coast-models.js?v=89';
+import{installCoast}from'./coast.js?v=89';
+import{coastLayout as buildCoastLayout}from'./coast-layout.js?v=89';
+import{makeBoss,animateBoss,makeSandEnemy,animateSandEnemy}from'./expansion-models.js?v=89';
+import{siteSchedule}from'./site-discovery.js?v=89';
+import{MAP_EVENTS,biomeEvent,eventNodes}from'./map-events.js?v=89';
+import{MAP_HALF,MAP_SCALE}from'./map-layout.js?v=89';
+import{buildPonds,animateWater,waterDepth,restoreWaterPose,animateWaterPose}from'./water.js?v=89';
+import{ENEMY_MOTION,animateEnemyIdentity}from'./enemy-motion.js?v=89';
+import{REGIONAL_ENEMIES}from'./map-enemies.js?v=89';
+import{groundCue}from'./ground-cues.js?v=89';
+import{heroesReady,createSkinnedHero,animateSkinnedHero}from'./skinned-hero.js?v=89';
 import * as T from './vendor/three.module.js';
-import{makeHero,animateHero}from'./hero-model.js?v=88';
-import{makeWraith,animateWraith}from'./wraith-model.js?v=88';
-import{MAPS,seeded}from'./rules.js?v=88';
+import{makeHero,animateHero}from'./hero-model.js?v=89';
+import{makeWraith,animateWraith}from'./wraith-model.js?v=89';
+import{MAPS,seeded}from'./rules.js?v=89';
 const geo=new Map(),materials=new Map(),terrainMaterials=new Map(),detailMaterials=new Map(),weatherMaterials=new Map();
 function geometry(kind,args){const key=kind+args.join(',');if(!geo.has(key))geo.set(key,new T[kind](...args));return geo.get(key);}
 export function mat(color,glow=false){const key=color+':'+glow;if(!materials.has(key))materials.set(key,new T.MeshStandardMaterial({color,roughness:glow?.35:.86,metalness:glow?.25:.08,emissive:glow?color:0,emissiveIntensity:glow?.9:0,flatShading:true}));return materials.get(key);}
@@ -36,7 +36,7 @@ export function actor(kind='silver',weapon='crossbow'){
  if(REGIONAL_ENEMIES[kind])return regionalActor(kind);
  const g=new T.Group(),rig=new T.Group();g.add(rig);g.userData.rig=rig;
  if(kind==='wraith')return makeWraith(weapon);
- if(['silver','scout','tide','lingya'].includes(kind))return heroesReady()?createSkinnedHero(kind,weapon):makeHero(kind,weapon);
+ if(['silver','scout','tide','lingya','wuling','mirage'].includes(kind))return heroesReady()?createSkinnedHero(kind,weapon):makeHero(kind,weapon);
  if(kind==='mushroom'){
   mesh('CylinderGeometry',[.23,.35,.72,7],0xb7a483,0,.45,0,rig);const capRig=new T.Group();capRig.position.y=1.05;rig.add(capRig);g.userData.cap=capRig;const cap=orb(capRig,0xb95e43,0,0,0,.66);cap.scale.y=.6;for(let i=0;i<5;i++)orb(capRig,0xf2dcad,Math.cos(i*2.4)*.37,.2,Math.sin(i*2.4)*.35,.09);for(const s of [-1,1])orb(rig,0xffdc88,s*.13,.7,.27,.04,true);
  }else if(kind==='wolf'){

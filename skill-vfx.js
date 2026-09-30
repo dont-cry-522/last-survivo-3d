@@ -1,7 +1,7 @@
-import{boneBoomerang}from'./beast-model.js?v=88';
+import{boneBoomerang}from'./beast-model.js?v=89';
 import * as T from './vendor/three.module.js';
-import{shadowCrescentGeometry}from'./shadow-weapons.js?v=88';
-import{spellShapes,streakTexture,crestTexture}from'./spell-shapes.js?v=88';
+import{shadowCrescentGeometry}from'./shadow-weapons.js?v=89';
+import{spellShapes,streakTexture,crestTexture}from'./spell-shapes.js?v=89';
 
 function flameTexture(){
  if(typeof document==='undefined')return null;
@@ -252,7 +252,9 @@ export class SkillVFX{
  }
  muzzle(w,x,z,angle){
   const dx=Math.sin(angle),dz=Math.cos(angle),px=x+dx*.65,pz=z+dz*.65,path=w.pathId,rank=w.pathRank||0;
-  if(w.id==='rifle'||w.id==='shotgun'){
+  if(w.id==='miasmalantern'){
+   const p=this.particle('sweep',0x9676b5,px,1.10,pz,{life:.25,size:[.31,.28,1],opacity:.43,additive:false,motion:'lash',roll:-1.2,velocity:[dx*.4,.05,dz*.4]});if(p)p.rotation.set(-.7,angle,.4);
+  }else if(w.id==='rifle'||w.id==='shotgun'){
    const scatter=w.id==='shotgun'&&w.count!==1,length=scatter?.22:path==='rifle_pierce'?.19+rank*.015:.16;
    const core=this.particle('crystal',0xffedbd,px+dx*.12,1.15,pz+dz*.12,{life:.065,size:[scatter?.075:.045,length,scatter?.075:.045],opacity:.95,additive:false,priority:1});if(core)core.quaternion.setFromUnitVectors(new T.Vector3(0,1,0),new T.Vector3(dx,0,dz));
    for(const side of [-1,1]){const a=angle+side*(scatter?.55:.35),spark=this.particle('crystal',0xeab36e,px,1.15,pz,{life:.10,size:[.017,scatter?.11:.075,.017],velocity:[Math.sin(a)*3,side*.35,Math.cos(a)*3],opacity:.8,additive:false});if(spark)spark.quaternion.setFromUnitVectors(new T.Vector3(0,1,0),new T.Vector3(Math.sin(a),0,Math.cos(a)));}
@@ -270,7 +272,7 @@ export class SkillVFX{
  }
  flight(b,dt){
   b.trail=(b.trail||0)-dt;
-  if(b.mesh.userData.aura){const aura=b.mesh.userData.aura,elapsed=b.elapsed||0,wave=1+Math.sin(elapsed*18)*.07;aura.scale.setScalar(wave);if(b.kind==='dark')aura.rotation.z=b.pathId==='dark_seek'?Math.sin(elapsed*8)*.14:elapsed*(b.pathId==='dark_gravity'?-5:2);}
+  if(b.mesh.userData.aura){const aura=b.mesh.userData.aura,elapsed=b.elapsed||0,wave=1+Math.sin(elapsed*(b.kind==='miasmalantern'?7:18))*(b.kind==='miasmalantern'?.04:.07);aura.scale.setScalar(wave);if(b.kind==='dark')aura.rotation.z=b.pathId==='dark_seek'?Math.sin(elapsed*8)*.14:elapsed*(b.pathId==='dark_gravity'?-5:2);if(b.kind==='miasmalantern')aura.rotation.z=Math.sin(elapsed*3)*.25;}
   if(b.trail>0)return;b.trail=['fire','dark'].includes(b.kind)?.075:.095;
   const len=Math.hypot(b.vx,b.vz)||1,dx=b.vx/len,dz=b.vz/len,y=b.height??1.15,path=b.pathId;
   if(['boomerang','shuriken','shadowblade'].includes(b.kind)){
@@ -283,6 +285,10 @@ export class SkillVFX{
    const curl=this.particle('sweep',path==='dark_seek'?0xab92cd:0x775a96,b.x-dx*.17,y,b.z-dz*.17,{life:.23,size:[.20,.16,1],motion:'lash',roll:path==='dark_gravity'?-5:-2,opacity:.45,additive:false,velocity:[-b.vx*.04,.06,-b.vz*.04]});if(curl)curl.rotation.set(-.9,Math.atan2(dx,dz),.5);
   }else if(b.kind==='shade'){
    this.segment(new T.Vector3(b.x-dx*.12,y,b.z-dz*.12),new T.Vector3(b.x-dx*.5,y,b.z-dz*.5),path==='shade_echo'?0x88bdc9:0x9781c1,.022,.14,false,0,.58);
+  }else if(b.kind==='miasmalantern'){
+   b.trail=.11;
+   this.particle('smoke',0x64447d,b.x-dx*.22,y-.035,b.z-dz*.22,{life:.30,size:[.16,.13,.20],velocity:[-dx*.75,.12,-dz*.75],grow:true,opacity:.23,additive:false});
+   const a=(b.elapsed||0)*6,p=this.particle('crystal',0xab8ec7,b.x-dx*.17+dz*Math.sin(a)*.10,y+.08*Math.cos(a),b.z-dz*.17-dx*Math.sin(a)*.10,{life:.30,size:[.025,.07,.010],velocity:[-dx*.55,.07,-dz*.55],spin:1.2,opacity:.45,additive:false});if(p)p.rotation.z=a;
   }else if(['rifle','shotgun','crossbow'].includes(b.kind)){
    if(b.kind==='shotgun'&&path!=='shotgun_slug')return;
    const crossbow=b.kind==='crossbow',pierce=path==='rifle_pierce'||path==='crossbow_pierce',length=pierce?.62:crossbow?.36:.43;
@@ -293,7 +299,16 @@ export class SkillVFX{
   const path=w.pathId,rank=w.pathRank||0;
   if(w.id==='boomerang'){const b=boneBoomerang();b.scale.setScalar(.72);return b;}
   const g=new T.Group(),part=(shape,color,scale,z=0)=>{if(!this.materials.has(color))this.materials.set(color,new T.MeshBasicMaterial({color,side:T.DoubleSide}));const m=new T.Mesh(this.geometry[shape],this.materials.get(color));m.scale.set(...scale);m.position.z=z;g.add(m);return m;};
-  if(w.id==='fire'){
+  if(w.id==='miasmalantern'){
+   // Soft, round poison body follows the 0.34 m collision silhouette; no needle shaft.
+   this.geometry.miasmaOrb||=new T.SphereGeometry(1,16,12);
+   const material=(key,color,opacity,map=null)=>{if(!this.materials.has(key))this.materials.set(key,new T.MeshBasicMaterial({color,transparent:true,opacity,depthWrite:false,side:T.DoubleSide,map}));return this.materials.get(key);};
+   const core=new T.Mesh(this.geometry.miasmaOrb,material('miasma-core',0x5a3676,.82));core.name='miasma-orb-core';core.scale.set(.29,.28,.34);g.add(core);
+   const aura=new T.Group();aura.name='miasma-orb-aura';g.add(aura);g.userData.aura=aura;
+   const heart=new T.Mesh(this.geometry.miasmaOrb,material('miasma-heart',0xc1a3db,.35));heart.scale.set(.16,.14,.18);heart.position.set(-.045,.055,.08);aura.add(heart);
+   for(const angle of[0,Math.PI/2]){const veil=new T.Mesh(this.geometry.veil,material('miasma-halo',0x9570b9,.32,this.shadowTexture));veil.scale.set(.37,.34,1);veil.rotation.y=angle;aura.add(veil);}
+   for(const side of[-1,1]){const wisp=new T.Mesh(this.geometry.miasmaOrb,material('miasma-wisp',0x40244f,.48));wisp.scale.set(.10,.14,.23);wisp.position.set(side*.15,-.04,-.15);wisp.rotation.z=side*.4;g.add(wisp);}
+  }else if(w.id==='fire'){
    const blast=path==='fire_blast',burn=path==='fire_burn';part('ember',blast?0xc95328:0xe87935,[.23,.22,.30]);part('crystal',blast?0xffe0a0:0xffcf76,[.11,.25,.11],.12).rotation.x=Math.PI/2;
    const aura=new T.Group();g.add(aura);g.userData.aura=aura;const key='fire-flight';if(!this.materials.has(key))this.materials.set(key,new T.MeshBasicMaterial({map:this.flameTexture,color:0xff8a34,transparent:true,opacity:.68,depthWrite:false,side:T.DoubleSide,blending:T.AdditiveBlending}));for(const angle of [0,Math.PI/2]){const flame=new T.Mesh(this.geometry.flame,this.materials.get(key));flame.scale.set(.24,burn?.55+rank*.025:.43,1);flame.position.z=burn?-.30:-.23;flame.rotation.set(Math.PI/2,angle,0);aura.add(flame);}
    if(blast)for(const side of [-1,1]){const seam=part('crystal',0xffc36e,[.025,.17,.025]);seam.position.x=side*.16;seam.rotation.x=Math.PI/2;}

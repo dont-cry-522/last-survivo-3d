@@ -1,4 +1,4 @@
-import{observePlayer}from'./target-awareness.js?v=88';
+import{observePlayer}from'./target-awareness.js?v=89';
 // A locked target and a readable anticipation precede every damaging attack.
 export const BOSS_STYLES={
  wreckwarden:{name:'沉舟寄居王',speed:1.8,wind:1.25,recovery:1.7,color:0x82d7da,moves:['claws','surge','anchors']},
@@ -27,7 +27,7 @@ export function bossAttackPlan(kind,move,b,target){
  return{angle:a,zones,duration:Math.max(...zones.map(z=>z.delay))-wind+.3};
 }
 export function tickBoss(b,p,dt,io){
- const style=BOSS_STYLES[b.kind],d=b.mesh.userData,focus=observePlayer(b,p,dt);
+ const style=BOSS_STYLES[b.kind],d=b.mesh.userData,focus=observePlayer(b,p,dt,io.decoy);
  if(b.reacquired)b.cool=Math.max(b.cool||0,.45);
  b.slow=Math.max(0,(b.slow||0)-dt);b.hurt=Math.max(0,(b.hurt||0)-dt);
  if(b.hp<b.maxHp*.5&&b.phase===1){b.phase=2;io.notice(style.name+'进入狂暴 · 留意扩大的攻击范围');}
@@ -40,8 +40,8 @@ export function tickBoss(b,p,dt,io){
   b.angle=b.targetLost&&distance<=3?b.searchHeading+Math.sin(b.searchTime*2)*.4:a;
   if(!b.targetLost&&b.cool<=0&&io.visible(b)){
    b.move=style.moves[(b.turn||0)%style.moves.length];b.turn=(b.turn||0)+1;
-   const distance=Math.hypot(p.x-b.x,p.z-b.z),limit=b.move==='tail'?4.2:12,k=Math.min(1,limit/Math.max(distance,.01));
-   b.target=io.landing({x:b.x+(p.x-b.x)*k,z:b.z+(p.z-b.z)*k},b);
+   const distance=Math.hypot(focus.x-b.x,focus.z-b.z),limit=b.move==='tail'?4.2:12,k=Math.min(1,limit/Math.max(distance,.01));
+   b.target=io.landing({x:b.x+(focus.x-b.x)*k,z:b.z+(focus.z-b.z)*k},b);
    const plan=bossAttackPlan(b.kind,b.move,b,b.target);b.angle=plan.angle;b.actionDuration=plan.duration;
    for(const z of plan.zones)io.zone(z,b.kind);
    b.stage='wind';b.elapsed=0;b.wind=style.wind;io.sound(b,'wind');

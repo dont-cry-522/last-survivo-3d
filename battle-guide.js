@@ -1,4 +1,4 @@
-import{REGIONAL_ENEMIES}from'./map-enemies.js?v=88';
+import{REGIONAL_ENEMIES}from'./map-enemies.js?v=89';
 export const ENEMY_GUIDE={
  mushroom:{image:"assets/bestiary/mushroom.png",traits:"红褐色斑点菌盖、小短腿；小跳挪动，菌盖随步伐摇摆。",name:'蹦跳蘑菇',attack:'蓄力后向锁定位置弹跳扑击',tip:'看到脚下的橙色爪痕就侧移，别沿直线后退。'},
  wolf:{image:"assets/bestiary/wolf.png",traits:"蓝灰色四足、尖耳长尾；交错快步绕侧，压低身体后扑咬。",name:'林地狼',attack:'绕侧接近，再向锁定方向猛扑',tip:'等它压低身体后闪到侧面。'},
@@ -9,6 +9,7 @@ export const ENEMY_GUIDE={
 };
 for(const [id,cfg]of Object.entries(REGIONAL_ENEMIES))ENEMY_GUIDE[id]={...cfg,image:'assets/bestiary/'+id+'.png'};
 export const CIRCLE_GUIDE=[
+ {color:'烟紫',name:'我方蜃影毒花',meaning:'雾苓·蜃影留下的人形替身会吸引攻击；撑到时间才绽放，留下伤害怪物的低矮毒雾，玩家可以穿行。被打碎的替身没有爆炸或毒雾。'},
  {color:'冰蓝',name:'寒霜落点',meaning:'雪地怪物的攻击。浅蓝预告后冰晶升起，范围内伤害并减速；沿空隙绕开。'},
  {color:'橙红',name:'怪物地火',meaning:'赤烬怪物的攻击。预告后爆燃并留下短暂余火，别站回落点。'},
  {color:'橙',name:'敌人蓄力',meaning:'短暂预警；蘑菇和狼用爪痕标出落点，石怪用柔和色块提示震地范围。'},

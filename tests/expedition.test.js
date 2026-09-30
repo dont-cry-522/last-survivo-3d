@@ -26,3 +26,9 @@ test('journal tolerates blocked/corrupt storage, filters untrusted entries, and 
  raw=JSON.stringify({relics:['wind','wind','bad','__proto__'],wins:['forest:crossbow','bad','forest:crossbow']});assert.deepEqual(readJournal(storage),j);
  assert.equal(writeJournal(undefined,j),false);assert.deepEqual(readJournal(undefined),{relics:[],wins:[]});
 });
+test('spore lantern victories persist on every map without discarding retired weapon records',()=>{
+ let raw=JSON.stringify({relics:['wind'],wins:['forest:hammer','snow:crossbow','coast:harpoon','confluence:boomerang']});
+ const storage={getItem:()=>raw,setItem:(_,v)=>raw=v},journal=readJournal(storage),old=[...journal.wins];
+ for(const map of['forest','snow','ash','sand','coast','confluence']){assert(recordVictory(journal,map,'sporelantern'));assert(!recordVictory(journal,map,'sporelantern'));}
+ assert(writeJournal(storage,journal));const restored=readJournal(storage);assert.deepEqual(restored,journal);for(const win of old)assert(restored.wins.includes(win));assert.equal(restored.wins.length,10);assert(!recordVictory(restored,'bad-map','sporelantern'));
+});

@@ -2,6 +2,10 @@
 // these short silhouettes never schedule damage, alter hit tests, or draw range rings.
 const look=(weapon,name,summary,phases)=>Object.freeze({weapon,name,summary,phases:Object.freeze(phases)});
 export const WEAPON_ROUTE_LOOKS=Object.freeze({
+ miasmalantern_lure:look('miasmalantern','幻瘴','替身自然绽放时，低位紫瓣向外舒展，余雾留在原地',['bloom']),
+ miasmalantern_venom:look('miasmalantern','蚀影','蜕影后的追击毒雾球带紫色卷气，破裂时散开短暂蚀雾',['cast','hit']),
+ sporelantern_still:look('sporelantern','沉瘴','落地毒囊裂出低矮孢芽，成熟后出现暖金色菌核',['hit']),
+ sporelantern_roam:look('sporelantern','游瘴','搬运后顺移动方向散开的轻薄叶雾',['hit']),
  rifle_pierce:look('rifle','贯穿弹道','命中后向弹道前方穿出的细金针',['hit']),
  rifle_rapid:look('rifle','疾速机括','枪口短促余焰与后退机括火星',['cast']),
  shotgun_fan:look('shotgun','散射风暴','开火时张开的三束碎屑，命中飞散砂石',['cast','hit']),
@@ -53,6 +57,24 @@ export function weaponRouteEffect(vfx,w,phase,x,z,angle=0,detail={}){
  const chip=(shape,color,forward,side,y,size,speed,up=.7,priority=0)=>particle(shape,color,forward,side,y,{life:.25,size,velocity:velocity(speed,side*2,up),gravity:4,spin:6,priority});
 
  switch(id){
+ case'miasmalantern_lure':{
+  const r=Math.max(.3,detail.radius||1.7);
+  for(const side of[-1,1])curl(side<0?0x5c3475:0xa184bc,0,side*.08,.11,r*.33,r*.29,{life:.34,roll:side*.7,opacity:.46,priority:1});
+  break;
+ }
+ case'miasmalantern_venom':
+  if(!detail.empowered)return false;
+  if(phase==='cast')for(const side of[-1,1])curl(side<0?0x76558e:0xb89dcd,-.03,side*.11,1.00,.30,.25,{rotation:-.6,life:.24,roll:side*.9,opacity:.46,priority:1});
+  else{for(const side of[-1,1])particle('smoke',side<0?0x5e3874:0x9674b0,.05,side*.23,.22,{life:.36,size:[.22,.14,.24],velocity:velocity(.15,side*.5,.14),opacity:.30,priority:1});}
+  break;
+ case'sporelantern_still':
+  for(const side of[-1,1])particle('crystal',side<0?0x899755:0xc2c384,.02,side*.17,.12,{life:.38,size:[.04,.16*level,.035],velocity:[0,.17,0],opacity:.7,priority:side<0?1:0});
+  particle('veil',0x657548,0,0,.075,{life:.38,size:[.34,.26,1],opacity:.16});
+  break;
+ case'sporelantern_roam':
+  for(const side of[-1,1])particle('smoke',side<0?0x7d985a:0xaebd7c,.08,side*.22,.20,{life:.34,size:[.10,.11,.22*level],velocity:velocity(-.55,side*.22,.18),opacity:.37,priority:side<0?1:0});
+  chip('ember',0xb8bf81,0,0,.28,[.035,.06,.025],-.5,.45);
+  break;
  case'rifle_pierce':
   line([target*.65,0,1],[target+.45*level,0,1],0xffd28d,.027,.115,1,.8);
   for(const side of[-1,1])chip('crystal',0xcba779,target*.72,side*.08,1,[.02,.065,.02],2.2,.18);

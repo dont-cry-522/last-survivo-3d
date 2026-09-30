@@ -1,4 +1,5 @@
-import{weaponGesture,shotStarted}from'./weapon-performance.js?v=88';
+import{weaponGesture,shotStarted}from'./weapon-performance.js?v=89';
+import{miasmaLantern}from'./mirage-appearance.js?v=89';
 import * as T from './vendor/three.module.js';
 // Shared smooth geometry: detail is concentrated on the two heroes, not multiplied across the forest.
 const geometries=new Map(),materials=new Map();
@@ -12,6 +13,14 @@ function tailored(p,c,profile,pos){const key='tailor'+JSON.stringify(profile);if
 function cloth(p,color,width,length,z){const key=`cloth:${width}:${length}:${z}`;if(!geometries.has(key)){const vertices=[],indices=[];for(let y=0;y<=6;y++)for(let x=0;x<=6;x++){const u=x/6,v=y/6;vertices.push((u-.5)*width*(.62+.38*v),-length*v,z-Math.sin(v*Math.PI/2)*.18+Math.cos(u*Math.PI*4)*.035*v);}for(let y=0;y<6;y++)for(let x=0;x<6;x++){const a=y*7+x;indices.push(a,a+7,a+1,a+1,a+7,a+8);}const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute(vertices,3));g.setIndex(indices);g.computeVertexNormals();geometries.set(key,g);}const mat=material(color);mat.side=T.DoubleSide;const m=new T.Mesh(geometries.get(key),mat);m.castShadow=m.receiveShadow=true;p.add(m);return m;}
 function lock(p,color,x,y,z,length,bend=.12){const key=`lock:${length}:${bend}`;if(!geometries.has(key)){const v=[],ix=[];for(let i=0;i<=10;i++){const f=i/10,r=.069*Math.sin(Math.min(1,f*8)*Math.PI/2)*(1-f)+.001;for(let j=0;j<10;j++){const a=j*Math.PI/5;v.push(Math.cos(a)*r,-f*length,bend*f*f+Math.sin(a)*r*.58);}}for(let i=0;i<10;i++)for(let j=0;j<10;j++){const a=i*10+j,b=i*10+(j+1)%10;ix.push(a,b,a+10,b,b+10,a+10);}const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute(v,3));g.setIndex(ix);g.computeVertexNormals();geometries.set(key,g);}const m=new T.Mesh(geometries.get(key),material(color));m.position.set(x,y,z);m.castShadow=true;p.add(m);return m;}
 export function makeHero(kind,weapon){
+  if(kind==='mirage'){
+    // Loading fallback uses the existing articulated woman, never a rifle-bearing scout.
+    const g=makeHero('silver','dark'),d=g.userData;
+    g.traverse(o=>{if(!o.isMesh)return;const c=o.material.color,hsl={};c.getHSL(hsl);const pale=hsl.l>.65,color=pale?0xc4b7db:hsl.l>.25?0x59436d:0x24142e;o.material=material(color,o.material.metalness);});
+    const mask=ell(d.head,0xb7abc9,[0,.012,.169],[.176,.216,.074],.14);mask.name='mirage-fallback-full-mask';
+    for(const side of[-1,1]){const eye=ell(d.head,0x21162c,[side*.077,.063,.232],[.043,.009,.008]);eye.rotation.z=side*-.12;}
+    d.weapon.clear();d.weapon.add(miasmaLantern());d.weapon.scale.setScalar(.95);d.weaponId=weapon;d.kind=kind;g.scale.setScalar(.81);return g;
+  }
   const silver=kind==='silver',g=new T.Group(),rig=joint(g,[0,0,0]),torso=joint(rig,[0,1.12,0]);
   const coat=silver?0x202c40:0x344f3e,light=silver?0x3e566c:0x6c7651,dark=0x15212c,trim=silver?0xa4b9d2:0xba9358,hair=silver?0xd6e0ee:0x503326,skin=silver?0xe2bea6:0xcb9c7d,gem=silver?0x7dbfbf:0xc9a867;
   const d=g.userData;Object.assign(d,{kind,weaponId:weapon,rig,torso});
@@ -101,7 +110,7 @@ export function animateHero(g,t,speed,attack){
   for(const [side,sign]of [['left',1],['right',-1]]){const f=Math.sin(phase+(sign<0?Math.PI:0));d[side+'Leg'].rotation.x=f*.6*run;d[side+'Knee'].rotation.x=Math.max(0,-f)*.95*run+.06;}
   d.torso.rotation.x=.035+run*.08;d.torso.rotation.y=-step*.08*run;
   d.leftArm.rotation.x=-step*.36*run-.1;d.leftElbow.rotation.x=-.24-Math.max(0,step)*.3*run;
-  const staff=['fire','dark'].includes(d.weaponId);d.rightArm.rotation.x=staff?-.12-aim*.3:-.4-aim*.32;d.rightElbow.rotation.x=staff?-.35:-.65-aim*.15;
+  const staff=['fire','dark','miasmalantern'].includes(d.weaponId);d.rightArm.rotation.x=staff?-.12-aim*.3:-.4-aim*.32;d.rightElbow.rotation.x=staff?-.35:-.65-aim*.15;
   d.weapon.rotation.x=staff?.18:-(d.rightArm.rotation.x+d.rightElbow.rotation.x)-.12*(1-aim);
   const k=motion.kick,s=motion.sweep;d.rig.position.z=-k*(d.weaponId==='shotgun'?.10:.035);
   d.rightArm.rotation.y=d.weaponId==='shuriken'?-.7*s:d.weaponId==='dark'?.5*s:0;d.rightArm.rotation.x-=k*(staff?.45:.15);d.rightElbow.rotation.x-=k*(d.weaponId==='shuriken'?.4:.15);d.leftArm.rotation.x-=staff?.4*s:motion.draw*.3;

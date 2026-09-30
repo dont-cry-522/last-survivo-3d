@@ -1,7 +1,7 @@
 import * as T from './vendor/three.module.js';
 
 // Weapon-space contact points: the wrapped handle, not the model's origin.
-export const GRIP_POINTS={rifle:[0,-.065,.075],shotgun:[0,-.065,.075],crossbow:[0,-.08,.01],fire:[0,0,.045],dark:[0,0,.045],shuriken:[-.07,0,.06],boomerang:[0,0,-.09],harpoon:[0,0,-.08],hammer:[0,.015,0]};
+export const GRIP_POINTS={miasmalantern:[0,.015,0],sporelantern:[0,.015,0],rifle:[0,-.065,.075],shotgun:[0,-.065,.075],crossbow:[0,-.08,.01],fire:[0,0,.045],dark:[0,0,.045],shuriken:[-.07,0,.06],boomerang:[0,0,-.09],harpoon:[0,0,-.08],hammer:[0,.015,0]};
 const palm=side=>new T.Vector3(side==='r'?-.036:.036,.097,0);
 const frame=(x,y,z)=>new T.Quaternion().setFromRotationMatrix(new T.Matrix4().makeBasis(new T.Vector3(...x),new T.Vector3(...y),new T.Vector3(...z)));
 const upright=frame([-1,0,0],[0,0,1],[0,1,0]);
@@ -52,8 +52,8 @@ export function poseGripFingers(d,motion={}){
   const id=d.weaponId,h=d.handGrips,hasSupport=['rifle','shotgun','crossbow','harpoon','hammer'].includes(id);
   const released=id==='boomerang'&&d.boomerangAway?1-(d.catchReady||0):id==='shuriken'?(motion.kick||0):0;
   for(const {bone,side,name,i}of h.fingers){
-    if(side==='l'&&!hasSupport)continue;
-    const release=side==='r'?released:0;
+    if(side==='l'&&!hasSupport&&id!=='sporelantern')continue;
+    const release=side==='r'?released:id==='sporelantern'?(motion.kick||0):0;
     const trigger=side==='r'&&['rifle','shotgun','crossbow'].includes(id)&&name==='index';
     const curl=(trigger?[.36,.64,.45]:id==='harpoon'?[1.02,1.08,.70]:[1.22,1.18,.76])[i-1]*(1-release*.84);
     h.scratch.setFromAxisAngle(h.offset.set(1,0,0),curl);

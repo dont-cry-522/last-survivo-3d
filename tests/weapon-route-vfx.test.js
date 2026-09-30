@@ -10,8 +10,8 @@ const event={combo:2,empowered:true,returning:true,targetSize:.6,x2:-2,z2:-1,sta
 const cast=(v,id,phase,detail=event,rank=3)=>weaponRouteEffect(v,weapon(id,rank),phase,0,0,.4,detail);
 const signature=v=>JSON.stringify(v.active.map(p=>[p.shape,p.mesh.material.color.getHex(),p.size,p.velocity]));
 
-test('all 22 routes produce distinct sibling silhouettes through the declared real events',()=>{
- assert.equal(Object.keys(WEAPON_ROUTE_LOOKS).length,22);
+test('all routes produce distinct sibling silhouettes through the declared real events',()=>{
+ assert.equal(Object.keys(WEAPON_ROUTE_LOOKS).length,Object.keys(WEAPON_PATHS).length);
  assert.deepEqual(Object.keys(WEAPON_ROUTE_LOOKS).sort(),Object.keys(WEAPON_PATHS).sort());
  const v=new SkillVFX(new T.Scene(),{mobile:true}),seen=new Map();
  for(const [id,look] of Object.entries(WEAPON_ROUTE_LOOKS)){
@@ -40,6 +40,7 @@ test('conditional routes never claim a return, third strike or explosion that di
  const v=new SkillVFX(new T.Scene());
  for(const [id,phase,detail] of [
   ['shuriken_return','hit',{}],['shadowblade_return','hit',{returning:false}],
+  ['miasmalantern_lure','hit',{}],['miasmalantern_venom','hit',{}],['miasmalantern_venom','cast',{empowered:false}],
   ['harpoon_tow','hit',{combo:0}],['harpoon_tow','hit',{combo:1}]
  ]){assert.equal(cast(v,id,phase,detail),false);assert.equal(v.active.length,0);}
  for(const id of ['crossbow_hunt','shade_blight']){

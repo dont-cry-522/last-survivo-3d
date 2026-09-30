@@ -15,7 +15,7 @@ fs.mkdirSync(output,{recursive:true});
    const scene=new T.Scene(),floor=new T.Mesh(new T.PlaneGeometry(40,40),new T.MeshBasicMaterial());floor.rotation.x=-Math.PI/2;floor.position.y=-.015;scene.add(floor);
    const dummy=new T.Group(),body=new T.Mesh(new T.CapsuleGeometry(.23,.6,4,8),new T.MeshBasicMaterial({color:0x624b42})),head=new T.Mesh(new T.SphereGeometry(.2,9,6),new T.MeshBasicMaterial({color:0x8e7660}));body.position.y=.55;head.position.y=1.02;dummy.add(body,head);scene.add(dummy);
    const contactShadow=new T.Mesh(new T.CircleGeometry(.37,24),new T.MeshBasicMaterial({color:0x202c27,transparent:true,opacity:.18}));contactShadow.rotation.x=-Math.PI/2;contactShadow.position.y=.002;scene.add(contactShadow);
-   if(Object.keys(WEAPON_ROUTE_LOOKS).length!==22||new Set(Object.values(WEAPON_ROUTE_LOOKS).map(q=>q.weapon)).size!==11)throw Error('Expected 11 weapons and 22 active route effects');
+   if(Object.keys(WEAPON_ROUTE_LOOKS).length!==24||new Set(Object.values(WEAPON_ROUTE_LOOKS).map(q=>q.weapon)).size!==12)throw Error('Expected 12 weapons and 24 active route effects');
    const v=new SkillVFX(scene,{mobile:true}),out=[];
    for(const [ground,color] of [['林地',0x536a48],['雪地',0x96b7bd]]){
     scene.background=new T.Color(color);floor.material.color.set(color);
@@ -35,6 +35,6 @@ fs.mkdirSync(output,{recursive:true});
    const filename=path.join(output,'weapon-routes-'+(ground==='林地'?'forest':'snow')+'.png');await page.screenshot({path:filename,fullPage:true});console.log(filename);
   }
   if(errors.length)throw Error(errors.join('\n'));
-  console.log('Rendered 22 route effects on forest and snow terrain; no browser errors.');
+  console.log('Rendered 24 route effects on forest and snow terrain; no browser errors.');
  }finally{await browser.close();}
 })().catch(error=>{console.error(error);process.exit(1);});

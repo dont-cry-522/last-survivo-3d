@@ -1,0 +1,59 @@
+<!doctype html><meta charset="utf-8"><style>body{margin:0;background:#303847;color:#e9e3f2;font:16px system-ui}#status{padding:12px}#frames{display:grid;grid-template-columns:repeat(3,340px)}figure{margin:0}img{width:340px;height:450px}figcaption{padding:8px}</style><div id="status">Loading model QA…</div><div id="frames"></div><script type="module">
+import * as T from '../vendor/three.module.js';
+import {loadHeroAssets,createSkinnedHero,animateSkinnedHero,disposeHero} from '../skinned-hero.js?v=89';
+import {GRIP_POINTS} from '../weapon-grips.js?v=89';
+import {MIRAGE} from '../mirage-config.js?v=89';
+import {mirageShotDelay,weaponGesture} from '../weapon-performance.js?v=89';
+import {restoreWaterPose,animateWaterPose} from '../water.js?v=89';
+import {MirageVFX} from '../mirage-vfx.js?v=89';
+const check=(value,msg)=>{if(!value)throw Error(msg)};
+try{
+ await loadHeroAssets();
+ const hero=createSkinnedHero('mirage','miasmalantern'),old=createSkinnedHero('wuling','sporelantern'),other=createSkinnedHero('mirage','miasmalantern'),silver=createSkinnedHero('silver','crossbow'),d=hero.userData;
+ const hair=d.mirageHair[0],otherHair=other.userData.mirageHair[0];check(hair&&hair.geometry!==otherHair.geometry,'hair geometry shared across actors');
+ let silverHair;silver.traverse(o=>{if(o.userData.hairstyle)silverHair=o});silverHair.geometry.computeBoundingBox();hair.geometry.computeBoundingBox();
+ check(hair.geometry.boundingBox.min.y<1.12,'missing waist-length hair');check(silverHair.geometry.boundingBox.min.y>1.45,'silver short hair changed');
+ const untouched=otherHair.geometry.attributes.position.array.slice();let rootDrift=0,tipMotion=0;
+ const otherOpacity=[];other.traverse(o=>{if(o.isMesh)otherOpacity.push([o.material,o.material.opacity])});
+ const oldOpacity=[];old.traverse(o=>{if(o.isMesh)oldOpacity.push([o.material,o.material.opacity])});
+ check(hero.getObjectByName('mirage-full-mask')?.parent===d.swimHead,'mask missing bone attachment');
+ const maskGeometry=hero.getObjectByName('mirage-full-mask').geometry;check(maskGeometry.attributes.normal.count===maskGeometry.attributes.position.count&&maskGeometry.attributes.normal.array.every(Number.isFinite),'mask rim normal buffer mismatch');
+ const oldMask=old.getObjectByName('wuling-full-mask');check(oldMask&&oldMask.material.color.getHex()===0x756d88,'original Wuling mask changed');
+ const period=1/MIRAGE.rate;for(const rate of [MIRAGE.rate,MIRAGE.rate*1.45*1.25])check(Math.abs(weaponGesture('miasmalantern',mirageShotDelay(rate),0,1/rate).kick-1)<.000001,'orb release/gesture timing mismatch');
+ let palmError=0,wristStep=0,last,reachMin=Infinity,reachMax=-Infinity,maxFade=0;
+ for(let i=0;i<420;i++){
+  const t=i/60,attack=t>1&&t<4,age=(t-1)%period;d.aimActive=attack;d.aimAngle=.4*Math.sin(t);d.travelAngle=.3;d.turnRate=t>2&&t<4?4*Math.sin(t*3):0;d.reloadDuration=period;d.reloadPhase=attack?age/period:1;d.shotSerial=t>=1?Math.floor((Math.min(t,3.999)-1)/period)+1:0;d.dashTime=t>4.3?Math.max(0,.52-(t-4.3)):0;d.mirageConceal=t>4.3&&t<5.15?1:0;
+  animateSkinnedHero(hero,t,t>2&&t<5?4:0,0,0);maxFade=Math.max(maxFade,d.mirageFade);hero.updateMatrixWorld(true);hero.traverse(o=>check(o.matrixWorld.elements.every(Number.isFinite),'invalid transform '+o.name));
+  const hp=hair.geometry.attributes.position,hm=hair.userData.hairMotion;for(let j=0;j<hp.count;j++){const shift=Math.hypot(hp.getX(j)-hm.rest[j*3],hp.getZ(j)-hm.rest[j*3+2]);check(Number.isFinite(shift),'invalid hair deformation');if(hm.weights[j]===0)rootDrift=Math.max(rootDrift,shift);if(hm.weights[j]>.8)tipMotion=Math.max(tipMotion,shift);}
+  const palm=d.support.rightHand.localToWorld(new T.Vector3(-.036,.097,0)),grip=d.gun.localToWorld(new T.Vector3(...GRIP_POINTS.miasmalantern));palmError=Math.max(palmError,palm.distanceTo(grip));
+  const q=d.support.rightHand.getWorldQuaternion(new T.Quaternion()).normalize();if(last&&i>15)wristStep=Math.max(wristStep,last.angleTo(q));last=q;
+  if(attack){const hand=hero.worldToLocal(d.support.rightHand.getWorldPosition(new T.Vector3()));reachMin=Math.min(reachMin,hand.z);reachMax=Math.max(reachMax,hand.z);}
+ }
+ check(palmError<.001,'lantern grip slipped');check(wristStep<.8,'wrist snap');check(reachMax-reachMin>.05,'missing orb gathering/casting movement');
+ for(const [m,opacity] of [...oldOpacity,...otherOpacity])check(m.opacity===opacity,'concealment leaked to another actor');
+ check(maxFade>.99,'concealment missing');check(d.mirageFade<.001,'failed reveal');
+ check(rootDrift===0&&tipMotion>.03&&tipMotion<.16,'hair roots moved or tips stiff/unbounded');check(untouched.every((v,i)=>v===otherHair.geometry.attributes.position.array[i]),'hair movement leaked to another actor');
+ const paused=hair.geometry.attributes.position.array.slice();animateSkinnedHero(hero,d.lastTime,0,0,0);check(paused.every((v,i)=>v===hair.geometry.attributes.position.array[i]),'paused hair moved');
+ const effects=new MirageVFX(new T.Scene());effects.capture(hero);const imprint=effects.snapshot.get(hair.uuid),vertex=hair.getVertexPosition(2000,new T.Vector3()).applyMatrix4(hair.matrixWorld);check(vertex.distanceTo(new T.Vector3().fromBufferAttribute(imprint.geometry.attributes.position,2000))<.00001,'decoy hair pose mismatch');effects.dispose();
+ // Measure the visible mask's forward axis, not a particular clip or implementation offset.
+ const postureHero=createSkinnedHero('mirage','miasmalantern'),pd=postureHero.userData,postureMask=postureHero.getObjectByName('mirage-full-mask');
+ let postureTime=0,postureSerial=0;
+ const postureSample=()=>{postureHero.updateMatrixWorld(true);const forward=new T.Vector3(0,0,1).transformDirection(postureMask.matrixWorld),neck=pd.model.getObjectByName('neck_01').getWorldPosition(new T.Vector3()),spine=pd.spine.getWorldPosition(new T.Vector3());return{face:-Math.atan2(forward.y,Math.hypot(forward.x,forward.z))*180/Math.PI,trunk:Math.atan2(neck.z-spine.z,neck.y-spine.y)*180/Math.PI};};
+ const postureStage=(aim,shoot,seconds)=>{const samples=[];for(let i=0;i<Math.ceil(seconds*60);i++){const age=(i/60)%period;pd.aimActive=aim;pd.aimAngle=0;pd.travelAngle=0;pd.reloadDuration=period;pd.reloadPhase=shoot?age/period:1;if(shoot)pd.shotSerial=postureSerial+Math.floor(i/60/period)+1;animateSkinnedHero(postureHero,postureTime+=1/60,0,0,0);if(i>=30)samples.push(postureSample());}postureSerial=pd.shotSerial||0;return{mean:samples.reduce((sum,v)=>sum+v.face,0)/samples.length,min:Math.min(...samples.map(v=>v.face)),max:Math.max(...samples.map(v=>v.face)),trunkMax:Math.max(...samples.map(v=>v.trunk))};};
+ const posture={idle:postureStage(false,false,3),aim:postureStage(true,false,3),casting:postureStage(true,true,period*3),recovered:postureStage(false,false,3)};
+ for(const key of ['idle','aim','recovered']){check(posture[key].mean<16&&posture[key].mean>-6,'resting face bows or leans back: '+key+' '+posture[key].mean);check(posture[key].max<22&&posture[key].trunkMax<16,'resting upper body hunch: '+key);}
+ check(posture.casting.max<27&&posture.casting.min>-10,'casting head pose leaves natural range');check(Math.abs(posture.idle.mean-posture.recovered.mean)<3,'posture drifts after repeated casting');disposeHero(postureHero);
+ const scene=new T.Scene();scene.background=new T.Color(0x303847);scene.add(new T.HemisphereLight(0xeaf0df,0x3b3830,2.2));const light=new T.DirectionalLight(0xffe5df,3);light.position.set(3,6,4);scene.add(light);const floor=new T.Mesh(new T.PlaneGeometry(30,30),new T.MeshStandardMaterial({color:0x536259}));floor.rotation.x=-Math.PI/2;floor.position.y=-.01;scene.add(floor);const camera=new T.PerspectiveCamera(32,340/450,.1,40);camera.position.set(0,1.75,5.2);camera.lookAt(0,.99,0);const renderer=new T.WebGLRenderer({antialias:true});renderer.setSize(340,450);renderer.toneMapping=T.ACESFilmicToneMapping;scene.add(hero);
+ let poseTime=8;
+ for(const [label,angle,moving,conceal,fire]of [['正面静待',0,0,0,false],['站姿正侧面',Math.PI/2,0,0,false],['背部与披肩',Math.PI,0,0,false],['毒球蓄放',-.25,0,0,true],['蓄力侧面',Math.PI/2,0,0,'gather'],['送灯侧面',Math.PI/2,0,0,true],['蜕影遁形',-.6,4,1,false],['行走',.7,4,0,false],['转身发尾',2.6,4,0,false],['面具正面',0,0,0,false],['面具侧面',1.2,0,0,false],['游泳姿势',1.3,3,0,false]]){
+  camera.position.set(0,1.75,5.2);camera.lookAt(0,.99,0);
+  d.turnRate=label==='转身发尾'?5:0;d.waterDepth=label==='游泳姿势'?.8:0;
+  hero.rotation.y=angle;d.mirageConceal=conceal;d.dashTime=0;d.aimActive=!!fire;d.reloadPhase=1;for(let i=0;i<60;i++)animateSkinnedHero(hero,poseTime+=1/60,moving,0,0);if(fire){const start=poseTime,release=mirageShotDelay(MIRAGE.rate)*(fire==='gather'?.42:1);d.shotSerial++;d.reloadPhase=0;animateSkinnedHero(hero,poseTime,0,.3,0);for(let i=1;i<=Math.ceil(release*60);i++){const age=Math.min(i/60,release);d.reloadPhase=age/period;animateSkinnedHero(hero,start+age,0,.3,0);}poseTime=start+release;}
+  if(d.waterDepth)for(let i=0;i<90;i++){restoreWaterPose(hero);animateSkinnedHero(hero,poseTime+=1/60,.7,0,0);animateWaterPose(hero,poseTime,3);}
+  if(d.waterDepth){hero.updateMatrixWorld(true);const center=d.swimHead.getWorldPosition(new T.Vector3()).add(d.pelvis.getWorldPosition(new T.Vector3())).multiplyScalar(.5);camera.position.copy(center).add(new T.Vector3(0,.8,4.8));camera.lookAt(center);}
+  if(label.startsWith('面具')){hero.updateMatrixWorld(true);const mask=hero.getObjectByName('mirage-full-mask'),center=mask.localToWorld(mask.geometry.boundingBox.getCenter(new T.Vector3()));camera.position.copy(center).add(new T.Vector3(0,.025,.88));camera.lookAt(center);}
+  scene.updateMatrixWorld(true);hero.traverse(o=>{if(o.isSkinnedMesh)o.skeleton.update()});renderer.render(scene,camera);const figure=document.createElement('figure'),img=document.createElement('img'),caption=document.createElement('figcaption');img.src=renderer.domElement.toDataURL();caption.textContent=label;figure.append(img,caption);document.querySelector('#frames').append(figure);
+ }
+ let disposed=0,hairDisposals=0;hair.geometry.addEventListener('dispose',()=>hairDisposals++);hair.material.addEventListener('dispose',()=>hairDisposals++);for(const material of d.mirageOwnedMaterials)material.addEventListener('dispose',()=>disposed++);disposeHero(hero);check(disposed===d.mirageOwnedMaterials.length&&hairDisposals===2,'resources not disposed once');disposeHero(old);disposeHero(other);disposeHero(silver);renderer.dispose();document.querySelector('#status').textContent='PASS '+JSON.stringify({palmError,wristStep,reach:reachMax-reachMin,maxFade,disposed,rootDrift,tipMotion,hairDisposals,period,releaseDelay:mirageShotDelay(MIRAGE.rate),posture});
+}catch(e){document.querySelector('#status').textContent='FAIL '+e.stack;throw e;}
+</script>
