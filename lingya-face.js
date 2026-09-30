@@ -1,7 +1,7 @@
 import * as T from './vendor/three.module.js';
-import {smoothSeams} from './hero-finish.js?v=84';
+import {smoothSeams} from './hero-finish.js?v=85';
 
-export const lingyaHeadY=y=>y-.023*T.MathUtils.smoothstep(y,1.44,1.59);
+export const lingyaHeadY=y=>y-.029*T.MathUtils.smoothstep(y,1.44,1.59);
 
 // Fit the existing hood, cropped hair and weighted neck around the authored head.
 export function refineLingyaHead(root){

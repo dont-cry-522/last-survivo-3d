@@ -1,7 +1,7 @@
-import {smoothSeams} from './hero-finish.js?v=84';
-import{weaponGesture,shotStarted}from'./weapon-performance.js?v=84';
+import {smoothSeams} from './hero-finish.js?v=85';
+import{weaponGesture,shotStarted}from'./weapon-performance.js?v=85';
 import * as T from './vendor/three.module.js';
-import{shadowCrescentGeometry,shadowCrescentEdge}from'./shadow-weapons.js?v=84';
+import{shadowCrescentGeometry,shadowCrescentEdge}from'./shadow-weapons.js?v=85';
 
 // Continuous cloth surfaces share geometry; each actor owns its pose and morph weights.
 const geometry=new Map(),materials=new Map();
@@ -58,9 +58,20 @@ function spring(state,target,dt,frequency=8,damping=5){
 
 function hand(parent,d,side){
  const wrist=joint(parent,0,-.21,0);d[side+'Hand']=wrist;
- ell(wrist,C.lining,[0,-.045,.015],[.057,.063,.045]);
- for(let i=0;i<4;i++){const f=ell(wrist,C.armor,[(i-1.5)*.021,-.103,.027],[.010,.033-(i===3?.009:0),.014]);f.rotation.x=-.25;}
- ell(wrist,C.armor,[-.047,-.046,.036],[.017,.034,.019]).rotation.z=-.5;return wrist;
+ ell(wrist,C.lining,[0,-.045,.015],[.052,.060,.038]);
+ const fingers=[];
+ for(let i=0;i<4;i++){
+  const length=i===3?.025:.032,base=joint(wrist,(i-1.5)*.023,-.082,.021);
+  ell(base,C.armor,[0,-length*.5,0],[.0105,length*.60,.012]);
+  const tip=joint(base,0,-length,0);ell(tip,C.armor,[0,-.010,0],[.0095,.015,.011]);fingers.push({base,tip});
+ }
+ const sign=side==='left'?1:-1,thumb=joint(wrist,sign*.043,-.042,.025);thumb.rotation.z=sign*.65;
+ ell(thumb,C.armor,[0,-.014,0],[.015,.025,.015]);const thumbTip=joint(thumb,0,-.031,0);ell(thumbTip,C.armor,[0,-.01,0],[.013,.019,.013]);
+ d[side+'Fingers']={fingers,thumb,thumbTip,sign};return wrist;
+}
+function poseHand(d,side,curl,spread,thumbClose){
+ const h=d[side+'Fingers'];h.fingers.forEach(({base,tip},i)=>{base.rotation.x=-curl*(i===0?.90:1);base.rotation.z=(i-1.5)*spread;tip.rotation.x=-curl*.82;});
+ h.thumb.rotation.x=-.28-thumbClose*.48;h.thumb.rotation.z=h.sign*(.65-thumbClose*.35);h.thumbTip.rotation.x=-.3-thumbClose*.65;
 }
 
 export function makeWraith(weapon='shade'){
@@ -99,6 +110,9 @@ export function makeWraith(weapon='shade'){
  }
  const w=joint(weapon==='grimoire'?d.leftHand:d.rightHand,0,-.035,.06);d.weapon=w;
  if(weapon==='shadowblade'){
+  // The unsharpened inner bridge sits inside the curled glove, clear of the edge.
+  curve(w,C.fold,[[-.075,-.035,.02],[.075,-.035,.02],[.14,-.015,.02]],.016);
+  for(const x of[-.04,-.01,.02,.05])curve(w,C.trim,[[x,-.046,.015],[x,-.046,.025]],.004);
   mesh(w,shadowCrescentGeometry,0x667297,[0,-.01,.11]).rotation.x=Math.PI/2;
   curve(w,C.light,shadowCrescentEdge.map(p=>[p.x,.008,.11+p.y]),.007,true);
  }else if(weapon==='grimoire'){
@@ -165,7 +179,11 @@ export function animateWraith(g,t,speed=0,attack=0,hurt=0){
  d.rightHand.rotation.z=blade?-motion.sweep*.7:book?motion.gather*.28:-motion.kick*.3;
  d.leftHand.rotation.z=book?0:-motion.gather*.35;
  d.weapon.scale.setScalar(blade?1-motion.kick*.55:1);
- d.weapon.rotation.x=book?d.weapon.rotation.x:recoil*(blade?-.65:.35);d.weapon.rotation.z=book?d.weapon.rotation.z:recoil*(blade?1.3:.18);
+ d.weapon.rotation.x=book?d.weapon.rotation.x:blade?0:recoil*.35;d.weapon.rotation.z=book?d.weapon.rotation.z:blade?0:recoil*.18;
+ if(blade){d.weapon.position.set(0,-.105+.035*d.weapon.scale.y,.056-.02*d.weapon.scale.z);}
+ const release=motion.kick;
+ poseHand(d,'right',blade?1.12-release*.92:book?.34+motion.gather*.30:.60+motion.gather*.30-release*.40,.035+release*.11,blade?1-release:book?.32:.60);
+ poseHand(d,'left',book?.24:.38,book?.075:.045,book?.20:.35);
  if(d.book){
   d.leftHand.getWorldQuaternion(d.bookParentQ);d.bookEuler.set(-.10+Math.sin(t*2.5)*.015,g.rotation.y+.12,.025*Math.sin(t*2));d.bookLevelQ.setFromEuler(d.bookEuler);d.book.quaternion.copy(d.bookParentQ).invert().multiply(d.bookLevelQ);
   d.book.position.y=-.025+Math.sin(t*2.5)*.018+cast*.035;d.page.rotation.z=Math.sin(t*2.4)*.10-motion.sweep*1.8+recoil*.6;d.page.position.y=.075+Math.sin(stroke*Math.PI)*cast*.025;

@@ -1,6 +1,7 @@
-import{heroDodgePose}from'./hero-dodge.js?v=84';
+import {primaryGripFrame,fitWeaponToPalm,GRIP_POINTS} from './weapon-grips.js?v=85';
+import{heroDodgePose}from'./hero-dodge.js?v=85';
 import * as T from './vendor/three.module.js';
-import {guardianPose} from './guardian-motion.js?v=84';
+import {guardianPose} from './guardian-motion.js?v=85';
 const geo=new Map(),mats=new Map();
 function material(color,metal=0){const key=color+':'+metal;if(!mats.has(key))mats.set(key,new T.MeshStandardMaterial({color,metalness:metal,roughness:metal?.46:.82,side:T.DoubleSide}));return mats.get(key);}
 function geometry(key,create){if(!geo.has(key))geo.set(key,create());return geo.get(key);}
@@ -35,7 +36,11 @@ export function equipGuardian(g,grips){
  d.hammerContact=joint(hammer,[0,.66,0]);
 
  for(const [weapon,grip]of [[shield,grips[0]],[hammer,grips[1]]]){weapon.scale.setScalar(.72);weapon.quaternion.copy(grip).invert();}
- shield.position.set(0,0,.12).applyQuaternion(shield.quaternion);
+ hammer.quaternion.copy(primaryGripFrame('hammer').invert());grips[1].copy(primaryGripFrame('hammer'));fitWeaponToPalm(hammer,GRIP_POINTS.hammer);
+ // A visible rear grip bridges the hand to the shield; it remains rigid during blocks.
+ tube(shield,0x563d30,[0,0,-.16],[.032,.23,.032]);
+ for(const y of[-.13,.13])tube(shield,0x765739,[0,y,-.10],[.025,.14,.025]).rotation.x=Math.PI/2;
+ fitWeaponToPalm(shield,[0,0,-.16],'l');
  d.gun=hammer;d.gunRest=hammer.quaternion.clone();d.grips=grips;
  d.guardianPrevious=[];
 }

@@ -15,7 +15,9 @@ for o in bpy.data.objects:
 for n in ['LipsAdjust']:
  bpy.data.objects['GEO-rain-head'].data.shape_keys.key_blocks[n].value=1
 for n in ['Smile.L','Smile.R']:
- bpy.data.objects['GEO-rain-head'].data.shape_keys.key_blocks[n].value=.16
+ bpy.data.objects['GEO-rain-head'].data.shape_keys.key_blocks[n].value=.26
+for side in ['L','R']:
+ bpy.data.objects['RIG-rain'].pose.bones['ACT-Lips_Corner.'+side].location.y=.006
 for o in bpy.data.objects:
  if o.type=='MESH':
   for m in o.modifiers:
@@ -26,21 +28,30 @@ def mat(name,color,rough=.8):
  m=bpy.data.materials.new(name);m.use_nodes=True
  b=m.node_tree.nodes.get('Principled BSDF');b.inputs['Base Color'].default_value=(*color,1);b.inputs['Roughness'].default_value=rough
  return m
-skin=mat('Lingya_face_skin',(.88,.51,.415));white=mat('Lingya_eye_white',(.93,.90,.83),.55);iris=mat('Lingya_eye_iris',(.18,.095,.034),.4);pupil=mat('Lingya_eye_pupil',(.009,.006,.004),.4);brow=mat('Lingya_face_brow',(.15,.070,.030));lash=mat('Lingya_face_lash',(.05,.025,.013));glint=mat('Lingya_eye_glint',(1,1,1),.6)
+skin=mat('Lingya_face_skin',(.88,.51,.415));white=mat('Lingya_eye_white',(.93,.90,.83),.55);iris=mat('Lingya_eye_iris',(.25,.125,.045),.4);pupil=mat('Lingya_eye_pupil',(.009,.006,.004),.4);brow=mat('Lingya_face_brow',(.20,.095,.045));lash=mat('Lingya_face_lash',(.05,.025,.013));glint=mat('Lingya_eye_glint',(1,1,1),.6)
 def fitted(name,src):
   x=src.x*.70;y=src.y*.70+.02;z=1.632+(src.z-1.475)*.73
   # Refine nose, mouth and jaw without disturbing the authored eye sockets.
   if name=='GEO-rain-head':
    front=max(0,min(1,(-y-.025)/.04))
    nose=math.exp(-((z-1.588)/.015)**2-(x/.027)**2)*front
-   x*=1-.23*nose;y+=.010*nose
+   x*=1-.34*nose;y+=.013*nose
    mouth=math.exp(-((z-1.553)/.014)**2-(x/.045)**2)*front
    x*=1-.12*mouth;y+=.006*mouth
    z+=.003*math.exp(-((abs(x)-.019)/.008)**2-((z-1.552)/.012)**2)*front
-   if z<1.54:z-=.065*max(0,min(1,(1.54-z)/.05))
+   # Full cheeks and a shorter, rounded jaw. Extend only the neck behind it.
+   cheek=math.exp(-((z-1.588)/.030)**2)*front
+   x*=1+.09*cheek;y-=.003*cheek*math.exp(-((abs(x)-.047)/.024)**2)
+   z+=.009*math.exp(-((z-1.541)/.022)**2)*front
+   neck=max(0,min(1,(y+.052)/.031))
+   if z<1.54:z-=.065*max(0,min(1,(1.54-z)/.05))*neck
   if name=='GEO-rain-eyebrows':
-   z=1.669+(z-1.669)*.62
-  return Vector((x,y,z))
+   z=1.669+(z-1.669)*.52+.004*math.exp(-((abs(x)-.023)/.020)**2)-.003*max(0,min(1,(abs(x)-.045)/.025))
+  if name=='GEO-rain-eye_dots':
+   # The viewport pupil is in front of Rain's original highlight plane.
+   center=math.copysign(.03273,x)
+   x=center+(x-center)*1.35-.002;y-=.002;z+=.003
+  return Vector((x,y,z-.006))
 
 created=[]
 for name in names:
@@ -70,8 +81,8 @@ for name in names:
   color=data.color_attributes.new(name='face_tint',type='FLOAT_COLOR',domain='POINT')
   for v,c in zip(data.vertices,color.data):
    x,y,z=v.co;front=max(0,min(1,(-y-.035)/.04))
-   lip=math.exp(-((z-1.554)/.006)**2-(x/.024)**2)*front*.4
-   cheek=math.exp(-((z-1.602)/.018)**2-((abs(x)-.048)/.019)**2)*front*.15
+   lip=math.exp(-((z-1.552)/.007)**2-(x/.024)**2)*front*.4
+   cheek=math.exp(-((z-1.593)/.020)**2-((abs(x)-.048)/.019)**2)*front*.27
    c.color=(.88,.51*(1-lip*.45-cheek*.3),.415*(1-lip*.30-cheek*.14),1)
   nodes=skin.node_tree.nodes;attr=nodes.new('ShaderNodeVertexColor');attr.layer_name='face_tint'
   skin.node_tree.links.new(attr.outputs['Color'],nodes.get('Principled BSDF').inputs['Base Color'])

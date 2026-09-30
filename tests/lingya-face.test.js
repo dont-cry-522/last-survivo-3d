@@ -6,7 +6,7 @@ import {CHARACTER_ASSETS} from '../character-assets.js';
 import {lingyaHeadY} from '../lingya-face.js';
 
 test('head lowering keeps the collar anchored and the entire head transform continuous',()=>{
- assert.equal(lingyaHeadY(1.4),1.4);assert(Math.abs(lingyaHeadY(1.7)-1.677)<1e-8);
+ assert.equal(lingyaHeadY(1.4),1.4);assert(Math.abs(lingyaHeadY(1.7)-1.671)<1e-8);
  let prev=-Infinity;for(let y=1.35;y<1.8;y+=.001){const out=lingyaHeadY(y);assert(out>prev);assert(out<=y);prev=out;}
 });
 
