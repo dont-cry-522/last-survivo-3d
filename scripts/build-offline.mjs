@@ -4,7 +4,7 @@ import {CHARACTER_ASSETS as assets} from '../character-assets.js';
 const root=new URL('../',import.meta.url),read=path=>readFile(new URL(path,root));
 const html=(await read('index.html')).toString(),version=html.match(/main\.js\?v=(\d+)/)?.[1];
 if(!version)throw Error('Missing release version');
-const files=['index.html','style.css','manifest.webmanifest'];
+const files=['index.html','style.css','manifest.webmanifest','THIRD_PARTY_ASSETS.md'];
 for(const f of await readdir(root))if(f.endsWith('.js')&&f!=='sw.js')files.push(f);
 for(const dir of ['vendor','assets/bestiary','assets/icons'])for(const f of await readdir(new URL(dir+'/',root)))if(/\.(js|png)$/.test(f))files.push(dir+'/'+f);
 const characterFiles=[...assets.textures,assets.motion.file,assets.motionFallback.file];
@@ -18,7 +18,7 @@ files.sort();const hash=createHash('sha256');let bytes=0;
 // Git normalizes text on Pages/Linux; the package must also be reproducible on Windows.
 const normalize=text=>text.replace(/\r\n/g,'\n');
 const template=normalize((await read('scripts/offline-worker.txt')).toString());hash.update(template);
-for(const file of files){let content=await read(file);if(/\.(?:js|css|html|webmanifest|json|gltf)$/.test(file))content=Buffer.from(normalize(content.toString()));hash.update(file);hash.update(content);bytes+=content.length;}
+for(const file of files){let content=await read(file);if(/\.(?:js|css|html|webmanifest|json|gltf|md)$/.test(file))content=Buffer.from(normalize(content.toString()));hash.update(file);hash.update(content);bytes+=content.length;}
 const build=version+'-'+hash.digest('hex').slice(0,12);
 const worker=template.toString().replace('__VERSION__',JSON.stringify(version)).replace('__BUILD__',JSON.stringify(build)).replace('__FILES__',JSON.stringify(files)).replace('__BYTES__',String(bytes));
 const out=new URL('sw.js',root);

@@ -1,22 +1,23 @@
-import {refineLingyaHead,lingyaHeadY} from './lingya-face.js?v=83';
-import {finishHeroSurface,smoothSeams} from './hero-finish.js?v=83';
-import{tideHarness}from'./tide-appearance.js?v=83';
-import{newHeroAttack,heroCarryPose,committedWeaponYaw}from'./new-hero-motion.js?v=83';
-import{heroDodgePose}from'./hero-dodge.js?v=83';
-import{lingyaHopPose}from'./lingya-motion.js?v=83';
-import{lingyaOutfit,lingyaAccessories,lingyaLegs}from'./lingya-appearance.js?v=83';
-import{boneBoomerang}from'./beast-model.js?v=83';
-import{makeHarpoon}from'./coast-models.js?v=83';
-import{guardianOutfit,guardianHair}from'./guardian-appearance.js?v=83';
-import{equipGuardian,animateGuardian}from'./guardian-model.js?v=83';
-import{weaponGesture,shotStarted}from'./weapon-performance.js?v=83';
-import{rollProgress,rollWeight}from'./dodge-motion.js?v=83';
+import {refineLingyaHead,lingyaHeadY} from './lingya-face.js?v=84';
+import {finishHeroSurface,smoothSeams} from './hero-finish.js?v=84';
+import{tideHarness}from'./tide-appearance.js?v=84';
+import{newHeroAttack,heroCarryPose,committedWeaponYaw}from'./new-hero-motion.js?v=84';
+import{heroDodgePose}from'./hero-dodge.js?v=84';
+import{lingyaHopPose}from'./lingya-motion.js?v=84';
+import{lingyaOutfit,lingyaAccessories,lingyaLegs}from'./lingya-appearance.js?v=84';
+import{boneBoomerang}from'./beast-model.js?v=84';
+import{makeHarpoon}from'./coast-models.js?v=84';
+import{guardianOutfit,guardianHair}from'./guardian-appearance.js?v=84';
+import{equipGuardian,animateGuardian}from'./guardian-model.js?v=84';
+import{weaponGesture,shotStarted}from'./weapon-performance.js?v=84';
+import{rollProgress,rollWeight}from'./dodge-motion.js?v=84';
 import * as T from './vendor/three.module.js';
 import {clone} from './vendor/SkeletonUtils.js';
-import {loadCharacterData} from './character-loader.js?v=83';
-import {makeHero as makePrototype} from './hero-model.js?v=83';
+import {loadCharacterData} from './character-loader.js?v=84';
+import {makeHero as makePrototype} from './hero-model.js?v=84';
 
 const templates=new Map(),clips=new Map();
+let lingyaFace;
 
 let loaded=false;
 const upper=/^(spine_|clavicle|upperarm|lowerarm|hand|index|middle|pinky|ring|thumb)/;
@@ -70,10 +71,11 @@ function bindParts(root,extra,onlyHead=false,kind=''){
   const target=firstSkin(root).skeleton,bones=new Map(target.bones.map(b=>[b.name,b]));const meshes=[];
   extra.traverse(o=>{if(o.isSkinnedMesh)meshes.push(o);});
   for(const m of meshes){
+    if(kind==='lingya'&&['Eyes','Eyebrows'].includes(m.name))continue;
     if(onlyHead&&m.material.name.includes('Superhero')){
       const g=m.geometry.clone(),p=g.attributes.position,ids=g.index?.array,keep=[];
       // The source base body is continuous; retain only head and neck above the outfit collar.
-      for(let i=0;i<(ids?.length||p.count);i+=3){const a=ids?ids[i]:i,b=ids?ids[i+1]:i+1,c=ids?ids[i+2]:i+2;if(Math.min(p.getY(a),p.getY(b),p.getY(c))>1.40&&Math.max(Math.abs(p.getX(a)),Math.abs(p.getX(b)),Math.abs(p.getX(c)))<.125)keep.push(a,b,c);}
+      for(let i=0;i<(ids?.length||p.count);i+=3){const a=ids?ids[i]:i,b=ids?ids[i+1]:i+1,c=ids?ids[i+2]:i+2;if(Math.min(p.getY(a),p.getY(b),p.getY(c))>1.40&&Math.max(Math.abs(p.getX(a)),Math.abs(p.getX(b)),Math.abs(p.getX(c)))<.125&&(kind!=='lingya'||Math.max(p.getY(a),p.getY(b),p.getY(c))<1.47))keep.push(a,b,c);}
       if(kind==='silver')for(let i=0;i<p.count;i++){let x=p.getX(i),y=p.getY(i),z=p.getZ(i);if(y>1.51){const jaw=Math.exp(-(((y-1.572)/.045)**2));x*=1-.035*jaw;if(y<1.62)y+=.002*jaw;if(z>.08&&Math.abs(x)<.027&&y>1.60&&y<1.665)z-=.002*Math.exp(-(((y-1.635)/.024)**2));p.setXYZ(i,x,y,z);}}
       g.setIndex(keep);g.computeVertexNormals();g.computeBoundingBox();g.computeBoundingSphere();m.geometry=g;
     }
@@ -84,6 +86,7 @@ function bindParts(root,extra,onlyHead=false,kind=''){
 export async function loadHeroAssets(onProgress=()=>{}){
   if(loaded)return;
   const {models:assets,clips:bakedClips}=await loadCharacterData(onProgress);
+  lingyaFace=assets['lingya-face'].scene;lingyaFace.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true;}});
   const tideBase=clone(assets['silver-base'].scene),lingyaBase=clone(assets['silver-base'].scene),lingyaHair=clone(assets['silver-hair'].scene),lingya=clone(assets['silver-outfit'].scene);
   for(const kind of ['silver','scout']){
     const root=assets[kind+'-outfit'].scene;root.skeleton=firstSkin(root).skeleton;
@@ -192,7 +195,7 @@ export function createSkinnedHero(kind,weapon){
     if(kind==='silver'){const mask=faceMask(model);owned.push(mask);attachAtRest(bones.get('Head'),mask,model);}
   }
   if(kind==='tide')attachAtRest(bones.get('spine_03'),tideHarness(),model);
-  if(kind==='lingya'){const a=lingyaAccessories();for(const ear of a.hood.children)ear.position.y=lingyaHeadY(ear.position.y);const bagPivot=new T.Group();bagPivot.position.set(.24,1,-.10);a.bag.position.set(-.24,-1,.10);bagPivot.add(a.bag);g.userData.satchel=bagPivot;g.userData.skirt=a.skirt;owned.push(a.skirt.children[0]);attachAtRest(bones.get('pelvis'),a.skirt,model);attachAtRest(bones.get('Head'),a.hood,model);attachAtRest(bones.get('spine_03'),a.chest,model);attachAtRest(bones.get('pelvis'),bagPivot,model);g.userData.satchelRest=bagPivot.quaternion.clone();}
+  if(kind==='lingya'){const face=lingyaFace.clone(true);face.name='Lingya_authored_face';attachAtRest(bones.get('Head'),face,model);g.userData.face=face;g.userData.faceEyes=face.getObjectByName('Lingya-eyes_viewport');g.userData.faceEyeRest=g.userData.faceEyes.position.z;g.userData.faceMorphs=[];face.traverse(o=>{if(o.morphTargetInfluences)g.userData.faceMorphs.push(o);});const a=lingyaAccessories();for(const ear of a.hood.children)ear.position.y=lingyaHeadY(ear.position.y);const bagPivot=new T.Group();bagPivot.position.set(.24,1,-.10);a.bag.position.set(-.24,-1,.10);bagPivot.add(a.bag);g.userData.satchel=bagPivot;g.userData.skirt=a.skirt;owned.push(a.skirt.children[0]);attachAtRest(bones.get('pelvis'),a.skirt,model);attachAtRest(bones.get('Head'),a.hood,model);attachAtRest(bones.get('spine_03'),a.chest,model);attachAtRest(bones.get('pelvis'),bagPivot,model);g.userData.satchelRest=bagPivot.quaternion.clone();}
   // Slightly larger head silhouette remains legible from the elevated game camera.
   bones.get('Head')?.scale.setScalar(kind==='silver'?1.035:kind==='guardian'?1.04:1.055);
   if(kind==='lingya')bones.get('Head')?.scale.set(1.28,1.28*1.02/.73,1.28);
@@ -211,6 +214,7 @@ export function createSkinnedHero(kind,weapon){
 }
 export function animateSkinnedHero(g,t,speed,attack,hurt){
   const d=g.userData,dt=d.lastTime===undefined?1/60:Math.max(0,Math.min(d.kineticActions?.1:.05,t-d.lastTime));d.lastTime=t;
+  if(d.faceMorphs){const phase=(t%4.3),blink=Math.max(0,1-Math.abs(phase-.13)/.13);for(const face of d.faceMorphs)face.morphTargetInfluences[0]=blink;d.faceEyes.position.z=d.faceEyeRest-blink*.008;}
   if(d.lingyaPoseReady)for(const [bone,q]of d.lingyaPoseBase)bone.quaternion.copy(q);
   const fired=shotStarted(d,attack,d.previousAttack||0);d.previousAttack=attack;d.attackAge=fired?0:(d.attackAge??2)+dt;
   const newHero=!!d.kineticActions,action=newHeroAttack(d.kind,d.shotSerial?(d.reloadDuration?(d.reloadPhase??1)*d.reloadDuration:d.attackAge):10,d.reloadDuration||1);

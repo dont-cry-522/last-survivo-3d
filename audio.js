@@ -1,7 +1,7 @@
-import{BIOME_THEMES,instrumentSample,scoreBiome,biomeThreat}from'./biome-music.js?v=83';
-import{companionSample}from'./companion-audio.js?v=83';
-import{weaponSample}from'./weapon-audio.js?v=83';
-import{creatureSample,creatureSpatial,ENEMY_VOICES}from'./enemy-audio.js?v=83';
+import{BIOME_THEMES,instrumentSample,scoreBiome,biomeThreat}from'./biome-music.js?v=84';
+import{companionSample}from'./companion-audio.js?v=84';
+import{weaponSample}from'./weapon-audio.js?v=84';
+import{creatureSample,creatureSpatial,ENEMY_VOICES}from'./enemy-audio.js?v=84';
 // Original procedural score and sound design. No external audio downloads.
 const midi=n=>440*2**((n-69)/12);
 const THEMES={...BIOME_THEMES,

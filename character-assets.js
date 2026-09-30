@@ -40,6 +40,10 @@ export const CHARACTER_ASSETS={
     "tide-hair": {
       "file": "tide-hair-4c520b3d2fa1.glb.gz",
       "bytes": 82599
+    },
+    "lingya-face": {
+      "file": "lingya-face-0a7f92978798.glb.gz",
+      "bytes": 1289068
     }
   },
   "textures": [

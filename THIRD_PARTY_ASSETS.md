@@ -16,6 +16,17 @@ The hashed delivery GLBs use lossless gzip compression. Baked animation tracks p
 
 The game does not contain extracted models, textures or audio from NieR, Chainsaw Man, Rozen Maiden, or other commercial reference works.
 
+## Lingya head — Rain Rig, CC BY 4.0
+
+“Rain Rig (CC) Blender Foundation | studio.blender.org”
+
+- Original asset: [Rain v3](https://studio.blender.org/characters/rain/v3/), Blender Studio / Blender Foundation.
+- License: [Creative Commons Attribution 4.0 International](https://creativecommons.org/licenses/by/4.0/).
+- Used portions: head, eyes, eyebrows, and eyelashes. No source rig scripts are executed or included.
+- Adaptations: extracted head, relaxed smile, resized and positioned to fit Lingya's existing hood and body, new skin/eye/brow/lash materials and baked eyelid morph animation, attached to the game's head bone, exported as glTF and gzip delivery GLB.
+- Adapted files: `assets/characters/lingya-face*`. The adapted head remains available under CC BY 4.0. The remaining character outfit/animation assets retain their own licenses.
+- Reproduction: `scripts/prepare-lingya-head.py`, run with Blender 4.5 LTS and the official Rain v3 source, with embedded Python auto-execution disabled.
+
 ## Three.js — MIT
 
 Three.js 0.180.0 and its GLTFLoader, SkeletonUtils and BufferGeometryUtils addons are vendored in `vendor/`. The MIT notice is retained in `vendor/LICENSE`. Addon imports were changed to local paths; the renderer has no runtime CDN dependency.
