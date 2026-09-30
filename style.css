@@ -145,3 +145,9 @@ header #offline-panel{position:relative;margin:0;padding:0;border:0;background:n
 @media(max-width:700px){body:not(.playing) #vignette{background:linear-gradient(0deg,#0d242bd9,transparent 70%,#0d242ba8)}}
 
 .showcase-heading,.menu-caption{text-shadow:0 1px 4px #071b20,0 2px 12px #071b20}.showcase-heading{color:#f0edce}.showcase-heading small{color:#e0e8d6}
+
+/* Inspection keeps the selected map visible and leaves vertical phone scrolling free. */
+#hero-preview{pointer-events:auto;touch-action:pan-y;cursor:grab}#hero-preview:active{cursor:grabbing}#hero-preview:focus-visible{outline:1px solid #e4cc8b88;outline-offset:3px}
+.preview-tools{display:flex;gap:6px;pointer-events:auto}.preview-tools button{font-size:11px;padding:7px 11px;letter-spacing:1px;background:#102e2bba}.preview-tools button[aria-pressed=true]{border-color:#e6c991;color:#f4dda8;background:#3d5036e8}.showcase-heading{align-items:center}.preview-help{display:block;text-align:center;font-size:10px;letter-spacing:1px;padding:8px 0;color:#dfdfc9;text-shadow:0 1px 5px #09252b}
+@media(max-width:700px){.hero-showcase{height:370px}.preview-tools button{padding:7px 10px}.preview-help{font-size:9px}}
+@media(max-height:500px) and (min-width:701px){.preview-help{padding:4px 0;font-size:9px}.preview-tools button{padding:5px 8px}.menu-caption{padding-top:7px}}

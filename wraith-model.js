@@ -1,6 +1,7 @@
-import{weaponGesture,shotStarted}from'./weapon-performance.js?v=81';
+import {smoothSeams} from './hero-finish.js?v=82';
+import{weaponGesture,shotStarted}from'./weapon-performance.js?v=82';
 import * as T from './vendor/three.module.js';
-import{shadowCrescentGeometry,shadowCrescentEdge}from'./shadow-weapons.js?v=81';
+import{shadowCrescentGeometry,shadowCrescentEdge}from'./shadow-weapons.js?v=82';
 
 // Continuous cloth surfaces share geometry; each actor owns its pose and morph weights.
 const geometry=new Map(),materials=new Map();
@@ -9,16 +10,16 @@ function cached(key,create){if(!geometry.has(key))geometry.set(key,create());ret
 function material(color,glow=false){const key=color+':'+glow;if(!materials.has(key))materials.set(key,glow?new T.MeshBasicMaterial({color,toneMapped:false}):new T.MeshStandardMaterial({color,roughness:.8,metalness:.12,side:T.DoubleSide}));return materials.get(key);}
 function mesh(parent,geo,color,pos=[0,0,0],scale=[1,1,1],glow=false){const m=new T.Mesh(geo,material(color,glow));m.position.set(...pos);m.scale.set(...scale);m.castShadow=!glow;m.receiveShadow=true;parent.add(m);return m;}
 const joint=(parent,x,y,z)=>{const g=new T.Group();g.position.set(x,y,z);parent.add(g);return g;};
-const ell=(p,c,pos,scale,glow=false)=>mesh(p,cached('sphere',()=>new T.SphereGeometry(1,16,12)),c,pos,scale,glow);
-function shape(p,c,profile,pos=[0,0,0],depth=.72){const geo=cached('profile:'+JSON.stringify(profile),()=>new T.LatheGeometry(profile.map(([r,y])=>new T.Vector2(r,y)),24));return mesh(p,geo,c,pos,[1,1,depth]);}
-function curve(p,c,points,radius=.008,glow=false){const key='curve:'+radius+JSON.stringify(points);const geo=cached(key,()=>new T.TubeGeometry(new T.CatmullRomCurve3(points.map(v=>new T.Vector3(...v))),Math.max(8,points.length*3),radius,5,false));return mesh(p,geo,c,[0,0,0],[1,1,1],glow);}
-function surface(vertices,indices){const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute(vertices,3));g.setIndex(indices);g.computeVertexNormals();return g;}
+const ell=(p,c,pos,scale,glow=false)=>mesh(p,cached('sphere',()=>new T.SphereGeometry(1,28,20)),c,pos,scale,glow);
+function shape(p,c,profile,pos=[0,0,0],depth=.72){const geo=cached('profile:'+JSON.stringify(profile),()=>new T.LatheGeometry(profile.map(([r,y])=>new T.Vector2(r,y)),40));return mesh(p,geo,c,pos,[1,1,depth]);}
+function curve(p,c,points,radius=.008,glow=false){const key='curve:'+radius+JSON.stringify(points);const geo=cached(key,()=>new T.TubeGeometry(new T.CatmullRomCurve3(points.map(v=>new T.Vector3(...v))),Math.max(16,points.length*4),radius,8,false));return mesh(p,geo,c,[0,0,0],[1,1,1],glow);}
+function surface(vertices,indices){const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute(vertices,3));g.setIndex(indices);g.computeVertexNormals();smoothSeams(g);return g;}
 
 function hoodGeometry(){return cached('hollow-hood',()=>{
- const vertices=[],indices=[],slices=32,rings=12;
+ const vertices=[],indices=[],slices=48,rings=18;
  for(let j=0;j<=rings;j++){const v=j/rings,bulge=1+.3*Math.sin(v*Math.PI),shrink=Math.sqrt(1-v*v)*bulge;
-  for(let i=0;i<=slices;i++){const a=i/slices*Math.PI*2,sy=Math.sin(a),x=Math.cos(a)*.224*shrink*(sy<0?.85:1),y=(sy*.24+(sy>0?Math.pow(sy,6)*.036:0))*shrink+v*.025,z=.18-v*.44+sy*.045*(1-v);
-   vertices.push(x*(sy<0?1+sy*.18:1),y,z);if(i<slices&&j<rings){const n=j*(slices+1)+i;indices.push(n,n+1,n+slices+1,n+1,n+slices+2,n+slices+1);}
+  for(let i=0;i<=slices;i++){const a=i/slices*Math.PI*2,sy=Math.sin(a),x=Math.cos(a)*.224*shrink*(1-.15*Math.max(0,-sy)),y=(sy*.24+(sy>0?Math.pow(sy,6)*.036:0))*shrink+v*.025,z=.18-v*.44+sy*.045*(1-v);
+   vertices.push(x*(1-.18*Math.max(0,-sy)),y,z);if(i<slices&&j<rings){const n=j*(slices+1)+i;indices.push(n,n+1,n+slices+1,n+1,n+slices+2,n+slices+1);}
   }
  }
  return surface(vertices,indices);
@@ -82,8 +83,8 @@ export function makeWraith(weapon='shade'){
  for(const s of [-1,1]){const coat=cloth(torso,d,C.robe,.33,.34,[s*.17,-.01,.235],true);coat.rotation.y=s*.3;coat.rotation.z=s*-.1;}
  // Recessed face, hollow hood and three cold light slits are visible from the game camera.
  const head=joint(torso,0,.76,0);head.scale.set(1.08,.98,1.0);d.head=head;mesh(head,hoodGeometry(),C.hood);
- ell(head,C.void,[0,-.015,.045],[.172,.208,.105]);
- const rim=[];for(let i=0;i<=24;i++){const a=i/24*Math.PI*2,sy=Math.sin(a);rim.push([Math.cos(a)*.224*(sy<0?.85*(1+sy*.18):1),sy*.24+(sy>0?Math.pow(sy,6)*.036:0),.18+sy*.045]);}curve(head,C.fold,rim,.012);
+ ell(head,C.void,[0,-.015,.045],[.194,.218,.128]);
+ const rim=[];for(let i=0;i<=24;i++){const a=i/24*Math.PI*2,sy=Math.sin(a);rim.push([Math.cos(a)*.224*(1-.15*Math.max(0,-sy))*(1-.18*Math.max(0,-sy)),sy*.24+(sy>0?Math.pow(sy,6)*.036:0),.18+sy*.045]);}curve(head,C.fold,rim,.012);
  for(const x of [-.071,0,.071])curve(head,C.light,[[x,.105,.170],[x*.88,.021,.18],[x*.81,-.075,.166],[x*.55,-.135,.135]],x===0?.0085:.0075,true);
  for(const s of [-1,1]){
   const side=s<0?'left':'right',leg=joint(hips,s*.16,-.04,0);d[side+'Leg']=leg;ell(leg,C.lining,[0,-.145,0],[.11,.17,.115]);

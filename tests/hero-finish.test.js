@@ -1,0 +1,18 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import * as T from '../vendor/three.module.js';
+import {smoothSeams,finishHeroSurface} from '../hero-finish.js';
+import {makeWraith} from '../wraith-model.js';
+
+test('surface finishing preserves skin attributes, custom shaders and independent materials',()=>{
+ const root=new T.Group(),geometry=new T.BoxGeometry(1,1,1),m=new T.MeshStandardMaterial({normalScale:new T.Vector2(.4,.4)});
+ m.name='Superhero';const compile=()=>{},key=()=> 'custom-skin';m.onBeforeCompile=compile;m.customProgramCacheKey=key;
+ geometry.setAttribute('skinIndex',new T.Uint16BufferAttribute(new Uint16Array(geometry.attributes.position.count*4).fill(1),4));geometry.setAttribute('skinWeight',new T.Float32BufferAttribute(new Float32Array(geometry.attributes.position.count*4).fill(.25),4));
+ const actor=new T.Mesh(geometry,m);root.add(actor);const p=Array.from(geometry.attributes.position.array),w=Array.from(geometry.attributes.skinWeight.array);
+ finishHeroSurface(root,'silver');assert.notEqual(actor.material,m);assert.notEqual(actor.geometry,geometry);assert.equal(actor.material.onBeforeCompile,compile);assert.equal(actor.material.customProgramCacheKey,key);assert.deepEqual(Array.from(actor.geometry.attributes.position.array),p);assert.deepEqual(Array.from(actor.geometry.attributes.skinWeight.array),w);assert.equal(m.normalScale.x,.4);
+ smoothSeams(actor.geometry);assert(Array.from(actor.geometry.attributes.normal.array).every(Number.isFinite));
+});
+test('wraith hood closes continuously at its side seam',()=>{
+ const h=makeWraith().userData.head.children[0],p=h.geometry.attributes.position;
+ for(let row=0;row<=18;row++){const a=new T.Vector3().fromBufferAttribute(p,row*49),b=new T.Vector3().fromBufferAttribute(p,row*49+48);assert(a.distanceTo(b)<1e-6,'open hood side seam');}
+});
