@@ -6,7 +6,7 @@ const url=process.env.TEST_URL||'http://127.0.0.1:8899/';
   await p.addInitScript(()=>{const raf=requestAnimationFrame;window.requestAnimationFrame=cb=>{window.nextFrame=cb;return raf(t=>{if(!window.freezeGame)cb(t);});};});
   const ready=()=>p.waitForFunction(()=>window.game3d&&!document.querySelector('#start').disabled,null,{timeout:60000});
   await p.goto(url,{waitUntil:'domcontentloaded',timeout:60000});await ready();
-  await p.locator('[data-map="confluence"]').click();await p.locator('[data-map-visibility="explore"]').click();
+  await p.locator('#travel-tab').click();await p.locator('[data-map="confluence"]').click();await p.locator('#travel-tab').click();await p.locator('[data-map-visibility="explore"]').click();
   assert.equal(await p.locator('[data-map-visibility="explore"]').getAttribute('aria-pressed'),'true');
   await p.screenshot({path:(process.env.OUTPUT_DIR||'../../outputs')+`/v76-menu-${width}.png`});
   await p.locator('#start').click();await p.evaluate(()=>freezeGame=true);await p.waitForTimeout(70);
@@ -27,12 +27,12 @@ const url=process.env.TEST_URL||'http://127.0.0.1:8899/';
   }
   await p.evaluate(()=>{game3d.select('silver','confluence',0);game3d.start();let t=performance.now();for(let i=0;i<8;i++)nextFrame(t+=17);});
   await p.screenshot({path:(process.env.OUTPUT_DIR||'../../outputs')+`/v76-fog-${width}.png`});
-  await p.evaluate(()=>game3d.menu());await p.locator('[data-map-visibility="visible"]').click();await p.locator('#start').click();
+  await p.evaluate(()=>game3d.menu());await p.locator('#travel-tab').click();await p.locator('[data-map-visibility="visible"]').click();await p.locator('#start').click();
   const visible=await p.evaluate(()=>({mode:game3d.world.exploration.mode,pixel:Array.from(document.querySelector('#map canvas').getContext('2d').getImageData(125,125,1,1).data).slice(0,3)}));
   assert.equal(visible.mode,'visible');assert.notDeepEqual(visible.pixel,[5,11,14]);
   await p.reload({waitUntil:'domcontentloaded'});await ready();assert.equal(await p.locator('[data-map-visibility="visible"]').getAttribute('aria-pressed'),'true');
-  await p.locator('[data-map-visibility="explore"]').click();await p.reload({waitUntil:'domcontentloaded'});await ready();assert.equal(await p.locator('[data-map-visibility="explore"]').getAttribute('aria-pressed'),'true');
-  await p.evaluate(()=>{Storage.prototype.setItem=()=>{throw Error('blocked');};});await p.locator('[data-map-visibility="visible"]').click();await p.locator('#start').click();assert.equal(await p.evaluate(()=>game3d.world.exploration.mode),'visible');
+  await p.locator('#travel-tab').click();await p.locator('[data-map-visibility="explore"]').click();await p.reload({waitUntil:'domcontentloaded'});await ready();assert.equal(await p.locator('[data-map-visibility="explore"]').getAttribute('aria-pressed'),'true');
+  await p.evaluate(()=>{Storage.prototype.setItem=()=>{throw Error('blocked');};});await p.locator('#travel-tab').click();await p.locator('[data-map-visibility="visible"]').click();await p.locator('#start').click();assert.equal(await p.evaluate(()=>game3d.world.exploration.mode),'visible');
   assert.deepEqual(errors,[]);console.log(`PASS ${width}x${height}: six maps, fog pixels, exploration retention/reset, pause, full visibility, reload preferences and blocked storage`);await p.close();
  }
 }finally{await b.close();}})().catch(e=>{console.error(e);process.exit(1);});

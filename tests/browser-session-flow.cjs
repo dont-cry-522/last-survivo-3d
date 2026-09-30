@@ -4,7 +4,7 @@ const {chromium}=require(process.env.PLAYWRIGHT_MODULE||'playwright'),assert=req
   const page=await browser.newPage({viewport:{width,height},hasTouch:touch}),errors=[];page.on('pageerror',e=>errors.push(e.message));
   await page.addInitScript(()=>{const raf=requestAnimationFrame;window.requestAnimationFrame=cb=>raf(t=>{if(!window.freezeGame)cb(t)});});
   await page.goto(process.env.TEST_URL||'http://127.0.0.1:8899/');await page.waitForFunction(()=>window.game3d,null,{polling:100,timeout:60000});
-  await page.locator('[data-hero=wraith]').click();await page.locator('[data-map=snow]').click();await page.locator('#weapons button').nth(2).click();
+  await page.locator('[data-hero=wraith]').click();await page.locator('#travel-tab').click();await page.locator('[data-map=snow]').click();await page.locator('#loadout-tab').click();await page.locator('#weapons button').nth(2).click();
   await page.locator('#start').click();await page.evaluate(()=>{freezeGame=true;game3d.world.obstacles.length=0;game3d.world.patches.length=0;game3d.world.sites.length=0;game3d.player.inv=999;});await page.waitForTimeout(60);
   if(touch){
    const boxes=await Promise.all(['#joystick','#dash','#aim-stick'].map(s=>page.locator(s).boundingBox()));
