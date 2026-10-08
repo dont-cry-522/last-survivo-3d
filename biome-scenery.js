@@ -1,6 +1,6 @@
 import * as T from './vendor/three.module.js';
-import{MAP_HALF}from'./map-layout.js?v=94';
-import{bridgeContains}from'./coast.js?v=94';
+import{MAP_HALF}from'./map-layout.js?v=95';
+import{bridgeContains}from'./coast.js?v=95';
 // Shared geometry and instanced details: decoration stays low, leaving combat and collision legible.
 const geometries={stone:new T.DodecahedronGeometry(1,0),snow:null,chip:new T.OctahedronGeometry(1,0),wood:new T.CylinderGeometry(.10,.15,1,7),leaf:null,ice:new T.ConeGeometry(1,1,5),frond:null},materials=new Map();
 const windAngle=-.7,windX=Math.sin(windAngle),windZ=Math.cos(windAngle);

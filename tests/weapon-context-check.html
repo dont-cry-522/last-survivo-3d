@@ -10,13 +10,13 @@
 <div class="controls"><select id="weapon" aria-label="选择人物与武器"></select><select id="mix" aria-label="声音对比"><option value="A">A · 当前版</option><option value="B">B · 减轻出手与装填</option><option value="C">C · 减轻命中与受击</option></select><button id="listen" disabled>播放所选片段</button><button id="compare" disabled>依次听 A / B / C</button><button id="stop" disabled>停止</button></div>
 <p id="status" role="status">正在载入真实游戏…</p><div id="view"></div><details><summary>开发检查与对比记录</summary><button id="run" disabled>运行动作音效检查</button><pre id="report">等待开始。</pre><pre id="comparison">尚未比较。</pre></details>
 <script type="module">
-import{HERO_LOADOUTS,WEAPONS}from'../rules.js?v=94';
+import{HERO_LOADOUTS,WEAPONS}from'../rules.js?v=95';
 const $=s=>document.querySelector(s),sleep=ms=>new Promise(resolve=>setTimeout(resolve,ms)),assert=(ok,message)=>{if(!ok)throw Error(message);};
 const heroNames={scout:'游侠',silver:'霜影',wraith:'影裔',tide:'潮行者',lingya:'铃芽',wuling:'雾苓',mirage:'蜃影'};
 for(const[hero,ids]of Object.entries(HERO_LOADOUTS))for(const[idIndex,id]of ids.entries()){const o=document.createElement('option');o.value=hero+':'+idIndex;o.textContent=heroNames[hero]+' · '+WEAPONS[id].name;$('#weapon').append(o);}
 $('#weapon').value='silver:0';
 let g,win,busy=false,stopRequested=false,events=[],clock=0,listening=false,activeMix='A';
-const mixes={A:{shot:1,mechanism:1,impact:1,hurt:1},B:{shot:.75,mechanism:.35,impact:1,hurt:1},C:{shot:1,mechanism:1,impact:.65,hurt:.35}};
+const mixes={A:'standard',B:'lightAttack',C:'lightImpact'};
 const records=[];
 function publish(){window.weaponContextReport={checks:records,events};$('#report').textContent=JSON.stringify(window.weaponContextReport,null,2);}
 function lock(value){busy=value;const frame=$('#view iframe');if(frame)frame.style.pointerEvents=value?'none':'';$('#run').disabled=value;$('#listen').disabled=value;$('#weapon').disabled=value;$('#mix').disabled=value;$('#compare').disabled=value;$('#stop').disabled=!value;}
@@ -25,7 +25,7 @@ function setup(hero,index=0){
  Object.assign(g.world,{obstacles:[],patches:[],ponds:[],ice:[],fords:[],bridges:[],sites:[],roaming:[],discoveries:[],breakables:[]});
  Object.assign(g.player,{x:0,z:0,attack:0,inv:999,pending:0});g.hero.position.set(0,0,0);g.hero.rotation.y=0;
  Object.assign(g.controls,{angle:0,held:false,hasAim:true});g.camera.position.set(12,20,16);g.camera.lookAt(0,0,0);g.camera.updateMatrixWorld(true);
- g.audio.musicVolume=0;g.audio.muted=false;g.audio.applyVolumes(true);events=[];clock=0;win.qaFrame(0);
+ g.audio.setSfxStyle(listening?mixes[activeMix]:'standard',{persist:false});g.audio.musicVolume=0;g.audio.muted=false;g.audio.applyVolumes(true);events=[];clock=0;win.qaFrame(0);
 }
 function target(x=0,z=6){const e=g.spawn('golem',x,z);assert(e,'未创建目标');Object.assign(e,{hp:10000,maxHp:10000,speed:0,cool:999,damage:0});return e;}
 function step(dt){clock+=dt;g.step(dt);g.vfx.update(dt);}
@@ -110,14 +110,12 @@ try{
  frame.srcdoc=html.replace('<head>','<head>'+bootstrap);win=frame.contentWindow;
  for(let i=0;i<500;i++){if(win.game3d&&!win.document.querySelector('#start')?.disabled)break;await sleep(50);}
  assert(win.game3d&&!win.document.querySelector('#start')?.disabled,'游戏资源载入超时');g=win.game3d;
- for(const kind of['shot','mechanism','impact','weapon','spell','dodge']){const original=g.audio[kind].bind(g.audio);g.audio[kind]=(...args)=>{const actual=[...args];if(kind==='weapon'&&listening){actual[3]=(args[3]??1)*(mixes[activeMix][args[1]]??1);}const event={kind,time:+clock.toFixed(4),args},before=kind==='weapon'?new Set(g.audio.weaponSources):null;events.push(event);const result=original(...actual);if(before){const sources=[...g.audio.weaponSources].filter(source=>!before.has(source));const key=args[0]+':'+args[1]+':'+(args[2]??0),take=(g.audio.weaponTakes.get(key)||2)-1,cue=g.audio.materialEffects.get(g.audio.materialEffects.count(key)?key:args[0]+':'+args[1],take);Object.assign(event,{actualVolume:actual[3]??1,gain:cue?.gain,offset:cue?.offset,played:result===true,sources:sources.length,material:sources.length>0&&sources.every(source=>source.buffer===g.audio.materialEffects.buffer)});}return result;};}
- const creature=g.audio.creature.bind(g.audio);let hurtBus;
- g.audio.creature=(...args)=>{if(!listening)return creature(...args);const before=new Set(g.audio.creatureSources),bus=g.audio.sfx,volume=args[1]==='hurt'?mixes[activeMix].hurt:1;let result;
-  if(volume!==1){hurtBus||=g.audio.ctx.createGain();hurtBus.gain.value=volume;hurtBus.disconnect();hurtBus.connect(bus);g.audio.sfx=hurtBus;}
-  try{result=creature(...args);}finally{g.audio.sfx=bus;}
+ for(const kind of['shot','mechanism','impact','weapon','spell','dodge']){const original=g.audio[kind].bind(g.audio);g.audio[kind]=(...args)=>{const event={kind,time:+clock.toFixed(4),args},before=kind==='weapon'?new Set(g.audio.weaponSources):null;events.push(event);const result=original(...args);if(before){const sources=[...g.audio.weaponSources].filter(source=>!before.has(source));const key=args[0]+':'+args[1]+':'+(args[2]??0),take=(g.audio.weaponTakes.get(key)||2)-1,cue=g.audio.materialCue(g.audio.materialEffects.count(key)?key:args[0]+':'+args[1],take);Object.assign(event,{actualVolume:(args[3]??1)*(g.audio.effectProfile[args[1]]??1),gain:cue?.gain,offset:cue?.offset,played:result===true,sources:sources.length,material:sources.length>0&&sources.every(source=>source.buffer===g.audio.materialEffects.buffer)});}return result;};}
+ const creature=g.audio.creature.bind(g.audio);
+ g.audio.creature=(...args)=>{if(!listening)return creature(...args);const before=new Set(g.audio.creatureSources),volume=args[1]==='hurt'?g.audio.effectProfile.hurt:1,result=creature(...args);
   const sources=[...g.audio.creatureSources].filter(source=>!before.has(source));events.push({kind:'creature',time:+clock.toFixed(4),args,played:result===true,sources:sources.length,actualVolume:volume,take:g.audio.weaponTakes.get('creature-'+args[0]+'-'+args[1])});return result;
  };
- window.addEventListener('pagehide',()=>{stopRequested=true;g.audio.stopWeapons();g.audio.stopCreatures();g.audio.stopMusic();hurtBus?.disconnect();});
+ window.addEventListener('pagehide',()=>{stopRequested=true;g.audio.stopWeapons();g.audio.stopCreatures();g.audio.stopMusic();});
  win.qaFrame(0);$('#status').textContent='已就绪。点击「依次听 A / B / C」，不用描述术语，听哪段更顺即可。';lock(false);
 }catch(error){$('#status').textContent='载入失败：'+error.message;}
 </script></html>

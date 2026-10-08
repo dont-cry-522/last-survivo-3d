@@ -1,11 +1,19 @@
-import{BIOME_THEMES,instrumentSample,scoreBiome,biomeThreat}from'./biome-music.js?v=94';
-import{companionSample}from'./companion-audio.js?v=94';
-import{weaponSample,weaponTakeCount}from'./weapon-audio.js?v=94';
-import{creatureSample,creatureSpatial,ENEMY_VOICES}from'./enemy-audio.js?v=94';
-import{RecordedMusic}from'./recorded-music.js?v=94';
-import{RecordedEffects}from'./recorded-effects.js?v=94';
+import{BIOME_THEMES,instrumentSample,scoreBiome,biomeThreat}from'./biome-music.js?v=95';
+import{companionSample}from'./companion-audio.js?v=95';
+import{weaponSample,weaponTakeCount}from'./weapon-audio.js?v=95';
+import{creatureSample,creatureSpatial,ENEMY_VOICES}from'./enemy-audio.js?v=95';
+import{RecordedMusic}from'./recorded-music.js?v=95';
+import{RecordedEffects}from'./recorded-effects.js?v=95';
 // Local licensed recordings, with the original procedural score as a loading/offline fallback.
 const midi=n=>440*2**((n-69)/12);
+// Sound preferences only: attack timing, damage and music keep their existing behavior.
+export const SFX_STYLES=Object.freeze({
+  standard:{label:'当前原版',description:'保留当前的出手、装填与命中声音。',material:true,shot:1,mechanism:1,impact:1,hurt:1},
+  lightAttack:{label:'轻出手版',description:'减轻出手与装填声音，保留命中的分量。',material:true,shot:.75,mechanism:.35,impact:1,hurt:1},
+  lightImpact:{label:'轻命中版',description:'减轻命中与怪物受击声，突出武器出手。',material:true,shot:1,mechanism:1,impact:.65,hurt:.35},
+  legacy:{label:'早期合成版',description:'使用材质录音加入前的合成音效。',material:false,shot:1,mechanism:1,impact:1,hurt:1}
+});
+const soundStyle=value=>Object.hasOwn(SFX_STYLES,value)?value:'standard';
 // Contact belongs to the target on the isometric ground plane, not to the camera.
 export function contactSpatial(dx=0,dz=0){return{gain:1/(1+Math.hypot(dx,dz)*.075),pan:Math.max(-.7,Math.min(.7,(dx-dz)/20))};}
 // Related abilities retain their hero's material instead of falling back to a shared chirp.
@@ -17,12 +25,19 @@ const THEMES={...BIOME_THEMES,
 };
 export class GameAudio{
   constructor(context=null){
-    this.ctx=context;this.ready=false;this.muted=false;this.musicVolume=.65;this.sfxVolume=.8;
+    this.ctx=context;this.ready=false;this.muted=false;this.musicVolume=.65;this.sfxVolume=.8;this.sfxStyle='standard';
     this.musicBuffers=new Map();this.musicSources=new Set();this.musicVoices=new Set();this.beat=0;this.next=0;this.map='forest';this.pressure=0;this.mode='menu';this.cooldowns=new Map();this.nodes=0;this.proceduralSources=new Set();this.weaponBuffers=new Map();this.weaponTakes=new Map();this.weaponSources=new Set();this.creatureBuffers=new Map();this.creatureSources=new Set();
-    try{const v=JSON.parse(localStorage.getItem('forest3d-audio')||'null');if(v){this.muted=!!v.muted;this.musicVolume=this.clamp(v.music,.65);this.sfxVolume=this.clamp(v.sfx,.8);}}catch{}
+    try{const v=JSON.parse(localStorage.getItem('forest3d-audio')||'null');if(v){this.muted=!!v.muted;this.musicVolume=this.clamp(v.music,.65);this.sfxVolume=this.clamp(v.sfx,.8);this.sfxStyle=soundStyle(v.sfxStyle);}}catch{}
   }
   clamp(n,f){return Number.isFinite(n)?Math.max(0,Math.min(1,n)):f;}
-  save(){try{localStorage.setItem('forest3d-audio',JSON.stringify({muted:this.muted,music:this.musicVolume,sfx:this.sfxVolume}));}catch{}}
+  save(){try{localStorage.setItem('forest3d-audio',JSON.stringify({muted:this.muted,music:this.musicVolume,sfx:this.sfxVolume,sfxStyle:this.sfxStyle}));}catch{}}
+  get effectProfile(){return SFX_STYLES[soundStyle(this.sfxStyle)];}
+  materialCue(key,take=0){return this.effectProfile.material?this.materialEffects?.get(key,take):null;}
+  setSfxStyle(value,{persist=true}={}){
+    const next=soundStyle(value);
+    if(next!==this.sfxStyle){this.stopWeapons(true);this.stopCreatures();this.sfxStyle=next;this.weaponTakes.clear();}
+    if(persist)this.save();
+  }
   setup(){
     if(this.ready)return;const c=this.ctx;
     this.master=c.createGain();this.music=c.createGain();this.scoreMusic=c.createGain();this.sfx=c.createGain();
@@ -83,13 +98,13 @@ export class GameAudio{
     const key='creature-'+kind+'-'+event,t=this.ctx.currentTime;
     if((this.cooldowns.get(key)||0)>t||(this.cooldowns.get('creature-'+group)||0)>t)return false;
     const materialKey='material:'+ENEMY_VOICES[kind].texture+':impact',take=this.weaponTakes.get(key)||0;
-    const material=['impact','hurt'].includes(event)?this.materialEffects?.get(materialKey,take):null;
+    const material=['impact','hurt'].includes(event)?this.materialCue(materialKey,take):null;
     const cacheKey=kind+':'+event;let buffer=material?.buffer||this.creatureBuffers.get(cacheKey);
     if(!buffer){const samples=creatureSample(kind,event,this.ctx.sampleRate);if(!samples)return false;buffer=this.ctx.createBuffer(1,samples.length,this.ctx.sampleRate);buffer.copyToChannel(samples,0);this.creatureBuffers.set(cacheKey,buffer);}
     this.cooldowns.set(key,t+(quiet?.3:.14));this.cooldowns.set('creature-'+group,t+interval);
     if(material)this.weaponTakes.set(key,(take+1)%this.materialEffects?.count(materialKey));
     const source=this.ctx.createBufferSource(),volume=this.ctx.createGain(),panner=this.ctx.createStereoPanner();
-    source.buffer=buffer;source.playbackRate.value=material?1:.97+Math.random()*.06;volume.gain.value=gain*(event==='step'?.65:event==='hurt'?.38:1)*(material?.gain??1);panner.pan.value=pan;
+    source.buffer=buffer;source.playbackRate.value=material?1:.97+Math.random()*.06;volume.gain.value=gain*(event==='step'?.65:event==='hurt'?.38*this.effectProfile.hurt:1)*(material?.gain??1);panner.pan.value=pan;
     source.connect(volume);volume.connect(panner);panner.connect(this.sfx);this.creatureSources.add(source);this.nodes++;
     source.onended=()=>{source.disconnect();volume.disconnect();panner.disconnect();this.creatureSources.delete(source);this.nodes--;};if(material)source.start(0,material.offset,material.duration);else source.start();return true;
   }
@@ -99,11 +114,11 @@ export class GameAudio{
     const limit=event==='impact'?10:event==='mechanism'?12:16;
     if(!this.available()||this.weaponSources.size>=limit)return false;
     const takeKey=id+':'+event+':'+variant,take=this.weaponTakes.get(takeKey)||0,key=takeKey+':'+take;
-    const cueKey=this.materialEffects?.count(takeKey)?takeKey:id+':'+event,material=this.materialEffects?.get(cueKey,take);
+    const cueKey=this.materialEffects?.count(takeKey)?takeKey:id+':'+event,material=this.materialCue(cueKey,take);
     let buffer=material?.buffer||this.weaponBuffers.get(key);
     if(!buffer){const samples=id==='companion'?companionSample(event,this.ctx.sampleRate):id==='material:wood'||id==='material:stone'?creatureSample(id==='material:wood'?'shaman':'golem','impact',this.ctx.sampleRate):weaponSample(id,event,this.ctx.sampleRate,variant,take);if(!samples)return false;buffer=this.ctx.createBuffer(1,samples.length,this.ctx.sampleRate);buffer.copyToChannel(samples,0);this.weaponBuffers.set(key,buffer);}
     this.weaponTakes.set(takeKey,(take+1)%(material?this.materialEffects?.count(cueKey):weaponTakeCount(id)));
-    const source=this.ctx.createBufferSource(),gain=this.ctx.createGain(),panner=this.ctx.createStereoPanner();source.buffer=buffer;source.playbackRate.value=material?1:.975+Math.random()*.05;gain.gain.value=(event==='impact'&&variant?1.12:1)*volume*(material?.gain??1)*(.97+Math.random()*.06);panner.pan.value=pan;
+    const source=this.ctx.createBufferSource(),gain=this.ctx.createGain(),panner=this.ctx.createStereoPanner();source.buffer=buffer;source.playbackRate.value=material?1:.975+Math.random()*.05;gain.gain.value=(event==='impact'&&variant?1.12:1)*volume*(this.effectProfile[event]??1)*(material?.gain??1)*(.97+Math.random()*.06);panner.pan.value=pan;
     const duration=material?Math.min(material.duration,maxDuration??Infinity):Math.min(buffer.duration||Infinity,maxDuration??Infinity);
     if(maxDuration&&Number.isFinite(duration)){const t=this.ctx.currentTime;gain.gain.setValueAtTime(gain.gain.value,t);gain.gain.setValueAtTime(gain.gain.value,t+Math.max(0,duration-.018));gain.gain.linearRampToValueAtTime(0,t+duration);}
     source.connect(gain);gain.connect(panner);panner.connect(material||id==='companion'?this.sfx:this.weaponTone||this.sfx);this.weaponSources.add(source);this.nodes++;source.onended=()=>{source.disconnect();gain.disconnect();panner.disconnect();this.weaponSources.delete(source);this.nodes--;};if(material)source.start(0,material.offset,duration);else{source.start();if(maxDuration)source.stop(this.ctx.currentTime+duration);}return true;
@@ -119,7 +134,7 @@ export class GameAudio{
   terrain(texture,dx=0,dz=0,strong=false){if(!this.allow('terrain-'+texture,.18))return;const p=contactSpatial(dx,dz);this.weapon('material:'+texture,'impact',0,p.gain*(strong?.48:.30),p.pan);}
   threat(kind='wave'){if(!this.allow('threat',2))return;const t=this.ctx.currentTime,deep=kind==='boss';if(this.recorded?.active){this.voice(deep?80:105,.32,deep?.13:.08,'sine',42);this.noise(.22,deep?.07:.04,850,160);return;}if(BIOME_THEMES[this.map]){biomeThreat(this,BIOME_THEMES[this.map],this.beat,t,deep);return;}this.voice(deep?58:82,.9,deep?.15:.105,'sawtooth',deep?35:48,t,'music',.04);this.noise(deep?.75:.42,deep?.16:.085,1400,170,t,'music');for(let i=0;i<(deep?4:3);i++)this.voice((deep?147:196)*2**(i/12),.19,.052,'triangle',null,t+i*.105,'music',.008);}
   spell(kind){if(!this.allow('spell-'+kind,.11))return;const t=this.ctx.currentTime;
-    if(this.materialEffects?.get('spell:'+kind)){this.weapon('spell',kind);return;}
+    if(this.materialCue('spell:'+kind)){this.weapon('spell',kind);return;}
     if(kind==='ice'){this.noise(.36,.24,4800,1400);[2100,3150,4100,2700].forEach((f,i)=>this.voice(f,.18,.035,'sine',f*.85,t+i*.035));}
     else if(kind==='storm'){this.noise(.22,.45,4200,300);this.voice(64,.4,.21,'sine',26);this.noise(.045,.23,6200,1800,t+.07);}
     else if(kind==='fire'){this.noise(.48,.55,1100,100);this.voice(92,.4,.25,'sine',25);}
@@ -129,7 +144,7 @@ export class GameAudio{
   }
   skill(kind){
     const material=SKILL_MATERIALS[kind];
-    if(material&&this.materialEffects?.get(material[0]+':'+material[1])){if(this.allow('hero-material-'+kind,kind==='wake'?.7:.16))this.weapon(material[0],material[1],0,material[2]);return;}
+    if(material&&this.materialCue(material[0]+':'+material[1])){if(this.allow('hero-material-'+kind,kind==='wake'?.7:.16))this.weapon(material[0],material[1],0,material[2]);return;}
     if(['faultPrime','saltWake','snareMark'].includes(kind)){if(!this.allow('pair-'+kind,.45))return;
       if(kind==='faultPrime'){this.noise(.16,.045,620,130);this.voice(145,.25,.045,'triangle',290);}
       else if(kind==='saltWake'){this.noise(.15,.035,3200,1000);this.voice(640,.12,.02,'sine',380);}
@@ -146,8 +161,8 @@ export class GameAudio{
     else this.noise(duration,volume*.9,kind.startsWith('rain')||kind==='trailSet'?4800:kind==='spikes'?1300:2600,kind==='mineBlast'?100:450,t+.012);
   }
   land(kind,wet=false){if(wet){this.water(true);return;}if(!this.allow('hero-land',.15))return;this.noise(.09,.065,kind==='guardian'?450:800,140);this.voice(kind==='guardian'?88:140,.10,.05,'sine',60);}
-  water(deep=false){if(!this.allow('water',.24))return;if(this.materialEffects?.get('motion:water')){this.weapon('motion','water',0,deep?.65:.38);return;}this.noise(deep?.22:.13,deep?.11:.07,1100,320);this.voice(310+Math.random()*80,.085,.028,'sine',115);}
-  dodge(hero){if(!this.allow('dodge',.2))return;const silver=hero===true||hero==='silver'||hero==='wraith',event=hero==='wraith'?'shadowblink':silver?'blink':'roll';if(this.materialEffects?.get('motion:'+event)){this.weapon('motion',event,0,.7);return;}this.noise(silver?.32:.2,.24,silver?4000:650,silver?220:140);if(silver)this.voice(440,.25,.065,'sine',110);}
+  water(deep=false){if(!this.allow('water',.24))return;if(this.materialCue('motion:water')){this.weapon('motion','water',0,deep?.65:.38);return;}this.noise(deep?.22:.13,deep?.11:.07,1100,320);this.voice(310+Math.random()*80,.085,.028,'sine',115);}
+  dodge(hero){if(!this.allow('dodge',.2))return;const silver=hero===true||hero==='silver'||hero==='wraith',event=hero==='wraith'?'shadowblink':silver?'blink':'roll';if(this.materialCue('motion:'+event)){this.weapon('motion',event,0,.7);return;}this.noise(silver?.32:.2,.24,silver?4000:650,silver?220:140);if(silver)this.voice(440,.25,.065,'sine',110);}
   hurt(){if(!this.allow('hurt',.15))return;this.noise(.15,.3,700,140);this.voice(130,.22,.25,'sine',36);}
   pickup(){if(!this.allow('pickup',.09))return;this.voice(780+(this.beat%4)*110,.075,.035,'sine',1100);}
   level(){if(!this.allow('level',.35))return;[523.25,659.25,783.99,1046.5].forEach((f,i)=>{const source=this.voice(f,.5,.075,'triangle',null,this.ctx.currentTime+i*.085);if(source)source.levelCue=true;});}

@@ -13,8 +13,8 @@
 <ol id="checks"></ol>
 <details><summary>JSON 报告</summary><pre id="report">尚未运行。</pre></details>
 <script type="module">
-import{GameAudio}from'../audio.js?v=94';
-import{SFX_FILE,SFX_CUES}from'../material-sfx.js?v=94';
+import{GameAudio}from'../audio.js?v=95';
+import{SFX_FILE,SFX_CUES}from'../material-sfx.js?v=95';
 
 const $=selector=>document.querySelector(selector),wait=ms=>new Promise(resolve=>setTimeout(resolve,ms));
 const assert=(condition,message)=>{if(!condition)throw Error(message);};
@@ -72,7 +72,7 @@ $('#run').onclick=async()=>{
  const savedPreferences=preferences(),started=performance.now();let audio,context,observed,atlas;
  try{
   context=new(window.AudioContext||window.webkitAudioContext)();
-  observed=observe(context);audio=new GameAudio(context);audio.muted=false;audio.musicVolume=0;audio.sfxVolume=.18;audio.setup();
+  observed=observe(context);audio=new GameAudio(context);audio.setSfxStyle('standard',{persist:false});audio.muted=false;audio.musicVolume=0;audio.sfxVolume=.18;audio.setup();
   await context.resume();assert(context.state==='running','浏览器未解锁音频');
   report.context={sampleRate:context.sampleRate,state:context.state};
   await check('合成后备先播放，录音就绪后切换且不补播',async()=>{
@@ -123,6 +123,29 @@ $('#run').onclick=async()=>{
     }
    }
    return{weapons:weapons.length,events:weapons.length*3,variants:variantChecks,starts:checked};
+  });
+
+  await check('四种设置立即切换，旧版走合成且切回后不重载图集',async()=>{
+   const styles=['standard','lightAttack','lightImpact','legacy'],results=[];
+   try{
+    for(const style of styles){
+     audio.setSfxStyle(style,{persist:false});await drained(audio);audio.cooldowns.clear();
+     assert(audio.sfxStyle===style,style+' 未应用');
+     for(const id of weapons){
+      assert(audio.weapon(id,'shot'),style+' / '+id+' 未出声');
+      const source=observed.starts.at(-1);assert((source.buffer===atlas)===(style!=='legacy'),style+' / '+id+' 使用错误声源');
+      assert((source.args.length===3)===(style!=='legacy'),style+' / '+id+' 截取参数错误');await drained(audio);
+     }
+     assert(audio.weapon('crossbow','shot'),'切换前未建立武器声音');
+     assert(audio.creature('golem','hurt'),'切换前未建立怪物声音');
+     const active=[...audio.weaponSources,...audio.creatureSources],before=observed.stops.length;
+     audio.setSfxStyle(style==='legacy'?'standard':'legacy',{persist:false});
+     for(const source of active)assert(observed.stops.slice(before).some(entry=>entry.source===source),'切换没有停止旧版声音');
+     await released(audio);assert(audio.materialEffects.buffer===atlas,'切换丢失图集缓存');
+     results.push({style,weapons:weapons.length,stoppedOldSources:active.length});
+    }
+    assert(preferences()===savedPreferences,'试听设置写入了真实偏好');return{styles:results,atlasRetained:true,preferencesUnchanged:true};
+   }finally{audio.setSfxStyle('standard',{persist:false});await drained(audio);}
   });
 
   await check('法术每次仅触发一段录音，不叠加旧合成音',async()=>{
@@ -202,7 +225,7 @@ $('#run').onclick=async()=>{
   await check('真实离线群战混音无非有限采样、无削波并自然回收',async()=>{
    const seconds=Math.max(4,...Object.values(SFX_CUES).flat().map(cue=>cue.duration+1));
    const offline=new OfflineAudioContext(2,Math.ceil(seconds*44100),44100),mixed=new GameAudio(offline),tracked=observe(offline);
-   mixed.muted=false;mixed.musicVolume=0;mixed.sfxVolume=1;mixed.setup();
+   mixed.setSfxStyle('standard',{persist:false});mixed.muted=false;mixed.musicVolume=0;mixed.sfxVolume=1;mixed.setup();
    // Offline contexts remain suspended until rendering; allow this test instance to schedule real nodes.
    mixed.available=()=>mixed.ready&&!mixed.muted&&mixed.nodes<100;
    const decoded=await mixed.materialEffects.prepare();assert(decoded,mixed.materialEffects.error?.message||'离线图集解码失败');
