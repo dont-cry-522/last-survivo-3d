@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="zh-CN">
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>手机操控与提示回归检查</title>
+<style>
+:root{color-scheme:dark;font:15px/1.6 system-ui;background:#102329;color:#e4efea}body{max-width:1100px;margin:auto;padding:20px}button{font:inherit;color:inherit;background:#254a48;border:1px solid #668d82;border-radius:8px;padding:10px 16px}button:disabled{opacity:.5}p{color:#b7cec6}#view{overflow:auto;max-height:880px;margin-top:16px}iframe{display:block;border:0;background:#102329}pre{white-space:pre-wrap;overflow-wrap:anywhere;background:#081b20;padding:16px}#status{min-height:28px}
+</style>
+<h1>手机操控与提示检查</h1>
+<p>真实游戏与原输入监听器，使用隔离存档。合成触控事件、模拟粗指针媒体条件及 pointer capture；这不是手机真机触控验证。攻击记录来自游戏实际调用，测试不会播放声音。</p>
+<button id="run" disabled>运行手机与电脑回归检查</button>
+<button id="portrait" disabled>手机竖屏预览</button><button id="landscape" disabled>手机横屏预览</button>
+<p id="status" role="status">正在载入测试资源…</p><div id="view"></div><pre id="report">尚未运行。</pre>
+<script type="module">
+const $=s=>document.querySelector(s),sleep=ms=>new Promise(resolve=>setTimeout(resolve,ms)),assert=(ok,message)=>{if(!ok)throw Error(message);};
+const records=[],storage=new Map(),errors=[];let frame,win,g,shots=[],html,css;
+window.mobileControlsReport={checks:records};
+const doc=()=>win.document,el=id=>doc().querySelector(id),rect=id=>el(id).getBoundingClientRect();
+function publish(){window.mobileControlsReport={checks:records,simulatedTouch:true,trueDeviceTest:false};$('#report').textContent=JSON.stringify(window.mobileControlsReport,null,2);}
+async function check(name,fn){$('#status').textContent='检查中：'+name;try{records.push({name,pass:true,details:await fn()});}catch(error){records.push({name,pass:false,error:error.message});}publish();}
+function dimensions(width,height){frame.style.width=width+'px';frame.style.height=height+'px';}
+async function load(touch=true,width=390,height=844){
+ if(g){errors.push(...win.qaErrors);g.menu();g.audio.stopMusic();g.renderer.dispose();g.renderer.forceContextLoss();}
+ frame?.remove();frame=document.createElement('iframe');frame.title=touch?'模拟手机真实游戏':'电脑真实游戏';dimensions(width,height);$('#view').append(frame);
+ window.qaStorage=storage;
+ const bootstrap=`<base href="../"><script>
+ window.qaErrors=[];addEventListener('error',e=>qaErrors.push(e.message));addEventListener('unhandledrejection',e=>qaErrors.push(String(e.reason)));
+ let seed=522;window.qaSeed=value=>{seed=value>>>0};Math.random=()=>{seed=(Math.imul(seed,1664525)+1013904223)>>>0;return seed/4294967296};
+ window.requestAnimationFrame=cb=>{window.qaFrame=cb;return 0};
+ const media=window.matchMedia.bind(window);window.matchMedia=query=>query.includes('pointer:coarse')||query.includes('pointer: coarse')?{matches:${touch},media:query,addEventListener(){},removeEventListener(){},addListener(){},removeListener(){}}:media(query);
+ Object.defineProperty(window,'localStorage',{value:{getItem:k=>parent.qaStorage.get(k)??null,setItem:(k,v)=>parent.qaStorage.set(k,String(v)),removeItem:k=>parent.qaStorage.delete(k)}});
+ const captures=new WeakMap();Element.prototype.setPointerCapture=function(id){captures.set(this,id)};Element.prototype.hasPointerCapture=function(id){return captures.get(this)===id};Element.prototype.releasePointerCapture=function(id){if(captures.get(this)===id)captures.delete(this)};
+ <\/script>`;
+ frame.srcdoc=html.replace('<head>','<head>'+bootstrap);win=frame.contentWindow;
+ for(let i=0;i<600;i++){if(win.game3d&&!el('#start')?.disabled)break;await sleep(50);}
+ assert(win.game3d&&!el('#start')?.disabled,'游戏资源载入超时');g=win.game3d;
+ if(touch){const style=doc().createElement('style');style.textContent=css.replaceAll(/\(pointer:\s*coarse\)/g,'(min-width:0px)').replaceAll(/\(pointer:\s*fine\)/g,'(min-width:100000px)');doc().head.append(style);}
+ // Test input and gameplay, not Web Audio. Keep asynchronous audio loading out of the fixture.
+ g.audio.init=async()=>true;g.audio.shot=(...args)=>shots.push({time:g.time,args});
+ await sleep(80);win.dispatchEvent(new win.Event('resize'));win.qaFrame(0);
+ assert(doc().body.classList.contains('touch')===touch,'粗指针分支选择错误');
+}
+function setMode(mode){el('[data-attack-mode="'+mode+'"]').click();}
+function selectedMode(){return el('[data-attack-mode][aria-pressed="true"]').dataset.attackMode;}
+function setup(mode='auto',hero='silver'){
+ win.qaSeed(522);g.menu();setMode(mode);g.select(hero,'forest',0);g.start();el('#dialog').close();
+ // Keep the real spawn and camera target together; moving only player would leave the camera elsewhere.
+ const{x,z}=g.player;
+ Object.assign(g.world,{obstacles:Array.from({length:32},(_,i)=>({x:x+Math.sin(i*Math.PI/16)*23,z:z+Math.cos(i*Math.PI/16)*23,r:8})),patches:[],ponds:[],ice:[],fords:[],bridges:[],sites:[],roaming:[],discoveries:[],breakables:[]});
+ Object.assign(g.player,{attack:0,inv:999,pending:0,iceVX:0,iceVZ:0});g.hero.rotation.y=0;
+ shots=[];win.qaFrame(0);
+}
+function target(){const e=g.spawn('golem',g.player.x,g.player.z+3);assert(e,'未创建目标');Object.assign(e,{hp:10000,maxHp:10000,speed:0,cool:999,damage:0});const p=e.mesh.position.clone();p.y=.8;p.project(g.camera);assert(Math.abs(p.x)<.96&&Math.abs(p.y)<.96&&p.z>-1&&p.z<1,'测试靶不在可见视锥：'+JSON.stringify(p));e.qaProjection={x:p.x,y:p.y,z:p.z};return e;}
+function step(seconds=.6){for(let elapsed=0;elapsed<seconds-1e-8;){const dt=Math.min(1/60,seconds-elapsed);g.step(dt);elapsed+=dt;}}
+function pointer(id,type,pointerId=1,x=0,y=0,pointerType='touch'){
+ const node=typeof id==='string'?el(id):id,r=node.getBoundingClientRect?.()||{left:0,top:0,width:0,height:0};
+ node.dispatchEvent(new win.PointerEvent(type,{bubbles:true,cancelable:true,pointerId,pointerType,button:0,buttons:type==='pointerup'||type==='pointercancel'?0:1,clientX:r.left+r.width/2+x,clientY:r.top+r.height/2+y,isPrimary:pointerId===1}));
+}
+function down(id='#aim-stick',pointerId=1,x=0,y=0){pointer(id,'pointerdown',pointerId,x,y);}
+function up(id='#aim-stick',pointerId=1){pointer(id,'pointerup',pointerId);}
+function displacement(before){return Math.hypot(g.player.x-before.x,g.player.z-before.z);}
+function setScale(value){const input=el('#control-scale');assert(input,'缺少按键大小设置');input.value=value;input.dispatchEvent(new win.Event('input',{bubbles:true}));}
+function box(id){const r=rect(id);return{x:r.x,y:r.y,width:r.width,height:r.height,right:r.right,bottom:r.bottom};}
+function overlap(a,b){return Math.min(a.right,b.right)-Math.max(a.x,b.x)>1&&Math.min(a.bottom,b.bottom)-Math.max(a.y,b.y)>1;}
+function controlsInside(width,height){const ids=['#joystick','#aim-stick','#dash'],boxes=ids.map(id=>({id,...box(id)}));for(const b of boxes)assert(b.width>=40&&b.height>=40&&b.x>=-1&&b.y>=-1&&b.right<=width+1&&b.bottom<=height+1,b.id+' 超出屏幕或可点击面积过小：'+JSON.stringify(b));for(let i=0;i<boxes.length;i++)for(let j=i+1;j<boxes.length;j++)assert(!overlap(boxes[i],boxes[j]),boxes[i].id+' 与 '+boxes[j].id+' 重叠');return boxes;}
+function lock(value){for(const id of['#run','#portrait','#landscape'])$(id).disabled=value;}
+async function preview(width,height){lock(true);$('#status').textContent='正在载入手机预览…';try{await load(true,width,height);setup();target();win.qaFrame(0);$('#status').textContent=width+' × '+height+' 手机模拟预览：可点击顶部「按键」设置，游戏时间冻结。';}catch(error){$('#status').textContent='预览失败：'+error.message;}finally{lock(false);}}
+$('#portrait').onclick=()=>preview(390,844);$('#landscape').onclick=()=>preview(667,375);
+$('#run').onclick=async()=>{
+ lock(true);records.length=0;errors.length=0;storage.clear();
+ try{
+  storage.set('forest-echoes-attack-mode','manual');await load();
+  await check('手机默认自动瞄准，不继承电脑模式；目标在场也不自动开火',()=>{
+   assert(selectedMode()==='auto','手机首次默认不是自动瞄准');assert(el('[data-attack-mode="auto"]').textContent.includes('自动瞄准'),'手机文案仍叫自动攻击');
+   setup();const foe=target();step(.8);assert(shots.length===0,'未按攻击键就发射');assert(g.controls.hasAim,'自动模式没有获取可见目标');return{mode:selectedMode(),shots:shots.length,targetNDC:foe.qaProjection};
+  });
+  await check('自动瞄准：按住才发射，释放后不再发射，无目标不乱射',()=>{
+   setup();target();down();step(.8);assert(shots.length>0,'按住攻击按钮未发射');up();const count=shots.length;step(.8);assert(shots.length===count,'松开攻击按钮仍发射');
+   setup();down();step(.8);up();assert(shots.length===0,'无目标时自动瞄准仍发射');return{heldShots:count,noTargetShots:shots.length};
+  });
+  await check('攻击指针取消、丢失捕获时立即停止',()=>{
+   const results=[];for(const event of['pointercancel','lostpointercapture']){setup();target();down();step(.45);assert(shots.length>0,'取消前未发射');pointer('#aim-stick',event);assert(!g.controls.held,event+' 未清除按住状态');const count=shots.length;step(.7);assert(shots.length===count,event+' 后继续发射');results.push({event,shots:count});}return results;
+  });
+  await check('左右两个触点互不抢占，松开或取消移动不会取消攻击',()=>{
+   setup();target();down('#joystick',2,80,0);down('#aim-stick',1);const before={...g.player};step(.3);assert(displacement(before)>.4,'双触点时移动失效');assert(g.controls.held,'双触点时攻击失效');
+   pointer('#joystick','pointercancel',2);assert(g.controls.held,'取消移动错误地取消攻击');const stopped={...g.player};step(.2);assert(displacement(stopped)<.01,'取消移动后角色继续走动');
+   down('#joystick',2,80,0);up('#aim-stick',1);assert(!g.controls.held,'松开攻击后仍按住');const moving={...g.player};step(.2);assert(displacement(moving)>.4,'松开攻击错误地取消移动');up('#joystick',2);return{independentPointers:true};
+  });
+  await check('无关触点结束不会释放仍在操控中的同类摇杆',()=>{
+   setup();down('#joystick',2,80,0);pointer('#joystick','pointerup',99);const before={...g.player};step(.2);assert(displacement(before)>.4,'无关触点释放了移动摇杆');up('#joystick',2);
+   down('#aim-stick',1);pointer('#aim-stick','pointercancel',99);assert(g.controls.held,'无关触点取消了攻击按钮');up();return{foreignPointerIgnored:true};
+  });
+  await check('手动模式保持右杆方向攻击',()=>{
+   setup('manual');down('#aim-stick',1,60,0);assert(g.controls.held&&g.controls.hasAim,'手动右杆没有激活');assert(Math.abs(g.controls.angle-Math.PI*.75)<.03,'右推方向没有匹配相机朝向');step(.6);assert(shots.length>0,'手动无目标不能发射');up();return{angle:g.controls.angle,shots:shots.length};
+  });
+  await check('模式切换、暂停、旋转及重新开局清除按住输入',()=>{
+   const results=[];for(const action of['mode','pause','resize','restart']){setup();target();down();if(action==='mode')setMode('manual');if(action==='pause'){g.pause();assert(!g.controls.held,'暂停后还保持攻击');g.resume();}if(action==='resize')win.dispatchEvent(new win.Event('resize'));if(action==='restart')g.start();assert(!g.controls.held,action+' 未清除攻击');const count=shots.length;step(.5);assert(shots.length===count,action+' 后没有重新按键却发射');results.push(action);}return results;
+  });
+  await check('升级或阵亡清除双摇杆输入，重开不自动攻击',()=>{
+   const states=[];for(const event of['upgrade','lost']){setup();down('#joystick',2,80,0);down();if(event==='upgrade')g.grant(200);else{g.player.inv=0;g.damage(99999,0,0);}assert(g.state===event,'没有进入'+event+'状态');assert(!g.controls.held,event+'没有清除攻击');g.start();const before={...g.player},count=shots.length;step(.2);assert(displacement(before)<.01,event+'重开后保留移动输入');assert(shots.length===count,event+'重开后自动攻击');states.push(event);}return states;
+  });
+  await check('75%、100%、135%：横竖屏按键不越界、不互相重叠',async()=>{
+   setup();const layouts=[];for(const[width,height]of[[320,568],[320,740],[390,844],[667,375],[844,390]]){dimensions(width,height);await sleep(80);win.dispatchEvent(new win.Event('resize'));for(const scale of[75,100,135]){setScale(scale);const boxes=controlsInside(width,height);assert(el('#control-scale-value').textContent.includes(String(scale)),'大小数值没有同步');layouts.push({width,height,scale,boxes});}}return layouts;
+  });
+  await check('放大缩小摇杆不改变满推移动速度',async()=>{
+   dimensions(390,844);await sleep(80);win.dispatchEvent(new win.Event('resize'));const moves=[];for(const scale of[75,100,135]){setup();setScale(scale);const r=rect('#joystick');down('#joystick',2,r.width/2,0);const before={...g.player};step(.4);moves.push({scale,distance:displacement(before)});up('#joystick',2);}assert(moves.every(m=>Math.abs(m.distance-moves[0].distance)<.01),'按键大小改变了满推移动速度');assert(moves[0].distance>2,'满推速度异常过低');return moves;
+  });
+  await check('新怪物提示靠屏幕上沿，避开角色及操作区',async()=>{
+   const layouts=[];for(const[width,height]of[[320,568],[390,844],[667,375],[844,390]]){dimensions(width,height);await sleep(80);win.dispatchEvent(new win.Event('resize'));setup();target();win.qaFrame(0);const b=box('#encounter');assert(!el('#encounter').hidden,'新物种提示未出现');assert(b.y>=0&&b.y<=85,'新物种提示没有放在顶部');assert(b.bottom<=height*.4,'提示占用了过多中央画面');const p=g.hero.position.clone();p.y=1.2;p.project(g.camera);const heroBox={x:(p.x+1)*width/2-28,right:(p.x+1)*width/2+28,y:(1-p.y)*height/2-42,bottom:(1-p.y)*height/2+34};assert(!overlap(b,heroBox),'新物种提示遮挡角色');for(const id of['#joystick','#aim-stick','#dash'])assert(!overlap(b,box(id)),'提示遮挡'+id);layouts.push({width,height,notification:b,hero:heroBox});}return layouts;
+  });
+  await check('长介绍可点击暂停查看全文，返回后不会自动续射',()=>{
+   setup('auto','wuling');const card=el('#encounter'),text=card.querySelector('span').textContent;assert(card.querySelector('strong').textContent.includes('雾苓')&&text.includes('保留剩余寿命'),'未触发角色完整介绍');assert(win.getComputedStyle(card).pointerEvents!=='none','提示不可触摸');down();card.click();assert(g.state==='paused','查看完整介绍未暂停');assert(el('#dialog-content').textContent.includes(text),'详情没有完整介绍');assert(!g.controls.held,'查看详情没有清除攻击');g.resume();const count=shots.length;step(.3);assert(shots.length===count,'返回后自动续射');return{fullTextLength:text.length,pausedAndReleased:true};
+  });
+  await check('手机大小与模式持久化，电脑旧偏好独立保留',async()=>{
+   setScale(135);setMode('manual');assert(storage.get('forest-echoes-attack-mode')==='manual','手机写入覆盖了电脑模式');assert(storage.get('forest-echoes-mobile-attack-mode')==='manual','手机模式未保存');assert(storage.has('forest3d-touch-scale'),'按键大小未保存');await load();assert(selectedMode()==='manual','重开未恢复手机模式');assert(Number(el('#control-scale').value)===135,'重开未恢复按键大小');el('#control-scale-reset').click();assert(Number(el('#control-scale').value)===100,'恢复默认未回到100%');assert(el('#control-scale-value').textContent.includes('100'),'恢复默认后显示未更新');return{mobileMode:selectedMode(),restoredScale:135,resetScale:100};
+  });
+  await check('电脑自动攻击照旧；手动鼠标按住才攻击',async()=>{
+   storage.set('forest-echoes-attack-mode','auto');await load(false,1100,700);assert(selectedMode()==='auto','电脑原有自动攻击偏好失效');setup();target();step(.8);assert(shots.length>0,'电脑自动模式被改成需要按住');const autoShots=shots.length;setup('manual');target();step(.5);assert(shots.length===0,'电脑手动模式自动发射');pointer('#world','pointerdown',1,80,80,'mouse');step(.8);assert(shots.length>0,'电脑鼠标按住无法发射');pointer('#world','pointerup',1,80,80,'mouse');const manualShots=shots.length;step(.6);assert(shots.length===manualShots,'电脑松开鼠标后继续发射');assert(storage.get('forest-echoes-mobile-attack-mode')==='manual','电脑模式覆盖了手机偏好');return{autoShots,manualShots};
+  });
+  await check('模拟浏览器运行没有未处理异常',()=>{errors.push(...win.qaErrors);assert(!errors.length,errors.join('; '));return{errors};});
+ }catch(error){records.push({name:'初始化',pass:false,error:error.message});}
+ finally{if(g){g.menu();g.audio.stopMusic();}publish();lock(false);$('#status').textContent=records.every(r=>r.pass)?'全部 '+records.length+' 项检查通过；仍需手机真机触控复核。':'有检查未通过，请查看下方报告。';}
+};
+try{[html,css]=await Promise.all(['../index.html','../style.css'].map(async path=>{const r=await fetch(path);assert(r.ok,'无法读取'+path);return r.text();}));lock(false);$('#status').textContent='已准备好。点击按钮运行，测试不会改写真实存档。';}catch(error){$('#status').textContent='准备失败：'+error.message;}
+</script>
+</html>

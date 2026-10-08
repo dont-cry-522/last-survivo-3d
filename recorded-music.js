@@ -1,4 +1,4 @@
-import{MUSIC_TRACKS}from'./music-tracks.js?v=95';
+import{MUSIC_TRACKS}from'./music-tracks.js?v=96';
 
 const FADE=2;
 const ramp=(param,value,time,duration=FADE)=>{
