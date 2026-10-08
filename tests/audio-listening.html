@@ -8,16 +8,16 @@
 <section><h2>地图配乐</h2><div class="row" id="maps">
 <button data-map="forest">森林</button><button data-map="snow">雪地</button><button data-map="ash">灰烬</button><button data-map="coast">海岸</button><button data-map="sand">沙漠</button><button id="battle">战斗</button>
 </div><p class="status" id="music-status">点击一张地图开始试听。</p><div class="row"><button id="pause">暂停音乐</button><button id="resume">继续音乐</button><button id="stop">停止所有声音</button><label>音乐音量 <input id="music-volume" type="range" min="0" max="100" value="65"></label><label>音效音量 <input id="sfx-volume" type="range" min="0" max="100" value="80"></label></div></section>
-<section><h2>武器材质</h2><p>可单独听出手、命中和收放动作；连续点击同一武器可听细微变化。强击沿用战斗中的原有含义。</p><label>动作 <select id="variant"><option value="0">普通</option><option value="1">强击 / 第二段</option><option value="2">第三段</option></select></label><canvas id="wave" width="1000" height="110"></canvas><p class="status" id="weapon-status">尚未播放武器声音。</p><div id="weapons"></div></section>
-<section><h2>声音检查</h2><p>真实解码五首本地配乐，检查暂停续播、地图切换、音量与静音、战斗迟滞和后备音乐。需要约 20 秒。</p><button id="check">运行声音检查</button><pre id="results" aria-live="polite">等待开始。</pre><pre id="diagnostics" aria-live="polite">尚未开启音频。</pre></section>
+<section><h2>武器材质</h2><p>新版使用木、金属、冰裂、电弧、液体与纸张等素材重新设计。可切换旧版作对照，连续点击试听不同取样。</p><label>声音版本 <select id="sound-version"><option value="material">新版材质音效</option><option value="legacy">旧版合成音效（对照）</option></select></label> <label>动作 <select id="variant"><option value="0">普通</option><option value="1">强击 / 第二段</option><option value="2">第三段</option></select></label><canvas id="wave" width="1000" height="110"></canvas><p class="status" id="weapon-status">尚未播放武器声音。</p><div id="weapons"></div></section>
+<section><h2>元素与闪避</h2><div class="row" id="elements"></div><p><a href="material-audio-check.html">打开材质音效专项检查</a></p></section><section><h2>声音检查</h2><p>真实解码五首本地配乐，检查暂停续播、地图切换、音量与静音、战斗迟滞和后备音乐。需要约 20 秒。</p><button id="check">运行声音检查</button><pre id="results" aria-live="polite">等待开始。</pre><pre id="diagnostics" aria-live="polite">尚未开启音频。</pre></section>
 <script type="module">
-import{GameAudio}from'../audio.js?v=92';
-import{weaponSample}from'../weapon-audio.js?v=92';
+import{GameAudio}from'../audio.js?v=93';
+import{weaponSample}from'../weapon-audio.js?v=93';
 const $=s=>document.querySelector(s),audio=new GameAudio();
 let map='forest',mode='paused',boss=false,pressure=0,last=performance.now(),checking=false,testClock=0,testDriver=null;
 const names={forest:'森林',snow:'雪地',ash:'灰烬',coast:'海岸',sand:'沙漠',battle:'战斗'};
 const wait=ms=>new Promise(resolve=>setTimeout(resolve,ms));
-const ensure=async()=>{if(!await audio.init())throw Error('浏览器尚未开启声音');audio.muted=false;audio.applyVolumes(true);};
+const ensure=async()=>{if(!await audio.init())throw Error('浏览器尚未开启声音');audio.muted=false;audio.applyVolumes(true);await audio.materialEffects.prepare();};
 const choose=async(key,battle=false)=>{await ensure();map=key;mode='playing';boss=battle;pressure=battle?1:0;audio.update(0,{map,mode,boss,pressure,seamless:true});};
 $('#music-volume').value=audio.musicVolume*100;$('#sfx-volume').value=audio.sfxVolume*100;
 for(const bus of['music','sfx'])$('#'+bus+'-volume').oninput=e=>{audio[bus+'Volume']=Number(e.target.value)/100;audio.applyVolumes();};
@@ -31,12 +31,13 @@ for(const[id,name,material]of weapons){
  const row=document.createElement('div');row.className='weapon';const title=document.createElement('div');title.textContent=name;const detail=document.createElement('small');detail.textContent=material;title.append(detail);row.append(title);
  for(const[event,label]of[['shot','出手'],['impact','命中'],[id==='miasmalantern'?'charge':'mechanism',id==='miasmalantern'?'吸气':'收放']]){
   const button=document.createElement('button');button.textContent=label;button.setAttribute('aria-label',name+' '+label);button.onclick=async()=>{
-   await ensure();const variant=Number($('#variant').value),samples=weaponSample(id,event,22050,variant);audio.weapon(id,event,variant);$('#weapon-status').textContent=name+' · '+label+' · '+material;
+   await ensure();const variant=Number($('#variant').value),bank=audio.materialEffects,legacy=$('#sound-version').value==='legacy',take=audio.weaponTakes.get(id+':'+event+':'+variant)||0,key=bank.count(id+':'+event+':'+variant)?id+':'+event+':'+variant:id+':'+event,cue=legacy?null:bank.get(key,take);const samples=cue?cue.buffer.getChannelData(0).subarray(Math.floor(cue.offset*cue.buffer.sampleRate),Math.floor((cue.offset+cue.duration)*cue.buffer.sampleRate)):weaponSample(id,event,22050,variant);if(legacy)audio.materialEffects={get:()=>null,count:()=>0};try{audio.weapon(id,event,variant);}finally{audio.materialEffects=bank;}$('#weapon-status').textContent=(legacy?'旧版合成':cue?'新版材质':'后备声音')+' · '+name+' · '+label+' · '+material;
    const canvas=$('#wave'),ctx=canvas.getContext('2d');ctx.clearRect(0,0,canvas.width,canvas.height);ctx.strokeStyle='#accda6';ctx.beginPath();for(let x=0;x<canvas.width;x++){const v=samples?.[Math.floor(x/canvas.width*samples.length)]||0,y=55-v*75;if(x)ctx.lineTo(x,y);else ctx.moveTo(x,y);}ctx.stroke();
   };row.append(button);
  }$('#weapons').append(row);
 }
-function diagnostics(){const r=audio.recorded;return JSON.stringify({visibility:document.visibilityState,context:audio.ctx?.state,contextTime:audio.ctx?.currentTime,sampleRate:audio.ctx?.sampleRate,ready:audio.ready,mode,map,desired:r?.desired,current:r?.current?.key,loading:r?.loading&&{key:r.loading.key,stage:r.loading.stage,bytes:r.loading.bytes},failed:r&&[...r.failed],error:r?.lastError,cache:r&&[...r.cache.keys()],hot:r?.hot,calm:r?.calm,testClock},null,2);}
+for(const[kind,label]of[['ice','碎冰'],['storm','电弧'],['fire','爆燃'],['chain','锁链'],['rift','裂隙'],['dark','暗幕']]){const b=document.createElement('button');b.textContent=label;b.onclick=async()=>{await ensure();audio.spell(kind);};$('#elements').append(b);}for(const[kind,label]of[['roll','翻滚'],['blink','瞬移'],['water','入水']]){const b=document.createElement('button');b.textContent=label;b.onclick=async()=>{await ensure();if(kind==='water')audio.water(true);else audio.dodge(kind==='blink');};$('#elements').append(b);}
+function diagnostics(){const r=audio.recorded;return JSON.stringify({visibility:document.visibilityState,context:audio.ctx?.state,contextTime:audio.ctx?.currentTime,sampleRate:audio.ctx?.sampleRate,ready:audio.ready,effectBank:audio.materialEffects?.buffer?'已解码':audio.materialEffects?.loading?'加载中':'未载入',effectError:audio.materialEffects?.error?.message,mode,map,desired:r?.desired,current:r?.current?.key,loading:r?.loading&&{key:r.loading.key,stage:r.loading.stage,bytes:r.loading.bytes},failed:r&&[...r.failed],error:r?.lastError,cache:r&&[...r.cache.keys()],hot:r?.hot,calm:r?.calm,testClock},null,2);}
 function display(){
  if(audio.ready){const r=audio.recorded,current=r?.current;$('#music-status').textContent=mode==='paused'?'音乐已暂停':current?'正在播放：'+names[current.key]+' · '+current.buffer.duration.toFixed(1)+' 秒 · 已解码 '+r.cache.size+' 首':r?.loading?'正在载入 '+names[r.loading.key]+'，播放后备音乐…':'正在播放：'+names[map]+' 合成后备音乐';}requestAnimationFrame(frame);
  $('#diagnostics').textContent=diagnostics();

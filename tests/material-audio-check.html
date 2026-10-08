@@ -1,0 +1,237 @@
+<!doctype html>
+<html lang="zh-CN">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>材质音效检查</title>
+<style>
+:root{color-scheme:dark;font:16px/1.6 system-ui,sans-serif;background:#101d22;color:#e3eeeb}body{max-width:820px;margin:auto;padding:24px 16px}h1{font-size:26px;margin:0 0 8px}p{color:#abc3c2}button{font:inherit;color:inherit;background:#254850;border:1px solid #456971;border-radius:8px;padding:10px 15px;cursor:pointer}button:disabled{opacity:.5;cursor:default}.actions{display:flex;flex-wrap:wrap;gap:10px}li{margin:12px 0;overflow-wrap:anywhere}li[data-pass=true]{color:#b6e7ad}li[data-pass=false]{color:#ffb4a5}pre{font:12px/1.5 ui-monospace,monospace;white-space:pre-wrap;overflow-wrap:anywhere;background:#0b171c;padding:14px;border-radius:10px}#status{min-height:26px}@media(max-width:480px){body{padding:18px 12px}button{flex:1}h1{font-size:23px}}
+</style>
+<h1>材质音效检查</h1>
+<p>检查本地录音、全部武器、法术与群战混音。运行时会短暂发声，结束后关闭音频，不修改声音偏好或存档。</p>
+<div class="actions"><button id="run">运行音效检查</button><button id="download" disabled>下载结果</button></div>
+<p id="status" role="status" aria-live="polite">等待开始。</p>
+<ol id="checks"></ol>
+<details><summary>JSON 报告</summary><pre id="report">尚未运行。</pre></details>
+<script type="module">
+import{GameAudio}from'../audio.js?v=93';
+import{SFX_FILE,SFX_CUES}from'../material-sfx.js?v=93';
+
+const $=selector=>document.querySelector(selector),wait=ms=>new Promise(resolve=>setTimeout(resolve,ms));
+const assert=(condition,message)=>{if(!condition)throw Error(message);};
+const weapons=['crossbow','rifle','shotgun','shuriken','fire','dark','shade','shadowblade','grimoire','harpoon','boomerang','sporelantern','miasmalantern'];
+let report=null;
+function preferences(){try{return localStorage.getItem('forest3d-audio');}catch{return null;}}
+function publish(){window.materialAudioReport=report;$('#report').textContent=JSON.stringify(report,null,2);}
+function observe(context){
+ const starts=[],stops=[],oscillators=[],createBufferSource=context.createBufferSource.bind(context),createOscillator=context.createOscillator.bind(context);
+ context.createBufferSource=()=>{const source=createBufferSource(),start=source.start.bind(source),stop=source.stop.bind(source);source.start=(...args)=>{starts.push({source,buffer:source.buffer,args,rate:source.playbackRate.value});return start(...args);};source.stop=(...args)=>{stops.push({source,args});return stop(...args);};return source;};
+ context.createOscillator=()=>{const source=createOscillator(),stop=source.stop.bind(source);source.stop=(...args)=>{stops.push({source,args});return stop(...args);};oscillators.push(source);return source;};
+ return{starts,stops,oscillators};
+}
+async function released(audio){
+ const deadline=performance.now()+1500;
+ while(audio.weaponSources.size||audio.creatureSources.size||audio.proceduralSources.size){assert(performance.now()<deadline,'停止后仍有播放源');await wait(20);}
+ assert(audio.nodes===0,'播放源释放后节点计数未归零：'+audio.nodes);
+}
+async function drained(audio){audio.stopWeapons();audio.stopCreatures();await released(audio);}
+function expectedCue(audio,id,event,variant=0,take=0){
+ const key=id+':'+event,variantKey=key+':'+variant;
+ return audio.materialEffects.get(audio.materialEffects.count(variantKey)?variantKey:key,take);
+}
+function checkStart(entry,cue,label){
+ assert(cue,label+' 缺少录音表项');assert(entry?.buffer===cue.buffer,label+' 未使用图集 buffer');
+ assert(entry.args.length===3&&entry.args[0]===0,label+' 未限定图集片段');
+ assert(entry.args[1]===cue.offset&&entry.args[2]===cue.duration,label+' offset / duration 串入其他片段');
+ assert(entry.rate===1,label+' 录音播放速率不为 1');
+}
+function sampleStats(buffer,offset=0,duration=buffer.duration){
+ const begin=Math.ceil(offset*buffer.sampleRate),end=Math.min(buffer.length,Math.floor((offset+duration)*buffer.sampleRate));
+ assert(end>begin,'音频片段没有采样');let peak=0,energy=0,count=0;
+ for(let ch=0;ch<buffer.numberOfChannels;ch++){const data=buffer.getChannelData(ch);for(let i=begin;i<end;i++){const n=data[i];assert(Number.isFinite(n),'出现非有限采样');peak=Math.max(peak,Math.abs(n));energy+=n*n;count++;}}
+ return{peak,rms:Math.sqrt(energy/count),samples:count};
+}
+function takeDifference(buffer,a,b){
+ const startA=Math.ceil(a.offset*buffer.sampleRate),startB=Math.ceil(b.offset*buffer.sampleRate),length=Math.floor(Math.min(a.duration,b.duration)*buffer.sampleRate);
+ let difference=0;const data=buffer.getChannelData(0);
+ for(let i=0;i<length;i++)difference+=(data[startA+i]-data[startB+i])**2;
+ return Math.sqrt(difference/length);
+}
+async function check(label,action){
+ $('#status').textContent='正在检查：'+label;
+ const started=performance.now(),item=document.createElement('li');item.textContent=label+'…';$('#checks').append(item);
+ let result;
+ try{result={name:label,pass:true,details:await action()};item.textContent='通过 · '+label;}
+ catch(error){result={name:label,pass:false,error:error.message};item.textContent='失败 · '+label+'：'+error.message;}
+ result.elapsedMs=Math.round(performance.now()-started);item.dataset.pass=String(result.pass);report.checks.push(result);publish();return result;
+}
+
+$('#run').onclick=async()=>{
+ if($('#run').disabled)return;
+ $('#run').disabled=true;$('#download').disabled=true;$('#checks').replaceChildren();
+ report={status:'running',startedAt:new Date().toISOString(),file:SFX_FILE,userAgent:navigator.userAgent,checks:[]};publish();
+ const savedPreferences=preferences(),started=performance.now();let audio,context,observed,atlas;
+ try{
+  context=new(window.AudioContext||window.webkitAudioContext)();
+  observed=observe(context);audio=new GameAudio(context);audio.muted=false;audio.musicVolume=0;audio.sfxVolume=.18;audio.setup();
+  await context.resume();assert(context.state==='running','浏览器未解锁音频');
+  report.context={sampleRate:context.sampleRate,state:context.state};
+  await check('合成后备先播放，录音就绪后切换且不补播',async()=>{
+   assert(!audio.materialEffects.buffer,'加载前已有图集');
+   assert(audio.weapon('crossbow','shot'),'后备声音未播放');
+   const fallback=observed.starts.at(-1);assert(fallback.args.length===0,'后备声音意外使用图集片段');
+   await wait(70);await drained(audio);
+   const before=observed.starts.length,pending=audio.materialEffects.prepare();
+   assert(audio.materialEffects.prepare()===pending,'并发 prepare 未共用 Promise');
+   atlas=await pending;assert(atlas,audio.materialEffects.error?.message||'录音解码失败');
+   assert(observed.starts.length===before,'异步加载完成后自动补播');
+   const take=audio.weaponTakes.get('crossbow:shot:0')||0,cue=expectedCue(audio,'crossbow','shot',0,take);
+   assert(audio.weapon('crossbow','shot'),'录音声音未播放');checkStart(observed.starts.at(-1),cue,'载入后出手');
+   assert(observed.starts.at(-1).buffer!==fallback.buffer,'录音就绪后仍使用后备 buffer');
+   await wait(70);await drained(audio);return{fallbackPlayed:true,automaticReplay:false,atlasDuration:atlas.duration};
+  });
+  if(!atlas)throw Error('图集未解码，无法继续真实录音检查');
+
+  await check('全部表项的范围、采样、能量、峰值与两次录音差异',()=>{
+   const entries=Object.entries(SFX_CUES);assert(entries.length>0,'图集表为空');const details={keys:entries.length,takes:0,maxPeak:0,minRms:Infinity,cues:{}};
+   for(const[key,takes]of entries){
+    assert(takes.length>=2,key+' 缺少两次录音');const values=[];
+    for(let take=0;take<takes.length;take++){
+     const cue=audio.materialEffects.get(key,take);assert(cue,key+'['+take+'] 超出解码长度或参数无效');
+     const stats=sampleStats(atlas,cue.offset,cue.duration);assert(stats.rms>.00001,key+'['+take+'] 没有有效能量');assert(stats.peak<.85,key+'['+take+'] 峰值过高：'+stats.peak);
+     details.takes++;details.maxPeak=Math.max(details.maxPeak,stats.peak);details.minRms=Math.min(details.minRms,stats.rms);values.push({offset:cue.offset,duration:cue.duration,gain:cue.gain,...stats});
+    }
+    assert(takes[0].offset!==takes[1].offset,key+' 两次录音共用 offset');const difference=takeDifference(atlas,takes[0],takes[1]);
+    assert(Number.isFinite(difference)&&difference>.00001,key+' 两次录音内容相同');details.cues[key]={takes:values,differenceRms:difference};
+   }
+   return details;
+  });
+
+  await check('13 种武器的出手、命中、收放与各变体使用正确片段',async()=>{
+   let checked=0,variantChecks=0;await drained(audio);
+   for(const id of weapons)for(const event of['shot','impact',id==='miasmalantern'?'charge':'mechanism']){
+    const prefix=id+':'+event+':',variants=new Set([0,...Object.keys(SFX_CUES).filter(key=>key.startsWith(prefix)&&/^\d+$/.test(key.slice(prefix.length))).map(key=>Number(key.slice(prefix.length)))]);
+    for(const variant of variants){
+     const takeKey=id+':'+event+':'+variant;audio.weaponTakes.delete(takeKey);
+     const offsets=[];
+     for(let take=0;take<2;take++){
+      const label=takeKey+' take '+take,cue=expectedCue(audio,id,event,variant,take),before=observed.starts.length,oscillators=observed.oscillators.length;
+      assert(audio.weapon(id,event,variant),label+' 未出声');assert(observed.starts.length===before+1,label+' 声源数量不为 1');
+      checkStart(observed.starts.at(-1),cue,label);assert(observed.oscillators.length===oscillators,label+' 叠加了合成振荡器');offsets.push(observed.starts.at(-1).args[1]);
+      await drained(audio);checked++;
+     }
+     assert(offsets[0]!==offsets[1],takeKey+' 未轮换两次录音');variantChecks++;
+    }
+   }
+   return{weapons:weapons.length,events:weapons.length*3,variants:variantChecks,starts:checked};
+  });
+
+  await check('法术每次仅触发一段录音，不叠加旧合成音',async()=>{
+   const kinds=[...new Set(['ice','fire','storm','chain','dark','rift',...Object.keys(SFX_CUES).filter(key=>/^spell:[^:]+$/.test(key)).map(key=>key.slice(6))])];
+   await drained(audio);
+   for(const kind of kinds){
+    audio.cooldowns.clear();audio.weaponTakes.delete('spell:'+kind+':0');
+    const before=observed.starts.length,oscillators=observed.oscillators.length,cue=audio.materialEffects.get('spell:'+kind);
+    audio.spell(kind);assert(observed.starts.length===before+1,kind+' 法术声源数量不为 1');checkStart(observed.starts.at(-1),cue,kind);
+    assert(observed.oscillators.length===oscillators,kind+' 仍叠加合成振荡器');await drained(audio);
+   }
+   return{kinds};
+  });
+
+  await check('静音时不创建声源且声音偏好保持原值',async()=>{
+   await drained(audio);audio.cooldowns.clear();const before=observed.starts.length,oscillators=observed.oscillators.length;
+   try{audio.muted=true;audio.applyVolumes(true);assert(!audio.weapon('rifle','shot'),'静音允许武器声音');audio.shot('crossbow');audio.spell('ice');assert(!audio.creature('golem','impact'),'静音允许怪物声音');audio.voice(440,.1,.1);audio.noise(.1,.1);}
+   finally{audio.muted=false;audio.applyVolumes(true);}
+   assert(observed.starts.length===before&&observed.oscillators.length===oscillators,'静音创建了播放源');assert(preferences()===savedPreferences,'声音偏好被改写');
+   return{newSources:0,preferencesUnchanged:true};
+  });
+
+  await check('命中最多 10 路，收放最多 12 路，总上限 16 路保留出手空间',async()=>{
+   await drained(audio);
+   try{
+    for(let i=0;i<10;i++)assert(audio.weapon('rifle','impact'),'第 '+(i+1)+' 路命中被提前拒绝');
+    assert(audio.weaponSources.size===10&&!audio.weapon('rifle','impact'),'命中超过 10 路');
+    for(let i=0;i<2;i++)assert(audio.weapon('rifle','mechanism'),'预留收放空间不可用');
+    assert(audio.weaponSources.size===12&&!audio.weapon('rifle','mechanism'),'收放超过 12 路');
+    for(let i=0;i<4;i++)assert(audio.weapon('rifle','shot'),'新出手的保留空间不可用');
+    assert(audio.weaponSources.size===16&&!audio.weapon('rifle','shot'),'武器声音超过 16 路');
+    return{impactLimit:10,mechanismLimit:12,totalLimit:16,reservedShots:4};
+   }finally{await drained(audio);}
+  });
+
+  await check('停止武器、停止怪物与重置均释放播放源',async()=>{
+   await drained(audio);audio.cooldowns.clear();
+   assert(audio.weapon('shotgun','shot'),'未建立武器播放源');assert(audio.creature('golem','impact'),'未建立怪物播放源');
+   assert(audio.weaponSources.size>0&&audio.creatureSources.size>0,'播放源集合为空');
+   const weapon=[...audio.weaponSources][0],creature=[...audio.creatureSources][0],stopIndex=observed.stops.length;
+   audio.stopWeapons();assert(observed.stops.slice(stopIndex).some(entry=>entry.source===weapon),'stopWeapons 未停止武器声源');
+   audio.stopCreatures();assert(observed.stops.slice(stopIndex).some(entry=>entry.source===creature),'stopCreatures 未停止怪物声源');await released(audio);
+   audio.cooldowns.clear();assert(audio.weapon('crossbow','shot'),'重置前武器未出声');assert(audio.creature('wolf','wind'),'重置前怪物未出声');audio.voice(120,.2,.03);
+   const active=[...audio.weaponSources,...audio.creatureSources],beforeReset=observed.stops.length;
+   audio.reset('forest');assert(audio.weaponTakes.size===0&&audio.cooldowns.size===0,'重置未清空轮换或冷却');
+   for(const source of active)assert(observed.stops.slice(beforeReset).some(entry=>entry.source===source),'reset 未停止已有播放源');
+   await released(audio);assert(audio.materialEffects.buffer===atlas,'重置丢失只读图集缓存');
+   return{weaponSources:audio.weaponSources.size,creatureSources:audio.creatureSources.size,proceduralSources:audio.proceduralSources.size,nodes:audio.nodes,atlasRetained:true};
+  });
+
+  await check('升级提示保留四声，暂停与结束状态回收同帧遗留声音',async()=>{
+   await drained(audio);audio.cooldowns.clear();const recorded=audio.recorded;recorded?.reset();audio.recorded=null;
+   try{
+    assert(audio.weapon('rifle','shot'),'未建立普通武器声');audio.spell('ice');audio.level();
+    const level=[...audio.proceduralSources].filter(source=>source.levelCue),ordinary=[...audio.weaponSources,...audio.proceduralSources].filter(source=>!source.levelCue),beforePreserve=observed.stops.length;
+    assert(level.length===4,'升级提示未建立四个 levelCue 声源');assert(ordinary.length>=2,'未建立武器和法术声源');
+    audio.stopWeapons(true);const preservedStops=observed.stops.slice(beforePreserve);
+    for(const source of level)assert(!preservedStops.some(entry=>entry.source===source),'保留升级提示时停止了 levelCue');
+    for(const source of ordinary)assert(preservedStops.some(entry=>entry.source===source),'保留升级提示时遗漏普通武器或法术');
+    await wait(40);assert(audio.weaponSources.size===0&&audio.proceduralSources.size===4&&level.every(source=>audio.proceduralSources.has(source)),'清理后未只保留四声升级提示');
+    const beforeFinal=observed.stops.length;audio.stopWeapons();
+    for(const source of level)assert(observed.stops.slice(beforeFinal).some(entry=>entry.source===source),'最终清理未停止升级提示');await released(audio);
+    const modes=['lost','paused','event-choice','won'];
+    for(const mode of modes){
+     audio.cooldowns.clear();audio.next=context.currentTime+10;audio.update(0,{map:audio.map,mode:'playing'});
+     // A finish handler clears voices before a later collision creates another voice in the same frame.
+     audio.stopWeapons();audio.stopCreatures();assert(audio.weapon('shotgun','impact'),'未建立同帧遗留武器声');assert(audio.creature('golem','impact'),'未建立同帧遗留怪物声');
+     const active=[...audio.weaponSources,...audio.creatureSources],beforeTransition=observed.stops.length;
+     audio.update(0,{map:audio.map,mode});
+     for(const source of active)assert(observed.stops.slice(beforeTransition).some(entry=>entry.source===source),mode+' 未停止同帧遗留声音');
+     await released(audio);assert(audio.mode===mode,mode+' 状态未生效');
+    }
+    return{preservedLevelCues:level.length,ordinaryVoicesStopped:ordinary.length,finalNodes:audio.nodes,modes,musicDisabledDuringCheck:true};
+   }finally{audio.recorded=recorded;await drained(audio);}
+  });
+
+  await check('真实离线群战混音无非有限采样、无削波并自然回收',async()=>{
+   const seconds=Math.max(4,...Object.values(SFX_CUES).flat().map(cue=>cue.duration+1));
+   const offline=new OfflineAudioContext(2,Math.ceil(seconds*44100),44100),mixed=new GameAudio(offline),tracked=observe(offline);
+   mixed.muted=false;mixed.musicVolume=0;mixed.sfxVolume=1;mixed.setup();
+   // Offline contexts remain suspended until rendering; allow this test instance to schedule real nodes.
+   mixed.available=()=>mixed.ready&&!mixed.muted&&mixed.nodes<100;
+   const decoded=await mixed.materialEffects.prepare();assert(decoded,mixed.materialEffects.error?.message||'离线图集解码失败');
+   for(let i=0;i<10;i++)assert(mixed.weapon(weapons[i],'impact',i%2,1,(i%5-2)/3),'群战命中未建立');
+   for(let i=0;i<6;i++)assert(mixed.weapon(weapons[i],'shot',0,1,(i%5-2)/3),'群战出手未建立');
+   for(const kind of['golem','wolf','mushroom','icewitch','cinderwisp','sandguard','shaman','yeti','foamling','boss']){
+    mixed.cooldowns.clear();assert(mixed.creature(kind,'impact',(tracked.starts.length%3)-1,0),kind+' 群战怪物声音未建立');
+   }
+   const scheduled={weapons:mixed.weaponSources.size,creatures:mixed.creatureSources.size,nodes:mixed.nodes,recorded:tracked.starts.filter(entry=>entry.buffer===decoded).length};
+   const rendered=await offline.startRendering(),stats=sampleStats(rendered);assert(stats.rms>.00001,'群战混音无有效能量');assert(stats.peak<1,'群战混音削波：'+stats.peak);
+   await wait(30);assert(mixed.nodes===0&&!mixed.weaponSources.size&&!mixed.creatureSources.size,'离线自然结束后未回收节点');
+   return{duration:seconds,sampleRate:rendered.sampleRate,...scheduled,...stats,remainingNodes:mixed.nodes};
+  });
+ }catch(error){report.checks.push({name:'检查环境',pass:false,error:error.message});}
+ finally{
+  if(audio){try{await drained(audio);}catch(error){report.checks.push({name:'最终回收',pass:false,error:error.message});}}
+  if(context&&context.state!=='closed'){try{await context.close();}catch(error){report.checks.push({name:'关闭音频',pass:false,error:error.message});}}
+  if(preferences()!==savedPreferences)report.checks.push({name:'声音偏好保持原值',pass:false,error:'检查前后声音偏好不同'});
+  report.contextClosed=!context||context.state==='closed';report.elapsedMs=Math.round(performance.now()-started);report.finishedAt=new Date().toISOString();
+  report.status=report.checks.every(result=>result.pass)&&report.contextClosed?'passed':'failed';publish();
+  document.body.dataset.status=report.status;
+  for(const result of report.checks.slice($('#checks').children.length)){const item=document.createElement('li');item.dataset.pass=String(result.pass);item.textContent='失败 · '+result.name+'：'+result.error;$('#checks').append(item);}
+  const passed=report.checks.filter(result=>result.pass).length;$('#status').textContent=(report.status==='passed'?'全部通过':'检查有失败项')+' · '+passed+'/'+report.checks.length+' 项 · '+(report.contextClosed?'音频已关闭':'音频关闭失败');
+  $('#run').disabled=false;$('#download').disabled=false;
+ }
+};
+$('#download').onclick=()=>{
+ if(!report)return;const url=URL.createObjectURL(new Blob([JSON.stringify(report,null,2)],{type:'application/json'})),link=document.createElement('a');
+ link.href=url;link.download='material-audio-check-'+new Date().toISOString().replace(/[:.]/g,'-')+'.json';link.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
+};
+</script>
+</html>

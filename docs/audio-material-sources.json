@@ -1,0 +1,4894 @@
+{
+  "version": 1,
+  "license": "CC0-1.0",
+  "checked_on": "2026-10-08",
+  "sources": [
+    {
+      "id": "kenney-impact",
+      "title": "Impact Sounds",
+      "creator": "Kenney",
+      "url": "https://kenney.nl/assets/impact-sounds",
+      "download": "https://kenney.nl/media/pages/assets/impact-sounds/87b4ddecda-1677589768/kenney_impact-sounds.zip",
+      "evidence": "evidence/kenney-impact.html",
+      "license_file": "kenney-impact/License.txt",
+      "materials": [
+        "wood",
+        "metal",
+        "stone",
+        "glass"
+      ],
+      "license": "CC0-1.0",
+      "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "sha256": "029d734af1582474edf3a694d1b0cebc97c1c152f2f39fa34d4c2bafc5de77f8"
+    },
+    {
+      "id": "kenney-rpg",
+      "title": "RPG Audio",
+      "creator": "Kenney",
+      "url": "https://kenney.nl/assets/rpg-audio",
+      "download": "https://kenney.nl/media/pages/assets/rpg-audio/8e99002d76-1677590336/kenney_rpg-audio.zip",
+      "evidence": "evidence/kenney-rpg.html",
+      "license_file": "kenney-rpg/License.txt",
+      "materials": [
+        "mechanism",
+        "blade",
+        "cloth",
+        "leather",
+        "paper"
+      ],
+      "license": "CC0-1.0",
+      "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "sha256": "6dbeaf8544da958d8f2adcb4a4a4b76c1ade34a05f8ab9edccd327da7375f38b"
+    },
+    {
+      "id": "oga-ice",
+      "title": "Ice breaking/shattering",
+      "creator": "IgnasD",
+      "url": "https://opengameart.org/content/ice-breakingshattering",
+      "download": "https://opengameart.org/sites/default/files/IceShatters_0.zip",
+      "evidence": "evidence/oga-ice.html",
+      "materials": [
+        "ice"
+      ],
+      "license": "CC0-1.0",
+      "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "sha256": "b84ea396fac1af183dd2cb205a01edaa94b493ffb36965eafe59912e41cf9eb7"
+    },
+    {
+      "id": "oga-paper",
+      "title": "Various Paper Sound Effects",
+      "creator": "Luckius",
+      "url": "https://opengameart.org/content/various-paper-sound-effects",
+      "download": "https://opengameart.org/sites/default/files/sounds_6.zip",
+      "evidence": "evidence/oga-paper.html",
+      "materials": [
+        "paper"
+      ],
+      "license": "CC0-1.0",
+      "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "sha256": "aa1889414310c7cfdd8dc291c19d4e4fc21ec987e9238b0d961fb72449c263a4"
+    },
+    {
+      "id": "oga-water",
+      "title": "40 CC0 water / splash / slime SFX",
+      "creator": "rubberduck",
+      "url": "https://opengameart.org/content/40-cc0-water-splash-slime-sfx",
+      "download": "https://opengameart.org/sites/default/files/water-splash-slime-sfx.zip",
+      "evidence": "evidence/oga-water.html",
+      "materials": [
+        "water",
+        "bubble",
+        "slime"
+      ],
+      "license": "CC0-1.0",
+      "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "sha256": "7cd39abb49d4362a37ba18dc0e454c7dc1d08029d4e5b683149046bc237b2eba"
+    },
+    {
+      "id": "oga-fire",
+      "title": "Fire Crackling",
+      "creator": "AntumDeluge",
+      "url": "https://opengameart.org/content/fire-crackling",
+      "download": "https://opengameart.org/sites/default/files/fire-1.wav",
+      "evidence": "evidence/oga-fire.html",
+      "materials": [
+        "fire"
+      ],
+      "license": "CC0-1.0",
+      "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "sha256": "26702de8a195bcbafeae72034861d875a1b7917168a25106f4e1957ecdddf7e5"
+    },
+    {
+      "id": "oga-bow",
+      "title": "Battle Sound Effects",
+      "creator": "artisticdude",
+      "url": "https://opengameart.org/content/battle-sound-effects",
+      "download": "https://opengameart.org/sites/default/files/battle_sound_effects_0.zip",
+      "evidence": "evidence/oga-bow.html",
+      "materials": [
+        "bow",
+        "swish"
+      ],
+      "license": "CC0-1.0",
+      "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "sha256": "44e3d26b2378d2eb3a4f28b4c5cbc71908ad13c7389038348dbe9b8cde4f4c05"
+    },
+    {
+      "id": "oga-fireworks",
+      "title": "25 CC0 bang / firework SFX",
+      "creator": "rubberduck",
+      "url": "https://opengameart.org/content/25-cc0-bang-firework-sfx",
+      "download": "https://opengameart.org/sites/default/files/25-CC0-bang-sfx.zip",
+      "evidence": "evidence/oga-fireworks.html",
+      "materials": [
+        "explosion",
+        "shot"
+      ],
+      "license": "CC0-1.0",
+      "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "sha256": "c0c9ecc11e2dc0d190f0cced755569858234b8528286bc83becb6314c663407f"
+    },
+    {
+      "id": "oga-dull",
+      "title": "Dull explosion",
+      "creator": "qubodup",
+      "url": "https://opengameart.org/content/dull-explosion",
+      "download": "https://opengameart.org/sites/default/files/explosion_dull.flac",
+      "evidence": "evidence/oga-dull.html",
+      "materials": [
+        "explosion"
+      ],
+      "license": "CC0-1.0",
+      "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "sha256": "a463ff6b4cc37321f646ddbe9ff326aef244dea33d3951bc2a833a27cc611bf9"
+    },
+    {
+      "id": "oga-flame",
+      "title": "Catching fire",
+      "creator": "themightyglider",
+      "url": "https://opengameart.org/content/catching-fire",
+      "download": "https://opengameart.org/sites/default/files/flame_0.ogg",
+      "evidence": "evidence/oga-flame.html",
+      "materials": [
+        "fire"
+      ],
+      "license": "CC0-1.0",
+      "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "sha256": "c1eaafba3746374c68c30dc8b7ec895dac0e1e66064522f03340dc9b2da4a2cd",
+      "upstream": "https://freesound.org/people/qubodup/sounds/159725/"
+    },
+    {
+      "id": "oga-electric",
+      "title": "Electricity Sound Effects",
+      "creator": "BMacZero / Brian MacIntosh",
+      "url": "https://opengameart.org/content/electricity-sound-effects-0",
+      "download": [
+        "https://opengameart.org/sites/default/files/spark.wav",
+        "https://opengameart.org/sites/default/files/continuousspark.wav"
+      ],
+      "evidence": "evidence/oga-electric.html",
+      "materials": [
+        "electricity"
+      ],
+      "license": "CC0-1.0",
+      "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "provenance": "Recorded from a small Tesla generator."
+    }
+  ],
+  "selected_files": [
+    {
+      "id": "arc",
+      "source": "oga-electric",
+      "file": "oga-electric/continuousspark.wav",
+      "sha256": "4ec24045b4fb6a88b958d00f16cc39b8aa992cd6e6a5edb4ecb0f34b36ddb18b",
+      "duration": 0.21769
+    },
+    {
+      "id": "bang1",
+      "source": "oga-fireworks",
+      "file": "oga-fireworks/bang_03.ogg",
+      "sha256": "b823f53557ca9702f57b3f9e997fc92d5b87da99d464309d14199aabf2d620c4",
+      "duration": 1.09006
+    },
+    {
+      "id": "bang2",
+      "source": "oga-fireworks",
+      "file": "oga-fireworks/bang_06.ogg",
+      "sha256": "1209d7d44cd333abe089bb0ed8ac684381abfde8e4baad20bd5a0005168fd9ea",
+      "duration": 1.36378
+    },
+    {
+      "id": "blade1",
+      "source": "kenney-rpg",
+      "file": "kenney-rpg/Audio/knifeSlice.ogg",
+      "sha256": "4cd96dc630bed9840c15f1dd2306da2cc56a4da26a5d3f1a03c5a7265ac5e54f",
+      "duration": 0.59956
+    },
+    {
+      "id": "blade2",
+      "source": "kenney-rpg",
+      "file": "kenney-rpg/Audio/knifeSlice2.ogg",
+      "sha256": "6c2064d0ef988d1ec3d56868e823ea8823a5cac00f2742560052633529407def",
+      "duration": 0.56881
+    },
+    {
+      "id": "body1",
+      "source": "kenney-impact",
+      "file": "kenney-impact/Audio/impactPunch_medium_001.ogg",
+      "sha256": "e71d23abcc3f10d9d6bc9615b2a431fff70b12333a5fcdd9964457564ace4349",
+      "duration": 0.40172
+    },
+    {
+      "id": "body2",
+      "source": "kenney-impact",
+      "file": "kenney-impact/Audio/impactPunch_medium_003.ogg",
+      "sha256": "2d7c719c05999e0532f4384e1018e04cd916db715140bf16dee2dff3f820e908",
+      "duration": 0.45528
+    },
+    {
+      "id": "book",
+      "source": "kenney-rpg",
+      "file": "kenney-rpg/Audio/bookClose.ogg",
+      "sha256": "81e976532565f4372abd14e83d2684195fa548d0a28d345de221e56052454f32",
+      "duration": 0.23062
+    },
+    {
+      "id": "bow",
+      "source": "oga-bow",
+      "file": "oga-bow/battle_sound_effects/Bow.wav",
+      "sha256": "0dc8cf132cf583563936ac3a4d776e196210d5f6703b4ebdd7c68e8f35b9f3e3",
+      "duration": 0.54859
+    },
+    {
+      "id": "bubble1",
+      "source": "oga-water",
+      "file": "oga-water/bubble_01.ogg",
+      "sha256": "1d03d72347019be889280efc6de5ca5ea439d0b24b235e6db87e5bf7583ecb2b",
+      "duration": 0.6965
+    },
+    {
+      "id": "bubble2",
+      "source": "oga-water",
+      "file": "oga-water/bubble_02.ogg",
+      "sha256": "7992a1a4637ea727b177b3edbc086ec280167d67a8fad010bb8fb58893b2e2f2",
+      "duration": 0.36038
+    },
+    {
+      "id": "bubble3",
+      "source": "oga-water",
+      "file": "oga-water/bubble_03.ogg",
+      "sha256": "6189106305ab917f1a260b66a74380ed7d6e5be0fb4f5eba3ac93aeb89d9b7ca",
+      "duration": 0.54712
+    },
+    {
+      "id": "bubbles",
+      "source": "oga-water",
+      "file": "oga-water/loop_bubbles_1.ogg",
+      "sha256": "5ae25a9734a05f60e57a1b1db2fa9afaddf972c1a2927c1e743e720fcdaaccfe",
+      "duration": 4.407
+    },
+    {
+      "id": "cannon1",
+      "source": "oga-fireworks",
+      "file": "oga-fireworks/cannon_01.ogg",
+      "sha256": "e87ca0ee6b53da1f21cd9086cb75f456495871618fdfed63388bd2208a872596",
+      "duration": 1.23828
+    },
+    {
+      "id": "cannon2",
+      "source": "oga-fireworks",
+      "file": "oga-fireworks/cannon_03.ogg",
+      "sha256": "c3690a013befc16be1432e6fe62422db71c7b606980ddfe62429e864c5caf1d2",
+      "duration": 0.86428
+    },
+    {
+      "id": "click",
+      "source": "kenney-rpg",
+      "file": "kenney-rpg/Audio/metalClick.ogg",
+      "sha256": "9851a69d0c613e13bceef08060ecc4148f098ef487927cbebe270d642398a3b3",
+      "duration": 0.44584
+    },
+    {
+      "id": "cloth1",
+      "source": "kenney-rpg",
+      "file": "kenney-rpg/Audio/cloth1.ogg",
+      "sha256": "ddb93a3671233f95da0e0b10367f082f7eb42fa6caaddcf776410aa8833c747d",
+      "duration": 0.66106
+    },
+    {
+      "id": "cloth2",
+      "source": "kenney-rpg",
+      "file": "kenney-rpg/Audio/cloth2.ogg",
+      "sha256": "8a7451193c38bc05483aec25dd193e163a15d44cf7fff04ac7912573231b0201",
+      "duration": 0.41506
+    },
+    {
+      "id": "cloth3",
+      "source": "kenney-rpg",
+      "file": "kenney-rpg/Audio/cloth3.ogg",
+      "sha256": "a48632d17a4f1416541d261a32a31612e01267144c407fa3ecab3ff410f0085b",
+      "duration": 0.47656
+    },
+    {
+      "id": "cloth4",
+      "source": "kenney-rpg",
+      "file": "kenney-rpg/Audio/cloth4.ogg",
+      "sha256": "e7ab9a6c4466dea874196c61f59bf1da05cfe58748f42fadd695d441a154a99b",
+      "duration": 0.38434
+    },
+    {
+      "id": "creak1",
+      "source": "kenney-rpg",
+      "file": "kenney-rpg/Audio/creak1.ogg",
+      "sha256": "8a346186fd297254248cab8e8117060a52a5cf2a84f603153a762108550ea95e",
+      "duration": 0.66106
+    },
+    {
+      "id": "creak2",
+      "source": "kenney-rpg",
+      "file": "kenney-rpg/Audio/creak2.ogg",
+      "sha256": "8a990afdc03aebb91d528f5385e2f95582dbfa8e2c12c71098ab01be9142294a",
+      "duration": 0.83016
+    },
+    {
+      "id": "crush1",
+      "source": "oga-paper",
+      "file": "oga-paper/WAV/Paper Crushed - 1.wav",
+      "sha256": "744102e4ba8e178d55edcb9d5b4bff18d2480f282aa24abd4f0683dc24aa81d2",
+      "duration": 1.14941
+    },
+    {
+      "id": "crush2",
+      "source": "oga-paper",
+      "file": "oga-paper/WAV/Paper Crushed - 2.wav",
+      "sha256": "2e9c9fd45abffbad091dca44ea5219a9d0dd9c55db5535ff1c65c0a1b03afb6e",
+      "duration": 0.69663
+    },
+    {
+      "id": "draw1",
+      "source": "kenney-rpg",
+      "file": "kenney-rpg/Audio/drawKnife1.ogg",
+      "sha256": "276403e72c3b71c47bc24db3083970c23f8e5551ffa78f436f83483c56f3f0bb",
+      "duration": 0.39972
+    },
+    {
+      "id": "draw2",
+      "source": "kenney-rpg",
+      "file": "kenney-rpg/Audio/drawKnife2.ogg",
+      "sha256": "d5df6a4130cbb016f97b4883769a418917b9629cb4c21717030b186e0c73281a",
+      "duration": 0.44584
+    },
+    {
+      "id": "dull",
+      "source": "oga-dull",
+      "file": "archives/explosion_dull.flac",
+      "sha256": "a463ff6b4cc37321f646ddbe9ff326aef244dea33d3951bc2a833a27cc611bf9",
+      "duration": 0.16594
+    },
+    {
+      "id": "fire",
+      "source": "oga-fire",
+      "file": "archives/fire-1.wav",
+      "sha256": "26702de8a195bcbafeae72034861d875a1b7917168a25106f4e1957ecdddf7e5",
+      "duration": 2.87062
+    },
+    {
+      "id": "flame",
+      "source": "oga-flame",
+      "file": "archives/flame_0.ogg",
+      "sha256": "c1eaafba3746374c68c30dc8b7ec895dac0e1e66064522f03340dc9b2da4a2cd",
+      "duration": 0.45044
+    },
+    {
+      "id": "glass1",
+      "source": "kenney-impact",
+      "file": "kenney-impact/Audio/impactGlass_light_001.ogg",
+      "sha256": "05e513fbd42829060eb37855f8c3866722ec5c39a8937c9bfde518cc609effa2",
+      "duration": 0.20672
+    },
+    {
+      "id": "glass2",
+      "source": "kenney-impact",
+      "file": "kenney-impact/Audio/impactGlass_light_003.ogg",
+      "sha256": "765290ce32fa108c939a0dbd6fbacbcd05abde622b57b708eb8a64058ef4225a",
+      "duration": 0.20672
+    },
+    {
+      "id": "ice1",
+      "source": "oga-ice",
+      "file": "oga-ice/IceShatters/LedasLuzta.ogg",
+      "sha256": "4c7304ac47f84e41b62edb71082d00fe01823a2a54ec4e4268a040c973e3510f",
+      "duration": 0.59213
+    },
+    {
+      "id": "ice2",
+      "source": "oga-ice",
+      "file": "oga-ice/IceShatters/LedasLuzta2.ogg",
+      "sha256": "92a20369f866c852f841ffaef31676cb70f542592504b040327c60f5101f9c47",
+      "duration": 0.40056
+    },
+    {
+      "id": "ice3",
+      "source": "oga-ice",
+      "file": "oga-ice/IceShatters/LedasLuzta4.ogg",
+      "sha256": "81558c035953d4e595640be7ba1a645c47c6f4b72f38de43a44d36fa70d52b8c",
+      "duration": 1.03988
+    },
+    {
+      "id": "latch",
+      "source": "kenney-rpg",
+      "file": "kenney-rpg/Audio/metalLatch.ogg",
+      "sha256": "ba9ba60b172b3ebc131a940f25793cd2e207aca7af73dc80d637277f060f1708",
+      "duration": 0.26134
+    },
+    {
+      "id": "leather1",
+      "source": "kenney-rpg",
+      "file": "kenney-rpg/Audio/handleSmallLeather.ogg",
+      "sha256": "ae3cbf695aa0a8b98b5a80a835be5a3ccbd5446a24db2235cd4c3cd6fc92ed96",
+      "duration": 0.33822
+    },
+    {
+      "id": "leather2",
+      "source": "kenney-rpg",
+      "file": "kenney-rpg/Audio/handleSmallLeather2.ogg",
+      "sha256": "a66f6db5918ad016c28a9f2768f127a7f39b5fa04481e5a3b4e78ebe2a1c282d",
+      "duration": 0.3075
+    },
+    {
+      "id": "metal1",
+      "source": "kenney-impact",
+      "file": "kenney-impact/Audio/impactMetal_light_000.ogg",
+      "sha256": "33b5e6e37c6e9d54e07bf5a89b12c76e879f40c1ea83cdd82714df1d6f9fec6d",
+      "duration": 0.373
+    },
+    {
+      "id": "metal2",
+      "source": "kenney-impact",
+      "file": "kenney-impact/Audio/impactMetal_light_003.ogg",
+      "sha256": "92d5db6bfc672d9dc1b4f390b2900504f013187fa36335472554fafefa9050b1",
+      "duration": 0.48206
+    },
+    {
+      "id": "metal3",
+      "source": "kenney-impact",
+      "file": "kenney-impact/Audio/impactMetal_medium_001.ogg",
+      "sha256": "e8a9eaba7c4d27422e4eeb3e6c7100d5d7dc0f83e005efc98c960adcc5265337",
+      "duration": 0.14056
+    },
+    {
+      "id": "metal4",
+      "source": "kenney-impact",
+      "file": "kenney-impact/Audio/impactMetal_heavy_003.ogg",
+      "sha256": "b0f2ba4dabde9a87eb9c188a19d31e0c2300fd321adeba08d3b9b8aa011d7037",
+      "duration": 0.20403
+    },
+    {
+      "id": "page1",
+      "source": "kenney-rpg",
+      "file": "kenney-rpg/Audio/bookFlip1.ogg",
+      "sha256": "fa81ac2fedc8c641661b87e349630a36c9800e795e0c800e029214efdbe26a7d",
+      "duration": 0.76866
+    },
+    {
+      "id": "page2",
+      "source": "kenney-rpg",
+      "file": "kenney-rpg/Audio/bookFlip2.ogg",
+      "sha256": "3409042acbfaebc24c1a6327dc073e36f9250841712e96c5040da566a97df73c",
+      "duration": 0.43044
+    },
+    {
+      "id": "paper1",
+      "source": "oga-paper",
+      "file": "oga-paper/WAV/Paper Sound - 1.wav",
+      "sha256": "d04ac578637259182dc4c9e03664217d9c80c0da90d5784563dbe43bd6a264cc",
+      "duration": 0.48762
+    },
+    {
+      "id": "paper2",
+      "source": "oga-paper",
+      "file": "oga-paper/WAV/Paper Sound - 2.wav",
+      "sha256": "7b670c269c463c308c8808a7d3bad5116fbd7a55c7e26d0b9064627f4c576b03",
+      "duration": 0.54569
+    },
+    {
+      "id": "rip",
+      "source": "oga-paper",
+      "file": "oga-paper/WAV/Paper Ripped - 1.wav",
+      "sha256": "79e862887ae205d2bfcf6ceea42faebae0115380c152b140b0427e36c845bc3e",
+      "duration": 0.49925
+    },
+    {
+      "id": "shot1",
+      "source": "oga-fireworks",
+      "file": "oga-fireworks/shot_01.ogg",
+      "sha256": "a846eefebbb08b6f6d31a7728318b8de349ea2971cea148d7afdb41d797fdcfc",
+      "duration": 0.45859
+    },
+    {
+      "id": "shot2",
+      "source": "oga-fireworks",
+      "file": "oga-fireworks/shot_02.ogg",
+      "sha256": "4b9b62ff7f430d9d257a07efc54be8192c2e01668fe5e2461f217b2f8fe33a77",
+      "duration": 0.37438
+    },
+    {
+      "id": "shot3",
+      "source": "oga-fireworks",
+      "file": "oga-fireworks/shot_03.ogg",
+      "sha256": "f3cfbf0af36a717ff9c8f58640f181db7b73266e8263591014d453c4e77c6418",
+      "duration": 0.26425
+    },
+    {
+      "id": "slime1",
+      "source": "oga-water",
+      "file": "oga-water/slime_01.ogg",
+      "sha256": "4273c9510b03c3cc6b2d901fbd20de62ff4f537e4077a368355039c3081099a1",
+      "duration": 0.47313
+    },
+    {
+      "id": "slime2",
+      "source": "oga-water",
+      "file": "oga-water/slime_03.ogg",
+      "sha256": "e78e0702ac671ae098537266cb6f9106d2402ed99b6554b1429327ec603c3dae",
+      "duration": 0.57053
+    },
+    {
+      "id": "slime3",
+      "source": "oga-water",
+      "file": "oga-water/slime_08.ogg",
+      "sha256": "d658b872438737d4bfd0b3b7c1b325f94a4467796266e02ff6f79cf8f3001666",
+      "duration": 0.52928
+    },
+    {
+      "id": "slime4",
+      "source": "oga-water",
+      "file": "oga-water/slime_12.ogg",
+      "sha256": "de5437b5ad2af49f6914679011bb212934986c1e13e9a4c9cf45537490f66f6e",
+      "duration": 0.22981
+    },
+    {
+      "id": "spark",
+      "source": "oga-electric",
+      "file": "oga-electric/spark.wav",
+      "sha256": "9a3d987bdf7f405570aa015f6da42596ce84c5073c18c0561be7cd3ae401bc97",
+      "duration": 0.33672
+    },
+    {
+      "id": "splash1",
+      "source": "oga-water",
+      "file": "oga-water/splash_01.ogg",
+      "sha256": "156f4df0fa1a552d1c4e451284a55000417ea871954dc4b5e0d4302a49e228a8",
+      "duration": 1.38109
+    },
+    {
+      "id": "splash2",
+      "source": "oga-water",
+      "file": "oga-water/splash_03.ogg",
+      "sha256": "ae2cff9a47934ece590dda45ff18acf89c5c98cb5497ce71c50b3a315b225a94",
+      "duration": 0.772
+    },
+    {
+      "id": "splash3",
+      "source": "oga-water",
+      "file": "oga-water/splash_07.ogg",
+      "sha256": "307e6ea8d4ed122d1f54377437194daf4c2d6103d3a04dd9128c3d7a342d46b8",
+      "duration": 1.25975
+    },
+    {
+      "id": "splash4",
+      "source": "oga-water",
+      "file": "oga-water/splash_10.ogg",
+      "sha256": "69ec352dc6c0ea4691435e692063f903c98e5292579ba71297d4fbdb51c33649",
+      "duration": 0.31819
+    },
+    {
+      "id": "stone1",
+      "source": "kenney-impact",
+      "file": "kenney-impact/Audio/impactMining_001.ogg",
+      "sha256": "61235a18de3f3d92118235398222dbf51d448f1be70b1c8bc962b10b86f2d9c6",
+      "duration": 0.86944
+    },
+    {
+      "id": "stone2",
+      "source": "kenney-impact",
+      "file": "kenney-impact/Audio/impactMining_003.ogg",
+      "sha256": "4237fa2cd80364ad81cd0af44f67d7497f1c5edcc7bdb02cd22be2ba4580c83d",
+      "duration": 0.99175
+    },
+    {
+      "id": "swish2",
+      "source": "oga-bow",
+      "file": "oga-bow/battle_sound_effects/swish_2.wav",
+      "sha256": "690725fd44a99a4abd32d59c0efe8e28486afb564d3f5710cca75a2c786cf0f1",
+      "duration": 0.37084
+    },
+    {
+      "id": "swish3",
+      "source": "oga-bow",
+      "file": "oga-bow/battle_sound_effects/swish_3.wav",
+      "sha256": "7767c7b6ba063d8d5de6e05ba29c037af5c4a19d02b00b6b5ff398f72732e1c9",
+      "duration": 0.575
+    },
+    {
+      "id": "swish4",
+      "source": "oga-bow",
+      "file": "oga-bow/battle_sound_effects/swish_4.wav",
+      "sha256": "a53382f21d9c7e4d7a1d6e8cddc9ce9779740f9ad2ba4d9012ee20318c04f24c",
+      "duration": 0.375
+    },
+    {
+      "id": "wood1",
+      "source": "kenney-impact",
+      "file": "kenney-impact/Audio/impactWood_light_000.ogg",
+      "sha256": "eb45e35b4bed784d3f120de4afec4b0d6ac09d9e143cce8cfcb7d739e1b1f3c3",
+      "duration": 0.26272
+    },
+    {
+      "id": "wood2",
+      "source": "kenney-impact",
+      "file": "kenney-impact/Audio/impactWood_light_003.ogg",
+      "sha256": "cdfbe8af2fe7ff9ee28f337a0a989deee0f327620da456c8413644880e9d0004",
+      "duration": 0.26272
+    },
+    {
+      "id": "wood3",
+      "source": "kenney-impact",
+      "file": "kenney-impact/Audio/impactWood_medium_001.ogg",
+      "sha256": "15271dbe8e2872dbb0ff1aeb7b12b2d2b92b7c1951c88532b9ab9158c36dfc73",
+      "duration": 0.32978
+    },
+    {
+      "id": "wood4",
+      "source": "kenney-impact",
+      "file": "kenney-impact/Audio/impactPlank_medium_003.ogg",
+      "sha256": "0602a7b3eab5f53484f10fe775ee4204e7a2ba9703c886b302e012f7f6fab8de",
+      "duration": 0.77903
+    }
+  ],
+  "cues": [
+    {
+      "key": "rifle:shot",
+      "variant": 0,
+      "offset": 0.12,
+      "duration": 0.32,
+      "category": "shot",
+      "target_rms": 0.115,
+      "layers": [
+        {
+          "sample": "shot1",
+          "gain": 1,
+          "delay": 0,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        },
+        {
+          "sample": "click",
+          "gain": 0.16,
+          "delay": 0.026,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        }
+      ],
+      "decoded_peak": 0.400059,
+      "decoded_rms": 0.107793
+    },
+    {
+      "key": "rifle:shot",
+      "variant": 1,
+      "offset": 0.56,
+      "duration": 0.32,
+      "category": "shot",
+      "target_rms": 0.115,
+      "layers": [
+        {
+          "sample": "shot2",
+          "gain": 1,
+          "delay": 0,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        },
+        {
+          "sample": "latch",
+          "gain": 0.13,
+          "delay": 0.035,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        }
+      ],
+      "decoded_peak": 0.395054,
+      "decoded_rms": 0.107568
+    },
+    {
+      "key": "rifle:impact",
+      "variant": 0,
+      "offset": 1.0,
+      "duration": 0.23,
+      "category": "impact",
+      "target_rms": 0.085,
+      "layers": [
+        {
+          "sample": "metal1",
+          "gain": 0.5,
+          "delay": 0,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        },
+        {
+          "sample": "body1",
+          "gain": 1,
+          "delay": 0,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        }
+      ],
+      "decoded_peak": 0.296396,
+      "decoded_rms": 0.080687
+    },
+    {
+      "key": "rifle:impact",
+      "variant": 1,
+      "offset": 1.35,
+      "duration": 0.23,
+      "category": "impact",
+      "target_rms": 0.085,
+      "layers": [
+        {
+          "sample": "metal2",
+          "gain": 0.5,
+          "delay": 0,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        },
+        {
+          "sample": "body2",
+          "gain": 1,
+          "delay": 0,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        }
+      ],
+      "decoded_peak": 0.299763,
+      "decoded_rms": 0.080882
+    },
+    {
+      "key": "rifle:mechanism",
+      "variant": 0,
+      "offset": 1.7,
+      "duration": 0.24,
+      "category": "mechanism",
+      "target_rms": 0.04,
+      "layers": [
+        {
+          "sample": "latch",
+          "gain": 1,
+          "delay": 0,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        },
+        {
+          "sample": "click",
+          "gain": 0.5,
+          "delay": 0.1,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        }
+      ],
+      "decoded_peak": 0.327798,
+      "decoded_rms": 0.038083
+    },
+    {
+      "key": "rifle:mechanism",
+      "variant": 1,
+      "offset": 2.06,
+      "duration": 0.24,
+      "category": "mechanism",
+      "target_rms": 0.04,
+      "layers": [
+        {
+          "sample": "click",
+          "gain": 1,
+          "delay": 0,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        },
+        {
+          "sample": "draw2",
+          "gain": 0.35,
+          "delay": 0.07,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        }
+      ],
+      "decoded_peak": 0.336561,
+      "decoded_rms": 0.038041
+    },
+    {
+      "key": "shotgun:shot",
+      "variant": 0,
+      "offset": 2.42,
+      "duration": 0.52,
+      "category": "shot",
+      "target_rms": 0.115,
+      "layers": [
+        {
+          "sample": "cannon1",
+          "gain": 1,
+          "delay": 0,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        },
+        {
+          "sample": "shot3",
+          "gain": 0.65,
+          "delay": 0,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        },
+        {
+          "sample": "latch",
+          "gain": 0.18,
+          "delay": 0.12,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        }
+      ],
+      "decoded_peak": 0.352181,
+      "decoded_rms": 0.108973
+    },
+    {
+      "key": "shotgun:shot",
+      "variant": 1,
+      "offset": 3.06,
+      "duration": 0.52,
+      "category": "shot",
+      "target_rms": 0.115,
+      "layers": [
+        {
+          "sample": "cannon2",
+          "gain": 1,
+          "delay": 0,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        },
+        {
+          "sample": "bang2",
+          "gain": 0.65,
+          "delay": 0,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        },
+        {
+          "sample": "click",
+          "gain": 0.18,
+          "delay": 0.1,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        }
+      ],
+      "decoded_peak": 0.374293,
+      "decoded_rms": 0.109647
+    },
+    {
+      "key": "shotgun:impact",
+      "variant": 0,
+      "offset": 3.7,
+      "duration": 0.33,
+      "category": "impact",
+      "target_rms": 0.085,
+      "layers": [
+        {
+          "sample": "body1",
+          "gain": 1,
+          "delay": 0,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        },
+        {
+          "sample": "wood3",
+          "gain": 0.55,
+          "delay": 0.012,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        },
+        {
+          "sample": "metal3",
+          "gain": 0.25,
+          "delay": 0.025,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        }
+      ],
+      "decoded_peak": 0.318099,
+      "decoded_rms": 0.080506
+    },
+    {
+      "key": "shotgun:impact",
+      "variant": 1,
+      "offset": 4.15,
+      "duration": 0.33,
+      "category": "impact",
+      "target_rms": 0.085,
+      "layers": [
+        {
+          "sample": "body2",
+          "gain": 1,
+          "delay": 0,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        },
+        {
+          "sample": "wood4",
+          "gain": 0.5,
+          "delay": 0.008,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        },
+        {
+          "sample": "metal4",
+          "gain": 0.22,
+          "delay": 0.02,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        }
+      ],
+      "decoded_peak": 0.317355,
+      "decoded_rms": 0.080577
+    },
+    {
+      "key": "shotgun:mechanism",
+      "variant": 0,
+      "offset": 4.6,
+      "duration": 0.35,
+      "category": "mechanism",
+      "target_rms": 0.04,
+      "layers": [
+        {
+          "sample": "draw1",
+          "gain": 1,
+          "delay": 0,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        },
+        {
+          "sample": "latch",
+          "gain": 0.8,
+          "delay": 0.13,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        }
+      ],
+      "decoded_peak": 0.254653,
+      "decoded_rms": 0.038269
+    },
+    {
+      "key": "shotgun:mechanism",
+      "variant": 1,
+      "offset": 5.07,
+      "duration": 0.35,
+      "category": "mechanism",
+      "target_rms": 0.04,
+      "layers": [
+        {
+          "sample": "draw2",
+          "gain": 1,
+          "delay": 0,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        },
+        {
+          "sample": "click",
+          "gain": 0.8,
+          "delay": 0.15,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        }
+      ],
+      "decoded_peak": 0.301985,
+      "decoded_rms": 0.037847
+    },
+    {
+      "key": "crossbow:shot",
+      "variant": 0,
+      "offset": 5.54,
+      "duration": 0.35,
+      "category": "shot",
+      "target_rms": 0.115,
+      "layers": [
+        {
+          "sample": "bow",
+          "gain": 1,
+          "delay": 0,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        },
+        {
+          "sample": "wood1",
+          "gain": 0.5,
+          "delay": 0,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        },
+        {
+          "sample": "latch",
+          "gain": 0.18,
+          "delay": 0.02,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        }
+      ],
+      "decoded_peak": 0.400689,
+      "decoded_rms": 0.107532
+    },
+    {
+      "key": "crossbow:shot",
+      "variant": 1,
+      "offset": 6.01,
+      "duration": 0.35,
+      "category": "shot",
+      "target_rms": 0.115,
+      "layers": [
+        {
+          "sample": "bow",
+          "gain": 0.85,
+          "delay": 0,
+          "start": 0.025,
+          "take": null,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        },
+        {
+          "sample": "wood2",
+          "gain": 0.55,
+          "delay": 0,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        },
+        {
+          "sample": "creak2",
+          "gain": 0.18,
+          "delay": 0.025,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        }
+      ],
+      "decoded_peak": 0.50187,
+      "decoded_rms": 0.107826
+    },
+    {
+      "key": "crossbow:impact",
+      "variant": 0,
+      "offset": 6.48,
+      "duration": 0.25,
+      "category": "impact",
+      "target_rms": 0.085,
+      "layers": [
+        {
+          "sample": "wood3",
+          "gain": 1,
+          "delay": 0,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        },
+        {
+          "sample": "body1",
+          "gain": 0.5,
+          "delay": 0,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        }
+      ],
+      "decoded_peak": 0.311949,
+      "decoded_rms": 0.080614
+    },
+    {
+      "key": "crossbow:impact",
+      "variant": 1,
+      "offset": 6.85,
+      "duration": 0.25,
+      "category": "impact",
+      "target_rms": 0.085,
+      "layers": [
+        {
+          "sample": "wood4",
+          "gain": 1,
+          "delay": 0,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        },
+        {
+          "sample": "body2",
+          "gain": 0.45,
+          "delay": 0,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        }
+      ],
+      "decoded_peak": 0.311736,
+      "decoded_rms": 0.080544
+    },
+    {
+      "key": "crossbow:mechanism",
+      "variant": 0,
+      "offset": 7.22,
+      "duration": 0.31,
+      "category": "mechanism",
+      "target_rms": 0.04,
+      "layers": [
+        {
+          "sample": "creak1",
+          "gain": 1,
+          "delay": 0,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        },
+        {
+          "sample": "wood1",
+          "gain": 0.4,
+          "delay": 0.12,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        }
+      ],
+      "decoded_peak": 0.236323,
+      "decoded_rms": 0.037896
+    },
+    {
+      "key": "crossbow:mechanism",
+      "variant": 1,
+      "offset": 7.65,
+      "duration": 0.31,
+      "category": "mechanism",
+      "target_rms": 0.04,
+      "layers": [
+        {
+          "sample": "creak2",
+          "gain": 1,
+          "delay": 0,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        },
+        {
+          "sample": "wood2",
+          "gain": 0.4,
+          "delay": 0.15,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        }
+      ],
+      "decoded_peak": 0.138373,
+      "decoded_rms": 0.038025
+    },
+    {
+      "key": "shuriken:shot",
+      "variant": 0,
+      "offset": 8.08,
+      "duration": 0.28,
+      "category": "shot",
+      "target_rms": 0.115,
+      "layers": [
+        {
+          "sample": "blade1",
+          "gain": 1,
+          "delay": 0,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        },
+        {
+          "sample": "metal1",
+          "gain": 0.22,
+          "delay": 0.04,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        }
+      ],
+      "decoded_peak": 0.36017,
+      "decoded_rms": 0.10962
+    },
+    {
+      "key": "shuriken:shot",
+      "variant": 1,
+      "offset": 8.48,
+      "duration": 0.28,
+      "category": "shot",
+      "target_rms": 0.115,
+      "layers": [
+        {
+          "sample": "blade2",
+          "gain": 1,
+          "delay": 0,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        },
+        {
+          "sample": "metal2",
+          "gain": 0.22,
+          "delay": 0.035,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        }
+      ],
+      "decoded_peak": 0.507651,
+      "decoded_rms": 0.109793
+    },
+    {
+      "key": "shuriken:impact",
+      "variant": 0,
+      "offset": 8.88,
+      "duration": 0.29,
+      "category": "impact",
+      "target_rms": 0.085,
+      "layers": [
+        {
+          "sample": "metal1",
+          "gain": 1,
+          "delay": 0,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        },
+        {
+          "sample": "blade1",
+          "gain": 0.3,
+          "delay": 0.012,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        }
+      ],
+      "decoded_peak": 0.319023,
+      "decoded_rms": 0.080446
+    },
+    {
+      "key": "shuriken:impact",
+      "variant": 1,
+      "offset": 9.29,
+      "duration": 0.29,
+      "category": "impact",
+      "target_rms": 0.085,
+      "layers": [
+        {
+          "sample": "metal2",
+          "gain": 1,
+          "delay": 0,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        },
+        {
+          "sample": "blade2",
+          "gain": 0.3,
+          "delay": 0.016,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        }
+      ],
+      "decoded_peak": 0.331757,
+      "decoded_rms": 0.081247
+    },
+    {
+      "key": "shuriken:mechanism",
+      "variant": 0,
+      "offset": 9.7,
+      "duration": 0.22,
+      "category": "mechanism",
+      "target_rms": 0.04,
+      "layers": [
+        {
+          "sample": "draw1",
+          "gain": 1,
+          "delay": 0,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        },
+        {
+          "sample": "click",
+          "gain": 0.3,
+          "delay": 0.09,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        }
+      ],
+      "decoded_peak": 0.227095,
+      "decoded_rms": 0.03853
+    },
+    {
+      "key": "shuriken:mechanism",
+      "variant": 1,
+      "offset": 10.04,
+      "duration": 0.22,
+      "category": "mechanism",
+      "target_rms": 0.04,
+      "layers": [
+        {
+          "sample": "draw2",
+          "gain": 1,
+          "delay": 0,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        },
+        {
+          "sample": "latch",
+          "gain": 0.2,
+          "delay": 0.06,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        }
+      ],
+      "decoded_peak": 0.224365,
+      "decoded_rms": 0.038369
+    },
+    {
+      "key": "fire:shot",
+      "variant": 0,
+      "offset": 10.38,
+      "duration": 0.52,
+      "category": "shot",
+      "target_rms": 0.115,
+      "layers": [
+        {
+          "sample": "flame",
+          "gain": 1,
+          "delay": 0,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        },
+        {
+          "sample": "fire",
+          "gain": 0.8,
+          "delay": 0,
+          "start": 0.35,
+          "take": null,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        },
+        {
+          "sample": "bang1",
+          "gain": 0.3,
+          "delay": 0,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        }
+      ],
+      "decoded_peak": 0.322386,
+      "decoded_rms": 0.109192
+    },
+    {
+      "key": "fire:shot",
+      "variant": 1,
+      "offset": 11.02,
+      "duration": 0.52,
+      "category": "shot",
+      "target_rms": 0.115,
+      "layers": [
+        {
+          "sample": "flame",
+          "gain": 0.7,
+          "delay": 0,
+          "start": 0.04,
+          "take": null,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        },
+        {
+          "sample": "fire",
+          "gain": 1,
+          "delay": 0,
+          "start": 1.4,
+          "take": null,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        },
+        {
+          "sample": "bang2",
+          "gain": 0.3,
+          "delay": 0,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        }
+      ],
+      "decoded_peak": 0.322454,
+      "decoded_rms": 0.109307
+    },
+    {
+      "key": "fire:impact",
+      "variant": 0,
+      "offset": 11.66,
+      "duration": 0.43,
+      "category": "impact",
+      "target_rms": 0.085,
+      "layers": [
+        {
+          "sample": "fire",
+          "gain": 1,
+          "delay": 0,
+          "start": 0.5,
+          "take": null,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        },
+        {
+          "sample": "dull",
+          "gain": 0.6,
+          "delay": 0,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        }
+      ],
+      "decoded_peak": 0.324445,
+      "decoded_rms": 0.080878
+    },
+    {
+      "key": "fire:impact",
+      "variant": 1,
+      "offset": 12.21,
+      "duration": 0.43,
+      "category": "impact",
+      "target_rms": 0.085,
+      "layers": [
+        {
+          "sample": "fire",
+          "gain": 1,
+          "delay": 0,
+          "start": 1.7,
+          "take": null,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        },
+        {
+          "sample": "bang2",
+          "gain": 0.5,
+          "delay": 0,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 1800,
+          "highpass": 0
+        }
+      ],
+      "decoded_peak": 0.30656,
+      "decoded_rms": 0.080726
+    },
+    {
+      "key": "fire:mechanism",
+      "variant": 0,
+      "offset": 12.76,
+      "duration": 0.3,
+      "category": "mechanism",
+      "target_rms": 0.04,
+      "layers": [
+        {
+          "sample": "fire",
+          "gain": 1,
+          "delay": 0,
+          "start": 0.2,
+          "take": null,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        },
+        {
+          "sample": "click",
+          "gain": 0.15,
+          "delay": 0,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        }
+      ],
+      "decoded_peak": 0.288825,
+      "decoded_rms": 0.03794
+    },
+    {
+      "key": "fire:mechanism",
+      "variant": 1,
+      "offset": 13.18,
+      "duration": 0.3,
+      "category": "mechanism",
+      "target_rms": 0.04,
+      "layers": [
+        {
+          "sample": "fire",
+          "gain": 1,
+          "delay": 0,
+          "start": 1.3,
+          "take": null,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        },
+        {
+          "sample": "latch",
+          "gain": 0.15,
+          "delay": 0,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        }
+      ],
+      "decoded_peak": 0.136041,
+      "decoded_rms": 0.038003
+    },
+    {
+      "key": "dark:shot",
+      "variant": 0,
+      "offset": 13.6,
+      "duration": 0.49,
+      "category": "shot",
+      "target_rms": 0.115,
+      "layers": [
+        {
+          "sample": "cloth1",
+          "gain": 1,
+          "delay": 0,
+          "start": 0,
+          "take": null,
+          "reverse": true,
+          "lowpass": 1600,
+          "highpass": 0
+        },
+        {
+          "sample": "dull",
+          "gain": 0.6,
+          "delay": 0.13,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        }
+      ],
+      "decoded_peak": 0.32577,
+      "decoded_rms": 0.108999
+    },
+    {
+      "key": "dark:shot",
+      "variant": 1,
+      "offset": 14.21,
+      "duration": 0.49,
+      "category": "shot",
+      "target_rms": 0.115,
+      "layers": [
+        {
+          "sample": "cloth3",
+          "gain": 1,
+          "delay": 0,
+          "start": 0,
+          "take": null,
+          "reverse": true,
+          "lowpass": 1300,
+          "highpass": 0
+        },
+        {
+          "sample": "body2",
+          "gain": 0.6,
+          "delay": 0.16,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 900,
+          "highpass": 0
+        }
+      ],
+      "decoded_peak": 0.327604,
+      "decoded_rms": 0.109297
+    },
+    {
+      "key": "dark:impact",
+      "variant": 0,
+      "offset": 14.82,
+      "duration": 0.43,
+      "category": "impact",
+      "target_rms": 0.085,
+      "layers": [
+        {
+          "sample": "crush1",
+          "gain": 1,
+          "delay": 0,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 1700,
+          "highpass": 0
+        },
+        {
+          "sample": "dull",
+          "gain": 0.7,
+          "delay": 0,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        }
+      ],
+      "decoded_peak": 0.338811,
+      "decoded_rms": 0.080985
+    },
+    {
+      "key": "dark:impact",
+      "variant": 1,
+      "offset": 15.37,
+      "duration": 0.43,
+      "category": "impact",
+      "target_rms": 0.085,
+      "layers": [
+        {
+          "sample": "crush2",
+          "gain": 1,
+          "delay": 0,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 1500,
+          "highpass": 0
+        },
+        {
+          "sample": "body2",
+          "gain": 0.8,
+          "delay": 0,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 800,
+          "highpass": 0
+        }
+      ],
+      "decoded_peak": 0.314773,
+      "decoded_rms": 0.080072
+    },
+    {
+      "key": "dark:mechanism",
+      "variant": 0,
+      "offset": 15.92,
+      "duration": 0.35,
+      "category": "mechanism",
+      "target_rms": 0.04,
+      "layers": [
+        {
+          "sample": "cloth2",
+          "gain": 1,
+          "delay": 0,
+          "start": 0,
+          "take": null,
+          "reverse": true,
+          "lowpass": 1100,
+          "highpass": 0
+        }
+      ],
+      "decoded_peak": 0.238668,
+      "decoded_rms": 0.037979
+    },
+    {
+      "key": "dark:mechanism",
+      "variant": 1,
+      "offset": 16.39,
+      "duration": 0.35,
+      "category": "mechanism",
+      "target_rms": 0.04,
+      "layers": [
+        {
+          "sample": "cloth4",
+          "gain": 1,
+          "delay": 0,
+          "start": 0,
+          "take": null,
+          "reverse": true,
+          "lowpass": 1000,
+          "highpass": 0
+        }
+      ],
+      "decoded_peak": 0.231075,
+      "decoded_rms": 0.037996
+    },
+    {
+      "key": "shade:shot",
+      "variant": 0,
+      "offset": 16.86,
+      "duration": 0.39,
+      "category": "shot",
+      "target_rms": 0.115,
+      "layers": [
+        {
+          "sample": "paper1",
+          "gain": 1,
+          "delay": 0,
+          "start": 0,
+          "take": null,
+          "reverse": true,
+          "lowpass": 2400,
+          "highpass": 0
+        },
+        {
+          "sample": "cloth2",
+          "gain": 0.6,
+          "delay": 0.06,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        }
+      ],
+      "decoded_peak": 0.338289,
+      "decoded_rms": 0.108797
+    },
+    {
+      "key": "shade:shot",
+      "variant": 1,
+      "offset": 17.37,
+      "duration": 0.39,
+      "category": "shot",
+      "target_rms": 0.115,
+      "layers": [
+        {
+          "sample": "paper2",
+          "gain": 1,
+          "delay": 0,
+          "start": 0,
+          "take": null,
+          "reverse": true,
+          "lowpass": 2200,
+          "highpass": 0
+        },
+        {
+          "sample": "cloth4",
+          "gain": 0.6,
+          "delay": 0.07,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        }
+      ],
+      "decoded_peak": 0.34578,
+      "decoded_rms": 0.109085
+    },
+    {
+      "key": "shade:impact",
+      "variant": 0,
+      "offset": 17.88,
+      "duration": 0.37,
+      "category": "impact",
+      "target_rms": 0.085,
+      "layers": [
+        {
+          "sample": "rip",
+          "gain": 0.7,
+          "delay": 0,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 2000,
+          "highpass": 0
+        },
+        {
+          "sample": "body1",
+          "gain": 0.7,
+          "delay": 0,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        }
+      ],
+      "decoded_peak": 0.296589,
+      "decoded_rms": 0.081007
+    },
+    {
+      "key": "shade:impact",
+      "variant": 1,
+      "offset": 18.37,
+      "duration": 0.37,
+      "category": "impact",
+      "target_rms": 0.085,
+      "layers": [
+        {
+          "sample": "crush2",
+          "gain": 0.7,
+          "delay": 0,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 1600,
+          "highpass": 0
+        },
+        {
+          "sample": "body2",
+          "gain": 0.7,
+          "delay": 0,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        }
+      ],
+      "decoded_peak": 0.307139,
+      "decoded_rms": 0.080606
+    },
+    {
+      "key": "shade:mechanism",
+      "variant": 0,
+      "offset": 18.86,
+      "duration": 0.29,
+      "category": "mechanism",
+      "target_rms": 0.04,
+      "layers": [
+        {
+          "sample": "leather1",
+          "gain": 1,
+          "delay": 0,
+          "start": 0,
+          "take": null,
+          "reverse": true,
+          "lowpass": 0,
+          "highpass": 0
+        }
+      ],
+      "decoded_peak": 0.309842,
+      "decoded_rms": 0.037795
+    },
+    {
+      "key": "shade:mechanism",
+      "variant": 1,
+      "offset": 19.27,
+      "duration": 0.29,
+      "category": "mechanism",
+      "target_rms": 0.04,
+      "layers": [
+        {
+          "sample": "leather2",
+          "gain": 1,
+          "delay": 0,
+          "start": 0,
+          "take": null,
+          "reverse": true,
+          "lowpass": 0,
+          "highpass": 0
+        }
+      ],
+      "decoded_peak": 0.301948,
+      "decoded_rms": 0.038247
+    },
+    {
+      "key": "shadowblade:shot",
+      "variant": 0,
+      "offset": 19.68,
+      "duration": 0.36,
+      "category": "shot",
+      "target_rms": 0.115,
+      "layers": [
+        {
+          "sample": "blade1",
+          "gain": 1,
+          "delay": 0,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        },
+        {
+          "sample": "cloth1",
+          "gain": 0.5,
+          "delay": 0,
+          "start": 0,
+          "take": null,
+          "reverse": true,
+          "lowpass": 1800,
+          "highpass": 0
+        }
+      ],
+      "decoded_peak": 0.375899,
+      "decoded_rms": 0.109345
+    },
+    {
+      "key": "shadowblade:shot",
+      "variant": 1,
+      "offset": 20.16,
+      "duration": 0.36,
+      "category": "shot",
+      "target_rms": 0.115,
+      "layers": [
+        {
+          "sample": "blade2",
+          "gain": 1,
+          "delay": 0,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        },
+        {
+          "sample": "cloth3",
+          "gain": 0.5,
+          "delay": 0,
+          "start": 0,
+          "take": null,
+          "reverse": true,
+          "lowpass": 1700,
+          "highpass": 0
+        }
+      ],
+      "decoded_peak": 0.394265,
+      "decoded_rms": 0.109348
+    },
+    {
+      "key": "shadowblade:impact",
+      "variant": 0,
+      "offset": 20.64,
+      "duration": 0.34,
+      "category": "impact",
+      "target_rms": 0.085,
+      "layers": [
+        {
+          "sample": "metal3",
+          "gain": 0.6,
+          "delay": 0,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        },
+        {
+          "sample": "rip",
+          "gain": 0.65,
+          "delay": 0.018,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        }
+      ],
+      "decoded_peak": 0.335503,
+      "decoded_rms": 0.080606
+    },
+    {
+      "key": "shadowblade:impact",
+      "variant": 1,
+      "offset": 21.1,
+      "duration": 0.34,
+      "category": "impact",
+      "target_rms": 0.085,
+      "layers": [
+        {
+          "sample": "metal4",
+          "gain": 0.6,
+          "delay": 0,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        },
+        {
+          "sample": "crush2",
+          "gain": 0.7,
+          "delay": 0.018,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        }
+      ],
+      "decoded_peak": 0.340796,
+      "decoded_rms": 0.080759
+    },
+    {
+      "key": "shadowblade:mechanism",
+      "variant": 0,
+      "offset": 21.56,
+      "duration": 0.26,
+      "category": "mechanism",
+      "target_rms": 0.04,
+      "layers": [
+        {
+          "sample": "draw1",
+          "gain": 1,
+          "delay": 0,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        },
+        {
+          "sample": "cloth2",
+          "gain": 0.4,
+          "delay": 0,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        }
+      ],
+      "decoded_peak": 0.222866,
+      "decoded_rms": 0.038226
+    },
+    {
+      "key": "shadowblade:mechanism",
+      "variant": 1,
+      "offset": 21.94,
+      "duration": 0.26,
+      "category": "mechanism",
+      "target_rms": 0.04,
+      "layers": [
+        {
+          "sample": "draw2",
+          "gain": 1,
+          "delay": 0,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        },
+        {
+          "sample": "cloth4",
+          "gain": 0.4,
+          "delay": 0,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        }
+      ],
+      "decoded_peak": 0.214294,
+      "decoded_rms": 0.038146
+    },
+    {
+      "key": "grimoire:shot",
+      "variant": 0,
+      "offset": 22.32,
+      "duration": 0.4,
+      "category": "shot",
+      "target_rms": 0.115,
+      "layers": [
+        {
+          "sample": "page1",
+          "gain": 1,
+          "delay": 0,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        },
+        {
+          "sample": "rip",
+          "gain": 0.55,
+          "delay": 0.07,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        }
+      ],
+      "decoded_peak": 0.41391,
+      "decoded_rms": 0.109688
+    },
+    {
+      "key": "grimoire:shot",
+      "variant": 1,
+      "offset": 22.84,
+      "duration": 0.4,
+      "category": "shot",
+      "target_rms": 0.115,
+      "layers": [
+        {
+          "sample": "page2",
+          "gain": 1,
+          "delay": 0,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        },
+        {
+          "sample": "crush2",
+          "gain": 0.6,
+          "delay": 0.1,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        }
+      ],
+      "decoded_peak": 0.359722,
+      "decoded_rms": 0.109953
+    },
+    {
+      "key": "grimoire:impact",
+      "variant": 0,
+      "offset": 23.36,
+      "duration": 0.37,
+      "category": "impact",
+      "target_rms": 0.085,
+      "layers": [
+        {
+          "sample": "crush1",
+          "gain": 1,
+          "delay": 0,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        },
+        {
+          "sample": "book",
+          "gain": 0.4,
+          "delay": 0,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        }
+      ],
+      "decoded_peak": 0.357665,
+      "decoded_rms": 0.080794
+    },
+    {
+      "key": "grimoire:impact",
+      "variant": 1,
+      "offset": 23.85,
+      "duration": 0.37,
+      "category": "impact",
+      "target_rms": 0.085,
+      "layers": [
+        {
+          "sample": "crush2",
+          "gain": 1,
+          "delay": 0,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        },
+        {
+          "sample": "paper2",
+          "gain": 0.5,
+          "delay": 0.035,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        }
+      ],
+      "decoded_peak": 0.365771,
+      "decoded_rms": 0.081134
+    },
+    {
+      "key": "grimoire:mechanism",
+      "variant": 0,
+      "offset": 24.34,
+      "duration": 0.33,
+      "category": "mechanism",
+      "target_rms": 0.04,
+      "layers": [
+        {
+          "sample": "paper1",
+          "gain": 1,
+          "delay": 0,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        },
+        {
+          "sample": "page1",
+          "gain": 0.55,
+          "delay": 0.1,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        }
+      ],
+      "decoded_peak": 0.293477,
+      "decoded_rms": 0.038219
+    },
+    {
+      "key": "grimoire:mechanism",
+      "variant": 1,
+      "offset": 24.79,
+      "duration": 0.33,
+      "category": "mechanism",
+      "target_rms": 0.04,
+      "layers": [
+        {
+          "sample": "paper2",
+          "gain": 1,
+          "delay": 0,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        },
+        {
+          "sample": "page2",
+          "gain": 0.55,
+          "delay": 0.09,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        }
+      ],
+      "decoded_peak": 0.297425,
+      "decoded_rms": 0.037999
+    },
+    {
+      "key": "harpoon:shot",
+      "variant": 0,
+      "offset": 25.24,
+      "duration": 0.36,
+      "category": "shot",
+      "target_rms": 0.115,
+      "layers": [
+        {
+          "sample": "metal3",
+          "gain": 0.7,
+          "delay": 0,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        },
+        {
+          "sample": "splash1",
+          "gain": 0.7,
+          "delay": 0,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        },
+        {
+          "sample": "swish2",
+          "gain": 0.6,
+          "delay": 0,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        }
+      ],
+      "decoded_peak": 0.398534,
+      "decoded_rms": 0.109258
+    },
+    {
+      "key": "harpoon:shot",
+      "variant": 1,
+      "offset": 25.72,
+      "duration": 0.36,
+      "category": "shot",
+      "target_rms": 0.115,
+      "layers": [
+        {
+          "sample": "metal4",
+          "gain": 0.65,
+          "delay": 0,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        },
+        {
+          "sample": "splash2",
+          "gain": 0.8,
+          "delay": 0,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        },
+        {
+          "sample": "swish3",
+          "gain": 0.55,
+          "delay": 0,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        }
+      ],
+      "decoded_peak": 0.467993,
+      "decoded_rms": 0.108966
+    },
+    {
+      "key": "harpoon:impact",
+      "variant": 0,
+      "offset": 26.2,
+      "duration": 0.4,
+      "category": "impact",
+      "target_rms": 0.085,
+      "layers": [
+        {
+          "sample": "metal3",
+          "gain": 0.7,
+          "delay": 0,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        },
+        {
+          "sample": "splash3",
+          "gain": 1,
+          "delay": 0,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        }
+      ],
+      "decoded_peak": 0.389349,
+      "decoded_rms": 0.080846
+    },
+    {
+      "key": "harpoon:impact",
+      "variant": 1,
+      "offset": 26.72,
+      "duration": 0.4,
+      "category": "impact",
+      "target_rms": 0.085,
+      "layers": [
+        {
+          "sample": "metal4",
+          "gain": 0.7,
+          "delay": 0,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        },
+        {
+          "sample": "splash4",
+          "gain": 1,
+          "delay": 0,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        }
+      ],
+      "decoded_peak": 0.391068,
+      "decoded_rms": 0.078093
+    },
+    {
+      "key": "harpoon:mechanism",
+      "variant": 0,
+      "offset": 27.24,
+      "duration": 0.3,
+      "category": "mechanism",
+      "target_rms": 0.04,
+      "layers": [
+        {
+          "sample": "draw1",
+          "gain": 0.7,
+          "delay": 0,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        },
+        {
+          "sample": "splash1",
+          "gain": 0.5,
+          "delay": 0,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        }
+      ],
+      "decoded_peak": 0.343974,
+      "decoded_rms": 0.038619
+    },
+    {
+      "key": "harpoon:mechanism",
+      "variant": 1,
+      "offset": 27.66,
+      "duration": 0.3,
+      "category": "mechanism",
+      "target_rms": 0.04,
+      "layers": [
+        {
+          "sample": "draw2",
+          "gain": 0.7,
+          "delay": 0,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        },
+        {
+          "sample": "splash2",
+          "gain": 0.5,
+          "delay": 0,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        }
+      ],
+      "decoded_peak": 0.288147,
+      "decoded_rms": 0.038128
+    },
+    {
+      "key": "harpoon:shot:1",
+      "variant": 0,
+      "offset": 28.08,
+      "duration": 0.43,
+      "category": "shot",
+      "target_rms": 0.115,
+      "layers": [
+        {
+          "sample": "swish3",
+          "gain": 1,
+          "delay": 0,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        },
+        {
+          "sample": "splash3",
+          "gain": 0.55,
+          "delay": 0.02,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        }
+      ],
+      "decoded_peak": 0.403024,
+      "decoded_rms": 0.108474
+    },
+    {
+      "key": "harpoon:shot:1",
+      "variant": 1,
+      "offset": 28.63,
+      "duration": 0.43,
+      "category": "shot",
+      "target_rms": 0.115,
+      "layers": [
+        {
+          "sample": "swish4",
+          "gain": 1,
+          "delay": 0,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        },
+        {
+          "sample": "splash4",
+          "gain": 0.55,
+          "delay": 0.03,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        }
+      ],
+      "decoded_peak": 0.404251,
+      "decoded_rms": 0.105488
+    },
+    {
+      "key": "harpoon:shot:2",
+      "variant": 0,
+      "offset": 29.18,
+      "duration": 0.55,
+      "category": "shot",
+      "target_rms": 0.115,
+      "layers": [
+        {
+          "sample": "draw1",
+          "gain": 0.65,
+          "delay": 0,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        },
+        {
+          "sample": "splash2",
+          "gain": 1,
+          "delay": 0.06,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        },
+        {
+          "sample": "metal3",
+          "gain": 0.4,
+          "delay": 0.15,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        }
+      ],
+      "decoded_peak": 0.449832,
+      "decoded_rms": 0.107665
+    },
+    {
+      "key": "harpoon:shot:2",
+      "variant": 1,
+      "offset": 29.85,
+      "duration": 0.55,
+      "category": "shot",
+      "target_rms": 0.115,
+      "layers": [
+        {
+          "sample": "draw2",
+          "gain": 0.65,
+          "delay": 0,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        },
+        {
+          "sample": "splash4",
+          "gain": 1,
+          "delay": 0.04,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        },
+        {
+          "sample": "metal4",
+          "gain": 0.4,
+          "delay": 0.17,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        }
+      ],
+      "decoded_peak": 0.39432,
+      "decoded_rms": 0.108856
+    },
+    {
+      "key": "harpoon:impact:1",
+      "variant": 0,
+      "offset": 30.52,
+      "duration": 0.45,
+      "category": "impact",
+      "target_rms": 0.085,
+      "layers": [
+        {
+          "sample": "splash3",
+          "gain": 1,
+          "delay": 0,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        },
+        {
+          "sample": "blade1",
+          "gain": 0.55,
+          "delay": 0,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        }
+      ],
+      "decoded_peak": 0.408498,
+      "decoded_rms": 0.081448
+    },
+    {
+      "key": "harpoon:impact:1",
+      "variant": 1,
+      "offset": 31.09,
+      "duration": 0.45,
+      "category": "impact",
+      "target_rms": 0.085,
+      "layers": [
+        {
+          "sample": "splash4",
+          "gain": 1,
+          "delay": 0,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        },
+        {
+          "sample": "blade2",
+          "gain": 0.55,
+          "delay": 0,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        }
+      ],
+      "decoded_peak": 0.367878,
+      "decoded_rms": 0.08073
+    },
+    {
+      "key": "harpoon:impact:2",
+      "variant": 0,
+      "offset": 31.66,
+      "duration": 0.55,
+      "category": "impact",
+      "target_rms": 0.085,
+      "layers": [
+        {
+          "sample": "splash2",
+          "gain": 1,
+          "delay": 0,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        },
+        {
+          "sample": "metal4",
+          "gain": 0.6,
+          "delay": 0.1,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        }
+      ],
+      "decoded_peak": 0.564203,
+      "decoded_rms": 0.081104
+    },
+    {
+      "key": "harpoon:impact:2",
+      "variant": 1,
+      "offset": 32.33,
+      "duration": 0.55,
+      "category": "impact",
+      "target_rms": 0.085,
+      "layers": [
+        {
+          "sample": "splash4",
+          "gain": 1,
+          "delay": 0,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        },
+        {
+          "sample": "metal3",
+          "gain": 0.6,
+          "delay": 0.14,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        }
+      ],
+      "decoded_peak": 0.385647,
+      "decoded_rms": 0.078086
+    },
+    {
+      "key": "boomerang:shot",
+      "variant": 0,
+      "offset": 33.0,
+      "duration": 0.42,
+      "category": "shot",
+      "target_rms": 0.115,
+      "layers": [
+        {
+          "sample": "swish2",
+          "gain": 1,
+          "delay": 0,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        },
+        {
+          "sample": "wood1",
+          "gain": 0.4,
+          "delay": 0,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        }
+      ],
+      "decoded_peak": 0.396478,
+      "decoded_rms": 0.105525
+    },
+    {
+      "key": "boomerang:shot",
+      "variant": 1,
+      "offset": 33.54,
+      "duration": 0.42,
+      "category": "shot",
+      "target_rms": 0.115,
+      "layers": [
+        {
+          "sample": "swish4",
+          "gain": 1,
+          "delay": 0,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        },
+        {
+          "sample": "wood2",
+          "gain": 0.4,
+          "delay": 0,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        }
+      ],
+      "decoded_peak": 0.414346,
+      "decoded_rms": 0.106771
+    },
+    {
+      "key": "boomerang:impact",
+      "variant": 0,
+      "offset": 34.08,
+      "duration": 0.27,
+      "category": "impact",
+      "target_rms": 0.085,
+      "layers": [
+        {
+          "sample": "wood3",
+          "gain": 1,
+          "delay": 0,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        },
+        {
+          "sample": "body1",
+          "gain": 0.45,
+          "delay": 0,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        }
+      ],
+      "decoded_peak": 0.315825,
+      "decoded_rms": 0.080564
+    },
+    {
+      "key": "boomerang:impact",
+      "variant": 1,
+      "offset": 34.47,
+      "duration": 0.27,
+      "category": "impact",
+      "target_rms": 0.085,
+      "layers": [
+        {
+          "sample": "wood4",
+          "gain": 1,
+          "delay": 0,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        },
+        {
+          "sample": "body2",
+          "gain": 0.45,
+          "delay": 0,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        }
+      ],
+      "decoded_peak": 0.320843,
+      "decoded_rms": 0.080582
+    },
+    {
+      "key": "boomerang:mechanism",
+      "variant": 0,
+      "offset": 34.86,
+      "duration": 0.31,
+      "category": "mechanism",
+      "target_rms": 0.04,
+      "layers": [
+        {
+          "sample": "swish3",
+          "gain": 1,
+          "delay": 0,
+          "start": 0,
+          "take": 0.13,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        },
+        {
+          "sample": "swish2",
+          "gain": 0.7,
+          "delay": 0.15,
+          "start": 0,
+          "take": 0.13,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        }
+      ],
+      "decoded_peak": 0.236283,
+      "decoded_rms": 0.038054
+    },
+    {
+      "key": "boomerang:mechanism",
+      "variant": 1,
+      "offset": 35.29,
+      "duration": 0.31,
+      "category": "mechanism",
+      "target_rms": 0.04,
+      "layers": [
+        {
+          "sample": "swish4",
+          "gain": 1,
+          "delay": 0,
+          "start": 0,
+          "take": 0.14,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        },
+        {
+          "sample": "swish3",
+          "gain": 0.7,
+          "delay": 0.16,
+          "start": 0,
+          "take": 0.12,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        }
+      ],
+      "decoded_peak": 0.241418,
+      "decoded_rms": 0.037891
+    },
+    {
+      "key": "boomerang:mechanism:1",
+      "variant": 0,
+      "offset": 35.72,
+      "duration": 0.26,
+      "category": "mechanism",
+      "target_rms": 0.04,
+      "layers": [
+        {
+          "sample": "wood1",
+          "gain": 1,
+          "delay": 0,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        },
+        {
+          "sample": "leather1",
+          "gain": 0.6,
+          "delay": 0,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        }
+      ],
+      "decoded_peak": 0.278045,
+      "decoded_rms": 0.038075
+    },
+    {
+      "key": "boomerang:mechanism:1",
+      "variant": 1,
+      "offset": 36.1,
+      "duration": 0.26,
+      "category": "mechanism",
+      "target_rms": 0.04,
+      "layers": [
+        {
+          "sample": "wood2",
+          "gain": 1,
+          "delay": 0,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        },
+        {
+          "sample": "leather2",
+          "gain": 0.6,
+          "delay": 0,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        }
+      ],
+      "decoded_peak": 0.265524,
+      "decoded_rms": 0.038178
+    },
+    {
+      "key": "sporelantern:shot",
+      "variant": 0,
+      "offset": 36.48,
+      "duration": 0.37,
+      "category": "shot",
+      "target_rms": 0.115,
+      "layers": [
+        {
+          "sample": "bubble1",
+          "gain": 1,
+          "delay": 0,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        },
+        {
+          "sample": "slime1",
+          "gain": 0.65,
+          "delay": 0.02,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        }
+      ],
+      "decoded_peak": 0.363103,
+      "decoded_rms": 0.109361
+    },
+    {
+      "key": "sporelantern:shot",
+      "variant": 1,
+      "offset": 36.97,
+      "duration": 0.37,
+      "category": "shot",
+      "target_rms": 0.115,
+      "layers": [
+        {
+          "sample": "bubble2",
+          "gain": 1,
+          "delay": 0,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        },
+        {
+          "sample": "slime2",
+          "gain": 0.65,
+          "delay": 0.015,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        }
+      ],
+      "decoded_peak": 0.362932,
+      "decoded_rms": 0.10913
+    },
+    {
+      "key": "sporelantern:impact",
+      "variant": 0,
+      "offset": 37.46,
+      "duration": 0.42,
+      "category": "impact",
+      "target_rms": 0.085,
+      "layers": [
+        {
+          "sample": "slime3",
+          "gain": 1,
+          "delay": 0,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        },
+        {
+          "sample": "bubble3",
+          "gain": 0.5,
+          "delay": 0.08,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        }
+      ],
+      "decoded_peak": 0.403912,
+      "decoded_rms": 0.080804
+    },
+    {
+      "key": "sporelantern:impact",
+      "variant": 1,
+      "offset": 38.0,
+      "duration": 0.42,
+      "category": "impact",
+      "target_rms": 0.085,
+      "layers": [
+        {
+          "sample": "slime4",
+          "gain": 1,
+          "delay": 0,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        },
+        {
+          "sample": "splash2",
+          "gain": 0.4,
+          "delay": 0.06,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        }
+      ],
+      "decoded_peak": 0.439192,
+      "decoded_rms": 0.079822
+    },
+    {
+      "key": "sporelantern:mechanism",
+      "variant": 0,
+      "offset": 38.54,
+      "duration": 0.22,
+      "category": "mechanism",
+      "target_rms": 0.04,
+      "layers": [
+        {
+          "sample": "leather1",
+          "gain": 0.65,
+          "delay": 0,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        },
+        {
+          "sample": "bubble1",
+          "gain": 0.3,
+          "delay": 0,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        },
+        {
+          "sample": "wood1",
+          "gain": 0.15,
+          "delay": 0.03,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 1300,
+          "highpass": 0
+        }
+      ],
+      "decoded_peak": 0.298629,
+      "decoded_rms": 0.03806
+    },
+    {
+      "key": "sporelantern:mechanism",
+      "variant": 1,
+      "offset": 38.88,
+      "duration": 0.22,
+      "category": "mechanism",
+      "target_rms": 0.04,
+      "layers": [
+        {
+          "sample": "leather2",
+          "gain": 0.65,
+          "delay": 0,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        },
+        {
+          "sample": "bubble2",
+          "gain": 0.3,
+          "delay": 0,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        },
+        {
+          "sample": "wood2",
+          "gain": 0.15,
+          "delay": 0.025,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 1300,
+          "highpass": 0
+        }
+      ],
+      "decoded_peak": 0.27704,
+      "decoded_rms": 0.038106
+    },
+    {
+      "key": "sporelantern:move",
+      "variant": 0,
+      "offset": 39.22,
+      "duration": 0.24,
+      "category": "move",
+      "target_rms": 0.04,
+      "layers": [
+        {
+          "sample": "bubble1",
+          "gain": 0.5,
+          "delay": 0,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        },
+        {
+          "sample": "leather1",
+          "gain": 0.4,
+          "delay": 0,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        }
+      ],
+      "decoded_peak": 0.282116,
+      "decoded_rms": 0.038088
+    },
+    {
+      "key": "sporelantern:move",
+      "variant": 1,
+      "offset": 39.58,
+      "duration": 0.24,
+      "category": "move",
+      "target_rms": 0.04,
+      "layers": [
+        {
+          "sample": "bubble2",
+          "gain": 0.5,
+          "delay": 0,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        },
+        {
+          "sample": "leather2",
+          "gain": 0.4,
+          "delay": 0,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        }
+      ],
+      "decoded_peak": 0.226926,
+      "decoded_rms": 0.038098
+    },
+    {
+      "key": "sporelantern:burst",
+      "variant": 0,
+      "offset": 39.94,
+      "duration": 0.64,
+      "category": "burst",
+      "target_rms": 0.11,
+      "layers": [
+        {
+          "sample": "slime3",
+          "gain": 1,
+          "delay": 0,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        },
+        {
+          "sample": "splash3",
+          "gain": 0.7,
+          "delay": 0.04,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        },
+        {
+          "sample": "bubble1",
+          "gain": 0.35,
+          "delay": 0.16,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        }
+      ],
+      "decoded_peak": 0.420013,
+      "decoded_rms": 0.104853
+    },
+    {
+      "key": "sporelantern:burst",
+      "variant": 1,
+      "offset": 40.7,
+      "duration": 0.64,
+      "category": "burst",
+      "target_rms": 0.11,
+      "layers": [
+        {
+          "sample": "slime4",
+          "gain": 1,
+          "delay": 0,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        },
+        {
+          "sample": "splash4",
+          "gain": 0.7,
+          "delay": 0.03,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        },
+        {
+          "sample": "bubble2",
+          "gain": 0.35,
+          "delay": 0.2,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        }
+      ],
+      "decoded_peak": 0.429178,
+      "decoded_rms": 0.104109
+    },
+    {
+      "key": "sporelantern:shield",
+      "variant": 0,
+      "offset": 41.46,
+      "duration": 0.56,
+      "category": "shield",
+      "target_rms": 0.07,
+      "layers": [
+        {
+          "sample": "bubble3",
+          "gain": 1,
+          "delay": 0,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        },
+        {
+          "sample": "glass1",
+          "gain": 0.3,
+          "delay": 0.06,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        },
+        {
+          "sample": "bubbles",
+          "gain": 0.5,
+          "delay": 0.11,
+          "start": 0.2,
+          "take": null,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        }
+      ],
+      "decoded_peak": 0.383812,
+      "decoded_rms": 0.066382
+    },
+    {
+      "key": "sporelantern:shield",
+      "variant": 1,
+      "offset": 42.14,
+      "duration": 0.56,
+      "category": "shield",
+      "target_rms": 0.07,
+      "layers": [
+        {
+          "sample": "bubble2",
+          "gain": 1,
+          "delay": 0,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        },
+        {
+          "sample": "glass2",
+          "gain": 0.3,
+          "delay": 0.08,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        },
+        {
+          "sample": "bubbles",
+          "gain": 0.5,
+          "delay": 0.13,
+          "start": 1.4,
+          "take": null,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        }
+      ],
+      "decoded_peak": 0.283928,
+      "decoded_rms": 0.066513
+    },
+    {
+      "key": "miasmalantern:shot",
+      "variant": 0,
+      "offset": 42.82,
+      "duration": 0.47,
+      "category": "shot",
+      "target_rms": 0.115,
+      "layers": [
+        {
+          "sample": "slime1",
+          "gain": 1,
+          "delay": 0,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 1600,
+          "highpass": 0
+        },
+        {
+          "sample": "cloth2",
+          "gain": 0.6,
+          "delay": 0,
+          "start": 0,
+          "take": null,
+          "reverse": true,
+          "lowpass": 0,
+          "highpass": 0
+        }
+      ],
+      "decoded_peak": 0.524702,
+      "decoded_rms": 0.110815
+    },
+    {
+      "key": "miasmalantern:shot",
+      "variant": 1,
+      "offset": 43.41,
+      "duration": 0.47,
+      "category": "shot",
+      "target_rms": 0.115,
+      "layers": [
+        {
+          "sample": "slime2",
+          "gain": 1,
+          "delay": 0,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 1800,
+          "highpass": 0
+        },
+        {
+          "sample": "cloth4",
+          "gain": 0.6,
+          "delay": 0,
+          "start": 0,
+          "take": null,
+          "reverse": true,
+          "lowpass": 0,
+          "highpass": 0
+        }
+      ],
+      "decoded_peak": 0.366928,
+      "decoded_rms": 0.109215
+    },
+    {
+      "key": "miasmalantern:impact",
+      "variant": 0,
+      "offset": 44.0,
+      "duration": 0.51,
+      "category": "impact",
+      "target_rms": 0.085,
+      "layers": [
+        {
+          "sample": "slime3",
+          "gain": 1,
+          "delay": 0,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 2100,
+          "highpass": 0
+        },
+        {
+          "sample": "crush1",
+          "gain": 0.4,
+          "delay": 0,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        }
+      ],
+      "decoded_peak": 0.359298,
+      "decoded_rms": 0.081031
+    },
+    {
+      "key": "miasmalantern:impact",
+      "variant": 1,
+      "offset": 44.63,
+      "duration": 0.51,
+      "category": "impact",
+      "target_rms": 0.085,
+      "layers": [
+        {
+          "sample": "slime4",
+          "gain": 1,
+          "delay": 0,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 1900,
+          "highpass": 0
+        },
+        {
+          "sample": "crush2",
+          "gain": 0.4,
+          "delay": 0,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        }
+      ],
+      "decoded_peak": 0.414009,
+      "decoded_rms": 0.080898
+    },
+    {
+      "key": "miasmalantern:charge",
+      "variant": 0,
+      "offset": 45.26,
+      "duration": 0.18,
+      "category": "charge",
+      "target_rms": 0.045,
+      "layers": [
+        {
+          "sample": "cloth1",
+          "gain": 0.6,
+          "delay": 0,
+          "start": 0,
+          "take": null,
+          "reverse": true,
+          "lowpass": 1200,
+          "highpass": 0
+        },
+        {
+          "sample": "bubbles",
+          "gain": 0.8,
+          "delay": 0,
+          "start": 0.4,
+          "take": null,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        }
+      ],
+      "crescendo_seconds": [
+        0.08,
+        0.15
+      ],
+      "decoded_peak": 0.165578,
+      "decoded_rms": 0.042478,
+      "charge_late_early_rms_ratio": 3.05664
+    },
+    {
+      "key": "miasmalantern:charge",
+      "variant": 1,
+      "offset": 45.56,
+      "duration": 0.18,
+      "category": "charge",
+      "target_rms": 0.045,
+      "layers": [
+        {
+          "sample": "cloth3",
+          "gain": 0.6,
+          "delay": 0,
+          "start": 0,
+          "take": null,
+          "reverse": true,
+          "lowpass": 1000,
+          "highpass": 0
+        },
+        {
+          "sample": "bubbles",
+          "gain": 0.8,
+          "delay": 0,
+          "start": 1.7,
+          "take": null,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        }
+      ],
+      "crescendo_seconds": [
+        0.08,
+        0.15
+      ],
+      "decoded_peak": 0.243811,
+      "decoded_rms": 0.04277,
+      "charge_late_early_rms_ratio": 10.61261
+    },
+    {
+      "key": "spell:ice",
+      "variant": 0,
+      "offset": 45.86,
+      "duration": 0.67,
+      "category": "spell",
+      "target_rms": 0.134,
+      "layers": [
+        {
+          "sample": "ice1",
+          "gain": 1,
+          "delay": 0,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        },
+        {
+          "sample": "glass1",
+          "gain": 0.4,
+          "delay": 0.07,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        }
+      ],
+      "decoded_peak": 0.585767,
+      "decoded_rms": 0.124676
+    },
+    {
+      "key": "spell:ice",
+      "variant": 1,
+      "offset": 46.65,
+      "duration": 0.67,
+      "category": "spell",
+      "target_rms": 0.134,
+      "layers": [
+        {
+          "sample": "ice2",
+          "gain": 1,
+          "delay": 0,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        },
+        {
+          "sample": "glass2",
+          "gain": 0.4,
+          "delay": 0.05,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        }
+      ],
+      "decoded_peak": 0.503362,
+      "decoded_rms": 0.121623
+    },
+    {
+      "key": "spell:storm",
+      "variant": 0,
+      "offset": 47.44,
+      "duration": 0.69,
+      "category": "spell",
+      "target_rms": 0.134,
+      "layers": [
+        {
+          "sample": "arc",
+          "gain": 1,
+          "delay": 0,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        },
+        {
+          "sample": "spark",
+          "gain": 0.7,
+          "delay": 0.15,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        },
+        {
+          "sample": "bang1",
+          "gain": 0.3,
+          "delay": 0.03,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 1100,
+          "highpass": 0
+        }
+      ],
+      "decoded_peak": 0.452203,
+      "decoded_rms": 0.12532
+    },
+    {
+      "key": "spell:storm",
+      "variant": 1,
+      "offset": 48.25,
+      "duration": 0.69,
+      "category": "spell",
+      "target_rms": 0.134,
+      "layers": [
+        {
+          "sample": "spark",
+          "gain": 1,
+          "delay": 0,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        },
+        {
+          "sample": "arc",
+          "gain": 0.75,
+          "delay": 0.2,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        },
+        {
+          "sample": "bang2",
+          "gain": 0.3,
+          "delay": 0.05,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 1100,
+          "highpass": 0
+        }
+      ],
+      "decoded_peak": 0.41397,
+      "decoded_rms": 0.12658
+    },
+    {
+      "key": "spell:fire",
+      "variant": 0,
+      "offset": 49.06,
+      "duration": 0.72,
+      "category": "spell",
+      "target_rms": 0.134,
+      "layers": [
+        {
+          "sample": "flame",
+          "gain": 1,
+          "delay": 0,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        },
+        {
+          "sample": "fire",
+          "gain": 0.8,
+          "delay": 0,
+          "start": 0.3,
+          "take": null,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        },
+        {
+          "sample": "bang1",
+          "gain": 0.4,
+          "delay": 0,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        }
+      ],
+      "decoded_peak": 0.327277,
+      "decoded_rms": 0.127236
+    },
+    {
+      "key": "spell:fire",
+      "variant": 1,
+      "offset": 49.9,
+      "duration": 0.72,
+      "category": "spell",
+      "target_rms": 0.134,
+      "layers": [
+        {
+          "sample": "fire",
+          "gain": 1,
+          "delay": 0,
+          "start": 1.2,
+          "take": null,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        },
+        {
+          "sample": "flame",
+          "gain": 0.8,
+          "delay": 0.1,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        },
+        {
+          "sample": "bang2",
+          "gain": 0.45,
+          "delay": 0,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        }
+      ],
+      "decoded_peak": 0.339451,
+      "decoded_rms": 0.127304
+    },
+    {
+      "key": "spell:veil",
+      "variant": 0,
+      "offset": 50.74,
+      "duration": 0.64,
+      "category": "spell",
+      "target_rms": 0.134,
+      "layers": [
+        {
+          "sample": "cloth1",
+          "gain": 1,
+          "delay": 0,
+          "start": 0,
+          "take": null,
+          "reverse": true,
+          "lowpass": 0,
+          "highpass": 0
+        },
+        {
+          "sample": "paper1",
+          "gain": 0.45,
+          "delay": 0.16,
+          "start": 0,
+          "take": null,
+          "reverse": true,
+          "lowpass": 0,
+          "highpass": 0
+        }
+      ],
+      "decoded_peak": 0.380045,
+      "decoded_rms": 0.126629
+    },
+    {
+      "key": "spell:veil",
+      "variant": 1,
+      "offset": 51.5,
+      "duration": 0.64,
+      "category": "spell",
+      "target_rms": 0.134,
+      "layers": [
+        {
+          "sample": "cloth3",
+          "gain": 1,
+          "delay": 0,
+          "start": 0,
+          "take": null,
+          "reverse": true,
+          "lowpass": 0,
+          "highpass": 0
+        },
+        {
+          "sample": "paper2",
+          "gain": 0.45,
+          "delay": 0.15,
+          "start": 0,
+          "take": null,
+          "reverse": true,
+          "lowpass": 0,
+          "highpass": 0
+        }
+      ],
+      "decoded_peak": 0.3803,
+      "decoded_rms": 0.127164
+    },
+    {
+      "key": "spell:chain",
+      "variant": 0,
+      "offset": 52.26,
+      "duration": 0.72,
+      "category": "spell",
+      "target_rms": 0.134,
+      "layers": [
+        {
+          "sample": "spark",
+          "gain": 1,
+          "delay": 0,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        },
+        {
+          "sample": "metal1",
+          "gain": 0.4,
+          "delay": 0.08,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        },
+        {
+          "sample": "arc",
+          "gain": 0.65,
+          "delay": 0.24,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        }
+      ],
+      "decoded_peak": 0.463757,
+      "decoded_rms": 0.124983
+    },
+    {
+      "key": "spell:chain",
+      "variant": 1,
+      "offset": 53.1,
+      "duration": 0.72,
+      "category": "spell",
+      "target_rms": 0.134,
+      "layers": [
+        {
+          "sample": "arc",
+          "gain": 1,
+          "delay": 0,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        },
+        {
+          "sample": "metal2",
+          "gain": 0.4,
+          "delay": 0.1,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        },
+        {
+          "sample": "spark",
+          "gain": 0.65,
+          "delay": 0.31,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        }
+      ],
+      "decoded_peak": 0.634747,
+      "decoded_rms": 0.123814
+    },
+    {
+      "key": "spell:rift",
+      "variant": 0,
+      "offset": 53.94,
+      "duration": 0.78,
+      "category": "spell",
+      "target_rms": 0.134,
+      "layers": [
+        {
+          "sample": "rip",
+          "gain": 1,
+          "delay": 0,
+          "start": 0,
+          "take": null,
+          "reverse": true,
+          "lowpass": 0,
+          "highpass": 0
+        },
+        {
+          "sample": "dull",
+          "gain": 0.7,
+          "delay": 0.2,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        },
+        {
+          "sample": "ice1",
+          "gain": 0.45,
+          "delay": 0.3,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        }
+      ],
+      "decoded_peak": 0.459213,
+      "decoded_rms": 0.125613
+    },
+    {
+      "key": "spell:rift",
+      "variant": 1,
+      "offset": 54.84,
+      "duration": 0.78,
+      "category": "spell",
+      "target_rms": 0.134,
+      "layers": [
+        {
+          "sample": "crush2",
+          "gain": 1,
+          "delay": 0,
+          "start": 0,
+          "take": null,
+          "reverse": true,
+          "lowpass": 0,
+          "highpass": 0
+        },
+        {
+          "sample": "body2",
+          "gain": 0.7,
+          "delay": 0.23,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 700,
+          "highpass": 0
+        },
+        {
+          "sample": "ice3",
+          "gain": 0.45,
+          "delay": 0.31,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        }
+      ],
+      "decoded_peak": 0.370561,
+      "decoded_rms": 0.127173
+    },
+    {
+      "key": "spell:dark",
+      "variant": 0,
+      "offset": 55.74,
+      "duration": 0.72,
+      "category": "spell",
+      "target_rms": 0.134,
+      "layers": [
+        {
+          "sample": "cloth2",
+          "gain": 1,
+          "delay": 0,
+          "start": 0,
+          "take": null,
+          "reverse": true,
+          "lowpass": 1500,
+          "highpass": 0
+        },
+        {
+          "sample": "dull",
+          "gain": 0.8,
+          "delay": 0.21,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        },
+        {
+          "sample": "crush1",
+          "gain": 0.5,
+          "delay": 0.2,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 1300,
+          "highpass": 0
+        }
+      ],
+      "decoded_peak": 0.363202,
+      "decoded_rms": 0.126304
+    },
+    {
+      "key": "spell:dark",
+      "variant": 1,
+      "offset": 56.58,
+      "duration": 0.72,
+      "category": "spell",
+      "target_rms": 0.134,
+      "layers": [
+        {
+          "sample": "cloth4",
+          "gain": 1,
+          "delay": 0,
+          "start": 0,
+          "take": null,
+          "reverse": true,
+          "lowpass": 1300,
+          "highpass": 0
+        },
+        {
+          "sample": "body2",
+          "gain": 0.8,
+          "delay": 0.18,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 650,
+          "highpass": 0
+        },
+        {
+          "sample": "crush2",
+          "gain": 0.6,
+          "delay": 0.21,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 1500,
+          "highpass": 0
+        }
+      ],
+      "decoded_peak": 0.359463,
+      "decoded_rms": 0.126524
+    },
+    {
+      "key": "motion:roll",
+      "variant": 0,
+      "offset": 57.42,
+      "duration": 0.37,
+      "category": "motion",
+      "target_rms": 0.065,
+      "layers": [
+        {
+          "sample": "cloth1",
+          "gain": 1,
+          "delay": 0,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        },
+        {
+          "sample": "leather1",
+          "gain": 0.6,
+          "delay": 0.08,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        }
+      ],
+      "decoded_peak": 0.320358,
+      "decoded_rms": 0.06189
+    },
+    {
+      "key": "motion:roll",
+      "variant": 1,
+      "offset": 57.91,
+      "duration": 0.37,
+      "category": "motion",
+      "target_rms": 0.065,
+      "layers": [
+        {
+          "sample": "cloth3",
+          "gain": 1,
+          "delay": 0,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        },
+        {
+          "sample": "leather2",
+          "gain": 0.6,
+          "delay": 0.07,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        }
+      ],
+      "decoded_peak": 0.299376,
+      "decoded_rms": 0.061618
+    },
+    {
+      "key": "motion:blink",
+      "variant": 0,
+      "offset": 58.4,
+      "duration": 0.45,
+      "category": "motion",
+      "target_rms": 0.065,
+      "layers": [
+        {
+          "sample": "cloth2",
+          "gain": 1,
+          "delay": 0,
+          "start": 0,
+          "take": null,
+          "reverse": true,
+          "lowpass": 0,
+          "highpass": 0
+        },
+        {
+          "sample": "paper1",
+          "gain": 0.45,
+          "delay": 0.16,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        }
+      ],
+      "decoded_peak": 0.328584,
+      "decoded_rms": 0.06186
+    },
+    {
+      "key": "motion:blink",
+      "variant": 1,
+      "offset": 58.97,
+      "duration": 0.45,
+      "category": "motion",
+      "target_rms": 0.065,
+      "layers": [
+        {
+          "sample": "cloth4",
+          "gain": 1,
+          "delay": 0,
+          "start": 0,
+          "take": null,
+          "reverse": true,
+          "lowpass": 0,
+          "highpass": 0
+        },
+        {
+          "sample": "paper2",
+          "gain": 0.45,
+          "delay": 0.17,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        }
+      ],
+      "decoded_peak": 0.318052,
+      "decoded_rms": 0.061699
+    },
+    {
+      "key": "motion:water",
+      "variant": 0,
+      "offset": 59.54,
+      "duration": 0.41,
+      "category": "motion",
+      "target_rms": 0.065,
+      "layers": [
+        {
+          "sample": "splash1",
+          "gain": 1,
+          "delay": 0,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        },
+        {
+          "sample": "bubble1",
+          "gain": 0.35,
+          "delay": 0.13,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        }
+      ],
+      "decoded_peak": 0.389181,
+      "decoded_rms": 0.061695
+    },
+    {
+      "key": "motion:water",
+      "variant": 1,
+      "offset": 60.07,
+      "duration": 0.41,
+      "category": "motion",
+      "target_rms": 0.065,
+      "layers": [
+        {
+          "sample": "splash2",
+          "gain": 1,
+          "delay": 0,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        },
+        {
+          "sample": "bubble2",
+          "gain": 0.35,
+          "delay": 0.15,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        }
+      ],
+      "decoded_peak": 0.489359,
+      "decoded_rms": 0.062094
+    },
+    {
+      "key": "material:stone:impact",
+      "variant": 0,
+      "offset": 60.6,
+      "duration": 0.32,
+      "category": "impact",
+      "target_rms": 0.085,
+      "layers": [
+        {
+          "sample": "stone1",
+          "gain": 1,
+          "delay": 0,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        },
+        {
+          "sample": "body1",
+          "gain": 0.25,
+          "delay": 0,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        }
+      ],
+      "decoded_peak": 0.317181,
+      "decoded_rms": 0.080781
+    },
+    {
+      "key": "material:stone:impact",
+      "variant": 1,
+      "offset": 61.04,
+      "duration": 0.32,
+      "category": "impact",
+      "target_rms": 0.085,
+      "layers": [
+        {
+          "sample": "stone2",
+          "gain": 1,
+          "delay": 0,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        },
+        {
+          "sample": "body2",
+          "gain": 0.25,
+          "delay": 0,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        }
+      ],
+      "decoded_peak": 0.324287,
+      "decoded_rms": 0.080587
+    },
+    {
+      "key": "material:wood:impact",
+      "variant": 0,
+      "offset": 61.48,
+      "duration": 0.29,
+      "category": "impact",
+      "target_rms": 0.085,
+      "layers": [
+        {
+          "sample": "wood3",
+          "gain": 1,
+          "delay": 0,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        },
+        {
+          "sample": "wood1",
+          "gain": 0.25,
+          "delay": 0.04,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        }
+      ],
+      "decoded_peak": 0.321235,
+      "decoded_rms": 0.080326
+    },
+    {
+      "key": "material:wood:impact",
+      "variant": 1,
+      "offset": 61.89,
+      "duration": 0.29,
+      "category": "impact",
+      "target_rms": 0.085,
+      "layers": [
+        {
+          "sample": "wood4",
+          "gain": 1,
+          "delay": 0,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        },
+        {
+          "sample": "wood2",
+          "gain": 0.25,
+          "delay": 0.04,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        }
+      ],
+      "decoded_peak": 0.320442,
+      "decoded_rms": 0.08015
+    },
+    {
+      "key": "material:ice:impact",
+      "variant": 0,
+      "offset": 62.3,
+      "duration": 0.42,
+      "category": "impact",
+      "target_rms": 0.085,
+      "layers": [
+        {
+          "sample": "ice1",
+          "gain": 1,
+          "delay": 0,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        },
+        {
+          "sample": "glass1",
+          "gain": 0.3,
+          "delay": 0,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        }
+      ],
+      "decoded_peak": 0.427642,
+      "decoded_rms": 0.080933
+    },
+    {
+      "key": "material:ice:impact",
+      "variant": 1,
+      "offset": 62.84,
+      "duration": 0.42,
+      "category": "impact",
+      "target_rms": 0.085,
+      "layers": [
+        {
+          "sample": "ice2",
+          "gain": 1,
+          "delay": 0,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        },
+        {
+          "sample": "glass2",
+          "gain": 0.3,
+          "delay": 0,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        }
+      ],
+      "decoded_peak": 0.394526,
+      "decoded_rms": 0.080007
+    },
+    {
+      "key": "material:wet:impact",
+      "variant": 0,
+      "offset": 63.38,
+      "duration": 0.36,
+      "category": "impact",
+      "target_rms": 0.085,
+      "layers": [
+        {
+          "sample": "slime1",
+          "gain": 1,
+          "delay": 0,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        },
+        {
+          "sample": "bubble1",
+          "gain": 0.4,
+          "delay": 0,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        }
+      ],
+      "decoded_peak": 0.37981,
+      "decoded_rms": 0.080822
+    },
+    {
+      "key": "material:wet:impact",
+      "variant": 1,
+      "offset": 63.86,
+      "duration": 0.36,
+      "category": "impact",
+      "target_rms": 0.085,
+      "layers": [
+        {
+          "sample": "slime2",
+          "gain": 1,
+          "delay": 0,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        },
+        {
+          "sample": "bubble2",
+          "gain": 0.4,
+          "delay": 0,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        }
+      ],
+      "decoded_peak": 0.367793,
+      "decoded_rms": 0.08089
+    },
+    {
+      "key": "material:fire:impact",
+      "variant": 0,
+      "offset": 64.34,
+      "duration": 0.43,
+      "category": "impact",
+      "target_rms": 0.085,
+      "layers": [
+        {
+          "sample": "fire",
+          "gain": 1,
+          "delay": 0,
+          "start": 0.4,
+          "take": null,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        },
+        {
+          "sample": "dull",
+          "gain": 0.45,
+          "delay": 0,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        }
+      ],
+      "decoded_peak": 0.328811,
+      "decoded_rms": 0.080852
+    },
+    {
+      "key": "material:fire:impact",
+      "variant": 1,
+      "offset": 64.89,
+      "duration": 0.43,
+      "category": "impact",
+      "target_rms": 0.085,
+      "layers": [
+        {
+          "sample": "fire",
+          "gain": 1,
+          "delay": 0,
+          "start": 1.6,
+          "take": null,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        },
+        {
+          "sample": "bang2",
+          "gain": 0.4,
+          "delay": 0,
+          "start": 0,
+          "take": null,
+          "reverse": false,
+          "lowpass": 0,
+          "highpass": 0
+        }
+      ],
+      "decoded_peak": 0.319928,
+      "decoded_rms": 0.080699
+    }
+  ],
+  "processing": {
+    "sample_rate": 32000,
+    "channels": 1,
+    "codec": "MP3 96 kbps",
+    "gap_seconds": 0.12,
+    "operations": [
+      "mono resample",
+      "onset trim",
+      "source region selection",
+      "layer-specific one-pole filtering",
+      "selective reverse",
+      "material layering",
+      "DC removal",
+      "soft peak ceiling",
+      "short edge fades",
+      "RMS calibration"
+    ],
+    "notes": [
+      "No generated white-noise or oscillator layers; variation uses different source takes and regions.",
+      "Rifle/shotgun reports are designed from CC0 firework recordings, not claimed as firearm recordings.",
+      "Fire Magic/Catching fire is an authored mixed effect; fireplace, water/slime and Tesla sources include recorded texture.",
+      "OpenGameArt Battle Sound Effects offers CC0 alongside other licenses; the CC0 option is used.",
+      "No runtime pitch variation is required by this atlas. Original downloads remain outside the game."
+    ]
+  }
+}
