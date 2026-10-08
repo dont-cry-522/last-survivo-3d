@@ -4,803 +4,839 @@ export const SFX_CUES = {
   "rifle:shot": [
     {
       "offset": 0.12,
-      "duration": 0.32,
-      "gain": 1
+      "duration": 0.19,
+      "gain": 0.82
     },
     {
-      "offset": 0.56,
-      "duration": 0.32,
-      "gain": 1
+      "offset": 0.43,
+      "duration": 0.19,
+      "gain": 0.82
     }
   ],
   "rifle:impact": [
     {
-      "offset": 1.0,
-      "duration": 0.23,
-      "gain": 1
+      "offset": 0.74,
+      "duration": 0.15,
+      "gain": 0.64
     },
     {
-      "offset": 1.35,
-      "duration": 0.23,
-      "gain": 1
+      "offset": 1.01,
+      "duration": 0.15,
+      "gain": 0.64
     }
   ],
   "rifle:mechanism": [
     {
-      "offset": 1.7,
-      "duration": 0.24,
-      "gain": 1
+      "offset": 1.28,
+      "duration": 0.11,
+      "gain": 0.58
     },
     {
-      "offset": 2.06,
-      "duration": 0.24,
-      "gain": 1
+      "offset": 1.51,
+      "duration": 0.11,
+      "gain": 0.58
     }
   ],
   "shotgun:shot": [
     {
-      "offset": 2.42,
-      "duration": 0.52,
+      "offset": 1.74,
+      "duration": 0.29,
       "gain": 1
     },
     {
-      "offset": 3.06,
-      "duration": 0.52,
+      "offset": 2.15,
+      "duration": 0.29,
       "gain": 1
     }
   ],
   "shotgun:impact": [
     {
-      "offset": 3.7,
-      "duration": 0.33,
-      "gain": 1
+      "offset": 2.56,
+      "duration": 0.25,
+      "gain": 0.88
     },
     {
-      "offset": 4.15,
-      "duration": 0.33,
-      "gain": 1
+      "offset": 2.93,
+      "duration": 0.25,
+      "gain": 0.88
     }
   ],
   "shotgun:mechanism": [
     {
-      "offset": 4.6,
-      "duration": 0.35,
-      "gain": 1
+      "offset": 3.3,
+      "duration": 0.17,
+      "gain": 0.64
     },
     {
-      "offset": 5.07,
-      "duration": 0.35,
-      "gain": 1
+      "offset": 3.59,
+      "duration": 0.17,
+      "gain": 0.64
+    }
+  ],
+  "shotgun:mechanism:1": [
+    {
+      "offset": 3.88,
+      "duration": 0.1,
+      "gain": 0.72
+    },
+    {
+      "offset": 4.1,
+      "duration": 0.1,
+      "gain": 0.72
     }
   ],
   "crossbow:shot": [
     {
-      "offset": 5.54,
-      "duration": 0.35,
-      "gain": 1
+      "offset": 4.32,
+      "duration": 0.16,
+      "gain": 0.68
     },
     {
-      "offset": 6.01,
-      "duration": 0.35,
-      "gain": 1
+      "offset": 4.6,
+      "duration": 0.16,
+      "gain": 0.68
     }
   ],
   "crossbow:impact": [
     {
-      "offset": 6.48,
-      "duration": 0.25,
-      "gain": 1
+      "offset": 4.88,
+      "duration": 0.13,
+      "gain": 0.62
     },
     {
-      "offset": 6.85,
-      "duration": 0.25,
-      "gain": 1
+      "offset": 5.13,
+      "duration": 0.13,
+      "gain": 0.62
     }
   ],
   "crossbow:mechanism": [
     {
-      "offset": 7.22,
-      "duration": 0.31,
-      "gain": 1
+      "offset": 5.38,
+      "duration": 0.1,
+      "gain": 0.38
     },
     {
-      "offset": 7.65,
-      "duration": 0.31,
-      "gain": 1
+      "offset": 5.6,
+      "duration": 0.1,
+      "gain": 0.38
+    }
+  ],
+  "crossbow:mechanism:1": [
+    {
+      "offset": 5.82,
+      "duration": 0.07,
+      "gain": 0.42
+    },
+    {
+      "offset": 6.01,
+      "duration": 0.07,
+      "gain": 0.42
     }
   ],
   "shuriken:shot": [
     {
-      "offset": 8.08,
-      "duration": 0.28,
-      "gain": 1
+      "offset": 6.2,
+      "duration": 0.2,
+      "gain": 0.56
     },
     {
-      "offset": 8.48,
-      "duration": 0.28,
-      "gain": 1
+      "offset": 6.52,
+      "duration": 0.2,
+      "gain": 0.56
     }
   ],
   "shuriken:impact": [
     {
-      "offset": 8.88,
-      "duration": 0.29,
-      "gain": 1
+      "offset": 6.84,
+      "duration": 0.17,
+      "gain": 0.68
     },
     {
-      "offset": 9.29,
-      "duration": 0.29,
-      "gain": 1
+      "offset": 7.13,
+      "duration": 0.17,
+      "gain": 0.68
     }
   ],
   "shuriken:mechanism": [
     {
-      "offset": 9.7,
-      "duration": 0.22,
-      "gain": 1
+      "offset": 7.42,
+      "duration": 0.14,
+      "gain": 0.42
     },
     {
-      "offset": 10.04,
-      "duration": 0.22,
-      "gain": 1
+      "offset": 7.68,
+      "duration": 0.14,
+      "gain": 0.42
     }
   ],
   "fire:shot": [
     {
-      "offset": 10.38,
-      "duration": 0.52,
-      "gain": 1
+      "offset": 7.94,
+      "duration": 0.34,
+      "gain": 0.84
     },
     {
-      "offset": 11.02,
-      "duration": 0.52,
-      "gain": 1
+      "offset": 8.4,
+      "duration": 0.34,
+      "gain": 0.84
     }
   ],
   "fire:impact": [
     {
-      "offset": 11.66,
-      "duration": 0.43,
+      "offset": 8.86,
+      "duration": 0.47,
       "gain": 1
     },
     {
-      "offset": 12.21,
-      "duration": 0.43,
+      "offset": 9.45,
+      "duration": 0.47,
       "gain": 1
     }
   ],
   "fire:mechanism": [
     {
-      "offset": 12.76,
-      "duration": 0.3,
-      "gain": 1
+      "offset": 10.04,
+      "duration": 0.18,
+      "gain": 0.34
     },
     {
-      "offset": 13.18,
-      "duration": 0.3,
-      "gain": 1
+      "offset": 10.34,
+      "duration": 0.18,
+      "gain": 0.34
     }
   ],
   "dark:shot": [
     {
-      "offset": 13.6,
-      "duration": 0.49,
-      "gain": 1
+      "offset": 10.64,
+      "duration": 0.35,
+      "gain": 0.82
     },
     {
-      "offset": 14.21,
-      "duration": 0.49,
-      "gain": 1
+      "offset": 11.11,
+      "duration": 0.35,
+      "gain": 0.82
     }
   ],
   "dark:impact": [
     {
-      "offset": 14.82,
-      "duration": 0.43,
-      "gain": 1
+      "offset": 11.58,
+      "duration": 0.39,
+      "gain": 0.88
     },
     {
-      "offset": 15.37,
-      "duration": 0.43,
-      "gain": 1
+      "offset": 12.09,
+      "duration": 0.39,
+      "gain": 0.88
     }
   ],
   "dark:mechanism": [
     {
-      "offset": 15.92,
-      "duration": 0.35,
-      "gain": 1
+      "offset": 12.6,
+      "duration": 0.22,
+      "gain": 0.36
     },
     {
-      "offset": 16.39,
-      "duration": 0.35,
-      "gain": 1
+      "offset": 12.94,
+      "duration": 0.22,
+      "gain": 0.36
     }
   ],
   "shade:shot": [
     {
-      "offset": 16.86,
-      "duration": 0.39,
-      "gain": 1
+      "offset": 13.28,
+      "duration": 0.25,
+      "gain": 0.7
     },
     {
-      "offset": 17.37,
-      "duration": 0.39,
-      "gain": 1
+      "offset": 13.65,
+      "duration": 0.25,
+      "gain": 0.7
     }
   ],
   "shade:impact": [
     {
-      "offset": 17.88,
-      "duration": 0.37,
-      "gain": 1
+      "offset": 14.02,
+      "duration": 0.24,
+      "gain": 0.78
     },
     {
-      "offset": 18.37,
-      "duration": 0.37,
-      "gain": 1
+      "offset": 14.38,
+      "duration": 0.24,
+      "gain": 0.78
     }
   ],
   "shade:mechanism": [
     {
-      "offset": 18.86,
-      "duration": 0.29,
-      "gain": 1
+      "offset": 14.74,
+      "duration": 0.19,
+      "gain": 0.32
     },
     {
-      "offset": 19.27,
-      "duration": 0.29,
-      "gain": 1
+      "offset": 15.05,
+      "duration": 0.19,
+      "gain": 0.32
     }
   ],
   "shadowblade:shot": [
     {
-      "offset": 19.68,
-      "duration": 0.36,
-      "gain": 1
+      "offset": 15.36,
+      "duration": 0.3,
+      "gain": 0.72
     },
     {
-      "offset": 20.16,
-      "duration": 0.36,
-      "gain": 1
+      "offset": 15.78,
+      "duration": 0.3,
+      "gain": 0.72
     }
   ],
   "shadowblade:impact": [
     {
-      "offset": 20.64,
-      "duration": 0.34,
-      "gain": 1
+      "offset": 16.2,
+      "duration": 0.27,
+      "gain": 0.88
     },
     {
-      "offset": 21.1,
-      "duration": 0.34,
-      "gain": 1
+      "offset": 16.59,
+      "duration": 0.27,
+      "gain": 0.88
     }
   ],
   "shadowblade:mechanism": [
     {
-      "offset": 21.56,
-      "duration": 0.26,
-      "gain": 1
+      "offset": 16.98,
+      "duration": 0.2,
+      "gain": 0.34
     },
     {
-      "offset": 21.94,
-      "duration": 0.26,
-      "gain": 1
+      "offset": 17.3,
+      "duration": 0.2,
+      "gain": 0.34
     }
   ],
   "grimoire:shot": [
     {
-      "offset": 22.32,
-      "duration": 0.4,
-      "gain": 1
+      "offset": 17.62,
+      "duration": 0.39,
+      "gain": 0.65
     },
     {
-      "offset": 22.84,
-      "duration": 0.4,
-      "gain": 1
+      "offset": 18.13,
+      "duration": 0.39,
+      "gain": 0.65
     }
   ],
   "grimoire:impact": [
     {
-      "offset": 23.36,
-      "duration": 0.37,
+      "offset": 18.64,
+      "duration": 0.46,
       "gain": 1
     },
     {
-      "offset": 23.85,
-      "duration": 0.37,
+      "offset": 19.22,
+      "duration": 0.46,
       "gain": 1
     }
   ],
   "grimoire:mechanism": [
     {
-      "offset": 24.34,
-      "duration": 0.33,
-      "gain": 1
+      "offset": 19.8,
+      "duration": 0.2,
+      "gain": 0.36
     },
     {
-      "offset": 24.79,
-      "duration": 0.33,
-      "gain": 1
+      "offset": 20.12,
+      "duration": 0.2,
+      "gain": 0.36
     }
   ],
   "harpoon:shot": [
     {
-      "offset": 25.24,
-      "duration": 0.36,
-      "gain": 1
+      "offset": 20.44,
+      "duration": 0.24,
+      "gain": 0.7
     },
     {
-      "offset": 25.72,
-      "duration": 0.36,
-      "gain": 1
+      "offset": 20.8,
+      "duration": 0.24,
+      "gain": 0.7
     }
   ],
   "harpoon:impact": [
     {
-      "offset": 26.2,
-      "duration": 0.4,
-      "gain": 1
+      "offset": 21.16,
+      "duration": 0.26,
+      "gain": 0.94
     },
     {
-      "offset": 26.72,
-      "duration": 0.4,
-      "gain": 1
+      "offset": 21.54,
+      "duration": 0.26,
+      "gain": 0.94
     }
   ],
   "harpoon:mechanism": [
     {
-      "offset": 27.24,
-      "duration": 0.3,
-      "gain": 1
+      "offset": 21.92,
+      "duration": 0.18,
+      "gain": 0.36
     },
     {
-      "offset": 27.66,
-      "duration": 0.3,
-      "gain": 1
+      "offset": 22.22,
+      "duration": 0.18,
+      "gain": 0.36
     }
   ],
   "harpoon:shot:1": [
     {
-      "offset": 28.08,
-      "duration": 0.43,
-      "gain": 1
+      "offset": 22.52,
+      "duration": 0.32,
+      "gain": 0.76
     },
     {
-      "offset": 28.63,
-      "duration": 0.43,
-      "gain": 1
+      "offset": 22.96,
+      "duration": 0.32,
+      "gain": 0.76
     }
   ],
   "harpoon:shot:2": [
     {
-      "offset": 29.18,
-      "duration": 0.55,
-      "gain": 1
+      "offset": 23.4,
+      "duration": 0.37,
+      "gain": 0.82
     },
     {
-      "offset": 29.85,
-      "duration": 0.55,
-      "gain": 1
+      "offset": 23.89,
+      "duration": 0.37,
+      "gain": 0.82
     }
   ],
   "harpoon:impact:1": [
     {
-      "offset": 30.52,
-      "duration": 0.45,
-      "gain": 1
+      "offset": 24.38,
+      "duration": 0.29,
+      "gain": 0.96
     },
     {
-      "offset": 31.09,
-      "duration": 0.45,
-      "gain": 1
+      "offset": 24.79,
+      "duration": 0.29,
+      "gain": 0.96
     }
   ],
   "harpoon:impact:2": [
     {
-      "offset": 31.66,
-      "duration": 0.55,
+      "offset": 25.2,
+      "duration": 0.35,
       "gain": 1
     },
     {
-      "offset": 32.33,
-      "duration": 0.55,
+      "offset": 25.67,
+      "duration": 0.35,
       "gain": 1
     }
   ],
   "boomerang:shot": [
     {
-      "offset": 33.0,
-      "duration": 0.42,
-      "gain": 1
+      "offset": 26.14,
+      "duration": 0.25,
+      "gain": 0.56
     },
     {
-      "offset": 33.54,
-      "duration": 0.42,
-      "gain": 1
+      "offset": 26.51,
+      "duration": 0.25,
+      "gain": 0.56
     }
   ],
   "boomerang:impact": [
     {
-      "offset": 34.08,
-      "duration": 0.27,
-      "gain": 1
+      "offset": 26.88,
+      "duration": 0.17,
+      "gain": 0.72
     },
     {
-      "offset": 34.47,
-      "duration": 0.27,
-      "gain": 1
+      "offset": 27.17,
+      "duration": 0.17,
+      "gain": 0.72
     }
   ],
   "boomerang:mechanism": [
     {
-      "offset": 34.86,
-      "duration": 0.31,
-      "gain": 1
+      "offset": 27.46,
+      "duration": 0.24,
+      "gain": 0.4
     },
     {
-      "offset": 35.29,
-      "duration": 0.31,
-      "gain": 1
+      "offset": 27.82,
+      "duration": 0.24,
+      "gain": 0.4
     }
   ],
   "boomerang:mechanism:1": [
     {
-      "offset": 35.72,
-      "duration": 0.26,
-      "gain": 1
+      "offset": 28.18,
+      "duration": 0.13,
+      "gain": 0.46
     },
     {
-      "offset": 36.1,
-      "duration": 0.26,
-      "gain": 1
+      "offset": 28.43,
+      "duration": 0.13,
+      "gain": 0.46
     }
   ],
   "sporelantern:shot": [
     {
-      "offset": 36.48,
-      "duration": 0.37,
-      "gain": 1
+      "offset": 28.68,
+      "duration": 0.27,
+      "gain": 0.62
     },
     {
-      "offset": 36.97,
-      "duration": 0.37,
-      "gain": 1
+      "offset": 29.07,
+      "duration": 0.27,
+      "gain": 0.62
     }
   ],
   "sporelantern:impact": [
     {
-      "offset": 37.46,
-      "duration": 0.42,
-      "gain": 1
+      "offset": 29.46,
+      "duration": 0.36,
+      "gain": 0.78
     },
     {
-      "offset": 38.0,
-      "duration": 0.42,
-      "gain": 1
+      "offset": 29.94,
+      "duration": 0.36,
+      "gain": 0.78
     }
   ],
   "sporelantern:mechanism": [
     {
-      "offset": 38.54,
-      "duration": 0.22,
-      "gain": 1
+      "offset": 30.42,
+      "duration": 0.17,
+      "gain": 0.38
     },
     {
-      "offset": 38.88,
-      "duration": 0.22,
-      "gain": 1
+      "offset": 30.71,
+      "duration": 0.17,
+      "gain": 0.38
     }
   ],
   "sporelantern:move": [
     {
-      "offset": 39.22,
-      "duration": 0.24,
-      "gain": 1
+      "offset": 31.0,
+      "duration": 0.26,
+      "gain": 0.72
     },
     {
-      "offset": 39.58,
-      "duration": 0.24,
-      "gain": 1
+      "offset": 31.38,
+      "duration": 0.26,
+      "gain": 0.72
     }
   ],
   "sporelantern:burst": [
     {
-      "offset": 39.94,
-      "duration": 0.64,
-      "gain": 1
+      "offset": 31.76,
+      "duration": 0.51,
+      "gain": 0.78
     },
     {
-      "offset": 40.7,
-      "duration": 0.64,
-      "gain": 1
+      "offset": 32.39,
+      "duration": 0.51,
+      "gain": 0.78
     }
   ],
   "sporelantern:shield": [
     {
-      "offset": 41.46,
-      "duration": 0.56,
-      "gain": 1
+      "offset": 33.02,
+      "duration": 0.36,
+      "gain": 0.65
     },
     {
-      "offset": 42.14,
-      "duration": 0.56,
-      "gain": 1
+      "offset": 33.5,
+      "duration": 0.36,
+      "gain": 0.65
     }
   ],
   "miasmalantern:shot": [
     {
-      "offset": 42.82,
-      "duration": 0.47,
-      "gain": 1
+      "offset": 33.98,
+      "duration": 0.4,
+      "gain": 0.78
     },
     {
-      "offset": 43.41,
-      "duration": 0.47,
-      "gain": 1
+      "offset": 34.5,
+      "duration": 0.4,
+      "gain": 0.78
     }
   ],
   "miasmalantern:impact": [
     {
-      "offset": 44.0,
-      "duration": 0.51,
-      "gain": 1
+      "offset": 35.02,
+      "duration": 0.44,
+      "gain": 0.88
     },
     {
-      "offset": 44.63,
-      "duration": 0.51,
-      "gain": 1
+      "offset": 35.58,
+      "duration": 0.44,
+      "gain": 0.88
     }
   ],
   "miasmalantern:charge": [
     {
-      "offset": 45.26,
+      "offset": 36.14,
       "duration": 0.18,
-      "gain": 1
+      "gain": 0.64
     },
     {
-      "offset": 45.56,
+      "offset": 36.44,
       "duration": 0.18,
-      "gain": 1
+      "gain": 0.64
     }
   ],
   "spell:ice": [
     {
-      "offset": 45.86,
+      "offset": 36.74,
       "duration": 0.67,
       "gain": 1
     },
     {
-      "offset": 46.65,
+      "offset": 37.53,
       "duration": 0.67,
       "gain": 1
     }
   ],
   "spell:storm": [
     {
-      "offset": 47.44,
+      "offset": 38.32,
       "duration": 0.69,
       "gain": 1
     },
     {
-      "offset": 48.25,
+      "offset": 39.13,
       "duration": 0.69,
       "gain": 1
     }
   ],
   "spell:fire": [
     {
-      "offset": 49.06,
+      "offset": 39.94,
       "duration": 0.72,
       "gain": 1
     },
     {
-      "offset": 49.9,
+      "offset": 40.78,
       "duration": 0.72,
       "gain": 1
     }
   ],
   "spell:veil": [
     {
-      "offset": 50.74,
+      "offset": 41.62,
       "duration": 0.64,
       "gain": 1
     },
     {
-      "offset": 51.5,
+      "offset": 42.38,
       "duration": 0.64,
       "gain": 1
     }
   ],
   "spell:chain": [
     {
-      "offset": 52.26,
+      "offset": 43.14,
       "duration": 0.72,
       "gain": 1
     },
     {
-      "offset": 53.1,
+      "offset": 43.98,
       "duration": 0.72,
       "gain": 1
     }
   ],
   "spell:rift": [
     {
-      "offset": 53.94,
+      "offset": 44.82,
       "duration": 0.78,
       "gain": 1
     },
     {
-      "offset": 54.84,
+      "offset": 45.72,
       "duration": 0.78,
       "gain": 1
     }
   ],
   "spell:dark": [
     {
-      "offset": 55.74,
+      "offset": 46.62,
       "duration": 0.72,
       "gain": 1
     },
     {
-      "offset": 56.58,
+      "offset": 47.46,
       "duration": 0.72,
       "gain": 1
     }
   ],
   "motion:roll": [
     {
-      "offset": 57.42,
+      "offset": 48.3,
       "duration": 0.37,
       "gain": 1
     },
     {
-      "offset": 57.91,
+      "offset": 48.79,
       "duration": 0.37,
       "gain": 1
     }
   ],
   "motion:blink": [
     {
-      "offset": 58.4,
-      "duration": 0.45,
-      "gain": 1
+      "offset": 49.28,
+      "duration": 0.25,
+      "gain": 0.74
     },
     {
-      "offset": 58.97,
-      "duration": 0.45,
-      "gain": 1
+      "offset": 49.65,
+      "duration": 0.25,
+      "gain": 0.74
+    }
+  ],
+  "motion:shadowblink": [
+    {
+      "offset": 50.02,
+      "duration": 0.32,
+      "gain": 0.86
+    },
+    {
+      "offset": 50.46,
+      "duration": 0.32,
+      "gain": 0.86
     }
   ],
   "motion:water": [
     {
-      "offset": 59.54,
+      "offset": 50.9,
       "duration": 0.41,
       "gain": 1
     },
     {
-      "offset": 60.07,
+      "offset": 51.43,
       "duration": 0.41,
       "gain": 1
     }
   ],
   "material:stone:impact": [
     {
-      "offset": 60.6,
+      "offset": 51.96,
       "duration": 0.32,
       "gain": 1
     },
     {
-      "offset": 61.04,
+      "offset": 52.4,
       "duration": 0.32,
       "gain": 1
     }
   ],
   "material:wood:impact": [
     {
-      "offset": 61.48,
+      "offset": 52.84,
       "duration": 0.29,
       "gain": 1
     },
     {
-      "offset": 61.89,
+      "offset": 53.25,
       "duration": 0.29,
       "gain": 1
     }
   ],
   "material:ice:impact": [
     {
-      "offset": 62.3,
+      "offset": 53.66,
       "duration": 0.42,
       "gain": 1
     },
     {
-      "offset": 62.84,
+      "offset": 54.2,
       "duration": 0.42,
       "gain": 1
     }
   ],
   "material:wet:impact": [
     {
-      "offset": 63.38,
+      "offset": 54.74,
       "duration": 0.36,
       "gain": 1
     },
     {
-      "offset": 63.86,
+      "offset": 55.22,
       "duration": 0.36,
       "gain": 1
     }
   ],
   "material:fire:impact": [
     {
-      "offset": 64.34,
+      "offset": 55.7,
       "duration": 0.43,
       "gain": 1
     },
     {
-      "offset": 64.89,
+      "offset": 56.25,
       "duration": 0.43,
       "gain": 1
     }
   ],
   "material:stone:hurt": [
     {
-      "offset": 60.6,
+      "offset": 51.96,
       "duration": 0.32,
       "gain": 1
     },
     {
-      "offset": 61.04,
+      "offset": 52.4,
       "duration": 0.32,
       "gain": 1
     }
   ],
   "material:wood:hurt": [
     {
-      "offset": 61.48,
+      "offset": 52.84,
       "duration": 0.29,
       "gain": 1
     },
     {
-      "offset": 61.89,
+      "offset": 53.25,
       "duration": 0.29,
       "gain": 1
     }
   ],
   "material:ice:hurt": [
     {
-      "offset": 62.3,
+      "offset": 53.66,
       "duration": 0.42,
       "gain": 1
     },
     {
-      "offset": 62.84,
+      "offset": 54.2,
       "duration": 0.42,
       "gain": 1
     }
   ],
   "material:wet:hurt": [
     {
-      "offset": 63.38,
+      "offset": 54.74,
       "duration": 0.36,
       "gain": 1
     },
     {
-      "offset": 63.86,
+      "offset": 55.22,
       "duration": 0.36,
       "gain": 1
     }
   ],
   "material:fire:hurt": [
     {
-      "offset": 64.34,
+      "offset": 55.7,
       "duration": 0.43,
       "gain": 1
     },
     {
-      "offset": 64.89,
+      "offset": 56.25,
       "duration": 0.43,
       "gain": 1
     }

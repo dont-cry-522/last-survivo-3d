@@ -1,11 +1,13 @@
-import{BIOME_THEMES,instrumentSample,scoreBiome,biomeThreat}from'./biome-music.js?v=93';
-import{companionSample}from'./companion-audio.js?v=93';
-import{weaponSample,weaponTakeCount}from'./weapon-audio.js?v=93';
-import{creatureSample,creatureSpatial,ENEMY_VOICES}from'./enemy-audio.js?v=93';
-import{RecordedMusic}from'./recorded-music.js?v=93';
-import{RecordedEffects}from'./recorded-effects.js?v=93';
+import{BIOME_THEMES,instrumentSample,scoreBiome,biomeThreat}from'./biome-music.js?v=94';
+import{companionSample}from'./companion-audio.js?v=94';
+import{weaponSample,weaponTakeCount}from'./weapon-audio.js?v=94';
+import{creatureSample,creatureSpatial,ENEMY_VOICES}from'./enemy-audio.js?v=94';
+import{RecordedMusic}from'./recorded-music.js?v=94';
+import{RecordedEffects}from'./recorded-effects.js?v=94';
 // Local licensed recordings, with the original procedural score as a loading/offline fallback.
 const midi=n=>440*2**((n-69)/12);
+// Contact belongs to the target on the isometric ground plane, not to the camera.
+export function contactSpatial(dx=0,dz=0){return{gain:1/(1+Math.hypot(dx,dz)*.075),pan:Math.max(-.7,Math.min(.7,(dx-dz)/20))};}
 // Related abilities retain their hero's material instead of falling back to a shared chirp.
 const SKILL_MATERIALS={mineSet:['rifle','mechanism',.65],mineBlast:['spell','fire',.8],volley:['rifle','shot',.75],counter:['rifle','impact',.8],rainAim:['crossbow','mechanism',.65],rain:['crossbow','shot',.7],trailSet:['shuriken','mechanism',.5],pursuit:['crossbow','mechanism',.65],echo:['shade','shot',.75],echoHit:['shade','impact',.7],soul:['dark','mechanism',.65],spikes:['shadowblade','impact',.85],surge:['harpoon','shot',.8],brine:['motion','water',.65],wake:['motion','water',.25],briarSet:['boomerang','mechanism',.55],briar:['boomerang','impact',.7]};
 const THEMES={...BIOME_THEMES,
@@ -92,17 +94,19 @@ export class GameAudio{
     source.onended=()=>{source.disconnect();volume.disconnect();panner.disconnect();this.creatureSources.delete(source);this.nodes--;};if(material)source.start(0,material.offset,material.duration);else source.start();return true;
   }
   tone(f,d=.12,v=.06,type='sine',end=null){this.voice(f,d,v,type,end);}
-  weapon(id,event,variant=0,volume=1,pan=0){
+  weapon(id,event,variant=0,volume=1,pan=0,maxDuration=null){
     // Contact tails cannot occupy the final slots reserved for a fresh attack.
     const limit=event==='impact'?10:event==='mechanism'?12:16;
     if(!this.available()||this.weaponSources.size>=limit)return false;
     const takeKey=id+':'+event+':'+variant,take=this.weaponTakes.get(takeKey)||0,key=takeKey+':'+take;
     const cueKey=this.materialEffects?.count(takeKey)?takeKey:id+':'+event,material=this.materialEffects?.get(cueKey,take);
     let buffer=material?.buffer||this.weaponBuffers.get(key);
-    if(!buffer){const samples=id==='companion'?companionSample(event,this.ctx.sampleRate):weaponSample(id,event,this.ctx.sampleRate,variant,take);if(!samples)return false;buffer=this.ctx.createBuffer(1,samples.length,this.ctx.sampleRate);buffer.copyToChannel(samples,0);this.weaponBuffers.set(key,buffer);}
+    if(!buffer){const samples=id==='companion'?companionSample(event,this.ctx.sampleRate):id==='material:wood'||id==='material:stone'?creatureSample(id==='material:wood'?'shaman':'golem','impact',this.ctx.sampleRate):weaponSample(id,event,this.ctx.sampleRate,variant,take);if(!samples)return false;buffer=this.ctx.createBuffer(1,samples.length,this.ctx.sampleRate);buffer.copyToChannel(samples,0);this.weaponBuffers.set(key,buffer);}
     this.weaponTakes.set(takeKey,(take+1)%(material?this.materialEffects?.count(cueKey):weaponTakeCount(id)));
     const source=this.ctx.createBufferSource(),gain=this.ctx.createGain(),panner=this.ctx.createStereoPanner();source.buffer=buffer;source.playbackRate.value=material?1:.975+Math.random()*.05;gain.gain.value=(event==='impact'&&variant?1.12:1)*volume*(material?.gain??1)*(.97+Math.random()*.06);panner.pan.value=pan;
-    source.connect(gain);gain.connect(panner);panner.connect(material||id==='companion'?this.sfx:this.weaponTone||this.sfx);this.weaponSources.add(source);this.nodes++;source.onended=()=>{source.disconnect();gain.disconnect();panner.disconnect();this.weaponSources.delete(source);this.nodes--;};if(material)source.start(0,material.offset,material.duration);else source.start();return true;
+    const duration=material?Math.min(material.duration,maxDuration??Infinity):Math.min(buffer.duration||Infinity,maxDuration??Infinity);
+    if(maxDuration&&Number.isFinite(duration)){const t=this.ctx.currentTime;gain.gain.setValueAtTime(gain.gain.value,t);gain.gain.setValueAtTime(gain.gain.value,t+Math.max(0,duration-.018));gain.gain.linearRampToValueAtTime(0,t+duration);}
+    source.connect(gain);gain.connect(panner);panner.connect(material||id==='companion'?this.sfx:this.weaponTone||this.sfx);this.weaponSources.add(source);this.nodes++;source.onended=()=>{source.disconnect();gain.disconnect();panner.disconnect();this.weaponSources.delete(source);this.nodes--;};if(material)source.start(0,material.offset,duration);else{source.start();if(maxDuration)source.stop(this.ctx.currentTime+duration);}return true;
   }
   companion(event,dx=0,dz=0){const quiet=['step','sniff'].includes(event),range=quiet?8:20,d=Math.hypot(dx,dz);if(d>=range||!this.allow('companion-'+event,event==='sniff'?5:event==='step'?.20:.12))return false;
     const volume=({step:.35,sniff:.35,pounce:.85,bite:.85,hurt:.8,down:.85,revive:.8,dodge:.85,dodgeLand:.5,trapSet:.6,trapSnap:.8})[event]||.7;
@@ -110,8 +114,9 @@ export class GameAudio{
   }
   stopWeapons(preserveLevel=false){for(const s of new Set([...this.weaponSources,...this.proceduralSources].filter(s=>!this.musicVoices.has(s)&&!(preserveLevel&&s.levelCue))))s.stop();}
   shot(id,variant=0){if(this.allow('shot',.045))this.weapon(id,'shot',variant);}
-  mechanism(id,stage=0){if(this.allow('mechanism',.065))this.weapon(id,'mechanism',stage);}
-  impact(id,strong=false,variant=strong?1:0){if(this.allow('impact-'+id+(strong?'-strong':''),.10))this.weapon(id,'impact',variant);}
+  mechanism(id,stage=0,period=null){if(this.allow('mechanism',.065))this.weapon(id,'mechanism',stage,1,0,period?Math.max(.035,period*.28):null);}
+  impact(id,strong=false,variant=strong?1:0,dx=0,dz=0){if(this.allow('impact-'+id+(strong?'-strong':''),.10)){const p=contactSpatial(dx,dz);this.weapon(id,'impact',variant,p.gain,p.pan);}}
+  terrain(texture,dx=0,dz=0,strong=false){if(!this.allow('terrain-'+texture,.18))return;const p=contactSpatial(dx,dz);this.weapon('material:'+texture,'impact',0,p.gain*(strong?.48:.30),p.pan);}
   threat(kind='wave'){if(!this.allow('threat',2))return;const t=this.ctx.currentTime,deep=kind==='boss';if(this.recorded?.active){this.voice(deep?80:105,.32,deep?.13:.08,'sine',42);this.noise(.22,deep?.07:.04,850,160);return;}if(BIOME_THEMES[this.map]){biomeThreat(this,BIOME_THEMES[this.map],this.beat,t,deep);return;}this.voice(deep?58:82,.9,deep?.15:.105,'sawtooth',deep?35:48,t,'music',.04);this.noise(deep?.75:.42,deep?.16:.085,1400,170,t,'music');for(let i=0;i<(deep?4:3);i++)this.voice((deep?147:196)*2**(i/12),.19,.052,'triangle',null,t+i*.105,'music',.008);}
   spell(kind){if(!this.allow('spell-'+kind,.11))return;const t=this.ctx.currentTime;
     if(this.materialEffects?.get('spell:'+kind)){this.weapon('spell',kind);return;}
@@ -142,7 +147,7 @@ export class GameAudio{
   }
   land(kind,wet=false){if(wet){this.water(true);return;}if(!this.allow('hero-land',.15))return;this.noise(.09,.065,kind==='guardian'?450:800,140);this.voice(kind==='guardian'?88:140,.10,.05,'sine',60);}
   water(deep=false){if(!this.allow('water',.24))return;if(this.materialEffects?.get('motion:water')){this.weapon('motion','water',0,deep?.65:.38);return;}this.noise(deep?.22:.13,deep?.11:.07,1100,320);this.voice(310+Math.random()*80,.085,.028,'sine',115);}
-  dodge(silver){if(!this.allow('dodge',.2))return;const event=silver?'blink':'roll';if(this.materialEffects?.get('motion:'+event)){this.weapon('motion',event,0,.7);return;}this.noise(silver?.32:.2,.24,silver?4000:650,silver?220:140);if(silver)this.voice(440,.25,.065,'sine',110);}
+  dodge(hero){if(!this.allow('dodge',.2))return;const silver=hero===true||hero==='silver'||hero==='wraith',event=hero==='wraith'?'shadowblink':silver?'blink':'roll';if(this.materialEffects?.get('motion:'+event)){this.weapon('motion',event,0,.7);return;}this.noise(silver?.32:.2,.24,silver?4000:650,silver?220:140);if(silver)this.voice(440,.25,.065,'sine',110);}
   hurt(){if(!this.allow('hurt',.15))return;this.noise(.15,.3,700,140);this.voice(130,.22,.25,'sine',36);}
   pickup(){if(!this.allow('pickup',.09))return;this.voice(780+(this.beat%4)*110,.075,.035,'sine',1100);}
   level(){if(!this.allow('level',.35))return;[523.25,659.25,783.99,1046.5].forEach((f,i)=>{const source=this.voice(f,.5,.075,'triangle',null,this.ctx.currentTime+i*.085);if(source)source.levelCue=true;});}

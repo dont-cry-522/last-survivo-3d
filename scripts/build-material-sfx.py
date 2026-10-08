@@ -86,83 +86,107 @@ def recipes():
     """Two separately assembled takes per event; source choice supplies variation."""
     result = {}
 
-    def cue(key, seconds, first, second, category=None):
+    def cue(key, seconds, first, second, category=None, gain=1):
         event = key.split(":")[1]
         kind = category or (key.split(":")[0] if key.startswith(("spell:", "motion:")) else event)
-        result[key] = dict(duration=seconds, category=kind, variants=[first, second])
+        result[key] = dict(duration=seconds, category=kind, gain=gain, variants=[first, second])
 
-    cue("rifle:shot", .32, [L("shot1"), L("click", .16, .026)],
-        [L("shot2"), L("latch", .13, .035)])
-    cue("rifle:impact", .23, [L("metal1", .5), L("body1")], [L("metal2", .5), L("body2")])
-    cue("rifle:mechanism", .24, [L("latch"), L("click", .5, .10)], [L("click"), L("draw2", .35, .07)])
-    cue("shotgun:shot", .52, [L("cannon1"), L("shot3", .65), L("latch", .18, .12)],
-        [L("cannon2"), L("bang2", .65), L("click", .18, .10)])
-    cue("shotgun:impact", .33, [L("body1"), L("wood3", .55, .012), L("metal3", .25, .025)],
-        [L("body2"), L("wood4", .5, .008), L("metal4", .22, .02)])
-    cue("shotgun:mechanism", .35, [L("draw1"), L("latch", .8, .13)], [L("draw2"), L("click", .8, .15)])
-    cue("crossbow:shot", .35, [L("bow"), L("wood1", .5), L("latch", .18, .02)],
-        [L("bow", .85, start=.025), L("wood2", .55), L("creak2", .18, .025)])
-    cue("crossbow:impact", .25, [L("wood3"), L("body1", .5)], [L("wood4"), L("body2", .45)])
-    cue("crossbow:mechanism", .31, [L("creak1"), L("wood1", .4, .12)], [L("creak2"), L("wood2", .4, .15)])
-    cue("shuriken:shot", .28, [L("blade1"), L("metal1", .22, .04)], [L("blade2"), L("metal2", .22, .035)])
-    cue("shuriken:impact", .29, [L("metal1"), L("blade1", .3, .012)], [L("metal2"), L("blade2", .3, .016)])
-    cue("shuriken:mechanism", .22, [L("draw1"), L("click", .3, .09)], [L("draw2"), L("latch", .2, .06)])
-    cue("fire:shot", .52, [L("flame"), L("fire", .8, start=.35), L("bang1", .3)],
-        [L("flame", .7, start=.04), L("fire", 1, start=1.4), L("bang2", .3)])
-    cue("fire:impact", .43, [L("fire", 1, start=.5), L("dull", .6)],
-        [L("fire", 1, start=1.7), L("bang2", .5, lowpass=1800)])
-    cue("fire:mechanism", .30, [L("fire", 1, start=.2), L("click", .15)],
-        [L("fire", 1, start=1.3), L("latch", .15)])
-    cue("dark:shot", .49, [L("cloth1", 1, reverse=True, lowpass=1600), L("dull", .6, .13)],
-        [L("cloth3", 1, reverse=True, lowpass=1300), L("body2", .6, .16, lowpass=900)])
-    cue("dark:impact", .43, [L("crush1", 1, lowpass=1700), L("dull", .7)],
-        [L("crush2", 1, lowpass=1500), L("body2", .8, lowpass=800)])
-    cue("dark:mechanism", .35, [L("cloth2", reverse=True, lowpass=1100)], [L("cloth4", reverse=True, lowpass=1000)])
-    cue("shade:shot", .39, [L("paper1", 1, reverse=True, lowpass=2400), L("cloth2", .6, .06)],
-        [L("paper2", 1, reverse=True, lowpass=2200), L("cloth4", .6, .07)])
-    cue("shade:impact", .37, [L("rip", .7, lowpass=2000), L("body1", .7)],
-        [L("crush2", .7, lowpass=1600), L("body2", .7)])
-    cue("shade:mechanism", .29, [L("leather1", 1, reverse=True)], [L("leather2", 1, reverse=True)])
-    cue("shadowblade:shot", .36, [L("blade1"), L("cloth1", .5, reverse=True, lowpass=1800)],
-        [L("blade2"), L("cloth3", .5, reverse=True, lowpass=1700)])
-    cue("shadowblade:impact", .34, [L("metal3", .6), L("rip", .65, .018)],
-        [L("metal4", .6), L("crush2", .7, .018)])
-    cue("shadowblade:mechanism", .26, [L("draw1"), L("cloth2", .4)], [L("draw2"), L("cloth4", .4)])
-    cue("grimoire:shot", .40, [L("page1"), L("rip", .55, .07)], [L("page2"), L("crush2", .6, .10)])
-    cue("grimoire:impact", .37, [L("crush1"), L("book", .4)], [L("crush2"), L("paper2", .5, .035)])
-    cue("grimoire:mechanism", .33, [L("paper1"), L("page1", .55, .10)], [L("paper2"), L("page2", .55, .09)])
-    cue("harpoon:shot", .36, [L("metal3", .7), L("splash1", .7), L("swish2", .6)],
-        [L("metal4", .65), L("splash2", .8), L("swish3", .55)])
-    cue("harpoon:impact", .40, [L("metal3", .7), L("splash3")], [L("metal4", .7), L("splash4")])
-    cue("harpoon:mechanism", .30, [L("draw1", .7), L("splash1", .5)], [L("draw2", .7), L("splash2", .5)])
-    cue("harpoon:shot:1", .43, [L("swish3"), L("splash3", .55, .02)],
-        [L("swish4"), L("splash4", .55, .03)], "shot")
-    cue("harpoon:shot:2", .55, [L("draw1", .65), L("splash2", 1, .06), L("metal3", .4, .15)],
-        [L("draw2", .65), L("splash4", 1, .04), L("metal4", .4, .17)], "shot")
-    cue("harpoon:impact:1", .45, [L("splash3"), L("blade1", .55)], [L("splash4"), L("blade2", .55)], "impact")
-    cue("harpoon:impact:2", .55, [L("splash2"), L("metal4", .6, .10)],
-        [L("splash4"), L("metal3", .6, .14)], "impact")
-    cue("boomerang:shot", .42, [L("swish2"), L("wood1", .4)], [L("swish4"), L("wood2", .4)])
-    cue("boomerang:impact", .27, [L("wood3"), L("body1", .45)], [L("wood4"), L("body2", .45)])
-    cue("boomerang:mechanism", .31, [L("swish3", take=.13), L("swish2", .7, .15, take=.13)],
-        [L("swish4", take=.14), L("swish3", .7, .16, take=.12)])
-    cue("boomerang:mechanism:1", .26, [L("wood1"), L("leather1", .6)],
-        [L("wood2"), L("leather2", .6)], "mechanism")
-    cue("sporelantern:shot", .37, [L("bubble1"), L("slime1", .65, .02)], [L("bubble2"), L("slime2", .65, .015)])
-    cue("sporelantern:impact", .42, [L("slime3"), L("bubble3", .5, .08)], [L("slime4"), L("splash2", .4, .06)])
-    cue("sporelantern:mechanism", .22, [L("leather1", .65), L("bubble1", .3), L("wood1", .15, .03, lowpass=1300)],
-        [L("leather2", .65), L("bubble2", .3), L("wood2", .15, .025, lowpass=1300)])
-    cue("sporelantern:move", .24, [L("bubble1", .5), L("leather1", .4)], [L("bubble2", .5), L("leather2", .4)])
-    cue("sporelantern:burst", .64, [L("slime3"), L("splash3", .7, .04), L("bubble1", .35, .16)],
-        [L("slime4"), L("splash4", .7, .03), L("bubble2", .35, .20)])
-    cue("sporelantern:shield", .56, [L("bubble3"), L("glass1", .3, .06), L("bubbles", .5, .11, start=.2)],
-        [L("bubble2"), L("glass2", .3, .08), L("bubbles", .5, .13, start=1.4)])
-    cue("miasmalantern:shot", .47, [L("slime1", 1, lowpass=1600), L("cloth2", .6, reverse=True)],
-        [L("slime2", 1, lowpass=1800), L("cloth4", .6, reverse=True)])
-    cue("miasmalantern:impact", .51, [L("slime3", 1, lowpass=2100), L("crush1", .4)],
-        [L("slime4", 1, lowpass=1900), L("crush2", .4)])
-    cue("miasmalantern:charge", .18, [L("cloth1", .6, reverse=True, lowpass=1200), L("bubbles", .8, start=.4)],
-        [L("cloth3", .6, reverse=True, lowpass=1000), L("bubbles", .8, start=1.7)])
+    # A compact screen-space weapon needs a shorter, lighter cue than a blast or spell.
+    # Mix headroom remains calibrated; gain is authored per event, not normalised away.
+    cue("rifle:shot", .19, [L("shot1", take=.15, highpass=180, lowpass=7000), L("click", .10, .014, take=.06)],
+        [L("shot2", take=.15, highpass=180, lowpass=6500), L("latch", .08, .018, take=.06)], gain=.82)
+    cue("rifle:impact", .15, [L("body1"), L("metal1", .10, highpass=600)],
+        [L("body2"), L("metal2", .10, highpass=600)], gain=.64)
+    cue("rifle:mechanism", .11, [L("latch"), L("click", .2, .04)], [L("click"), L("draw2", .2, .035)], gain=.58)
+    cue("shotgun:shot", .29, [L("cannon1", take=.23, highpass=75, lowpass=4500), L("shot3", .45, take=.10)],
+        [L("cannon2", take=.23, highpass=75, lowpass=4500), L("bang2", .30, take=.10)], gain=1)
+    cue("shotgun:impact", .25, [L("body1"), L("wood3", .25, .009), L("metal3", .10, .016)],
+        [L("body2"), L("wood4", .25, .007), L("metal4", .10, .015)], gain=.88)
+    cue("shotgun:mechanism", .17, [L("draw1", highpass=160), L("leather1", .2)],
+        [L("draw2", highpass=160), L("leather2", .2)], gain=.64)
+    cue("shotgun:mechanism:1", .10, [L("latch"), L("metal1", .12)],
+        [L("click"), L("metal2", .12)], gain=.72)
+    cue("crossbow:shot", .16, [L("bow", take=.085, highpass=320), L("swish2", .18, .018, take=.12, highpass=750, lowpass=5800)],
+        [L("bow", .9, start=.012, take=.085, highpass=320), L("swish4", .18, .018, take=.12, highpass=750, lowpass=5600)], gain=.68)
+    cue("crossbow:impact", .13, [L("body1", take=.11, highpass=180, lowpass=3000), L("blade1", .10, take=.06, highpass=500)],
+        [L("body2", take=.11, highpass=180, lowpass=2800), L("blade2", .10, take=.06, highpass=500)], gain=.62)
+    cue("crossbow:mechanism", .10, [L("leather1", take=.085, highpass=400), L("click", .07, .03, take=.045, highpass=700)],
+        [L("leather2", take=.085, highpass=400), L("click", .07, .025, start=.006, take=.045, highpass=650)], gain=.38)
+    cue("crossbow:mechanism:1", .07, [L("click", take=.055, highpass=800)],
+        [L("click", start=.009, take=.055, highpass=950)], gain=.42)
+    cue("shuriken:shot", .20, [L("swish2", highpass=250, lowpass=5000), L("blade1", .16)],
+        [L("swish4", highpass=250, lowpass=5000), L("blade2", .16)], gain=.56)
+    cue("shuriken:impact", .17, [L("blade1", .7), L("body1", .45), L("metal1", .18)],
+        [L("blade2", .7), L("body2", .45), L("metal2", .18)], gain=.68)
+    cue("shuriken:mechanism", .14, [L("draw1"), L("leather1", .3)], [L("draw2"), L("leather2", .3)], gain=.42)
+    cue("fire:shot", .34, [L("flame", highpass=80, lowpass=3800), L("fire", .30, start=.35), L("bang1", .07, take=.09)],
+        [L("flame", .9, start=.04, highpass=80, lowpass=3800), L("fire", .35, start=1.4), L("bang2", .07, take=.09)], gain=.84)
+    cue("fire:impact", .47, [L("fire", 1, start=.5), L("dull", .32, lowpass=1700)],
+        [L("fire", 1, start=1.7), L("bang2", .28, lowpass=1800)], gain=1)
+    cue("fire:mechanism", .18, [L("fire", 1, start=.2, highpass=500)],
+        [L("fire", 1, start=1.3, highpass=500)], gain=.34)
+    cue("dark:shot", .35, [L("swish2", reverse=True, lowpass=1500, highpass=80), L("body1", .22, .035, lowpass=650)],
+        [L("swish4", reverse=True, lowpass=1300, highpass=80), L("body2", .22, .04, lowpass=600)], gain=.82)
+    cue("dark:impact", .39, [L("dull", .6, take=.23, lowpass=700), L("cloth2", .65, .025, lowpass=1800)],
+        [L("body2", .65, take=.22, lowpass=650), L("cloth4", .8, .025, lowpass=1500)], gain=.88)
+    cue("dark:mechanism", .22, [L("cloth2", reverse=True, lowpass=1100)],
+        [L("cloth4", reverse=True, lowpass=1000)], gain=.36)
+    cue("shade:shot", .25, [L("swish2", lowpass=1800, highpass=85), L("cloth2", .5, reverse=True, lowpass=1600), L("body1", .16, lowpass=550)],
+        [L("swish4", lowpass=1700, highpass=85), L("cloth4", .5, reverse=True, lowpass=1400), L("body2", .16, lowpass=500)], gain=.70)
+    cue("shade:impact", .24, [L("body1", .7, lowpass=750), L("cloth1", .55, .018, lowpass=1900)],
+        [L("body2", .7, lowpass=700), L("cloth3", .55, .018, lowpass=1800)], gain=.78)
+    cue("shade:mechanism", .19, [L("cloth1", reverse=True, lowpass=1200)], [L("cloth3", reverse=True, lowpass=1000)], gain=.32)
+    cue("shadowblade:shot", .30, [L("swish3", lowpass=2800), L("cloth1", .45, reverse=True, lowpass=1300), L("blade1", .16)],
+        [L("swish4", lowpass=2600), L("cloth3", .45, reverse=True, lowpass=1200), L("blade2", .16)], gain=.72)
+    cue("shadowblade:impact", .27, [L("blade1", .65), L("body1", .7, lowpass=1100), L("metal3", .12, lowpass=2400)],
+        [L("blade2", .65), L("body2", .7, lowpass=1000), L("metal4", .12, lowpass=2200)], gain=.88)
+    cue("shadowblade:mechanism", .20, [L("cloth2"), L("draw1", .2)], [L("cloth4"), L("draw2", .2)], gain=.34)
+    cue("grimoire:shot", .39, [L("swish2", 1, reverse=True, lowpass=1200), L("cloth2", .45, lowpass=1600)],
+        [L("swish4", 1, reverse=True, lowpass=1000), L("cloth4", .45, lowpass=1500)], gain=.65)
+    cue("grimoire:impact", .46, [L("dull", .75, take=.27, lowpass=600), L("swish3", .55, .025, lowpass=1700)],
+        [L("body2", .8, take=.25, lowpass=550), L("swish4", .7, .025, lowpass=1500)], gain=1)
+    cue("grimoire:mechanism", .20, [L("page1", .8), L("paper1", .12)],
+        [L("page2", .8), L("paper2", .12)], gain=.36)
+    cue("harpoon:shot", .24, [L("swish2"), L("splash1", .18, highpass=550, lowpass=4300)],
+        [L("swish3"), L("splash2", .18, highpass=550, lowpass=4300)], gain=.70)
+    cue("harpoon:impact", .26, [L("body1", .65), L("metal3", .2, lowpass=2800), L("splash3", .35)],
+        [L("body2", .65), L("metal4", .2, lowpass=2600), L("splash4", .35)], gain=.94)
+    cue("harpoon:mechanism", .18, [L("leather1"), L("splash1", .12, highpass=600)],
+        [L("leather2"), L("splash2", .12, highpass=600)], gain=.36)
+    cue("harpoon:shot:1", .32, [L("swish3"), L("splash3", .26, .015, highpass=400)],
+        [L("swish4"), L("splash4", .26, .015, highpass=400)], "shot", gain=.76)
+    cue("harpoon:shot:2", .37, [L("swish2", .8, reverse=True, take=.17), L("swish3", .65, .15), L("splash2", .26, .13, highpass=350)],
+        [L("swish3", .8, reverse=True, take=.17), L("swish4", .65, .15), L("splash4", .26, .13, highpass=350)], "shot", gain=.82)
+    cue("harpoon:impact:1", .29, [L("splash3", .55), L("blade1", .4), L("body1", .6)],
+        [L("splash4", .55), L("blade2", .4), L("body2", .6)], "impact", gain=.96)
+    cue("harpoon:impact:2", .35, [L("splash2", .65), L("metal4", .25, .035, lowpass=2400), L("body1", .7)],
+        [L("splash4", .65), L("metal3", .25, .03, lowpass=2400), L("body2", .7)], "impact", gain=1)
+    cue("boomerang:shot", .25, [L("swish2", highpass=220, lowpass=4300), L("wood1", .12)],
+        [L("swish4", highpass=220, lowpass=4300), L("wood2", .12)], gain=.56)
+    cue("boomerang:impact", .17, [L("wood1"), L("body1", .32, lowpass=2300)],
+        [L("wood2"), L("body2", .32, lowpass=2300)], gain=.72)
+    cue("boomerang:mechanism", .24, [L("swish3", take=.10, highpass=300), L("swish2", .65, .12, take=.10, highpass=300)],
+        [L("swish4", take=.10, highpass=300), L("swish3", .65, .12, take=.10, highpass=300)], gain=.40)
+    cue("boomerang:mechanism:1", .13, [L("leather1"), L("wood1", .22)],
+        [L("leather2"), L("wood2", .22)], "mechanism", gain=.46)
+    cue("sporelantern:shot", .27, [L("cloth2", .8, highpass=160, lowpass=2800), L("swish2", .45, lowpass=2300), L("bubble1", .10)],
+        [L("cloth4", .8, highpass=160, lowpass=2600), L("swish4", .45, lowpass=2100), L("bubble2", .10)], gain=.62)
+    cue("sporelantern:impact", .36, [L("slime3", .23, take=.10), L("cloth1", .9, .018, highpass=190, lowpass=3400)],
+        [L("slime4", .23, take=.10), L("cloth3", .9, .018, highpass=190, lowpass=3200)], gain=.78)
+    cue("sporelantern:mechanism", .17, [L("leather1"), L("wood1", .10, .025, lowpass=1300)],
+        [L("leather2"), L("wood2", .10, .02, lowpass=1300)], gain=.38)
+    cue("sporelantern:move", .26, [L("cloth2", reverse=True, lowpass=1700), L("swish2", .3, highpass=160, lowpass=2200)],
+        [L("cloth4", reverse=True, lowpass=1600), L("swish4", .3, highpass=160, lowpass=2100)], gain=.72)
+    cue("sporelantern:burst", .51, [L("slime3", .15, take=.10), L("swish3", .7, lowpass=2200), L("cloth1", .8, .035, highpass=150, lowpass=2800)],
+        [L("slime4", .15, take=.10), L("swish4", .7, lowpass=2000), L("cloth3", .8, .035, highpass=150, lowpass=2600)], gain=.78)
+    cue("sporelantern:shield", .36, [L("cloth1", .8, reverse=True, lowpass=1800), L("glass1", .08, .04, lowpass=1700)],
+        [L("cloth3", .8, reverse=True, lowpass=1600), L("glass2", .08, .04, lowpass=1500)], gain=.65)
+    cue("miasmalantern:shot", .40, [L("swish2", 1, lowpass=1900, highpass=110), L("cloth2", .55, reverse=True, lowpass=1400), L("slime1", .08, take=.10, lowpass=1200)],
+        [L("swish4", 1, lowpass=1700, highpass=110), L("cloth4", .55, reverse=True, lowpass=1300), L("slime2", .08, take=.10, lowpass=1100)], gain=.78)
+    cue("miasmalantern:impact", .44, [L("cloth1", 1, highpass=160, lowpass=2600), L("swish3", .65, .035, lowpass=1700), L("slime3", .13, take=.11, lowpass=1300)],
+        [L("cloth3", 1, highpass=160, lowpass=2400), L("swish4", .65, .03, lowpass=1500), L("slime4", .13, take=.11, lowpass=1200)], gain=.88)
+    cue("miasmalantern:charge", .18, [L("cloth1", 1, reverse=True, lowpass=1200), L("swish2", .4, reverse=True, lowpass=1700), L("bubbles", .05, start=.4, lowpass=900)],
+        [L("cloth3", 1, reverse=True, lowpass=1000), L("swish4", .4, reverse=True, lowpass=1600), L("bubbles", .05, start=1.7, lowpass=850)], gain=.64)
     result["miasmalantern:charge"]["crescendo"] = [.08, .15]
     cue("spell:ice", .67, [L("ice1"), L("glass1", .4, .07)], [L("ice2"), L("glass2", .4, .05)])
     cue("spell:storm", .69, [L("arc"), L("spark", .7, .15), L("bang1", .3, .03, lowpass=1100)],
@@ -178,8 +202,10 @@ def recipes():
     cue("spell:dark", .72, [L("cloth2", 1, reverse=True, lowpass=1500), L("dull", .8, .21), L("crush1", .5, .20, lowpass=1300)],
         [L("cloth4", 1, reverse=True, lowpass=1300), L("body2", .8, .18, lowpass=650), L("crush2", .6, .21, lowpass=1500)])
     cue("motion:roll", .37, [L("cloth1"), L("leather1", .6, .08)], [L("cloth3"), L("leather2", .6, .07)])
-    cue("motion:blink", .45, [L("cloth2", reverse=True), L("paper1", .45, .16)],
-        [L("cloth4", reverse=True), L("paper2", .45, .17)])
+    cue("motion:blink", .25, [L("swish2", reverse=True, highpass=350, lowpass=4800), L("cloth2", .25, .06, highpass=400)],
+        [L("swish4", reverse=True, highpass=350, lowpass=4600), L("cloth4", .25, .06, highpass=400)], gain=.74)
+    cue("motion:shadowblink", .32, [L("swish3", reverse=True, lowpass=1100), L("cloth1", .5, .04, lowpass=1300)],
+        [L("swish4", reverse=True, lowpass=1000), L("cloth3", .5, .04, lowpass=1200)], gain=.86)
     cue("motion:water", .41, [L("splash1"), L("bubble1", .35, .13)], [L("splash2"), L("bubble2", .35, .15)])
     cue("material:stone:impact", .32, [L("stone1"), L("body1", .25)], [L("stone2"), L("body2", .25)], "impact")
     cue("material:wood:impact", .29, [L("wood3"), L("wood1", .25, .04)], [L("wood4"), L("wood2", .25, .04)], "impact")
@@ -292,23 +318,24 @@ def main():
         for variant, layers in enumerate(recipe["variants"]):
             audio = make_cue(recipe, layers, cache)
             offset = len(atlas) / RATE
-            cues[key].append(dict(offset=round(offset, 5), duration=len(audio) / RATE, gain=1))
+            cues[key].append(dict(offset=round(offset, 5), duration=len(audio) / RATE, gain=recipe["gain"]))
             records.append(dict(key=key, variant=variant, offset=offset, duration=len(audio) / RATE,
-                                category=recipe["category"], target_rms=TARGETS[recipe["category"]], layers=layers))
+                                category=recipe["category"], gain=recipe["gain"], target_rms=TARGETS[recipe["category"]], layers=layers))
             if "crescendo" in recipe:
                 records[-1]["crescendo_seconds"] = recipe["crescendo"]
             atlas.extend(audio)
             atlas.extend([0.0] * round(GAP * RATE))
             if key in ("crossbow:shot", "fire:shot", "sporelantern:shot"):
-                write_wav(report_dir / (key.replace(":", "-") + f"-{variant + 1}.wav"), audio)
-                previews.extend(audio)
+                preview = [value * recipe["gain"] for value in audio]
+                write_wav(report_dir / (key.replace(":", "-") + f"-{variant + 1}.wav"), preview)
+                previews.extend(preview)
                 previews.extend([0.0] * round(.30 * RATE))
     wav_path = report_dir / "material-sfx-master.wav"
     write_wav(wav_path, atlas)
     write_wav(report_dir / "material-sfx-preview.wav", previews)
     mp3_path = repo / "assets/audio/material-sfx.mp3"
     subprocess.run([args.ffmpeg, "-v", "error", "-y", "-i", str(wav_path), "-c:a", "libmp3lame",
-                    "-b:a", "96k", "-ar", str(RATE), "-ac", "1", "-write_xing", "1", str(mp3_path)], check=True)
+                    "-b:a", "128k", "-ar", str(RATE), "-ac", "1", "-write_xing", "1", str(mp3_path)], check=True)
     decoded = read_audio(args.ffmpeg, mp3_path)
     for record in records:
         start = round(record["offset"] * RATE)
@@ -316,6 +343,9 @@ def main():
         samples = decoded[start:end]
         record["decoded_peak"] = round(max(abs(x) for x in samples), 6)
         record["decoded_rms"] = round(rms(samples), 6)
+        record["playback_rms"] = round(record["decoded_rms"] * record["gain"], 6)
+        record["playback_peak"] = round(record["decoded_peak"] * record["gain"], 6)
+        assert 0 < record["gain"] <= 1, record
         assert record["decoded_peak"] <= .68, record
         assert abs(record["decoded_rms"] - record["target_rms"]) < .015, record
         bounds = {"shot": (.10, .14), "impact": (.07, .10), "mechanism": (.03, .05),
@@ -343,13 +373,15 @@ def main():
                for source in source_manifest["sources"] if source["id"] in used_source_ids]
     provenance = dict(version=1,license="CC0-1.0",checked_on=source_manifest["checked_on"],
         sources=sources, selected_files=selected, cues=records,
-        processing=dict(sample_rate=RATE,channels=1,codec="MP3 96 kbps",gap_seconds=GAP,
+        processing=dict(sample_rate=RATE,channels=1,codec="MP3 128 kbps",gap_seconds=GAP,
             operations=["mono resample", "onset trim", "source region selection", "layer-specific one-pole filtering",
                         "selective reverse", "material layering", "DC removal", "soft peak ceiling", "short edge fades", "RMS calibration"],
             notes=["No generated white-noise or oscillator layers; variation uses different source takes and regions.",
                    "Rifle/shotgun reports are designed from CC0 firework recordings, not claimed as firearm recordings.",
                    "Fire Magic/Catching fire is an authored mixed effect; fireplace, water/slime and Tesla sources include recorded texture.",
                    "OpenGameArt Battle Sound Effects offers CC0 alongside other licenses; the CC0 option is used.",
+                   "Encoded category RMS only reserves mixing headroom; exported per-event gain preserves hero and weapon scale.",
+                   "Air swings omit collision layers; impact transients are reserved for actual contact. Reload pull and latch have distinct cues.",
                    "No runtime pitch variation is required by this atlas. Original downloads remain outside the game."]))
     (repo / "docs/audio-material-sources.json").write_text(json.dumps(provenance, ensure_ascii=False, indent=2), encoding="utf-8")
     variant_correlations = {}
@@ -367,7 +399,10 @@ def main():
                   for category in categories}
     quality = dict(cue_keys=len(cues),encoded_variants=len(records),selected_samples=len(selected),
         duration_seconds=len(atlas)/RATE,mp3_bytes=mp3_path.stat().st_size,
-        decoded_peak=max(record["decoded_peak"] for record in records),sample_rate=RATE,channels=1,
+        decoded_peak=max(record["decoded_peak"] for record in records),
+        playback_peak=max(record["playback_peak"] for record in records),
+        playback_gain_range=[min(record["gain"] for record in records),max(record["gain"] for record in records)],
+        sample_rate=RATE,channels=1,
         minimum_gap=GAP,rms_ranges=rms_ranges,variant_waveform_correlations=variant_correlations,
         maximum_absolute_variant_correlation=max(abs(value) for value in variant_correlations.values()),
         listening_status="Local WAV previews prepared; no claim of human listening approval.",

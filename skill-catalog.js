@@ -1,5 +1,5 @@
-import{POISON}from'./poison-config.js?v=93';
-import{MIRAGE}from'./mirage-config.js?v=93';
+import{POISON}from'./poison-config.js?v=94';
+import{MIRAGE}from'./mirage-config.js?v=94';
 export const EXTRA_SKILLS=[
  {id:'mirage_residue',hero:'mirage',name:'残蛊',icon:'♧',max:3,describe:r=>`毒团命中、扩散波及或接触己方蜃雾后，留下每秒 ${MIRAGE.residueDps[r]} 伤害、${MIRAGE.residueDuration[r]} 秒的残蛊。刷新不叠层；区域内只受最强蜃雾，区域外附毒、残蛊、诱葬只取最强一份，不触发技能或遗物连锁。`},
  {id:'mirage_burial',hero:'mirage',name:'诱葬',icon:'❧',max:3,describe:r=>`仅替身自然结束的绽爆，为范围内存活敌人附上每秒 ${MIRAGE.burialDps[r]} 伤害、${MIRAGE.burialDuration} 秒的毒蚀并减速 ${MIRAGE.burialSlow[r]} 秒。替身被杀或被新替身替换时不触发；区域内不叠加，离区与其他附着毒取高。`},

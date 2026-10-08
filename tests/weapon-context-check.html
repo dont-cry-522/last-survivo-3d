@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="zh-CN">
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>人物动作与声音检查</title>
+<style>
+:root{color-scheme:dark;font:15px/1.6 system-ui;background:#112129;color:#e1eeeb}body{max-width:1120px;margin:auto;padding:20px}button,select{font:inherit;color:inherit;background:#244652;border:1px solid #527078;border-radius:8px;padding:9px 14px}button:disabled{opacity:.5}p{color:#acc4c6}.controls{display:flex;gap:10px;flex-wrap:wrap}iframe{display:block;width:100%;height:560px;border:1px solid #34545a;margin-top:18px}pre{white-space:pre-wrap;overflow-wrap:anywhere;background:#0b171d;padding:14px}#status{min-height:28px}@media(max-width:600px){body{padding:12px}iframe{height:420px}}
+</style>
+<h1>人物动作与声音检查</h1>
+<p>在真实游戏场景中听出手、命中与收放，使用隔离测试存档。这里只检查声音与动作的配合，不代表手感已获人工确认。</p>
+<div class="controls"><button id="run" disabled>运行动作音效检查</button><select id="weapon" aria-label="选择人物与武器"></select><button id="listen" disabled>看人物连续攻击</button><button id="stop" disabled>停止</button></div>
+<p id="status" role="status">正在载入真实游戏…</p><div id="view"></div><pre id="report">等待开始。</pre>
+<script type="module">
+import{HERO_LOADOUTS,WEAPONS}from'../rules.js?v=94';
+const $=s=>document.querySelector(s),sleep=ms=>new Promise(resolve=>setTimeout(resolve,ms)),assert=(ok,message)=>{if(!ok)throw Error(message);};
+const heroNames={scout:'游侠',silver:'霜影',wraith:'影裔',tide:'潮行者',lingya:'铃芽',wuling:'雾苓',mirage:'蜃影'};
+for(const[hero,ids]of Object.entries(HERO_LOADOUTS))for(const[idIndex,id]of ids.entries()){const o=document.createElement('option');o.value=hero+':'+idIndex;o.textContent=heroNames[hero]+' · '+WEAPONS[id].name;$('#weapon').append(o);}
+$('#weapon').value='silver:0';
+let g,win,busy=false,stopRequested=false,events=[],clock=0;
+const records=[];
+function publish(){window.weaponContextReport={checks:records,events};$('#report').textContent=JSON.stringify(window.weaponContextReport,null,2);}
+function lock(value){busy=value;$('#run').disabled=value;$('#listen').disabled=value;$('#weapon').disabled=value;$('#stop').disabled=!value;}
+function setup(hero,index=0){
+ g.menu();win.document.querySelector('[data-attack-mode=manual]').click();g.select(hero,'forest',index);g.start();win.document.querySelector('#dialog').close();
+ Object.assign(g.world,{obstacles:[],patches:[],ponds:[],ice:[],fords:[],bridges:[],sites:[],roaming:[],discoveries:[],breakables:[]});
+ Object.assign(g.player,{x:0,z:0,attack:0,inv:999,pending:0});g.hero.position.set(0,0,0);g.hero.rotation.y=0;
+ Object.assign(g.controls,{angle:0,held:false,hasAim:true});g.camera.position.set(12,20,16);g.camera.lookAt(0,0,0);g.camera.updateMatrixWorld(true);
+ g.audio.musicVolume=0;g.audio.muted=false;g.audio.applyVolumes(true);events=[];clock=0;win.qaFrame(0);
+}
+function target(x=0,z=6){const e=g.spawn('golem',x,z);assert(e,'未创建目标');Object.assign(e,{hp:10000,maxHp:10000,speed:0,cool:999,damage:0});return e;}
+function step(dt){clock+=dt;g.step(dt);g.vfx.update(dt);}
+async function advance(seconds){for(let elapsed=0;elapsed<seconds-1e-8&&!stopRequested;){const dt=Math.min(1/60,seconds-elapsed);step(dt);elapsed+=dt;win.qaFrame(0);await sleep(dt*1000);}}
+function fire(){g.controls.held=true;g.player.attack=0;step(1/60);g.controls.held=false;}
+const matching=(kind,id)=>events.filter(e=>e.kind===kind&&e.args[0]===id);
+async function readyAudio(){assert(await g.audio.init(),'浏览器尚未允许声音');g.audio.muted=false;g.audio.applyVolumes(true);assert(await g.audio.materialEffects.prepare(),'材质音效加载失败');}
+async function check(name,fn){$('#status').textContent='检查中：'+name;try{const details=await fn();assert(!stopRequested,'检查已停止');records.push({name,pass:true,details});}catch(error){records.push({name,pass:false,error:error.message});}publish();}
+$('#run').onclick=async()=>{
+ if(busy)return;lock(true);stopRequested=false;records.length=0;
+ try{
+  await readyAudio();
+  await check('潮行者挥空：声音随实际击出，不在起手提前',async()=>{
+   setup('tide');fire();assert(!matching('shot','harpoon').length,'挥叉声在起手提前播放');await advance(.09);assert(!matching('shot','harpoon').length,'蓄势期间提前播放挥叉声');await advance(.12);
+   const shots=matching('shot','harpoon');assert(shots.length===1,'挥空必须播放一次挥叉声');assert(shots[0].time>=.15&&shots[0].time<=.23,'挥叉声没有落在实际击出时刻');assert(!matching('impact','harpoon').length,'挥空错误播放命中声');return{events:[...events]};
+  });
+  await check('潮行者起手被潜潮取消后不补播攻击',async()=>{setup('tide');fire();g.dash();await advance(.35);assert(!matching('shot','harpoon').length,'取消攻击仍补播挥叉声');return{events:[...events]};});
+  await check('霜影短弩：两阶段拉栓与回扣使用不同事件',async()=>{
+   setup('silver');fire();await advance(.42);const reload=matching('mechanism','crossbow');assert(matching('shot','crossbow').length===1,'单次输入重复射击');assert(reload.length===2,'短弩缺少两阶段收放');assert(reload[0].args[1]===0&&reload[1].args[1]===1,'两阶段事件没有区分');assert(reload[0].time<reload[1].time,'收放顺序颠倒');
+   const a=g.audio.materialEffects.get('crossbow:mechanism'),b=g.audio.materialEffects.get('crossbow:mechanism:1');assert(a&&b&&a.offset!==b.offset,'拉栓与回扣仍引用同一音频片段');return{events:[...events],firstDuration:a.duration,secondDuration:b.duration};
+  });
+  await check('命中声携带真实目标相对位置',async()=>{
+   setup('silver');const foe=target(3,6),a=Math.atan2(3,6);g.hero.rotation.y=a;Object.assign(g.controls,{angle:a,hasAim:true});fire();await advance(.30);const impact=matching('impact','crossbow')[0];assert(foe.hp<10000,'目标未真实受到箭矢伤害');assert(impact,'缺少真实命中音效');assert(Number.isFinite(impact.args[3])&&Number.isFinite(impact.args[4]),'命中声未传递目标相对坐标');assert(Math.abs(impact.args[3]-3)<.1&&Math.abs(impact.args[4]-6)<.1,'命中声位置与实际目标不符');return{event:impact,hp:foe.hp};
+  });
+  await check('暂停冻结动作并回收声音，没有异步补音',async()=>{
+   setup('silver');fire();await advance(.04);g.pause();const pausedTime=g.time,count=events.length;await advance(.40);assert(g.time===pausedTime,'暂停仍推进游戏时间');assert(events.length===count,'暂停后还触发了攻击/收放音效');assert(!g.audio.weaponSources.size&&!g.audio.creatureSources.size,'暂停后仍遗留播放源');return{events:[...events],sources:g.audio.weaponSources.size};
+  });
+  await check('7 位英雄、13 种武器：连续攻击实际播放各自的出手取样',async()=>{
+   const loadouts=[];
+   for(const[hero,ids]of Object.entries(HERO_LOADOUTS))for(const[index,id]of ids.entries()){
+    assert(!stopRequested,'检查已停止');$('#status').textContent='连续攻击检查：'+heroNames[hero]+' · '+WEAPONS[id].name;
+    setup(hero,index);target(0,hero==='tide'?2.8:6);g.controls.held=true;await advance(.85);g.controls.held=false;
+    const shots=matching('weapon',id).filter(e=>e.args[1]==='shot');assert(shots.length>0,hero+' / '+id+' 没有实际出手音效');
+    assert(shots.every(e=>e.played&&e.sources===1&&e.material),hero+' / '+id+' 出手未创建材质取样播放源');
+    assert(!events.some(e=>e.kind==='weapon'&&e.args[1]==='shot'&&e.args[0]!=='companion'&&e.args[0]!==id),hero+' / '+id+' 错用了其他武器出手声');
+    loadouts.push({hero,weapon:id,shots:shots.length,firstShotAt:shots[0].time,allShotsUseMaterial:true});g.audio.stopWeapons();g.audio.stopCreatures();
+   }
+   assert(new Set(loadouts.map(e=>e.hero)).size===7&&loadouts.length===13,'英雄或武器覆盖不完整');return{heroes:7,weapons:13,loadouts};
+  });
+  await check('霜影与影裔闪避各播一次专属瞬移声，不叠加暗术爆破',async()=>{
+   const results=[];
+   for(const[hero,event]of[['silver','blink'],['wraith','shadowblink']]){
+    setup(hero);g.dash();await advance(.15);const motion=matching('weapon','motion');assert(matching('dodge',hero).length===1,hero+' 闪避没有传递人物身份');
+    assert(motion.length===1&&motion[0].args[1]===event,hero+' 瞬移声缺失、重复或身份错误');assert(motion[0].played&&motion[0].material&&motion[0].sources===1,hero+' 瞬移未实际播放专属材质取样');
+    assert(!matching('spell','dark').length&&!matching('weapon','spell').some(e=>e.args[1]==='dark'),hero+' 闪避仍叠加暗术爆破');results.push({hero,event,events:[...events]});
+   }
+   return results;
+  });
+  assert(!win.qaErrors.length,'浏览器报错：'+win.qaErrors.join('; '));$('#status').textContent=records.every(r=>r.pass)?'全部 '+records.length+' 项实战动作音效检查通过。':'存在未通过项，请查看下方报告。';
+ }catch(error){$('#status').textContent='失败：'+error.message;records.push({name:'初始化 / 浏览器错误',pass:false,error:error.message});}
+ finally{g.menu();g.audio.stopMusic();g.audio.stopWeapons();g.audio.stopCreatures();lock(false);publish();}
+};
+$('#listen').onclick=async()=>{if(busy)return;lock(true);stopRequested=false;try{await readyAudio();const[hero,index]=$('#weapon').value.split(':');setup(hero,Number(index));target(0,hero==='tide'?2.8:6);g.controls.held=true;$('#status').textContent='真实角色连续攻击 · 请同时观察动作、弹道与声音。';await advance(3.8);$('#status').textContent='试听结束，可换一位角色继续比较。';}catch(error){$('#status').textContent=error.message;}finally{g.controls.held=false;g.pause();g.audio.stopWeapons();g.audio.stopCreatures();lock(false);publish();}};
+$('#stop').onclick=()=>{stopRequested=true;g.controls.held=false;if(g.state==='playing')g.pause();g.audio.stopMusic();g.audio.stopWeapons();g.audio.stopCreatures();};
+try{
+ const html=await(await fetch('../index.html')).text(),frame=document.createElement('iframe');frame.title='真实游戏测试场景';$('#view').append(frame);
+ const bootstrap=`<base href="../"><script>window.qaErrors=[];addEventListener('error',e=>qaErrors.push(e.message));addEventListener('unhandledrejection',e=>qaErrors.push(String(e.reason)));window.requestAnimationFrame=cb=>{window.qaFrame=cb;return 0};const memory=new Map();Object.defineProperty(window,'localStorage',{value:{getItem:k=>memory.get(k)||null,setItem:(k,v)=>memory.set(k,String(v)),removeItem:k=>memory.delete(k)}});<\/script>`;
+ frame.srcdoc=html.replace('<head>','<head>'+bootstrap);win=frame.contentWindow;
+ for(let i=0;i<500;i++){if(win.game3d&&!win.document.querySelector('#start')?.disabled)break;await sleep(50);}
+ assert(win.game3d&&!win.document.querySelector('#start')?.disabled,'游戏资源载入超时');g=win.game3d;
+ for(const kind of['shot','mechanism','impact','weapon','spell','dodge']){const original=g.audio[kind].bind(g.audio);g.audio[kind]=(...args)=>{const event={kind,time:+clock.toFixed(4),args},before=kind==='weapon'?new Set(g.audio.weaponSources):null;events.push(event);const result=original(...args);if(before){const sources=[...g.audio.weaponSources].filter(source=>!before.has(source));Object.assign(event,{played:result===true,sources:sources.length,material:sources.length>0&&sources.every(source=>source.buffer===g.audio.materialEffects.buffer)});}return result;};}
+ win.qaFrame(0);$('#status').textContent='已就绪。点击检查，或选择人物观看连续攻击。';lock(false);
+}catch(error){$('#status').textContent='载入失败：'+error.message;}
+</script></html>
