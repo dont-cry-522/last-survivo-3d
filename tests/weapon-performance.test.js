@@ -12,7 +12,8 @@ test('all weapons have finite bounded distinct shot and impact textures with smo
       for(const v of s){assert(Number.isFinite(v));energy+=v*v;peak=Math.max(peak,Math.abs(v));}
       assert(Math.sqrt(energy/s.length)>.01,id+' inaudible');assert(peak<.75,id+' clipping');
       assert(Math.abs(s[0])<.0001);assert(Math.abs(s.at(-1))<.001);
-      signatures.add(Array.from(s.slice(20,60)).map(n=>n.toFixed(4)).join(','));
+      // Breath/pressure sounds deliberately swell after the first milliseconds.
+      signatures.add(Array.from({length:40},(_,i)=>s[Math.floor((i+1)*s.length/41)].toFixed(4)).join(','));
     }
     assert.equal(signatures.size,Object.keys(WEAPONS).length);
   }

@@ -8,7 +8,9 @@ export class RenderBudget{
  constructor(){this.quality=1;this.reset();}
  reset(){this.warmup=1.5;this.elapsed=0;this.frames=0;this.slow=0;this.fast=0;}
  sample(dt){
-  if(!Number.isFinite(dt)||dt<=0||dt>.1){this.reset();return false;}
+  if(!Number.isFinite(dt)||dt<=0){this.reset();return false;}
+  // Limit isolated suspension gaps without discarding sustained low-frame-rate samples.
+  dt=Math.min(dt,.25);
   if(this.warmup>0){this.warmup-=dt;return false;}
   this.elapsed+=dt;this.frames++;if(this.elapsed<1)return false;
   const average=this.elapsed/this.frames;this.elapsed=0;this.frames=0;

@@ -2,7 +2,7 @@ const{chromium}=require(process.env.PLAYWRIGHT_MODULE||'../../mobile-check/node_
 (async()=>{const b=await chromium.launch({executablePath:'C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe',headless:true});try{
  const p=await b.newPage(),errors=[];p.on('pageerror',e=>errors.push(e.message));await p.goto(process.env.TEST_URL||'http://127.0.0.1:8897/');await p.waitForFunction(()=>!!window.game3d,null,{polling:100,timeout:90000});
  const rows=await p.evaluate(async()=>{
-  const T=await import('./vendor/three.module.js'),{createSkinnedHero,animateSkinnedHero,disposeHero}=await import('./skinned-hero.js?v=89'),{makeWraith,animateWraith}=await import('./wraith-model.js?v=89'),{GRIP_POINTS}=await import('./weapon-grips.js?v=89');
+  const T=await import('./vendor/three.module.js'),{createSkinnedHero,animateSkinnedHero,disposeHero}=await import('./skinned-hero.js?v=90'),{makeWraith,animateWraith}=await import('./wraith-model.js?v=90'),{GRIP_POINTS}=await import('./weapon-grips.js?v=90');
   const check=(v,m)=>{if(!v)throw Error(m)},rows=[];
   for(const [kind,id]of [['scout','rifle'],['scout','shotgun'],['scout','fire'],['silver','crossbow'],['silver','shuriken'],['silver','dark'],['tide','harpoon'],['lingya','boomerang'],['wraith','shade'],['wraith','shadowblade'],['wraith','grimoire']]){
    const hero=kind==='wraith'?makeWraith(id):createSkinnedHero(kind,id),d=hero.userData,animate=kind==='wraith'?animateWraith:animateSkinnedHero;let error=0,step=0,supportError=0,peakAt=0,last;

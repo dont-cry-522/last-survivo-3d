@@ -1,15 +1,16 @@
 import * as T from './vendor/three.module.js';
-import{MAPS,seeded,segmentDistance}from'./rules.js?v=89';
-import{buildPonds}from'./water.js?v=89';
-import{installCoast}from'./coast.js?v=89';
-import{coastProp}from'./coast-models.js?v=89';
-import{buildDistricts}from'./map-districts.js?v=89';
-import{installScenery}from'./biome-scenery.js?v=89';
-import{installDiscoveries}from'./map-discoveries.js?v=89';
-import{installTactics}from'./map-tactics.js?v=89';
-import{installRoaming}from'./roaming-events.js?v=89';
-import{biomeEvent}from'./map-events.js?v=89';
-import{groundCue}from'./ground-cues.js?v=89';
+import{addTree}from'./tree-scenery.js?v=90';
+import{MAPS,seeded,segmentDistance}from'./rules.js?v=90';
+import{buildPonds}from'./water.js?v=90';
+import{installCoast}from'./coast.js?v=90';
+import{coastProp}from'./coast-models.js?v=90';
+import{buildDistricts}from'./map-districts.js?v=90';
+import{installScenery}from'./biome-scenery.js?v=90';
+import{installDiscoveries}from'./map-discoveries.js?v=90';
+import{installTactics}from'./map-tactics.js?v=90';
+import{installRoaming}from'./roaming-events.js?v=90';
+import{biomeEvent}from'./map-events.js?v=90';
+import{groundCue}from'./ground-cues.js?v=90';
 export const CONFLUENCE_HALF=140;
 export const REGIONS=[
  {id:'forest',x:-72,z:20,label:'古木河谷',transition:'林缘渐冷，针叶林沿山麓向雪线延伸'},
@@ -57,8 +58,7 @@ export function buildConfluence(seed,{mesh,trail,makeWeather,buildSites,groundSh
   const weights=biomeWeights(x,z);let roll=rnd(),id=REGIONS.at(-1).id;for(const q of REGIONS){roll-=weights[q.id];if(roll<=0){id=q.id;break;}}
   const prop=new T.Group();prop.position.set(x,0,z);group.add(prop);const o={x,z,r:.7,mesh:prop,biome:id};w.obstacles.push(o);const tall=2.8+rnd()*2.2;
   if(id==='forest'||id==='snow'){
-   mesh('CylinderGeometry',[.15,.32,tall,7],id==='forest'?0x685a43:0x737a73,0,tall*.5,0,prop);
-   for(let k=0;k<3;k++){const leaf=mesh(id==='snow'?'ConeGeometry':'DodecahedronGeometry',id==='snow'?[1.6-k*.2,2.2,9]:[1.6-k*.15,1],id==='snow'?[0x577f7e,0x93adaa,0xd0dddd][k]:[0x326c4e,0x527e56,0x6a915f][k],id==='forest'?Math.sin(k*2.4)*.45:0,tall-.5+k*.6,id==='forest'?Math.cos(k*2.4)*.35:0,prop);if(id==='forest')leaf.scale.y=.66;w.foliage.push({leaf,x:leaf.position.x,z:leaf.position.z,phase:x*.1+z*.17});}
+   const angle=x*.37+z*.23,leaf=addTree(prop,id,tall,{angle,variation:1+Math.sin(angle)*.16,bend:Math.sin(angle*.7)*.08});w.foliage.push({leaf,x:leaf.position.x,z:leaf.position.z,phase:x*.1+z*.17});
   }else if(id==='coast')o.r=coastProp(prop,i,rnd);
   else{
    const rock=mesh('DodecahedronGeometry',[1,1],id==='ash'?0x645650:0xa18e70,0,.7,0,prop);rock.scale.set(.9,.65+rnd()*1.2,.85);rock.rotation.y=rnd()*6;

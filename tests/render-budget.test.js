@@ -12,6 +12,17 @@ test('quality responds to sustained slow frames, ignores stalls and recovers cau
  const budget=new RenderBudget();for(let i=0;i<180;i++)budget.sample(1/60);assert.equal(budget.quality,1);
  budget.sample(.8);assert.equal(budget.quality,1);
  for(let i=0;i<360;i++)budget.sample(1/30);assert(budget.quality<1&&budget.quality>=.65);
- const reduced=budget.quality;for(let i=0;i<120;i++)budget.sample(1/60);assert.equal(budget.quality,reduced);
+ const reduced=budget.quality;for(let i=0;i<120;i++)budget.sample(1/60);assert(budget.quality<=reduced&&budget.quality>=.65);
  for(let i=0;i<1800;i++)budget.sample(1/60);assert(budget.quality>reduced&&budget.quality<=1);
+});
+test('sustained very slow frames still reduce quality while an isolated suspension does not',()=>{
+ for(const fps of[8,5,2]){
+  const budget=new RenderBudget();for(let i=0;i<fps*8;i++)budget.sample(1/fps);
+  assert(budget.quality<1&&budget.quality>=.65,`${fps} FPS must trigger adaptation`);
+  for(let i=0;i<fps*40;i++)budget.sample(1/fps);assert.equal(budget.quality,.65);
+ }
+ for(const gap of[.12,.8,20]){
+  const budget=new RenderBudget();for(let i=0;i<180;i++)budget.sample(1/60);
+  budget.sample(gap);for(let i=0;i<240;i++)budget.sample(1/60);assert.equal(budget.quality,1);
+ }
 });

@@ -1,26 +1,27 @@
-import{buildConfluence,biomeWeights}from'./confluence.js?v=89';
-import{installTactics}from'./map-tactics.js?v=89';
-import{installRoaming}from'./roaming-events.js?v=89';
-import{installDiscoveries}from'./map-discoveries.js?v=89';
-import{restoreEnemyHit,animateEnemyHit}from'./enemy-feedback.js?v=89';
-import{groveCenters,installScenery,animateScenery}from'./biome-scenery.js?v=89';
-import{districtLayout,buildDistricts}from'./map-districts.js?v=89';
-import{makeCoastEnemy,animateCoastEnemy,coastProp}from'./coast-models.js?v=89';
-import{installCoast}from'./coast.js?v=89';
-import{coastLayout as buildCoastLayout}from'./coast-layout.js?v=89';
-import{makeBoss,animateBoss,makeSandEnemy,animateSandEnemy}from'./expansion-models.js?v=89';
-import{siteSchedule}from'./site-discovery.js?v=89';
-import{MAP_EVENTS,biomeEvent,eventNodes}from'./map-events.js?v=89';
-import{MAP_HALF,MAP_SCALE}from'./map-layout.js?v=89';
-import{buildPonds,animateWater,waterDepth,restoreWaterPose,animateWaterPose}from'./water.js?v=89';
-import{ENEMY_MOTION,animateEnemyIdentity}from'./enemy-motion.js?v=89';
-import{REGIONAL_ENEMIES}from'./map-enemies.js?v=89';
-import{groundCue}from'./ground-cues.js?v=89';
-import{heroesReady,createSkinnedHero,animateSkinnedHero}from'./skinned-hero.js?v=89';
+import{buildConfluence,biomeWeights}from'./confluence.js?v=90';
+import{addTree}from'./tree-scenery.js?v=90';
+import{installTactics}from'./map-tactics.js?v=90';
+import{installRoaming}from'./roaming-events.js?v=90';
+import{installDiscoveries}from'./map-discoveries.js?v=90';
+import{restoreEnemyHit,animateEnemyHit}from'./enemy-feedback.js?v=90';
+import{groveCenters,installScenery,animateScenery}from'./biome-scenery.js?v=90';
+import{districtLayout,buildDistricts}from'./map-districts.js?v=90';
+import{makeCoastEnemy,animateCoastEnemy,coastProp}from'./coast-models.js?v=90';
+import{installCoast}from'./coast.js?v=90';
+import{coastLayout as buildCoastLayout}from'./coast-layout.js?v=90';
+import{makeBoss,animateBoss,makeSandEnemy,animateSandEnemy}from'./expansion-models.js?v=90';
+import{siteSchedule}from'./site-discovery.js?v=90';
+import{MAP_EVENTS,biomeEvent,eventNodes}from'./map-events.js?v=90';
+import{MAP_HALF,MAP_SCALE}from'./map-layout.js?v=90';
+import{buildPonds,animateWater,waterDepth,restoreWaterPose,animateWaterPose}from'./water.js?v=90';
+import{ENEMY_MOTION,animateEnemyIdentity}from'./enemy-motion.js?v=90';
+import{REGIONAL_ENEMIES}from'./map-enemies.js?v=90';
+import{groundCue}from'./ground-cues.js?v=90';
+import{heroesReady,createSkinnedHero,animateSkinnedHero}from'./skinned-hero.js?v=90';
 import * as T from './vendor/three.module.js';
-import{makeHero,animateHero}from'./hero-model.js?v=89';
-import{makeWraith,animateWraith}from'./wraith-model.js?v=89';
-import{MAPS,seeded}from'./rules.js?v=89';
+import{makeHero,animateHero}from'./hero-model.js?v=90';
+import{makeWraith,animateWraith}from'./wraith-model.js?v=90';
+import{MAPS,seeded}from'./rules.js?v=90';
 const geo=new Map(),materials=new Map(),terrainMaterials=new Map(),detailMaterials=new Map(),weatherMaterials=new Map();
 function geometry(kind,args){const key=kind+args.join(',');if(!geo.has(key))geo.set(key,new T[kind](...args));return geo.get(key);}
 export function mat(color,glow=false){const key=color+':'+glow;if(!materials.has(key))materials.set(key,new T.MeshStandardMaterial({color,roughness:glow?.35:.86,metalness:glow?.25:.08,emissive:glow?color:0,emissiveIntensity:glow?.9:0,flatShading:true}));return materials.get(key);}
@@ -202,10 +203,15 @@ export function buildWorld(id,seed=1){if(id==='confluence')return buildConfluenc
   if(id==='coast'){obstacles.at(-1).r=coastProp(tree,i,rnd);}
   else if(id==='sand'){const h=.6+rnd()*1.9;if(i%4===0){mesh('CylinderGeometry',[.5,.64,h,10],0xa6977c,0,h/2,0,tree);box(tree,0xc2b89b,0,h+.1,0,1.15,.2,1.15);}else{const rock=mesh('DodecahedronGeometry',[.7,1],i%2?0xb1a083:0x978768,0,.3,0,tree);rock.scale.set(1,.5+rnd()*.6,1);if(i%3===0){const slab=box(tree,0xbcb092,0,.4,0,.9,.45,.8);slab.rotation.z=.25;}}}
   else if(id==='ash'){const stone=mesh('DodecahedronGeometry',[1.2,0],0x66565c,0,tall*.38,0,tree);stone.scale.multiply(new T.Vector3(.7,tall*.55,.8));cone(tree,0xeaa169,0,tall*.8,0,.24,.85);}
-  else{const bend=(rnd()-.5)*.18,variation=.78+rnd()*.38;const trunk=mesh('CylinderGeometry',[.17,.38,tall,8],id==='snow'?0x697879:0x675a46,bend*tall*.18,tall/2,0,tree);trunk.rotation.z=-bend*.18;for(let j=0;j<3;j++){const a=j*2.27+rnd()*.55,off=id==='snow'?0:.46+j*.13,r=(1.62-j*.18)*variation,leaf=mesh(id==='snow'?'ConeGeometry':'DodecahedronGeometry',id==='snow'?[1,1,10]:[r,1],id==='snow'?[0x688c91,0x94b0ad,0xd7e4df][j]:[theme.leaf,0x37765c,0x5d9174][j],bend+Math.sin(a)*off,tall-.85+j*.65,id==='snow'?0:Math.cos(a)*off,tree);leaf.rotation.y=a;if(id==='snow')leaf.scale.set(r,2.15,r);else{leaf.scale.set(1,.62+rnd()*.13,.85+rnd()*.2);leaf.rotation.z=(rnd()-.5)*.18;}}for(let j=0;j<3;j++){const a=j*2.1+.4,branch=mesh('CylinderGeometry',[.055,.11,1.25,5],id==='snow'?0x849395:0x70634d,Math.cos(a)*.46,tall*.57,Math.sin(a)*.46,tree);branch.rotation.z=Math.cos(a)*.78;branch.rotation.x=-Math.sin(a)*.78;}}
+  else{
+   const bend=(rnd()-.5)*.18,variation=.78+rnd()*.38;let angle=0;
+   // Keep the established random stream, so tree shapes never move obstacles or rewards.
+   for(let j=0;j<3;j++){angle+=j*2.27+rnd()*.55;if(id!=='snow')angle+=(rnd()-.5)*.13+(rnd()-.5)*.2+(rnd()-.5)*.18;}
+   addTree(tree,id,tall,{bend,variation,angle});
+  }
  }
  if(id==='sand')for(let i=0;i<18;i++){const x=(rnd()-.5)*(MAP_HALF-10)*2,z=(rnd()-.5)*(MAP_HALF-10)*2;for(const [offset,color]of [[0,0xd5c099],[1.7,0x928469]]){const dune=groundShape(x,z+offset,2.5+rnd()*1.5,rnd,color);dune.scale.set(2.8,1,.7);dune.rotation.y=.25+Math.sin(i)*.2;group.add(dune);}}
- const foliage=[];if(!['ash','sand','coast'].includes(id))for(const o of obstacles)for(const leaf of o.mesh.children)if(leaf.geometry?.type===(id==='snow'?'ConeGeometry':'DodecahedronGeometry'))foliage.push({leaf,x:leaf.position.x,z:leaf.position.z,phase:o.x*.17+o.z*.13});
+ const foliage=[];if(!['ash','sand','coast'].includes(id))for(const o of obstacles)for(const leaf of o.mesh.children)if(leaf.userData.treeCanopy)foliage.push({leaf,x:leaf.position.x,z:leaf.position.z,phase:o.x*.17+o.z*.13});
  buildSites(group,sites,theme);
  if(id==='sand'){const s=sites[0],a=Math.atan2(s.x-spawn.x,s.z-spawn.z);s.gates=[];for(let i=-1;i<=1;i++){const x=s.x-Math.sin(a)*11+Math.cos(a)*i*1.75,z=s.z-Math.cos(a)*11-Math.sin(a)*i*1.75,g=new T.Group();g.position.set(x,0,z);box(g,0x847f6b,0,1.25,0,1.7,2.5,.8);g.rotation.y=a;group.add(g);const gate={x,z,r:.95,mesh:g};obstacles.push(gate);s.gates.push(gate);}}
 

@@ -1,0 +1,27 @@
+<!doctype html><meta charset="utf-8"><title>场景比例与渲染检查</title>
+<style>body{background:#17231f;color:#eee;font:15px system-ui;margin:12px}button,select{padding:8px}iframe{display:block;border:0;max-width:none}pre{white-space:pre-wrap;max-height:130px;overflow:auto}img{max-width:100%;width:1280px}</style>
+<h1>真实游戏场景检查</h1><p>固定随机种子，隔离存档；尺寸模拟不等同真机。渲染提交耗时不等同 GPU 完整帧率。</p>
+<select id="map"><option>forest</option><option>snow</option><option>ash</option><option>sand</option><option>coast</option><option>confluence</option></select>
+<select id="size"><option>1920x1080</option><option>3840x2160</option><option>844x390</option></select><button id="run">运行场景检查</button>
+<pre id="report">等待开始</pre><div id="view"></div><img id="capture" alt="固定场景画面">
+<script type="module">
+import * as T from '../vendor/three.module.js';
+const report=document.querySelector('#report'),view=document.querySelector('#view'),capture=document.querySelector('#capture'),wait=ms=>new Promise(r=>setTimeout(r,ms));
+const html=await(await fetch('../index.html')).text();
+document.querySelector('#run').onclick=async()=>{try{
+ report.textContent='RUNNING';view.replaceChildren();capture.removeAttribute('src');
+ const map=document.querySelector('#map').value,[width,height]=document.querySelector('#size').value.split('x').map(Number),frame=document.createElement('iframe');frame.width=width;frame.height=height;view.append(frame);
+ const boot=`<base href="../"><script>let seed=7412;window.qaSeed=()=>{seed=7412};Math.random=()=>((seed=Math.imul(seed,1664525)+1013904223>>>0)/4294967296);window.qaErrors=[];addEventListener('error',e=>qaErrors.push(e.message));addEventListener('unhandledrejection',e=>qaErrors.push(String(e.reason)));window.requestAnimationFrame=cb=>{window.qaFrame=cb;return 0};const mem=new Map();Object.defineProperty(window,'localStorage',{value:{getItem:k=>mem.get(k)||null,setItem:(k,v)=>mem.set(k,String(v))}});const media=window.matchMedia.bind(window);window.matchMedia=q=>q==='(pointer:coarse)'?{matches:${width<1000},addEventListener(){},removeEventListener(){}}:media(q);<\/script>`;
+ frame.srcdoc=html.replace('<head>','<head>'+boot);const win=frame.contentWindow;
+ for(let i=0;i<400&&!win.game3d;i++)await wait(50);const g=win.game3d;if(!g)throw Error('game load timeout');
+ win.qaSeed();g.select('silver',map,0);win.qaSeed();g.start();g.controls.held=false;g.player.attack=999;g.player.hp=g.player.maxHp=10000;
+ const origin={x:g.player.x,z:g.player.z};
+ for(let i=0;i<14;i++){const a=i*2.399,r=4+(i%4)*1.8,e=g.spawn(['mushroom','wolf','golem','spitter','shaman'][i%5],origin.x+Math.sin(a)*r,origin.z+Math.cos(a)*r);if(e){e.speed=0;e.cool=999;e.hp=10000;}}
+ let clock=win.performance.now(),times=[],calls=[],triangles=[];
+ for(let i=0;i<70;i++){const t=performance.now();win.qaFrame(clock+=1000/60);const elapsed=performance.now()-t;if(i>=10){times.push(elapsed);calls.push(g.renderer.info.render.calls);triangles.push(g.renderer.info.render.triangles);}await new Promise(requestAnimationFrame);}
+ const bounds=o=>{const v=new T.Box3().setFromObject(o).getSize(new T.Vector3());return{x:+v.x.toFixed(3),y:+v.y.toFixed(3),z:+v.z.toFixed(3)};};
+ const avg=a=>a.reduce((x,y)=>x+y,0)/a.length;times.sort((a,b)=>a-b);
+ report.textContent=JSON.stringify({status:win.qaErrors.length?'FAIL':'PASS',map,width,height,drawBuffer:[g.renderer.domElement.width,g.renderer.domElement.height],quality:g.renderQuality,hero:bounds(g.hero),enemies:g.enemies.map(e=>({kind:e.kind,bounds:bounds(e.mesh)})),drawCalls:+avg(calls).toFixed(1),triangles:+avg(triangles).toFixed(0),renderSubmitMedianMs:+times[Math.floor(times.length/2)].toFixed(2),renderSubmitP95Ms:+times[Math.floor(times.length*.95)].toFixed(2),errors:win.qaErrors},null,2);
+ win.qaFrame(clock+=1000/60);capture.src=g.renderer.domElement.toDataURL('image/jpeg',.88);g.pause();frame.style.display='none';
+ }catch(e){report.textContent='FAIL '+e.stack;console.error(e);}};
+</script>
