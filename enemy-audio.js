@@ -28,9 +28,26 @@ export const ENEMY_VOICES = {
   cinderlord:{texture:'fire',  pitch:32,  grain:23,  length:1.7, color:0xff8950, shape:'flame'}
 };
 const EVENTS={step:[.12,.24],wind:[.37,.7],attack:[.24,.9],impact:[.27,.85],hurt:[.14,.42],death:[.48,.65]};
+function forestFootSample(kind,event,sampleRate){
+  const wolf=kind==='wolf',landing=event==='impact',duration=landing?(wolf?.23:.30):(wolf?.105:.14),data=new Float32Array(Math.ceil(sampleRate*duration));
+  let seed=wolf?197:881,low=0,body=0;
+  const filter=1-Math.exp(-2*Math.PI*(wolf?1700:650)/sampleRate),bass=1-Math.exp(-2*Math.PI*140/sampleRate);
+  for(let i=0;i<data.length;i++){
+    seed=(Math.imul(seed,1664525)+1013904223)>>>0;const noise=seed/2147483648-1,t=i/sampleRate,u=i/data.length;
+    low+=(noise-low)*filter;body+=(noise-body)*bass;
+    const press=Math.exp(-t/(landing?.050:.018)),scrape=Math.max(0,t-.012),second=landing?Math.exp(-(((t-.034)/.012)**2)):0;
+    // Paw pads press then brush leaf litter; the mushroom lands with a damp, soft body.
+    const texture=wolf?(low*.55+body*2.6)*(press+second*.38)+(noise-low)*Math.sin(Math.min(1,scrape/.055)*Math.PI)*.13:
+      body*3.6*(press+second*.25)+low*.24*Math.exp(-t/.09)+Math.sin(2*Math.PI*(landing?67:110)*t)*Math.exp(-t/.025)*.07;
+    const envelope=Math.min(1,t/.004)*(1-u)**1.5;
+    data[i]=Math.tanh(texture)*envelope*(landing?.34:.16);
+  }
+  return data;
+}
 export function creatureSample(kind,event,sampleRate){
   const p=ENEMY_VOICES[kind],setting=EVENTS[event];
   if(!p||!setting)return null;
+  if(['wolf','mushroom'].includes(kind)&&['step','impact'].includes(event))return forestFootSample(kind,event,sampleRate);
   const duration=setting[0]*p.length,data=new Float32Array(Math.ceil(sampleRate*duration));
   let seed=p.pitch*7919+p.grain*107,low=0,body=0,phase=0;
   const smooth=1-Math.exp(-2*Math.PI*(p.texture==='hiss'?2900:1100)/sampleRate);

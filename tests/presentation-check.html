@@ -22,6 +22,6 @@ document.querySelector('#run').onclick=async()=>{try{
  const bounds=o=>{const v=new T.Box3().setFromObject(o).getSize(new T.Vector3());return{x:+v.x.toFixed(3),y:+v.y.toFixed(3),z:+v.z.toFixed(3)};};
  const avg=a=>a.reduce((x,y)=>x+y,0)/a.length;times.sort((a,b)=>a-b);
  report.textContent=JSON.stringify({status:win.qaErrors.length?'FAIL':'PASS',map,width,height,drawBuffer:[g.renderer.domElement.width,g.renderer.domElement.height],quality:g.renderQuality,hero:bounds(g.hero),enemies:g.enemies.map(e=>({kind:e.kind,bounds:bounds(e.mesh)})),drawCalls:+avg(calls).toFixed(1),triangles:+avg(triangles).toFixed(0),renderSubmitMedianMs:+times[Math.floor(times.length/2)].toFixed(2),renderSubmitP95Ms:+times[Math.floor(times.length*.95)].toFixed(2),errors:win.qaErrors},null,2);
- win.qaFrame(clock+=1000/60);capture.src=g.renderer.domElement.toDataURL('image/jpeg',.88);g.pause();frame.style.display='none';
+ win.qaFrame(clock+=1000/60);g.renderer.render(g.vfx.scene,g.camera);g.renderer.getContext().finish();capture.src=g.renderer.domElement.toDataURL('image/jpeg',.88);g.pause();frame.style.display='none';
  }catch(e){report.textContent='FAIL '+e.stack;console.error(e);}};
 </script>

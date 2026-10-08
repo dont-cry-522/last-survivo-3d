@@ -1,5 +1,5 @@
 import{test}from'node:test';import assert from'node:assert/strict';import * as T from'../vendor/three.module.js';
-import{buildWorld,clearAt}from'../world.js';import{sceneryAllowed}from'../biome-scenery.js';
+import{buildWorld,clearAt,animateWorld}from'../world.js';import{sceneryAllowed}from'../biome-scenery.js';
 import{bridgeContains,updateTide}from'../coast.js';import{waterDepth}from'../water.js';
 globalThis.document={createElement:()=>({width:256,height:256,getContext:()=>({fillRect(){}})})};
 function dispose(w){w.group.traverse(o=>{if(o.isInstancedMesh)o.dispose();if(o.userData.ownedGeometry)o.geometry.dispose();});}
@@ -34,6 +34,45 @@ test('plants stay below the fighting plane and snow accumulation follows a consi
 test('biomes use distinct detail silhouettes and reuse GPU materials on restart',()=>{
  const expected={forest:'frond',snow:'ice',ash:'chip',sand:'leaf',coast:'wood'};
  for(const [id,kind]of Object.entries(expected)){const a=buildWorld(id,19),b=buildWorld(id,19);assert(a.scenery.batches.some(m=>m.userData.biomeDetail===kind));assert.deepEqual(a.scenery.records,b.scenery.records);assert.deepEqual(a.obstacles.map(o=>[o.x,o.z]),b.obstacles.map(o=>[o.x,o.z]));for(const m of a.scenery.batches){const other=b.scenery.batches.find(n=>n.userData.biomeDetail===m.userData.biomeDetail);assert.strictEqual(m.geometry,other.geometry);assert.strictEqual(m.material,other.material);}dispose(a);dispose(b);}
+});
+test('snow mounds bury their outer rim below the terrain and remain low opaque caps',()=>{
+ const w=buildWorld('snow',7),snow=w.scenery.batches.find(m=>m.userData.biomeDetail==='snow'),geometry=snow.geometry,p=geometry.attributes.position,matrix=new T.Matrix4(),point=new T.Vector3();
+ geometry.computeBoundingBox();assert(geometry.index.count/3<=80);assert(!snow.material.transparent);
+ const bottom=geometry.boundingBox.min.y,rim=[];for(let i=0;i<p.count;i++)if(Math.abs(p.getY(i)-bottom)<1e-5)rim.push(i);assert(rim.length>=8,'snow lost its complete buried perimeter');
+ for(let i=0;i<snow.count;i++){
+  snow.getMatrixAt(i,matrix);
+  for(const vertex of rim){point.fromBufferAttribute(p,vertex).applyMatrix4(matrix);assert(point.y<w.ground.position.y-.01,'snow exposes a raised edge or underside');}
+  point.set(0,geometry.boundingBox.max.y,0).applyMatrix4(matrix);assert(point.y>0&&point.y<.2,'snow cap is too tall or fully buried');
+ }
+ dispose(w);
+});
+test('natural ground cover stays within the previous per-biome geometry budgets',()=>{
+ const budgets={forest:68368,snow:150218,ash:116088,sand:162870,coast:123792};
+ for(const[id,triangles]of Object.entries(budgets)){
+  const w=buildWorld(id,7),drawn=w.scenery.batches.reduce((n,m)=>n+m.count*(m.geometry.index?.count??m.geometry.attributes.position.count)/3,0);
+  assert(drawn<=triangles,id+' ground detail triangle budget grew');
+  for(const m of w.scenery.batches){assert(!m.material.transparent);assert(!Array.isArray(m.material),'material groups multiply detail draws');}
+  if(id==='forest'){
+   const fronds=w.scenery.batches.find(m=>m.userData.biomeDetail==='frond'),matrix=new T.Matrix4(),cover=w.scenery.records.map(()=>0);
+   for(let i=0;i<fronds.count;i++){fronds.getMatrixAt(i,matrix);const x=matrix.elements[12],z=matrix.elements[14];let nearest=0,distance=Infinity;w.scenery.records.forEach((p,j)=>{const d=(p.x-x)**2+(p.z-z)**2;if(d<distance){nearest=j;distance=d;}});cover[nearest]++;}
+   assert(cover.some(n=>n===2)&&cover.some(n=>n===4),'forest clusters lost their sparse and sheltered variation');
+  }
+  dispose(w);
+ }
+});
+test('confluence plants retain their own wind and tide response through the full animation update',()=>{
+ const w=buildWorld('confluence',7),motion=id=>w.regions.find(r=>r.id===id).scenery.batches.filter(m=>m.material.userData.motion);
+ assert.notStrictEqual(motion('sand')[0].material,motion('coast')[0].material,'separate climates share a mutable gust');
+ w.sandstorm={strength:1};w.tide={high:true};
+ for(const activeBiome of['forest','sand','coast']){
+  w.activeBiome=activeBiome;animateWorld(w,12,8,-5);
+  for(const id of['forest','snow','sand','coast'])for(const m of motion(id)){
+   const p=m.material.userData.motion;assert.equal(p.gust.value,id==='sand'?2.8:id==='coast'?1.3:1);assert.equal(p.clock.value,12);assert.deepEqual(p.focus.value.toArray(),[8,-5]);
+  }
+ }
+ w.sandstorm.strength=0;w.tide.high=false;animateWorld(w,13,8,-5);
+ for(const id of['forest','snow','sand','coast'])for(const m of motion(id))assert.equal(m.material.userData.motion.gust.value,1,'weather motion did not settle');
+ dispose(w);
 });
 test('groves leave spawn, all rewards and broad cross-map routes connected',()=>{
  for(const id of ['forest','snow'])for(let seed=1;seed<=6;seed++){

@@ -1,51 +1,51 @@
-import{MirageCombat}from'./mirage-combat.js?v=91';
-import{MirageVFX}from'./mirage-vfx.js?v=91';
-import{mirageSound}from'./mirage-audio.js?v=91';
-import{PoisonCombat}from'./poison-combat.js?v=91';
-import{PoisonVFX}from'./poison-vfx.js?v=91';
-import{poisonSound}from'./poison-audio.js?v=91';
-import {HeroPreview} from './hero-preview.js?v=91';
-import {knownMapPoints,mapWaypoint,waypointHint} from './map-navigation.js?v=91';
-import {createExploration,EXPLORATION_SIZE} from './map-exploration.js?v=91';
-import{REGIONS,biomeAt,biomeWeights,biomeColor,CONFLUENCE_TEXT}from'./confluence.js?v=91';
-import{observePlayer}from'./target-awareness.js?v=91';
-import{TERRAIN_TIPS,onIce,iceMotion,damageTerrain,updateTactics,terrainMesh}from'./map-tactics.js?v=91';
-import{advanceRoaming,roamingHint,courierDirection}from'./roaming-events.js?v=91';
-import{SMALL_FINDS,advanceDiscovery,discoveryHint,animateDiscoveries}from'./map-discoveries.js?v=91';
-import{recordEnemyHit,EnemyDeaths}from'./enemy-feedback.js?v=91';
-import{sandWeather}from'./sand-weather.js?v=91';
-import{HERO_DODGES,HERO_ABILITY_TEXT,dodgeTravel}from'./hero-dodge.js?v=91';
-import{LINGYA_HOP_DURATION,lingyaHopScale,planLingyaHop,steerLingyaHop}from'./lingya-motion.js?v=91';
-import{BeastCompanion,PET_TIMING,sideHopTravel}from'./beast-companion.js?v=91';
-import{makeBadger,animateBadger}from'./beast-model.js?v=91';
-import{updateTide,harpoonHit,tideDashTravel,HARPOON_ATTACKS}from'./coast.js?v=91';
-import{tickBoss}from'./boss-combat.js?v=91';
-import{inMeleeArc,meleeDamageScale}from'./melee.js?v=91';
-import{discoverSite}from'./site-discovery.js?v=91';
-import{MAP_EVENTS,createMapEvent,advanceMapEvent,eventProgress}from'./map-events.js?v=91';
-import{MAP_HALF as DEFAULT_HALF}from'./map-layout.js?v=91';
-import{terrainAt}from'./water.js?v=91';
-import{crossedSwimPhase}from'./swim-motion.js?v=91';
-import{RELICS,relicChoices,equipRelic,relicEvent,incomingRelicDamage,readJournal,writeJournal,recordDiscovery,recordVictory}from'./expedition.js?v=91';
-import{encounterPhase,enemyGrowth,encounterRole,HUNT_SQUAD,huntFormation,HUNT_BOONS,takeHuntBoon,enemyApproach,separation,attackSlotAvailable}from'./encounters.js?v=91';
-import{setupMobileDisplay}from'./mobile-display.js?v=91';
-import{weaponCuePhases,mirageShotDelay}from'./weapon-performance.js?v=91';
-import{ENEMY_VOICES}from'./enemy-audio.js?v=91';
-import{ENEMY_MOTION,gaitPace}from'./enemy-motion.js?v=91';
-import{MAP_ROSTERS,REGIONAL_ENEMIES,regionalEnemy}from'./map-enemies.js?v=91';
-import{HeroSkills}from'./hero-skills.js?v=91';
-import{EXTRA_BY_ID,skillPairState,skillPairHint}from'./skill-catalog.js?v=91';
-import{SCOUT_ROLL_DURATION,rollTravel}from'./dodge-motion.js?v=91';
-import{renderPixelRatio,RenderBudget}from'./render-budget.js?v=91';
-import{groundCue,disposeCue}from'./ground-cues.js?v=91';
-import{weaponRouteEffect,WEAPON_ROUTE_LOOKS}from'./weapon-route-vfx.js?v=91';
-import{SkillVFX}from'./skill-vfx.js?v=91';
-import{loadHeroAssets,disposeHero}from'./skinned-hero.js?v=91';
-import{GameAudio}from'./audio.js?v=91';
-import{ENEMY_GUIDE,CIRCLE_GUIDE}from'./battle-guide.js?v=91';
+import{MirageCombat}from'./mirage-combat.js?v=92';
+import{MirageVFX}from'./mirage-vfx.js?v=92';
+import{mirageSound}from'./mirage-audio.js?v=92';
+import{PoisonCombat}from'./poison-combat.js?v=92';
+import{PoisonVFX}from'./poison-vfx.js?v=92';
+import{poisonSound}from'./poison-audio.js?v=92';
+import {HeroPreview} from './hero-preview.js?v=92';
+import {knownMapPoints,mapWaypoint,waypointHint} from './map-navigation.js?v=92';
+import {createExploration,EXPLORATION_SIZE} from './map-exploration.js?v=92';
+import{REGIONS,biomeAt,biomeWeights,biomeColor,CONFLUENCE_TEXT}from'./confluence.js?v=92';
+import{observePlayer}from'./target-awareness.js?v=92';
+import{TERRAIN_TIPS,onIce,iceMotion,damageTerrain,updateTactics,terrainMesh}from'./map-tactics.js?v=92';
+import{advanceRoaming,roamingHint,courierDirection}from'./roaming-events.js?v=92';
+import{SMALL_FINDS,advanceDiscovery,discoveryHint,animateDiscoveries}from'./map-discoveries.js?v=92';
+import{recordEnemyHit,EnemyDeaths}from'./enemy-feedback.js?v=92';
+import{sandWeather}from'./sand-weather.js?v=92';
+import{HERO_DODGES,HERO_ABILITY_TEXT,dodgeTravel}from'./hero-dodge.js?v=92';
+import{LINGYA_HOP_DURATION,lingyaHopScale,planLingyaHop,steerLingyaHop}from'./lingya-motion.js?v=92';
+import{BeastCompanion,PET_TIMING,sideHopTravel}from'./beast-companion.js?v=92';
+import{makeBadger,animateBadger}from'./beast-model.js?v=92';
+import{updateTide,harpoonHit,tideDashTravel,HARPOON_ATTACKS}from'./coast.js?v=92';
+import{tickBoss}from'./boss-combat.js?v=92';
+import{inMeleeArc,meleeDamageScale}from'./melee.js?v=92';
+import{discoverSite}from'./site-discovery.js?v=92';
+import{MAP_EVENTS,createMapEvent,advanceMapEvent,eventProgress}from'./map-events.js?v=92';
+import{MAP_HALF as DEFAULT_HALF}from'./map-layout.js?v=92';
+import{terrainAt}from'./water.js?v=92';
+import{crossedSwimPhase}from'./swim-motion.js?v=92';
+import{RELICS,relicChoices,equipRelic,relicEvent,incomingRelicDamage,readJournal,writeJournal,recordDiscovery,recordVictory}from'./expedition.js?v=92';
+import{encounterPhase,enemyGrowth,encounterRole,HUNT_SQUAD,huntFormation,HUNT_BOONS,takeHuntBoon,enemyApproach,separation,attackSlotAvailable}from'./encounters.js?v=92';
+import{setupMobileDisplay}from'./mobile-display.js?v=92';
+import{weaponCuePhases,mirageShotDelay}from'./weapon-performance.js?v=92';
+import{ENEMY_VOICES}from'./enemy-audio.js?v=92';
+import{ENEMY_MOTION,gaitPace,advanceEnemyLocomotion}from'./enemy-motion.js?v=92';
+import{MAP_ROSTERS,REGIONAL_ENEMIES,regionalEnemy}from'./map-enemies.js?v=92';
+import{HeroSkills}from'./hero-skills.js?v=92';
+import{EXTRA_BY_ID,skillPairState,skillPairHint}from'./skill-catalog.js?v=92';
+import{SCOUT_ROLL_DURATION,rollTravel}from'./dodge-motion.js?v=92';
+import{renderPixelRatio,RenderBudget}from'./render-budget.js?v=92';
+import{groundCue,disposeCue}from'./ground-cues.js?v=92';
+import{weaponRouteEffect,WEAPON_ROUTE_LOOKS}from'./weapon-route-vfx.js?v=92';
+import{SkillVFX}from'./skill-vfx.js?v=92';
+import{loadHeroAssets,disposeHero}from'./skinned-hero.js?v=92';
+import{GameAudio}from'./audio.js?v=92';
+import{ENEMY_GUIDE,CIRCLE_GUIDE}from'./battle-guide.js?v=92';
 import * as T from './vendor/three.module.js';
-import{MAPS,WEAPONS,ENEMIES,HERO_LOADOUTS,heroHealth,weaponFor,experienceNeeded,grantExperience,chooseUpgrades,takeUpgrade,weaponStats,weaponReachText,WEAPON_PATHS,segmentDistance,registerCrossbowHit,registerShadowHit,UPGRADES}from'./rules.js?v=91';
-import{actor,animateActor,animateWorld,buildWorld,clearAt,moveActor,mesh,mat}from'./world.js?v=91';
+import{MAPS,WEAPONS,ENEMIES,HERO_LOADOUTS,heroHealth,weaponFor,experienceNeeded,grantExperience,chooseUpgrades,takeUpgrade,weaponStats,weaponReachText,WEAPON_PATHS,segmentDistance,registerCrossbowHit,registerShadowHit,UPGRADES}from'./rules.js?v=92';
+import{actor,animateActor,animateWorld,buildWorld,clearAt,moveActor,mesh,mat}from'./world.js?v=92';
 const $=s=>document.querySelector(s),touch=matchMedia('(pointer:coarse)').matches;
 document.body.classList.toggle('touch',touch);if(touch)$('#map>small').textContent='点击查看地图';
 const canvas=$('#world');let renderer;
@@ -79,7 +79,7 @@ async function unlockAudio(){const ok=await sound.init();syncAudioUI();if(!ok)to
 for(const bus of ['music','sfx'])$('#'+bus+'-volume').addEventListener('input',e=>{sound.setVolume(bus,Number(e.target.value)/100);unlockAudio();syncAudioUI();});
 syncAudioUI();
 function toast(text){$('#toast').textContent=text;$('#toast').style.opacity=1;toastTimer=3;}
-function showNextIntroduction(){const item=introductions.shift(),card=$('#encounter');if(!item){card.hidden=true;encounterTime=0;return;}const kind=item.key.startsWith('enemy:')?item.key.slice(6):null,info=ENEMY_GUIDE[kind],portrait=card.querySelector('img');portrait.hidden=!info;card.classList.toggle('has-portrait',!!info);if(info){portrait.src=info.image+'?v=91';portrait.alt=info.name+' · 游戏内外形';}else portrait.removeAttribute('src');card.querySelector('strong').textContent=item.title;card.querySelector('span').textContent=item.text;card.hidden=false;encounterTime=info?8:5;}
+function showNextIntroduction(){const item=introductions.shift(),card=$('#encounter');if(!item){card.hidden=true;encounterTime=0;return;}const kind=item.key.startsWith('enemy:')?item.key.slice(6):null,info=ENEMY_GUIDE[kind],portrait=card.querySelector('img');portrait.hidden=!info;card.classList.toggle('has-portrait',!!info);if(info){portrait.src=info.image+'?v=92';portrait.alt=info.name+' · 游戏内外形';}else portrait.removeAttribute('src');card.querySelector('strong').textContent=item.title;card.querySelector('span').textContent=item.text;card.hidden=false;encounterTime=info?8:5;}
 function introduce(key,title,text){if(introduced.has(key))return;introduced.add(key);introductions.push({key,title,text});if(!encounterTime)showNextIntroduction();}
 function introduceEnemy(kind){const info=ENEMY_GUIDE[kind];if(info)introduce('enemy:'+kind,'新物种 · '+info.name,info.traits+' 攻击：'+info.attack+'。应对：'+info.tip);}
 function introduceCircle(kind,title,text){introduce('circle:'+kind,title,text);}
@@ -142,7 +142,7 @@ function resume(){state='playing';$('#dialog').close();keys.clear();releaseStick
 function menu(){renderChoices();sound.stopWeapons();sound.stopCreatures();state='menu';$('#dialog').close();$('#menu').hidden=false;$('#hud').hidden=true;$('#touch').hidden=true;$('#encounter').hidden=true;introductions.length=0;encounterTime=0;document.body.classList.remove('playing');keys.clear();releaseStick();clearAttack();build();}
 $('#pause').onclick=pause;$('#dialog').addEventListener('cancel',e=>{e.preventDefault();if(state==='paused')resume();});
 $('#battle-guide').onclick=()=>{const playing=state==='playing';if(!playing&&state!=='menu')return;if(playing){sound.stopWeapons();sound.stopCreatures();state='paused';keys.clear();releaseStick();clearAttack();}dialog('战场说明','图片使用实战模型；首领实际体型更大。新物种首次出现时也会显示对应图片和介绍。',[[playing?'继续远征':'返回准备',playing?resume:()=>$('#dialog').close()]]);
- const panel=document.createElement('section');panel.className='guide-content';const renderGuide=selected=>{const id=selected==='confluence'?localBiome():selected;panel.innerHTML=(selected==='confluence'?'<h3>五境大远征</h3><p>'+CONFLUENCE_TEXT+'</p>':'')+'<div class=guide-biomes>'+Object.entries(MAPS).map(([key,m])=>`<button data-guide-map="${key}" aria-pressed="${key===selected}">${m.name}</button>`).join('')+'</div><h3>怪物图鉴 · 图片与实战一致</h3><small>图片按展示空间缩放，首领在实战中远大于普通怪物。</small>'+Object.values(MAP_ROSTERS[id]).map(kind=>{const info=ENEMY_GUIDE[kind];return `<article class=enemy-entry data-enemy="${kind}"><img src="${info.image}?v=91" alt="${info.name}的游戏模型" width=112 height=112><div><h4>${info.name}${kind===MAP_ROSTERS[id].boss?'<small>首领</small>':''}</h4><dl><dt>识别与特点</dt><dd>${info.traits}</dd><dt>攻击方式</dt><dd>${info.attack}</dd><dt>应对方法</dt><dd>${info.tip}</dd></dl></div></article>`;}).join('')+'<h3>地形互动</h3><p>幽潮遗港由曲折水湾、支流与干燥岛地组成，水湾朝向和岸线每局会有变化；仓储码头、沉船岸与古灯塔分布在不同方向。长短栈桥供涨潮时绕行，退潮浅滩提供另一条近路。每 28 秒涨落一次潮水：涨潮前提前 3 秒提示，潮水扩大；栈桥上不受水阻，潮行者涉水移速至少 72%。修复灯塔需清除守卫，并在退潮时累计停留 8 秒。青色水爆会伤害并减速，预告后侧移。</p><p>幽林与雪地有蓝绿色水池，小地图同色标出。浅水涉行、深水划水；越深越慢，池心移速约为陆地 48%。地面怪物也减速，重型怪物水阻较小，浮霜晶核不受水阻。游侠水中闪避变成短距离划水，瞬移仍可穿越水池；水中可继续攻击，没有溺水惩罚。赤烬荒原保留地火与灰烬地形。</p><h3>地图专属事件</h3>'+Object.values(MAP_EVENTS).map(e=>'<p><b>'+e.name+'</b><br>'+e.tip+'</p>').join('')+'<p>开局不标出全部事件。先沿附近小径探索，走到约 16 米内才会发现可用地点，并将名称记在小地图上；已发现的地点不会因离开而消失。技能事件约半分钟后出现，伏击约一分钟后出现，远处祭坛约一分半后出现，具体时间每局略有变化。靠近已发现事件会显示玩法和实时进度。事件完成后仍需靠近中心领取原有技能或治疗奖励；撤退保留已完成进度，暂停时事件与危险一起暂停。</p><h3>利用地形战斗</h3><p>'+TERRAIN_TIPS[id]+'</p><h3>随机小遭遇</h3><p>金色宝袋标出携宝猎物：靠近 8 米或先命中后开始追击，18 秒内击败，再靠近掉落的宝袋领取 30 经验。它不会攻击，也可以不追。补给营地靠近 6 米才惊动三名守卫；清理后靠近领取 40 经验和 18% 治疗。营地有不同守卫组合，可绕行离开，奖励每局一次。首领出现后不再触发新遭遇。</p><h3>沿途小发现 · '+MAPS[id].name+'</h3><p><b>'+SMALL_FINDS[id].name+'</b> · +'+SMALL_FINDS[id].xp+' 经验'+(SMALL_FINDS[id].heal?' / 恢复 '+Math.round(SMALL_FINDS[id].heal*100)+'% 生命':'')+'<br>'+SMALL_FINDS[id].tip+'</p><p>独立地图每局五处，约 10 / 45 / 80 / 115 / 150 秒后可发现；五境大远征每区保留三处；进入附近 9 米才会显露。浅黄色小方点是已发现且未领取的小补给，靠近会提示做法。奖励每处只能领取一次，领取后保留景物；附近有敌人时暂停采集，不需要额外按键。</p><h3>探索与遗物</h3><p>独立地图约 192 × 192，五境大远征约 280 × 280。出生区域附近仍有遗物遗迹，外围还会逐步出现补给和技能祭坛，发现后才显示小地图标记。</p><p>地图金色“遗物”标记是一处随机位置的遗迹。靠近唤醒四名守卫，清理后从三件遗物中选择一件；选择时战斗暂停，不消耗升级。遗物只在本局生效，发现记录保留在远征手册。武器每次发射算一次攻击，霰弹与多枚飞镖不重复计数；点击技能栏的遗物可查看具体效果。</p><h3>战斗节奏与经验</h3><p>精锐围猎有 5 秒预告；金色晶冠标出领队。狼群绕两侧，重甲正面推进，远程怪借它掩护。清理整队获得额外经验与 8% 治疗，随后有短暂喘息。林地会交替出现岩甲护送与獠牙穿插小队；首次清队可选择追猎纹章或林卫护符，仅本局生效。喘息期暂停增援，已有怪物仍会攻击。</p><p>越后期的怪物掉落越多经验。灵光靠近即拾取；附近灵光停留 12 秒、远处灵光停留 24 秒后自动回收，喘息时统一回收。手动和自动攻击使用相同经验与怪物强度。</p><h3>地面提示代表什么</h3>'+CIRCLE_GUIDE.map(info=>`<p><b>${info.color} · ${info.name}</b><br><small>${info.meaning}</small></p>`).join('')+'<h3>素材鸣谢</h3><p>铃芽的头部改编自 <a href="https://studio.blender.org/characters/rain/v3/" target="_blank" rel="noopener">Rain Rig (CC) Blender Foundation | studio.blender.org</a>，按 <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">CC BY 4.0</a> 使用。调整了比例、五官、肤色、眨眼和骨骼适配。服装与基础动作来自 Quaternius（CC0）。<a href="THIRD_PARTY_ASSETS.md" target="_blank" rel="noopener">完整素材说明</a></p>';};renderGuide(mapId);panel.onclick=e=>{const id=e.target.closest('[data-guide-map]')?.dataset.guideMap;if(MAPS[id])renderGuide(id);};$('#dialog-content').insertBefore(panel,$('#dialog-content .dialog-actions'));};
+ const panel=document.createElement('section');panel.className='guide-content';const renderGuide=selected=>{const id=selected==='confluence'?localBiome():selected;panel.innerHTML=(selected==='confluence'?'<h3>五境大远征</h3><p>'+CONFLUENCE_TEXT+'</p>':'')+'<div class=guide-biomes>'+Object.entries(MAPS).map(([key,m])=>`<button data-guide-map="${key}" aria-pressed="${key===selected}">${m.name}</button>`).join('')+'</div><h3>怪物图鉴 · 图片与实战一致</h3><small>图片按展示空间缩放，首领在实战中远大于普通怪物。</small>'+Object.values(MAP_ROSTERS[id]).map(kind=>{const info=ENEMY_GUIDE[kind];return `<article class=enemy-entry data-enemy="${kind}"><img src="${info.image}?v=92" alt="${info.name}的游戏模型" width=112 height=112><div><h4>${info.name}${kind===MAP_ROSTERS[id].boss?'<small>首领</small>':''}</h4><dl><dt>识别与特点</dt><dd>${info.traits}</dd><dt>攻击方式</dt><dd>${info.attack}</dd><dt>应对方法</dt><dd>${info.tip}</dd></dl></div></article>`;}).join('')+'<h3>地形互动</h3><p>幽潮遗港由曲折水湾、支流与干燥岛地组成，水湾朝向和岸线每局会有变化；仓储码头、沉船岸与古灯塔分布在不同方向。长短栈桥供涨潮时绕行，退潮浅滩提供另一条近路。每 28 秒涨落一次潮水：涨潮前提前 3 秒提示，潮水扩大；栈桥上不受水阻，潮行者涉水移速至少 72%。修复灯塔需清除守卫，并在退潮时累计停留 8 秒。青色水爆会伤害并减速，预告后侧移。</p><p>幽林与雪地有蓝绿色水池，小地图同色标出。浅水涉行、深水划水；越深越慢，池心移速约为陆地 48%。地面怪物也减速，重型怪物水阻较小，浮霜晶核不受水阻。游侠水中闪避变成短距离划水，瞬移仍可穿越水池；水中可继续攻击，没有溺水惩罚。赤烬荒原保留地火与灰烬地形。</p><h3>地图专属事件</h3>'+Object.values(MAP_EVENTS).map(e=>'<p><b>'+e.name+'</b><br>'+e.tip+'</p>').join('')+'<p>开局不标出全部事件。先沿附近小径探索，走到约 16 米内才会发现可用地点，并将名称记在小地图上；已发现的地点不会因离开而消失。技能事件约半分钟后出现，伏击约一分钟后出现，远处祭坛约一分半后出现，具体时间每局略有变化。靠近已发现事件会显示玩法和实时进度。事件完成后仍需靠近中心领取原有技能或治疗奖励；撤退保留已完成进度，暂停时事件与危险一起暂停。</p><h3>利用地形战斗</h3><p>'+TERRAIN_TIPS[id]+'</p><h3>随机小遭遇</h3><p>金色宝袋标出携宝猎物：靠近 8 米或先命中后开始追击，18 秒内击败，再靠近掉落的宝袋领取 30 经验。它不会攻击，也可以不追。补给营地靠近 6 米才惊动三名守卫；清理后靠近领取 40 经验和 18% 治疗。营地有不同守卫组合，可绕行离开，奖励每局一次。首领出现后不再触发新遭遇。</p><h3>沿途小发现 · '+MAPS[id].name+'</h3><p><b>'+SMALL_FINDS[id].name+'</b> · +'+SMALL_FINDS[id].xp+' 经验'+(SMALL_FINDS[id].heal?' / 恢复 '+Math.round(SMALL_FINDS[id].heal*100)+'% 生命':'')+'<br>'+SMALL_FINDS[id].tip+'</p><p>独立地图每局五处，约 10 / 45 / 80 / 115 / 150 秒后可发现；五境大远征每区保留三处；进入附近 9 米才会显露。浅黄色小方点是已发现且未领取的小补给，靠近会提示做法。奖励每处只能领取一次，领取后保留景物；附近有敌人时暂停采集，不需要额外按键。</p><h3>探索与遗物</h3><p>独立地图约 192 × 192，五境大远征约 280 × 280。出生区域附近仍有遗物遗迹，外围还会逐步出现补给和技能祭坛，发现后才显示小地图标记。</p><p>地图金色“遗物”标记是一处随机位置的遗迹。靠近唤醒四名守卫，清理后从三件遗物中选择一件；选择时战斗暂停，不消耗升级。遗物只在本局生效，发现记录保留在远征手册。武器每次发射算一次攻击，霰弹与多枚飞镖不重复计数；点击技能栏的遗物可查看具体效果。</p><h3>战斗节奏与经验</h3><p>精锐围猎有 5 秒预告；金色晶冠标出领队。狼群绕两侧，重甲正面推进，远程怪借它掩护。清理整队获得额外经验与 8% 治疗，随后有短暂喘息。林地会交替出现岩甲护送与獠牙穿插小队；首次清队可选择追猎纹章或林卫护符，仅本局生效。喘息期暂停增援，已有怪物仍会攻击。</p><p>越后期的怪物掉落越多经验。灵光靠近即拾取；附近灵光停留 12 秒、远处灵光停留 24 秒后自动回收，喘息时统一回收。手动和自动攻击使用相同经验与怪物强度。</p><h3>地面提示代表什么</h3>'+CIRCLE_GUIDE.map(info=>`<p><b>${info.color} · ${info.name}</b><br><small>${info.meaning}</small></p>`).join('')+'<h3>素材鸣谢</h3><p>铃芽的头部改编自 <a href="https://studio.blender.org/characters/rain/v3/" target="_blank" rel="noopener">Rain Rig (CC) Blender Foundation | studio.blender.org</a>，按 <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">CC BY 4.0</a> 使用。调整了比例、五官、肤色、眨眼和骨骼适配。服装与基础动作来自 Quaternius（CC0）。<a href="THIRD_PARTY_ASSETS.md" target="_blank" rel="noopener">完整素材说明</a></p>';};renderGuide(mapId);panel.onclick=e=>{const id=e.target.closest('[data-guide-map]')?.dataset.guideMap;if(MAPS[id])renderGuide(id);};$('#dialog-content').insertBefore(panel,$('#dialog-content .dialog-actions'));};
 $('#sound').onclick=()=>{if(sound.ctx?.state==='running')sound.setMuted(!sound.muted);else sound.setMuted(false);unlockAudio();syncAudioUI();};
 function upgrade(){if(player.pending<=0||state!=='playing')return;state='upgrade';keys.clear();releaseStick();clearAttack();
  const opening=!player.upgradeDraft,openingKey='forest-echoes-opening:'+heroId+':'+player.weaponId;
@@ -356,7 +356,7 @@ function addZone(x,z,r,delay,damage,kind='poison',source=null){const color=kind=
 function enemyTarget(e,dt){const focus=observePlayer(e,player,dt,mirage.decoy),p=companion;if(e.reacquired)e.cool=Math.max(e.cool,.35);if(!p?.alive||!['mushroom','wolf','golem'].includes(e.role))return focus;const pd=Math.hypot(p.x-e.x,p.z-e.z),hd=Math.hypot(focus.x-e.x,focus.z-e.z);if(pd<3.5&&(e.targetLost||pd<hd*.8)&&!world.obstacles.some(o=>segmentDistance(o.x,o.z,e.x,e.z,p.x,p.z)<o.r+.1)){e.targetLost=false;return p;}return focus;}
 function enemyWindup(e,a,target=player){
  const lead=e.role==='spitter'?.28:0,vx=target.vx||0,vz=target.vz||0,scale=Math.min(lead,1.4/(Math.hypot(vx,vz)||1));e.tx=target.x+vx*scale;e.tz=target.z+vz*scale;e.attackAngle=a;e.attackMode=e.kind==='snowtotem'?'hex':e.kind==='ashseer'?(enemies.some(q=>q!==e&&q.alive&&Math.hypot(q.x-e.x,q.z-e.z)<6)?'rally':'hex'):e.role==='shaman'&&enemies.some(q=>q.alive&&q.hp<q.maxHp*.8&&Math.hypot(q.x-e.x,q.z-e.z)<6)?'heal':'hex';
- e.wind=ENEMY_MOTION[e.kind].wind;enemySound(e,'wind');
+ e.pounceMissed=false;e.wind=ENEMY_MOTION[e.kind].wind;enemySound(e,'wind');
  const atSelf=e.role==='golem'||e.role==='shaman'&&['heal','rally'].includes(e.attackMode),x=atSelf?e.x:e.tx,z=atSelf?e.z:e.tz,r=e.role==='golem'?2.4:e.role==='spitter'?2:e.role==='shaman'?['heal','rally'].includes(e.attackMode)?3:1.3:e.role==='wolf'?1.05:.85;
  const color=REGIONAL_ENEMIES[e.kind]?.map==='snow'?0x9ddeef:REGIONAL_ENEMIES[e.kind]?.map==='ash'?0xffa16c:e.role==='spitter'?0xd7a3e6:e.role==='shaman'?0x84dfb0:0xffad70;
  const healing=e.role==='shaman'&&['heal','rally'].includes(e.attackMode);if(healing)vfx.rise(x,z,e.attackMode==='rally'?0xf7a25d:0x89ddb3,1);const marker=healing?null:effect(e.role==='mushroom'||e.role==='wolf'?'target':'cue',x,z,color,r);if(marker?.userData.groundCue==='pounce')marker.rotation.z=a;if(marker){const entry=effects.at(-1);entry.life=entry.max=e.wind+.12;entry.telegraph=true;e.marker=entry;}
@@ -381,7 +381,19 @@ function finishEnemyWindup(e){enemySound(e,'attack');if(['spitter','shaman'].inc
 }
 // The ease offset returns to zero at landing, preserving total travel even when frame times vary.
 function lungeEase(p){return .25*p+1.2/Math.PI*(1-Math.cos(Math.PI*p));}
-function enemyPounce(e,dt){const ox=e.x,oz=e.z,base=e.role==='wolf'?14:10,duration=e.pounceDuration,from=T.MathUtils.clamp(1-e.pounce/duration,0,1),to=Math.min(1,from+dt/duration);const step=terrainAt(world,e.x,e.z,e.kind).speed*base*(dt+duration*((lungeEase(to)-lungeEase(from))/lungeEase(1)-(to-from)));moveActor(world,e,Math.sin(e.attackAngle)*step,Math.cos(e.attackAngle)*step,e.size*.6);e.pounce=Math.max(0,e.pounce-dt);if(mirage.decoy?.alive&&e.hitDecoy!==mirage.decoy.id&&segmentDistance(mirage.decoy.x,mirage.decoy.z,ox,oz,e.x,e.z)<e.size+.5){e.hitDecoy=mirage.decoy.id;mirage.damageDecoy(e.damage);}if(!e.hitPet&&companion?.alive&&segmentDistance(companion.x,companion.z,ox,oz,e.x,e.z)<e.size+.3){companion.takeDamage(e.damage);e.hitPet=true;}if(!e.hit&&segmentDistance(player.x,player.z,ox,oz,e.x,e.z)<e.size+.5){const canHit=player.inv<=0&&!mirage.hidden;hitPlayer(e.damage,e.x,e.z);if(canHit&&e.hitSlow)player.hexSlow=Math.max(player.hexSlow,e.hitSlow);e.hit=true;}if(e.pounce<=0){enemySound(e,'impact');if(e.kind==='emberling')addZone(e.x,e.z,.85,.25,6,'ember',e.kind);e.landRecover=ENEMY_MOTION[e.kind].recover;impactChips(e.x,e.z,e.role==='wolf'?0xb8c6d4:0xe0b38a,3);}return Math.hypot(e.x-ox,e.z-oz)/Math.max(dt,.001);}
+function enemyPounce(e,dt){const ox=e.x,oz=e.z,base=e.role==='wolf'?14:10,duration=e.pounceDuration,from=T.MathUtils.clamp(1-e.pounce/duration,0,1),to=Math.min(1,from+dt/duration);const step=terrainAt(world,e.x,e.z,e.kind).speed*base*(dt+duration*((lungeEase(to)-lungeEase(from))/lungeEase(1)-(to-from)));moveActor(world,e,Math.sin(e.attackAngle)*step,Math.cos(e.attackAngle)*step,e.size*.6);e.pounce=Math.max(0,e.pounce-dt);if(mirage.decoy?.alive&&e.hitDecoy!==mirage.decoy.id&&segmentDistance(mirage.decoy.x,mirage.decoy.z,ox,oz,e.x,e.z)<e.size+.5){e.hitDecoy=mirage.decoy.id;mirage.damageDecoy(e.damage);}if(!e.hitPet&&companion?.alive&&segmentDistance(companion.x,companion.z,ox,oz,e.x,e.z)<e.size+.3){companion.takeDamage(e.damage);e.hitPet=true;}if(!e.hit&&segmentDistance(player.x,player.z,ox,oz,e.x,e.z)<e.size+.5){const canHit=player.inv<=0&&!mirage.hidden;hitPlayer(e.damage,e.x,e.z);if(canHit&&e.hitSlow)player.hexSlow=Math.max(player.hexSlow,e.hitSlow);e.hit=true;}if(e.pounce<=0){e.pounceMissed=!e.hit&&!e.hitPet&&!e.hitDecoy;if(e.mesh.userData.appearance&&['wolf','mushroom'].includes(e.kind))e.landed=true;else enemySound(e,'impact');if(e.kind==='emberling')addZone(e.x,e.z,.85,.25,6,'ember',e.kind);e.landRecover=ENEMY_MOTION[e.kind].recover;if(!e.landed)impactChips(e.x,e.z,e.role==='wolf'?0xb8c6d4:0xe0b38a,3);}return Math.hypot(e.x-ox,e.z-oz)/Math.max(dt,.001);}
+// Footfall feedback is emitted after the pose solve, from its contacting feet.
+function enemyFootfall(e,mask,landing=false){
+ const distance=Math.hypot(e.x-player.x,e.z-player.z);if(distance>14)return;
+ enemySound(e,landing?'impact':'step');if(distance>11||e.waterDepth>0)return;
+ const d=e.mesh.userData,color=localBiome(e.x,e.z)==='snow'?0xd6e4e4:localBiome(e.x,e.z)==='ash'?0x977568:localBiome(e.x,e.z)==='sand'?0xb9a481:0x938b69;
+ e.mesh.updateMatrixWorld(true);
+ const feet=d.kind==='wolf'?d.legs.map(leg=>leg.paw):d.feet;
+ for(let i=0;i<feet.length;i++)if(mask&(1<<i)){
+  feet[i].getWorldPosition(temp);
+  vfx.particle('smoke',color,temp.x,.08,temp.z,{life:landing?.26:.17,size:[landing?.16:.09,.045,landing?.14:.07],velocity:[-Math.sin(e.mesh.rotation.y)*.12,.09,-Math.cos(e.mesh.rotation.y)*.12],opacity:landing?.23:.14,additive:false});
+ }
+}
 function updateWaterActor(p,model,dt,speed,isPlayer=false){
  const terrain=terrainAt(world,p.x,p.z,isPlayer?'hero':p.kind),before=p.waterDepth||0;p.waterDepth=terrain.depth;model.userData.waterDepth=terrain.depth;model.userData.waterFloating=terrain.floating;
  if(isPlayer&&terrain.depth>0&&before===0)introduce('terrain:water','浅水涉行，深水游泳','越靠近池心，行动越慢；岸边逐渐恢复。地面怪物同样受水阻，浮霜晶核可掠过水面。游侠在水中短距离划水，霜影和影裔仍可瞬移。');
@@ -404,7 +416,7 @@ function playerWaterFX(dt,speed){
  const strength=speed>.15?.60:.28;
  vfx.water(temp.x,temp.z,hero.rotation.y,strength);player.waterFX=.22;if(speed>.15)sound.water(true);
 }
-function updateEnemies(dt){for(const e of enemies){if(!e.alive)continue;updateStatus(e,dt);if(!e.alive)continue;e.cool-=dt;e.rage=Math.max(0,(e.rage||0)-dt);e.hurt=Math.max(0,e.hurt-dt);e.slow=Math.max(0,e.slow-dt);e.stagger=Math.max(0,(e.stagger||0)-dt);const focus=enemyTarget(e,dt),startX=e.x,startZ=e.z,dx=focus.x-e.x,dz=focus.z-e.z,d=Math.hypot(dx,dz),a=Math.atan2(dx,dz);let moving=0;
+function updateEnemies(dt){for(const e of enemies){if(!e.alive)continue;updateStatus(e,dt);if(!e.alive)continue;e.cool-=dt;e.rage=Math.max(0,(e.rage||0)-dt);e.hurt=Math.max(0,e.hurt-dt);e.slow=Math.max(0,e.slow-dt);e.stagger=Math.max(0,(e.stagger||0)-dt);const focus=enemyTarget(e,dt),startX=e.x,startZ=e.z,dx=focus.x-e.x,dz=focus.z-e.z,d=Math.hypot(dx,dz),a=Math.atan2(dx,dz),groundedFeet=e.mesh.userData.appearance&&['wolf','mushroom'].includes(e.kind);let moving=0;
  if(e.courier){const v=courierDirection(e,focus,time);if(v&&e.stagger<=0){const step=e.speed*(e.slow>0?.45:1)*terrainAt(world,e.x,e.z,e.kind).speed*dt;walkActor(e,v.x*step,v.z*step,dt,e.size*.6);if(Math.hypot(e.x-startX,e.z-startZ)<step*.25)for(const turn of[1.2,-1.2,2.2,-2.2]){const a=Math.atan2(v.x,v.z)+turn;if(clearAt(world,e.x+Math.sin(a)*step*3,e.z+Math.cos(a)*step*3,e.size*.6)){moveActor(world,e,Math.sin(a)*step,Math.cos(a)*step,e.size*.6);break;}}moving=Math.hypot(e.x-startX,e.z-startZ)/dt;e.gait=(e.gait||0)+dt*ENEMY_MOTION[e.kind].cadence;}}
  else if(e.stagger>0){e.mesh.userData.cancelled=true;e.wind=0;e.pounce=0;if(e.marker){e.marker.life=0;e.marker=null;}e.cool=Math.max(e.cool,.3);}
  else if(e.pounce>0)moving=enemyPounce(e,dt);
@@ -415,11 +427,16 @@ function updateEnemies(dt){for(const e of enemies){if(!e.alive)continue;updateSt
  else{const target=e.targetLost?focus:enemyApproach(e,focus,enemies,visibleCombatPoint(e.x,e.z)),tx=target.x,tz=target.z,avoid=separation(e,enemies);let ta=Math.atan2(tx-e.x,tz-e.z);ta=Math.atan2(Math.sin(ta)+avoid.x,Math.cos(ta)+avoid.z);if(e.kind==='mushroom')ta+=Math.sin(time*3+e.id)*.1;if(e.kind==='snowhare')ta+=Math.sin(time*1.3+e.id)*.34;if(e.kind==='emberling')ta+=Math.sin(time*4+e.id)*.22;
  e.gait=(e.gait||0)+dt*ENEMY_MOTION[e.kind].cadence*(e.slow>0?.65:1);const speed=e.speed*(e.rage>0?1.35:1)*(e.slow>0?.45:1)*(terrainAt(world,e.x,e.z,e.kind).speed)*gaitPace(e.kind,e.gait),step=speed*dt;if(Math.hypot(tx-e.x,tz-e.z)>.4){const ox=e.x,oz=e.z;walkActor(e,Math.sin(ta)*step,Math.cos(ta)*step,dt,e.size*.6);if(Math.hypot(e.x-ox,e.z-oz)<step*.2)moveActor(world,e,Math.sin(ta+1.3)*step,Math.cos(ta+1.3)*step,e.size*.6);moving=Math.hypot(e.x-ox,e.z-oz)/Math.max(dt,.001);}}
  if(moving===0&&onIce(world,e.x,e.z)){walkActor(e,0,0,dt,e.size*.6);moving=Math.hypot(e.x-startX,e.z-startZ)/dt;}
- if(moving>.7&&terrainAt(world,e.x,e.z,e.kind).depth===0){const hover=['spitter','shaman'].includes(e.role),beat=Math.floor((e.gait||0)/(hover?Math.PI*3:Math.PI));if(beat!==e.soundStep){e.soundStep=beat;enemySound(e,'step');}}
- if(moving>.7&&d<13&&terrainAt(world,e.x,e.z,e.kind).depth===0&&!['spitter','shaman'].includes(e.role)){e.stepFX=(e.stepFX||0)-dt;if(e.stepFX<=0){e.stepFX=e.role==='golem'?.34:.23;vfx.particle('smoke',localBiome(e.x,e.z)==='snow'?0xe0f4f8:localBiome(e.x,e.z)==='ash'?0xbb7963:localBiome(e.x,e.z)==='sand'?0xc3b28b:0x95a77b,e.x,.13,e.z,{life:.3,size:[e.size*.28,.07,e.size*.28],velocity:[0,.15,0],opacity:.4,additive:false});}}
- const facing=e.wind>0||e.pounce>0?e.attackAngle:e.targetLost?(moving>.2?Math.atan2(e.x-startX,e.z-startZ):e.searchHeading+Math.sin(e.searchTime*2)*.4):['spitter','shaman'].includes(e.role)?a:moving>.2?Math.atan2(e.x-startX,e.z-startZ):a,diff=Math.atan2(Math.sin(facing-e.mesh.rotation.y),Math.cos(facing-e.mesh.rotation.y));e.mesh.rotation.y+=T.MathUtils.clamp(diff*dt*8,-dt*6,dt*6);
+ if(!groundedFeet&&moving>.7&&terrainAt(world,e.x,e.z,e.kind).depth===0){const hover=['spitter','shaman'].includes(e.role),beat=Math.floor((e.gait||0)/(hover?Math.PI*3:Math.PI));if(beat!==e.soundStep){e.soundStep=beat;enemySound(e,'step');}}
+ if(!groundedFeet&&moving>.7&&d<13&&terrainAt(world,e.x,e.z,e.kind).depth===0&&!['spitter','shaman'].includes(e.role)){e.stepFX=(e.stepFX||0)-dt;if(e.stepFX<=0){e.stepFX=e.role==='golem'?.34:.23;vfx.particle('smoke',localBiome(e.x,e.z)==='snow'?0xe0f4f8:localBiome(e.x,e.z)==='ash'?0xbb7963:localBiome(e.x,e.z)==='sand'?0xc3b28b:0x95a77b,e.x,.13,e.z,{life:.3,size:[e.size*.28,.07,e.size*.28],velocity:[0,.15,0],opacity:.4,additive:false});}}
+ const facing=e.wind>0||e.pounce>0?e.attackAngle:e.targetLost?(moving>.2?Math.atan2(e.x-startX,e.z-startZ):e.searchHeading+Math.sin(e.searchTime*2)*.4):['spitter','shaman'].includes(e.role)?a:moving>.2?Math.atan2(e.x-startX,e.z-startZ):a,diff=Math.atan2(Math.sin(facing-e.mesh.rotation.y),Math.cos(facing-e.mesh.rotation.y));const turn=T.MathUtils.clamp(diff*dt*8,-dt*6,dt*6);e.mesh.rotation.y+=turn;
  if(e.rage>0){e.rageFX=(e.rageFX||0)-dt;if(e.rageFX<=0){e.rageFX=.3;vfx.particle('ember',0xf4a25e,e.x,.2,e.z,{life:.3,size:[.055,.08,.055],velocity:[0,.8,0]});}}
- e.mesh.userData.walkPhase=e.gait||0;e.mesh.userData.pounce=e.pounce>0?e.pounce/e.pounceDuration:0;e.mesh.userData.attackMode=e.attackMode;e.mesh.position.set(e.x,0,e.z);updateWaterActor(e,e.mesh,dt,moving);animateActor(e.mesh,time+e.id,moving,e.wind,e.hurt);
+ const pose=e.mesh.userData;pose.walkPhase=e.gait||0;pose.pounce=e.pounce>0?e.pounce/e.pounceDuration:0;pose.attackMode=e.attackMode;pose.turnRate=dt>0?turn/dt:0;pose.lookTurn=Math.atan2(Math.sin(facing-e.mesh.rotation.y),Math.cos(facing-e.mesh.rotation.y));pose.landRecover=e.landRecover||0;pose.pounceMissed=!!e.pounceMissed;
+ e.mesh.position.set(e.x,0,e.z);updateWaterActor(e,e.mesh,dt,moving);
+ const walking=moving>.05&&e.wind<=0&&!(e.pounce>0||e.landRecover>0||e.recovery>0||e.stagger>0)&&e.waterDepth<.42;
+ const contact=advanceEnemyLocomotion(pose,dt,Math.hypot(e.x-startX,e.z-startZ),walking);
+ animateActor(e.mesh,time+e.id,moving,e.wind,e.hurt);
+ if(e.landed){enemyFootfall(e,e.kind==='wolf'?15:3,true);e.landed=false;}else if(contact&&!e.waterDepth)enemyFootfall(e,contact);
  }enemies=enemies.filter(e=>e.alive);}
 function spawnBoss(region=localBiome()){const start=Math.random()*Math.PI*2;let spot=null;for(const radius of [14,17,11,20,8,23]){for(let i=0;i<24;i++){const a=start+i*Math.PI/12,x=T.MathUtils.clamp(player.x+Math.sin(a)*radius,-mapHalf()+2.1,mapHalf()-2.1),z=T.MathUtils.clamp(player.z+Math.cos(a)*radius,-mapHalf()+2.1,mapHalf()-2.1);if(clearAt(world,x,z,2)){spot={x,z};break;}}if(spot)break;}if(!spot)return;bossBorn=true;const kind=regionalEnemy(region,'boss'),m=actor(kind),health=world.regions?1400+350*world.regions.filter(r=>r.cleared).length:1900;boss={...spot,biome:region,boss:true,hp:health,maxHp:health,size:2,alive:true,mesh:m,cool:3,wind:0,recover:0,kind,phase:1,turn:0};m.position.set(boss.x,0,boss.z);scene.add(m);introduceEnemy(kind);toast(ENEMY_GUIDE[kind].name+'苏醒 · 躲开蓄力，抓住破绽');if(region==='coast')vfx.water(boss.x,boss.z,0,4);else burst(region==='snow'?'ice':'fire',boss.x,boss.z,4);sound.threat('boss');enemySound(boss,'wind');}
 function updateBoss(dt){if(!boss?.alive)return;const b=boss;updateStatus(b,dt);if(!b.alive)return;

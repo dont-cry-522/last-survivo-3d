@@ -1,0 +1,8 @@
+<!doctype html><html lang="zh-CN"><meta charset="utf-8"><title>怪物实际步行与扑击回归</title>
+<style>body{margin:18px;background:#18231f;color:#e4e9df;font:15px system-ui}h1{font-size:23px}button,select{padding:9px;margin:4px}pre{max-height:350px;overflow:auto;white-space:pre-wrap;background:#111a16;padding:12px}#view iframe{width:1280px;height:720px;border:0;position:absolute;left:-1400px;top:0}#capture{max-width:100%;width:1280px;display:block}#status{color:#cbd6af}</style>
+<h1>真实游戏：怪物落脚、转向与扑击</h1>
+<p>固定种子、隔离存档、冻结游戏自动帧。测试调用现有游戏循环；只在测试场地移除障碍、奖励点及无关敌人，声音静音但记录脚步触发。浏览器尺寸模拟不代表安卓真机结果。</p>
+<button id="run">运行完整回归</button><select id="kind"><option value="wolf">狼</option><option value="mushroom">蘑菇</option></select>
+<button data-stage="wind">查看蓄势</button><button data-stage="takeoff">查看起跳</button><button data-stage="air">查看腾空</button><button data-stage="landing">查看落地承重</button><button data-stage="recover">查看收招</button>
+<p id="status">等待开始</p><pre id="report">等待开始</pre><img id="capture" alt="真实游戏动作截帧"><div id="view"></div>
+<script type="module" src="./enemy-grounding-check.js"></script></html>

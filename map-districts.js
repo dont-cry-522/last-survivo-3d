@@ -1,6 +1,6 @@
 import * as T from './vendor/three.module.js';
-import{MAP_HALF}from'./map-layout.js?v=91';
-import{bridgeContains}from'./coast.js?v=91';
+import{MAP_HALF}from'./map-layout.js?v=92';
+import{bridgeContains}from'./coast.js?v=92';
 const slabGeometry=new T.BoxGeometry(1,1,1),slabMaterials={sand:new T.MeshStandardMaterial({color:0xb3a184,roughness:1}),coast:new T.MeshStandardMaterial({color:0x697f76,roughness:1}),wood:new T.MeshStandardMaterial({color:0x8a7a60,roughness:1})};
 // Districts leave a broad open center; solid pieces have matching collision footprints.
 export function districtLayout(id,spawn){const scale=MAP_HALF/82;return id==='sand'?[{x:spawn.x+12,z:spawn.z+1,kind:'gate'},...[[-34,-31],[34,29],[42,-33],[-35,36],[12,57]].map(([x,z])=>({x:x*scale,z:z*scale,kind:'court'}))]:id==='coast'?[{x:-16,z:-9,kind:'warehouse'},{x:24,z:29,kind:'warehouse'},{x:-16,z:42,kind:'wreck'}]:[];}

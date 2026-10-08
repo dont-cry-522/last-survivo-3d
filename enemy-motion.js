@@ -1,4 +1,4 @@
-import{updateEnemyGrip}from'./enemy-appearance.js?v=91';
+import{updateEnemyGrip}from'./enemy-appearance.js?v=92';
 // Attack timings are shared with the pose driver so the strike matches its hit.
 export const ENEMY_MOTION={
  foamling:{wind:.55,recover:.25,cadence:9,range:2.1},tidecrab:{wind:.7,recover:.35,cadence:10,range:3.1},reefturtle:{wind:1.1,recover:.6,cadence:4,range:4},jellyseer:{wind:.85,recover:.4,cadence:4,range:12},tidestar:{wind:.9,recover:.45,cadence:4,range:11},wreckwarden:{wind:1.25,recover:1.7,cadence:4},
@@ -16,39 +16,83 @@ export function gaitPace(kind,phase){
  return 1;
 }
 const smooth=x=>{x=Math.max(0,Math.min(1,x));return x*x*(3-2*x);};
+// Presentation only: e.gait remains the AI's clock. Return one bounded contact
+// mask per frame for the caller's existing footstep sound/ground effects.
+export function advanceEnemyLocomotion(d,dt,distance,walking){
+ if(!(dt>0))return 0;
+ const blend=1-Math.exp(-dt*10),turn=Math.max(-1,Math.min(1,(d.turnRate||0)/6)),look=Math.max(-.75,Math.min(.75,d.lookTurn||0));
+ d.motionTurn=(d.motionTurn||0)+(turn-(d.motionTurn||0))*blend;
+ d.motionLook=(d.motionLook||0)+(look-(d.motionLook||0))*blend;
+ d.motionSpeed=walking?Math.max(0,distance)/dt:0;
+ if(!d.appearance||!['wolf','mushroom'].includes(d.kind))return 0;
+ const grounded=walking&&distance>1e-6&&!(d.pounce>0);
+ if(d.kind==='wolf'){d.visualPhase=(d.visualPhase||0)+(grounded?distance*4.5:0);d.walkPhase=d.visualPhase;}
+ const phase=d.walkPhase||0,previous=d.contactPhase;d.contactPhase=phase;
+ if(!grounded||previous===undefined||phase<=previous)return 0;
+ if(d.kind==='wolf'){const beat=Math.floor(phase/Math.PI);return beat>Math.floor(previous/Math.PI)?beat%2?6:9:0;}
+ return Math.floor((phase-Math.PI)/(Math.PI*2))>Math.floor((previous-Math.PI)/(Math.PI*2))?3:0;
+}
+const wolfSoles=new WeakMap();
+function wolfSole(leg){
+ const geometry=leg.knee.children.find(n=>n.name==='wolf-lower-leg').geometry;
+ if(wolfSoles.has(geometry))return wolfSoles.get(geometry);
+ // The existing batch contains two equal-topology ellipsoids: calf and paw.
+ // Cache their support bounds once, rather than visiting vertices each frame.
+ const positions=geometry.attributes.position,parts=[];
+ for(let part=0;part<2;part++){
+  const lo=[Infinity,Infinity,Infinity],hi=[-Infinity,-Infinity,-Infinity];
+  for(let i=part*positions.count/2;i<(part+1)*positions.count/2;i++)for(let axis=0;axis<3;axis++){const v=positions.array[i*3+axis];lo[axis]=Math.min(lo[axis],v);hi[axis]=Math.max(hi[axis],v);}
+  const center=lo.map((v,i)=>(v+hi[i])/2),radius=lo.map((v,i)=>(hi[i]-v)/2*(i===1?1:1/Math.cos(Math.PI/10)));
+  parts.push({center,radius});
+ }
+ wolfSoles.set(geometry,parts);return parts;
+}
 // The paw stays low during the longer support phase, then folds for the return.
-// This is a visual two-bone solve; it never changes the actor's world position.
-function plantPaw(leg,phase,stride,crouch,pounce){
+// Solve for its real batched sole, not the empty ankle marker. Leg lengths and
+// the actor's collision root are unchanged; at most four support corrections.
+function plantPaw(leg,rig,phase,stride,crouch,pounce){
  const u=((phase/(Math.PI*2))%1+1)%1,support=u<.62;
  const swing=support?0:(u-.62)/.38,travel=support?1-2*u/.62:-1+2*smooth(swing);
- const lift=Math.sin(swing*Math.PI)*.085*stride;
- const upper=leg.upperLength,lower=leg.lowerLength,z=travel*.16*stride-crouch*.035+pounce*(leg.joint.position.z>0?.12:-.12);
- const y=upper+lower-.025-lift-crouch*.075-pounce*.045;
- const distance=Math.min(upper+lower-.002,Math.max(.08,Math.hypot(y,z)));
+ const lift=Math.sin(swing*Math.PI)*.13*stride;
+ const upper=leg.upperLength,lower=leg.lowerLength,z=.12+travel*.16*stride+crouch*.065+pounce*(leg.joint.position.z>0?.12:-.12);
+ let y=upper+lower-.025-lift-crouch*.075-pounce*.045;
  const clamp=x=>Math.max(-1,Math.min(1,x));
- const knee=Math.PI-Math.acos(clamp((upper*upper+lower*lower-distance*distance)/(2*upper*lower)));
- const hip=-Math.atan2(z,y)-Math.acos(clamp((upper*upper+distance*distance-lower*lower)/(2*upper*distance)));
+ const rx=Math.cos(rig.rotation.x)*Math.sin(rig.rotation.z),ry=Math.cos(rig.rotation.x)*Math.cos(rig.rotation.z),rz=-Math.sin(rig.rotation.x),sole=wolfSole(leg);
+ let knee,hip;
+ for(let i=0;i<=4;i++){
+  const distance=Math.min(upper+lower-.002,Math.max(.08,Math.hypot(y,z)));
+  knee=Math.PI-Math.acos(clamp((upper*upper+lower*lower-distance*distance)/(2*upper*lower)));
+  hip=-Math.atan2(z,y)-Math.acos(clamp((upper*upper+distance*distance-lower*lower)/(2*upper*distance)));
+  if(i===4)break;
+  const c=Math.cos(hip+knee),s=Math.sin(hip+knee),sy=ry*c+rz*s,sz=-ry*s+rz*c;
+  const origin=rig.position.y+rx*leg.joint.position.x+ry*(leg.restY-upper*Math.cos(hip))+rz*(leg.joint.position.z-upper*Math.sin(hip));
+  let bottom=Infinity;for(const {center:p,radius:r}of sole)bottom=Math.min(bottom,origin+rx*p[0]+sy*p[1]+sz*p[2]-Math.hypot(rx*r[0],sy*r[1],sz*r[2]));
+  if(bottom>=.004)break;y=Math.max(.15,y-(.006-bottom)*1.25);
+ }
  leg.joint.rotation.set(hip,0,0);leg.knee.rotation.set(knee,0,0);leg.paw.rotation.set(-hip-knee,0,0);
 }
 function animateForestEnemy(d,t,stride,phase,gather,drive,impact){
- const rig=d.rig,sway=Math.sin(phase),lag=Math.sin(phase-.55),pounce=d.pounce||0;
+ const rig=d.rig,pounce=d.pounce||0,turn=d.motionTurn||0,look=d.motionLook||0;
+ const leap=d.kind==='wolf'||d.kind==='mushroom',recover=Math.min(1,(d.landRecover||0)/(ENEMY_MOTION[d.kind]?.recover||.18));
+ if(leap){stride*=pounce>0?0:1-recover;drive=Math.max(drive,pounce>0?.8*smooth(pounce/.18):0);}
+ const sway=Math.sin(phase),lag=Math.sin(phase-.55),brake=leap&&d.motionSpeed!==undefined?Math.max(0,stride-Math.min(1,d.motionSpeed/2.5))*(1-gather):0;
  const airborne=pounce>0?Math.sin(pounce*Math.PI):0,breath=Math.sin(t*2.1),settle=d.previousAttack>0?0:Math.sin(Math.PI*drive);
- const landing=Math.sin(Math.PI*(1-(d.landing||0)/.18));
+ const landing=d.landRecover!==undefined?Math.sin(Math.PI*recover):Math.sin(Math.PI*(1-(d.landing||0)/.18)),adjust=d.pounceMissed?landing:0;
  if(d.kind==='mushroom'){
   const hop=Math.max(0,sway)*stride,squash=sway*.075*stride-gather*.14+drive*.04-impact*.1;
-  rig.position.y=hop*.15-gather*.07+airborne*.34-landing*.06;
-  rig.scale.set(1-squash*.45,1+squash,1-squash*.45);rig.rotation.set(gather*.08-drive*.12,0,Math.sin(phase*.5)*.055*stride);
-  d.cap.rotation.set(lag*.085*stride+gather*.19-drive*.26-settle*.035,0,Math.sin(phase-.8)*.085*stride);
-  d.feet?.forEach((foot,i)=>{const step=Math.sin(phase+i*Math.PI);foot.position.y=.12+Math.max(0,-step)*.045*stride;foot.position.z=.1+step*.08*stride;foot.rotation.x=step*.18*stride+gather*.12-drive*.14;});
+  rig.position.y=hop*.15-gather*.07+airborne*.34-landing*.06-brake*.018;
+  rig.scale.set(1-squash*.45,1+squash-landing*.035,1-squash*.45);rig.rotation.set(gather*.08-drive*.12+brake*.035,0,Math.sin(phase*.5)*.055*stride-turn*.035*stride);
+  d.cap.rotation.set(lag*.085*stride+gather*.19-drive*.26-settle*.035-brake*.02,-turn*.08+look*.045,Math.sin(phase-.8)*.085*stride-turn*.035);
+  d.feet?.forEach((foot,i)=>{const step=Math.sin(phase+i*Math.PI);foot.position.y=.12+Math.max(0,-step)*.045*stride+airborne*.035+landing*.065;foot.position.z=.1+step*.08*stride+airborne*.035;foot.rotation.x=step*.18*stride+gather*.12-drive*.14+airborne*.13;});
  }else if(d.kind==='wolf'){
-  rig.position.set(sway*.012*stride,Math.abs(sway)*.025*stride-gather*.09+airborne*.26-landing*.07,-impact*.13-gather*.035+drive*.04);
-  rig.rotation.set(.045*stride+Math.sin(phase*2)*.018*stride-gather*.04+drive*.09+landing*.08,0,sway*.025*stride);
-  d.head.rotation.set(.07*stride+lag*.025*stride+gather*.17-drive*.25+landing*.10,Math.sin(t*1.35)*.025*(1-stride),-sway*.018*stride);
+  rig.position.set(sway*.012*stride+look*adjust*.018,(Math.abs(sway)*.015-.015)*stride-gather*.09+airborne*.26-landing*.07-brake*.02,-impact*.13-gather*.035+drive*.04-brake*.025);
+  rig.rotation.set(.045*stride+Math.sin(phase*2)*.018*stride-gather*.04+drive*.09+landing*.08+brake*.055,0,sway*.025*stride-turn*.045*stride);
+  d.head.rotation.set(.07*stride+lag*.025*stride+gather*.17-drive*.25+landing*.10-brake*.025,Math.sin(t*1.35)*.025*(1-stride)+look*(.34+adjust*.08)-turn*.065,-sway*.018*stride+turn*.025);
   d.jaw.position.y=-.21-gather*.04-drive*.065-pounce*.035;
-  d.tail.rotation.set(-.05-gather*.2+airborne*.18,Math.sin(phase*.65-.5)*(.07+.18*stride),0);
-  if(d.tailTip)d.tailTip.rotation.set(Math.sin(phase*.65-.9)*.055*stride,Math.sin(phase*.65-1.25)*(.055+.11*stride),0);
-  d.ears?.forEach((ear,i)=>ear.rotation.set(-.06-Math.sin(phase-.8+i*.35)*.075*stride-gather*.19+drive*.11,0,(i?1:-1)*.07+breath*.025));
-  for(const leg of d.legs)if(leg.knee&&leg.paw)plantPaw(leg,phase+leg.phase,stride,gather,pounce);
+  d.tail.rotation.set(-.05-gather*.2+airborne*.18+brake*.09,Math.sin(phase*.65-.5)*(.07+.18*stride)-turn*.22,0);
+  if(d.tailTip)d.tailTip.rotation.set(Math.sin(phase*.65-.9)*.055*stride,Math.sin(phase*.65-1.25)*(.055+.11*stride)-turn*.28,0);
+  d.ears?.forEach((ear,i)=>ear.rotation.set(-.06-Math.sin(phase-.8+i*.35)*.075*stride-gather*.19+drive*.11,look*.05,(i?1:-1)*.07+breath*.025+turn*.045));
+  for(const leg of d.legs)if(leg.knee&&leg.paw)plantPaw(leg,rig,phase+leg.phase,stride,gather+landing*(leg.joint.position.z>0?1.2:.75)+brake*.25,pounce);
  }else if(d.kind==='golem'){
   const weight=Math.sin(phase)*stride;
   rig.position.set(weight*.035,Math.abs(sway)*.025*stride-gather*.13-drive*.045,-impact*.13-gather*.045+drive*.04);
@@ -70,10 +114,22 @@ function animateForestEnemy(d,t,stride,phase,gather,drive,impact){
   d.feet?.forEach((foot,i)=>{const step=Math.sin(phase+i*Math.PI);foot.position.set((i?1:-1)*.15,.08+Math.max(0,-step)*.05*stride,.07+step*.085*stride);foot.rotation.x=step*.15*stride;});
  }
 }
+function followEnemyHit(d,t,impact){
+ if(!['wolf','mushroom'].includes(d.kind))return;
+ // Sample the existing recoil after it has advanced. Its one-frame delay lets
+ // the head/cap trail the body; a repeated paused pose must reuse that sample.
+ if(d.followHitTime!==t){
+  d.followHitTime=t;const h=d.hitReaction,amount=h?Math.min(.055,(h.amount||0)*.32):impact*.025,a=h?h.angle-d.rig.parent.rotation.y:0;
+  d.followHitX=Math.cos(a)*amount;d.followHitZ=-Math.sin(a)*amount;
+ }
+ const x=d.followHitX||0,z=d.followHitZ||0;
+ if(d.kind==='mushroom'){d.cap.rotation.x-=x;d.cap.rotation.z-=z;}
+ else{d.head.rotation.x-=x;d.head.rotation.z-=z;d.tail.rotation.x-=x*.4;d.tail.rotation.z-=z*.4;}
+}
 export function animateEnemyIdentity(d,t,stride,phase,wind,release,impact){
  const id=d.species||d.kind,rig=d.rig,pounce=d.pounce||0,active=d.previousAttack>0;
  const drive=active?smooth((wind-.66)/.34):release,gather=active?smooth(wind/.6)*(1-.85*drive):release*.15;
- if(d.appearance){animateForestEnemy(d,t,stride,phase,gather,drive,impact);updateEnemyGrip(d);return;}
+ if(d.appearance){animateForestEnemy(d,t,stride,phase,gather,drive,impact);followEnemyHit(d,t,impact);updateEnemyGrip(d);return;}
  const hand=(i,x,z=0)=>{if(d.arms[i])d.arms[i].rotation.set(x,0,z);};
  const legs=(amp,spread=0)=>d.legs.forEach(({joint,phase:offset})=>{joint.rotation.x=Math.sin(phase+offset)*amp*stride;joint.rotation.z=Math.sign(joint.position.x)*spread;});
  // All poses use absolute offsets: repeated casts cannot accumulate transforms.
@@ -121,4 +177,8 @@ export function animateEnemyIdentity(d,t,stride,phase,wind,release,impact){
  if(d.kind==='boss'&&d.attackMode==='charge'){
   rig.rotation.x=.08+gather*.26+(d.charging?.14:0);for(const [i,arm]of d.arms.entries())arm.rotation.x=-gather*.3+(d.charging?Math.sin(phase+i*Math.PI)*.48*stride:0);
  }
+ // Reuse bounded turning cues on the snow/ash relatives, preserving their own gait.
+ const turn=d.motionTurn||0,look=d.motionLook||0;
+ if(d.kind==='wolf'){rig.rotation.z-=turn*.035*stride;d.head.rotation.y+=look*.28-turn*.04;d.head.rotation.z=turn*.02;d.tail.rotation.y-=turn*.18;}
+ else if(d.kind==='mushroom'){rig.rotation.z-=turn*.025*stride;d.cap.rotation.y=-turn*.06+look*.035;d.ears?.forEach(ear=>{ear.rotation.y=look*.04;});}
 }
