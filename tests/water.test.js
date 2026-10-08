@@ -15,6 +15,13 @@ test('ponds stay clear of trees, spawn and reward sites; ash stays dry; surface 
   w.group.traverse(o=>{if(o.isInstancedMesh)o.dispose();});
  }
 });
+test('water depth finish keeps a single surface pass and the existing two-layer shoreline',()=>{
+ for(const id of['forest','snow','coast']){
+  const w=buildWorld(id,7),waterMaterials=new Set(w.ponds.map(p=>p.mesh.material));assert.equal(waterMaterials.size,1);
+  for(const p of w.ponds){assert(p.mesh.material.forceSinglePass);assert(!p.mesh.material.depthWrite);assert(p.mesh.material.transparent);assert.equal(p.mesh.position.y,.075);assert.equal(p.bank.position.y,.045);assert.equal(p.mesh.geometry.attributes.position.count,192);assert.equal(waterDepth(p,p.x,p.z),1);}
+  w.group.traverse(o=>{if(o.isInstancedMesh)o.dispose();if(o.userData.ownedGeometry)o.geometry.dispose();});
+ }
+});
 test('water pose does not accumulate and returns to land for heroes and ground creatures',()=>{
  for(const kind of ['silver','scout','wraith','wolf','golem','mushroom']){const g=actor(kind),d=g.userData;d.waterDepth=1;
   for(let i=0;i<600;i++){animateActor(g,i/60,3,0,0);assert(Math.abs(d.rig.position.y)<1.2);g.traverse(o=>{assert(Number.isFinite(o.quaternion.w));assert(Number.isFinite(o.position.y));});}

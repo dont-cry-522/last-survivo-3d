@@ -28,7 +28,7 @@ export class HeroPreview {
    }
    let bounds=this.bounds;
    if(this.portrait){const head=(hero.userData.swimHead||hero.userData.head).getWorldPosition(new T.Vector3()),top=this.bounds.max.y;bounds=new T.Box3(new T.Vector3(head.x-.35,top-.83,head.z-.30),new T.Vector3(head.x+.35,top+.025,head.z+.30));}
-   const center=bounds.getCenter(new T.Vector3()),direction=new T.Vector3(.7,this.portrait?.25:.45,.9).normalize();
+   const center=bounds.getCenter(new T.Vector3()),direction=new T.Vector3(.7,this.portrait?.25:.60,.9).normalize();
    this.camera.clearViewOffset();this.camera.aspect=rect.width/rect.height;
    this.camera.position.copy(center).add(direction);this.camera.lookAt(center);this.camera.updateMatrixWorld(true);
    const right=new T.Vector3().setFromMatrixColumn(this.camera.matrixWorld,0),up=new T.Vector3().setFromMatrixColumn(this.camera.matrixWorld,1);
@@ -49,7 +49,7 @@ export class HeroPreview {
    // with the hero still centered in the reserved area (including mobile scroll).
    this.camera.setViewOffset(rect.width,rect.height,-rect.left,-rect.top,width,height);
    this.camera.updateMatrixWorld(true);
-   this.fill.intensity=hero.userData.wraith?1.2:2.8;this.fill.position.copy(center).addScaledVector(direction,1.8);this.fill.position.y+=.65;scene.add(this.fill);
+   this.fill.intensity=hero.userData.wraith?1.2:3.2;this.fill.position.copy(center).addScaledVector(direction,1.8);this.fill.position.y+=.65;scene.add(this.fill);
    this.renderer.render(scene,this.camera);
   }finally{
    this.fill.removeFromParent();

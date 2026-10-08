@@ -1,8 +1,69 @@
 import * as T from './vendor/three.module.js';
-import{MAP_HALF}from'./map-layout.js?v=96';
-import{bridgeContains}from'./coast.js?v=96';
+import{MAP_HALF}from'./map-layout.js?v=97';
+import{bridgeContains}from'./coast.js?v=97';
+import{seeded}from'./rules.js?v=97';
+// One worn silhouette is shared by boulders, bank stones and instanced scree.
+export const naturalRockGeometry=(()=>{
+ const g=new T.SphereGeometry(1,10,7),p=g.attributes.position,colors=[];
+ for(let i=0;i<p.count;i++){
+  const x=p.getX(i),y=p.getY(i),z=p.getZ(i),wear=1+Math.sin(x*3.6+z*2.2+y)*.105+Math.sin(z*4.3-y*2.6)*.065;
+  p.setXYZ(i,x*wear*(1-y*.08)+y*.09,Math.max(-.73,y*wear*.91),z*wear*(1+y*.08));
+  const mineral=.88+Math.sin(y*11+x*3+z*2)*.045+Math.max(0,y)*.10;colors.push(mineral*1.025,mineral,mineral*.965);
+ }
+ g.setAttribute('color',new T.Float32BufferAttribute(colors,3));g.computeVertexNormals();
+ // Average the duplicated seam and pole normals without splitting material groups.
+ const n=g.attributes.normal,welded=new Map(),key=i=>[p.getX(i),p.getY(i),p.getZ(i)].map(v=>Math.round(v*1e5)).join(',');
+ for(let i=0;i<p.count;i++){const k=key(i);if(!welded.has(k))welded.set(k,new T.Vector3());welded.get(k).add(new T.Vector3().fromBufferAttribute(n,i));}
+ for(let i=0;i<p.count;i++){const v=welded.get(key(i)).normalize();n.setXYZ(i,v.x,v.y,v.z);}return g;
+})();
+const rockMaterials=new Map();
+export function finishRock(rock){
+ if(rock.geometry===naturalRockGeometry)return rock;
+ const radius=rock.geometry.parameters?.radius||1,source=rock.material,key=source.uuid;
+ if(!rockMaterials.has(key)){const m=source.clone();m.vertexColors=true;m.roughness=.94;m.flatShading=false;rockMaterials.set(key,m);}
+ rock.geometry=naturalRockGeometry;rock.material=rockMaterials.get(key);rock.scale.multiplyScalar(radius);return rock;
+}
+let groundDetailTexture;
+export function installGroundSurface(ground,id='confluence'){
+ const material=ground.material;if(material.userData.groundSurface===id)return;
+ if(!groundDetailTexture){
+  const size=128,pixels=new Uint8Array(size*size*4),random=seeded(5629),layers=[4,16,64].map(n=>({n,values:Float32Array.from({length:n*n},()=>random())}));
+  const sample=(layer,x,y)=>{const u=x/size*layer.n,v=y/size*layer.n,ix=Math.floor(u),iy=Math.floor(v),fx=u-ix,fy=v-iy,s=fx*fx*(3-2*fx),t=fy*fy*(3-2*fy),at=(a,b)=>layer.values[(b%layer.n)*layer.n+a%layer.n];return T.MathUtils.lerp(T.MathUtils.lerp(at(ix,iy),at(ix+1,iy),s),T.MathUtils.lerp(at(ix,iy+1),at(ix+1,iy+1),s),t);};
+  for(let y=0;y<size;y++)for(let x=0;x<size;x++){const k=(y*size+x)*4;for(let channel=0;channel<3;channel++)pixels[k+channel]=Math.round(sample(layers[channel],x,y)*255);pixels[k+3]=255;}
+  groundDetailTexture=new T.DataTexture(pixels,size,size);groundDetailTexture.wrapS=groundDetailTexture.wrapT=T.RepeatWrapping;groundDetailTexture.magFilter=T.LinearFilter;groundDetailTexture.minFilter=T.LinearMipmapLinearFilter;groundDetailTexture.generateMipmaps=true;groundDetailTexture.anisotropy=4;groundDetailTexture.needsUpdate=true;
+ }
+ material.userData.groundSurface=id;
+ material.onBeforeCompile=shader=>{
+  shader.uniforms.groundDetail={value:groundDetailTexture};
+  shader.vertexShader='varying vec3 groundWorld;\n'+shader.vertexShader;
+  shader.vertexShader=shader.vertexShader.replace('#include <begin_vertex>','#include <begin_vertex>\ngroundWorld=(modelMatrix*vec4(position,1.0)).xyz;');
+  shader.fragmentShader='uniform sampler2D groundDetail; varying vec3 groundWorld;\n'+shader.fragmentShader;
+  shader.fragmentShader=shader.fragmentShader.replace('#include <color_fragment>',`#include <color_fragment>
+   vec2 soilPoint=groundWorld.xz;
+   float soilField=texture2D(groundDetail,soilPoint*.013).r;
+   float soilClump=texture2D(groundDetail,soilPoint*.046+vec2(.23,.61)).g;
+   float soilGrain=texture2D(groundDetail,soilPoint*.18).b;
+   float soilPatch=smoothstep(.43,.73,soilField+soilClump*.13);
+   diffuseColor.rgb*=.91+soilClump*.14+soilGrain*.045;
+   ${id==='forest'?`diffuseColor.rgb=mix(diffuseColor.rgb,vec3(.083,.070,.037),soilPatch*.53);float moss=smoothstep(.58,.81,soilClump)*(1.0-soilPatch);diffuseColor.rgb=mix(diffuseColor.rgb,vec3(.064,.103,.037),moss*.30);`
+    :id==='snow'?`diffuseColor.rgb=mix(diffuseColor.rgb,diffuseColor.rgb*vec3(.77,.88,.99),soilPatch*.38);diffuseColor.rgb+=vec3(.035,.039,.038)*smoothstep(.59,.83,soilClump);`
+    :id==='ash'?`diffuseColor.rgb=mix(diffuseColor.rgb,vec3(.075,.071,.075),soilPatch*.40);diffuseColor.rgb*=1.0-smoothstep(.68,.86,soilClump)*.16;`
+    :id==='sand'?`float sandRidge=sin((soilPoint.x*.765+soilPoint.y*.644)*3.2+soilField*8.0)*.5+.5;diffuseColor.rgb*=.94+sandRidge*.085;diffuseColor.rgb=mix(diffuseColor.rgb,diffuseColor.rgb*vec3(.91,.84,.72),soilPatch*.23);`
+    :id==='coast'?`diffuseColor.rgb=mix(diffuseColor.rgb,vec3(.110,.117,.082),soilPatch*.36);diffuseColor.rgb*=.96+soilClump*.08;`
+    :`float soilSnow=smoothstep(.25,.48,max(diffuseColor.r,max(diffuseColor.g,diffuseColor.b)));diffuseColor.rgb=mix(diffuseColor.rgb,diffuseColor.rgb*mix(vec3(1.17,.95,.77),vec3(.91,.97,1.04),soilSnow),soilPatch*.30);`}
+   float soilRelief=soilClump*.055+soilGrain*.006;
+  `);
+  shader.fragmentShader=shader.fragmentShader.replace('#include <normal_fragment_maps>',`#include <normal_fragment_maps>
+   vec3 soilDx=dFdx(-vViewPosition),soilDy=dFdy(-vViewPosition);
+   vec3 soilRx=cross(soilDy,normal),soilRy=cross(normal,soilDx);
+   float soilDet=dot(soilDx,soilRx);
+   normal=normalize(abs(soilDet)*normal-sign(soilDet)*(dFdx(soilRelief)*soilRx+dFdy(soilRelief)*soilRy));
+  `);
+ };
+ material.customProgramCacheKey=()=> 'ground-surface-'+id;material.needsUpdate=true;
+}
 // Shared geometry and instanced details: decoration stays low, leaving combat and collision legible.
-const geometries={stone:new T.DodecahedronGeometry(1,0),snow:null,chip:new T.OctahedronGeometry(1,0),wood:new T.CylinderGeometry(.10,.15,1,7),leaf:null,ice:new T.ConeGeometry(1,1,5),frond:null},materials=new Map();
+const geometries={stone:naturalRockGeometry,snow:null,chip:new T.OctahedronGeometry(1,0),wood:new T.CylinderGeometry(.10,.15,1,7),leaf:null,ice:new T.ConeGeometry(1,1,5),frond:null},materials=new Map();
 const windAngle=-.7,windX=Math.sin(windAngle),windZ=Math.cos(windAngle);
 // The low cap ends below the terrain, so no underside or hard raised rim is exposed.
 function snowGeometry(){
@@ -26,7 +87,7 @@ function frondGeometry(){
  const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute(p,3));g.setIndex(ix);g.computeVertexNormals();return g;
 }geometries.frond=frondGeometry();
 function material(kind,id){const key=['leaf','frond','ice'].includes(kind)?kind+':'+id:kind;if(!materials.has(key)){
- const m=new T.MeshStandardMaterial({color:0xffffff,roughness:1,vertexColors:kind==='snow',side:['leaf','frond'].includes(kind)?T.DoubleSide:T.FrontSide});
+ const m=new T.MeshStandardMaterial({color:0xffffff,roughness:1,vertexColors:['snow','stone'].includes(kind),side:['leaf','frond'].includes(kind)?T.DoubleSide:T.FrontSide});
  if(['leaf','frond','ice'].includes(kind)){
   const clock={value:0},gust={value:1},focus={value:new T.Vector2()};m.userData.motion={clock,gust,focus};
   m.onBeforeCompile=s=>{Object.assign(s.uniforms,{sceneryTime:clock,sceneryGust:gust,sceneryFocus:focus});
@@ -64,7 +125,7 @@ function groundColors(w,id){
   if(id==='coast'){r*=1-foot*.12;c*=1-foot*.055;b*=1-foot*.055;}
   for(const pond of w.ponds){const a=pond.angle||0,dx=x-pond.x,dz=z-pond.z,d=Math.hypot((Math.cos(a)*dx-Math.sin(a)*dz)/pond.rx,(Math.sin(a)*dx+Math.cos(a)*dz)/pond.rz),shore=Math.max(0,1-Math.abs(d-1.08)/.32);if(shore){r*=1-shore*(id==='coast'?.27:.12);c*=1-shore*.13;b*=1-shore*.08;}}
   colors.push(r,c,b);
- }g.setAttribute('color',new T.Float32BufferAttribute(colors,3));ground.geometry=g;ground.userData.ownedGeometry=true;ground.material.vertexColors=true;ground.material.needsUpdate=true;
+ }g.setAttribute('color',new T.Float32BufferAttribute(colors,3));ground.geometry=g;ground.userData.ownedGeometry=true;ground.material.vertexColors=true;installGroundSurface(ground,id);
 }
 export function installScenery(w,id,rnd){
  if(!w.regional)groundColors(w,id);const batches=new Map(),dummy=new T.Object3D(),records=[];

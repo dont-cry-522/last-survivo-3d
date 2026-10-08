@@ -1,8 +1,26 @@
 import{test}from'node:test';import assert from'node:assert/strict';import * as T from'../vendor/three.module.js';
 import{buildWorld,clearAt,animateWorld}from'../world.js';import{sceneryAllowed}from'../biome-scenery.js';
 import{bridgeContains,updateTide}from'../coast.js';import{waterDepth}from'../water.js';
+import{naturalRockGeometry,finishRock,installGroundSurface}from'../biome-scenery.js?v=97';
 globalThis.document={createElement:()=>({width:256,height:256,getContext:()=>({fillRect(){}})})};
 function dispose(w){w.group.traverse(o=>{if(o.isInstancedMesh)o.dispose();if(o.userData.ownedGeometry)o.geometry.dispose();});}
+test('worn rocks reuse a bounded smooth mesh and preserve placed obstacle transforms',()=>{
+ const source=new T.MeshStandardMaterial({color:0x867863}),a=new T.Mesh(new T.DodecahedronGeometry(.7,0),source),b=a.clone();a.position.set(3,.3,-2);a.scale.set(1,.8,1);
+ finishRock(a);finishRock(b);assert.strictEqual(a.geometry,naturalRockGeometry);assert.strictEqual(a.material,b.material);assert.notStrictEqual(a.material,source);assert(!source.vertexColors);assert(a.material.vertexColors);
+ assert.deepEqual(a.position.toArray(),[3,.3,-2]);assert(Math.abs(a.scale.y-.56)<1e-8);const scale=a.scale.clone();finishRock(a);assert(a.scale.equals(scale),'finishing a rock twice changes its footprint');
+ assert(naturalRockGeometry.index.count/3<=120);const p=naturalRockGeometry.attributes.position,n=naturalRockGeometry.attributes.normal,radii=[];
+ for(let i=0;i<p.count;i++){const v=new T.Vector3().fromBufferAttribute(n,i);assert(Math.abs(v.length()-1)<1e-5,'rock normal is invalid');radii.push(new T.Vector3().fromBufferAttribute(p,i).length());}
+ assert(Math.max(...radii)-Math.min(...radii)>.15,'rock lost its worn silhouette');assert(Math.max(...radii)<1.2);
+});
+test('all ground finishes share one filtered detail texture without changing terrain height',()=>{
+ let texture;for(const id of['forest','snow','ash','sand','coast','confluence']){
+  const w=buildWorld(id,7);installGroundSurface(w.ground,id);const shader={uniforms:{},vertexShader:T.ShaderLib.standard.vertexShader,fragmentShader:T.ShaderLib.standard.fragmentShader};w.ground.material.onBeforeCompile(shader);
+  const detail=shader.uniforms.groundDetail.value;if(texture)assert.strictEqual(detail,texture);texture=detail;
+  assert(detail.generateMipmaps);assert.equal(detail.wrapS,T.RepeatWrapping);assert.equal(detail.image.width,128);assert.equal(detail.image.height,128);assert(!w.ground.material.transparent);
+  const positions=w.ground.geometry.attributes.position;for(let i=0;i<positions.count;i++)assert.equal(positions.getZ(i),0,'visual relief moved the playable terrain');
+  dispose(w);
+ }
+});
 test('biome details are bounded, finite, grounded and clear of rewards, bridges and hazard warnings',()=>{
  for(const id of ['forest','snow','ash','sand','coast'])for(let seed=1;seed<=5;seed++){
   const w=buildWorld(id,seed);assert(w.scenery.records.length>35,id);assert(w.scenery.batches.length<=3);const matrix=new T.Matrix4();let instances=0;

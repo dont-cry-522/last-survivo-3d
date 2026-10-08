@@ -1,21 +1,21 @@
-import {GRIP_POINTS,primaryGripFrame,fitWeaponToPalm,createHandGrips,restoreGripWrists,captureGripWrists,aimGrip,supportGripTarget,aimSupportGrip,poseGripFingers} from './weapon-grips.js?v=96';
-import {refineLingyaHead,lingyaHeadY} from './lingya-face.js?v=96';
-import {finishHeroSurface,smoothSeams} from './hero-finish.js?v=96';
-import{tideHarness}from'./tide-appearance.js?v=96';
-import{WULING_PALETTE,wulingOutfit,wulingAccessories,wulingMask,sporeLantern,sporeSatchel,sporePod}from'./wuling-appearance.js?v=96';
-import{MIRAGE_PALETTE,mirageOutfit,mirageHair,prepareMirageHair,animateMirageHair,mirageMask,mirageAccessories,miragePetalTails,miasmaLantern}from'./mirage-appearance.js?v=96';
-import{newHeroAttack,heroCarryPose,committedWeaponYaw}from'./new-hero-motion.js?v=96';
-import{heroDodgePose}from'./hero-dodge.js?v=96';
-import{lingyaHopPose}from'./lingya-motion.js?v=96';
-import{lingyaOutfit,lingyaAccessories,lingyaLegs}from'./lingya-appearance.js?v=96';
-import{boneBoomerang}from'./beast-model.js?v=96';
-import{makeHarpoon}from'./coast-models.js?v=96';
-import{weaponGesture,shotStarted}from'./weapon-performance.js?v=96';
-import{rollProgress,rollWeight}from'./dodge-motion.js?v=96';
+import {GRIP_POINTS,primaryGripFrame,fitWeaponToPalm,createHandGrips,restoreGripWrists,captureGripWrists,aimGrip,supportGripTarget,aimSupportGrip,poseGripFingers} from './weapon-grips.js?v=97';
+import {refineLingyaHead,lingyaHeadY} from './lingya-face.js?v=97';
+import {finishHeroSurface,smoothSeams} from './hero-finish.js?v=97';
+import{tideHarness}from'./tide-appearance.js?v=97';
+import{WULING_PALETTE,wulingOutfit,wulingAccessories,wulingMask,sporeLantern,sporeSatchel,sporePod}from'./wuling-appearance.js?v=97';
+import{MIRAGE_PALETTE,mirageOutfit,mirageHair,prepareMirageHair,animateMirageHair,mirageMask,mirageAccessories,miragePetalTails,miasmaLantern}from'./mirage-appearance.js?v=97';
+import{newHeroAttack,heroCarryPose,committedWeaponYaw}from'./new-hero-motion.js?v=97';
+import{heroDodgePose}from'./hero-dodge.js?v=97';
+import{lingyaHopPose}from'./lingya-motion.js?v=97';
+import{lingyaOutfit,lingyaAccessories,lingyaLegs}from'./lingya-appearance.js?v=97';
+import{boneBoomerang}from'./beast-model.js?v=97';
+import{makeHarpoon}from'./coast-models.js?v=97';
+import{weaponGesture,shotStarted}from'./weapon-performance.js?v=97';
+import{rollProgress,rollWeight}from'./dodge-motion.js?v=97';
 import * as T from './vendor/three.module.js';
 import {clone} from './vendor/SkeletonUtils.js';
-import {loadCharacterData} from './character-loader.js?v=96';
-import {makeHero as makePrototype} from './hero-model.js?v=96';
+import {loadCharacterData} from './character-loader.js?v=97';
+import {makeHero as makePrototype} from './hero-model.js?v=97';
 
 const templates=new Map(),clips=new Map();
 let lingyaFace;
@@ -50,6 +50,11 @@ function hunterLegs(base){
       float trim=(1.0-smoothstep(.003,.007,abs(h-.676)))+(1.0-smoothstep(.002,.005,abs(h-.887)));
       vec3 bootColor=mix(vec3(.016,.022,.028),vec3(.15,.17,.18),clamp(trim,0.0,1.0));
       diffuseColor.rgb=mix(diffuseColor.rgb,bootColor,clamp(leather+trim,0.0,1.0));`);
+    // This reused body mesh contains skin, leather and fittings; its old skin atlas cannot describe the boots.
+    s.fragmentShader=s.fragmentShader.replace('#include <roughnessmap_fragment>',`#include <roughnessmap_fragment>
+      roughnessFactor=mix(mix(.78,.66,leather),.42,clamp(trim,0.0,1.0));`);
+    s.fragmentShader=s.fragmentShader.replace('#include <metalnessmap_fragment>',`#include <metalnessmap_fragment>
+      metalnessFactor=clamp(trim,0.0,1.0)*.55;`);
   };legs.material.customProgramCacheKey=()=> 'silver-hunter-legs';return legs;
 }
 function firstSkin(root){let result;root.traverse(o=>{if(o.isSkinnedMesh&&!result)result=o;});return result;}
@@ -125,7 +130,14 @@ float weave=dot(diffuseColor.rgb,vec3(.21,.72,.07));diffuseColor.rgb=vec3(${tint
   mirage.traverse(o=>{if(o.isMesh&&o.material.name.includes('Regular'))skinTone(o.material,'mirage');});
   mirageBase.traverse(o=>{if(o.isMesh){o.material=o.material.clone();if(o.material.name.includes('Superhero'))skinTone(o.material,'mirage');if(o.material.name.includes('Hair'))o.material.color.set(0xc4b7db);}});bindParts(mirage,mirageBase,true,'silver');
   mirageHair(mirageLocks);bindParts(mirage,mirageLocks);mirage.traverse(o=>{if(['Eyes','Eyebrows'].includes(o.name))o.visible=false;});mirage.updateMatrixWorld(true);templates.set('mirage',mirage);
-  for(const [kind,root] of templates)finishHeroSurface(root,kind);
+  for(const [kind,root] of templates){
+    finishHeroSurface(root,kind);
+    if(['silver','scout','tide'].includes(kind))root.traverse(o=>{
+      if(!o.isMesh||!o.material.metalnessMap||!/Ranger|Peasant/.test(o.material.name))return;
+      // The authored atlas masks buckles and rivets separately from cloth and leather.
+      o.material.metalness=.72;o.material.roughness=/Belt|Bracer|Feet/.test(o.name)?.82:.96;
+    });
+  }
   for(const c of bakedClips)clips.set(c.name,c);
   loaded=true;
 }

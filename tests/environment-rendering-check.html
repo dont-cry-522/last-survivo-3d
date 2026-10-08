@@ -1,0 +1,50 @@
+<!doctype html><html lang="zh-CN"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>环境渲染检查</title><style>body{margin:12px;background:#13242b;color:#e1e9e4;font:14px system-ui}button,select{padding:10px;background:#254943;color:inherit;border:1px solid #709582;border-radius:6px}iframe{border:0;display:block;margin-top:12px}#view{overflow:auto}pre{white-space:pre-wrap}</style>
+<button id="run" disabled>运行环境回归</button><select id="map"><option value="forest">林地</option><option value="snow">雪地</option><option value="ash">赤烬</option><option value="sand">沙漠</option><option value="coast">海港</option><option value="confluence">五境</option></select><button id="lobby" disabled>预览大厅</button><button id="battle" disabled>预览实战</button><button id="mobile" disabled>预览手机横屏</button><button id="water" disabled>查看水岸</button><button id="paths">路径显示检查</button><p id="status">载入中。此页使用隔离存档和固定帧进度；手机尺寸是模拟，不代表真机帧率。</p><div id="view"></div><pre id="report"></pre>
+<script type="module">
+const $=s=>document.querySelector(s),sleep=ms=>new Promise(r=>setTimeout(r,ms)),assert=(v,n)=>{if(!v)throw Error(n);};
+const html=await(await fetch('../index.html')).text(),css=await(await fetch('../style.css')).text();let frame,g,win,now=0;const results=[],errors=[];
+function step(n=1){for(let i=0;i<n;i++)win.qaFrame(now+=1000/60);}
+function publish(){document.querySelector('#report').textContent=JSON.stringify({results,errors},null,2);}
+async function load(mobile=false,width=1180,height=720){
+ if(g){errors.push(...win.qaErrors);g.audio.stopMusic();g.renderer.dispose();g.renderer.forceContextLoss();}frame?.remove();
+ frame=document.createElement('iframe');frame.title='真实游戏环境预览';frame.style.width=width+'px';frame.style.height=height+'px';$('#view').append(frame);
+ const boot=`<base href="../"><script>
+ window.qaErrors=[];addEventListener('error',e=>qaErrors.push(e.message));addEventListener('unhandledrejection',e=>qaErrors.push(String(e.reason)));
+ const log=console.error.bind(console);console.error=(...a)=>{qaErrors.push(a.map(String).join(' '));log(...a)};
+ let seed=522;window.qaSeed=()=>seed=522;Math.random=()=>{seed=(Math.imul(seed,1664525)+1013904223)>>>0;return seed/4294967296};
+ window.requestAnimationFrame=cb=>{window.qaFrame=cb;return 0};
+ const data=new Map();Object.defineProperty(window,'localStorage',{value:{getItem:k=>data.get(k)??null,setItem:(k,v)=>data.set(k,String(v)),removeItem:k=>data.delete(k)}});
+ const media=matchMedia.bind(window);window.matchMedia=q=>q.includes('pointer:coarse')||q.includes('pointer: coarse')?{matches:${mobile},media:q,addEventListener(){},removeEventListener(){}}:media(q);
+ <\/script>`;
+ frame.srcdoc=html.replace('<head>','<head>'+boot);win=frame.contentWindow;
+ for(let i=0;i<600&&!win.game3d;i++)await sleep(50);assert(win.game3d,'加载超时');g=win.game3d;g.audio.init=async()=>true;
+ if(mobile){const s=win.document.createElement('style');s.textContent=css.replaceAll(/\(pointer:\s*coarse\)/g,'(min-width:0px)');win.document.head.append(s);}
+ now=win.performance.now();step(2);
+}
+function select(map,hero='silver',battle=false){g.menu();win.qaSeed();g.select(hero,map,0);if(battle){win.qaSeed();g.start();g.player.inv=9999;g.player.attack=9999;}step(12);}
+async function check(name,fn){$('#status').textContent=name;try{results.push({name,pass:true,detail:await fn()});}catch(e){results.push({name,pass:false,error:e.message});}publish();await sleep(0);}
+function reportFrame(){const r=g.renderer;assert(!win.qaErrors.length,win.qaErrors.join('\n'));assert(r.info.programs.every(p=>p.diagnostics?.runnable!==false),'GPU 着色器未通过');assert(r.getContext().getError()===0,'WebGL 错误');return{calls:r.info.render.calls,triangles:r.info.render.triangles,geometries:r.info.memory.geometries,textures:r.info.memory.textures,pixels:r.domElement.width*r.domElement.height};}
+$('#run').onclick=async()=>{
+ for(const b of document.querySelectorAll('button'))b.disabled=true;results.length=0;errors.length=0;
+ try{
+  await load();const ids=['forest','snow','ash','sand','coast','confluence'],memory={};
+  for(let cycle=0;cycle<3;cycle++)for(const id of ids)await check(id+' 大厅/战斗 '+(cycle+1),()=>{
+   const old=g.world.group.getObjectByName('distant-landscape');let disposed=!old;old?.geometry.addEventListener('dispose',()=>disposed=true);
+   select(id);assert(disposed,'切图未回收远景');const lobby=reportFrame();win.qaSeed();g.start();g.player.inv=9999;g.player.attack=9999;step(24);const battle=reportFrame();assert(battle.pixels<=3200000,'电脑像素预算超限');
+   if(cycle===1)memory[id]=battle;if(cycle===2){assert(battle.geometries<=memory[id].geometries+2,'同地图重建几何资源持续增长');assert(battle.textures<=memory[id].textures,'同地图重建纹理资源增长');}
+   return{lobby,battle};
+  });
+  for(const hero of ['scout','silver','wraith','tide','lingya','wuling','mirage'])await check(hero+' 材质与武器',()=>{select('forest',hero);return reportFrame();});
+  for(const [width,height]of [[2560,1440],[3840,2160]])await check(width+'×'+height+' 大屏像素预算',async()=>{await load(false,width,height);select('forest','silver',true);const r=reportFrame();assert(r.pixels<=3200000,'大屏像素预算超限');assert(Math.abs(g.camera.aspect-width/height)<.001,'大屏相机比例错误');return r;});
+  for(const [width,height]of [[844,390],[390,844]])await check(width+'×'+height+' 手机模拟',async()=>{await load(true,width,height);const maps=[];for(const id of ids){select(id,'silver',true);const r=reportFrame();assert(r.pixels<=1800000,'手机像素预算超限');assert(win.document.body.classList.contains('touch'),'手机控制分支失效');maps.push({id,...r});}return maps;});
+  await check('所有运行日志',()=>{errors.push(...win.qaErrors);assert(!errors.length,errors.join('\n'));return{errors};});
+ }catch(e){results.push({name:'初始化',pass:false,error:e.message});}
+ publish();for(const b of document.querySelectorAll('button'))b.disabled=false;$('#status').textContent=results.every(r=>r.pass)?'全部 '+results.length+' 项通过（手机尺寸模拟，非真机性能测试）':'有检查失败';
+};
+async function preview(battle=false,mobile=false){await load(mobile,mobile?844:1180,mobile?390:720);select($('#map').value,'silver',battle);$('#status').textContent='固定帧画面预览 · '+$('#map').selectedOptions[0].text;}
+$('#lobby').onclick=()=>preview();$('#battle').onclick=()=>preview(true);$('#mobile').onclick=()=>preview(true,true);
+$('#paths').onclick=()=>{for(const site of g.world.sites)site.trail.visible=!site.trail.visible;step();};
+$('#water').onclick=()=>{const pond=g.world.ponds[0];if(!pond)return;g.start();g.player.inv=9999;g.player.attack=9999;g.player.x=pond.x+pond.rx+1.5;g.player.z=pond.z;step(100);$('#status').textContent='水岸实景';};
+await load();for(const b of document.querySelectorAll('button'))b.disabled=false;$('#status').textContent='准备完成';
+</script></html>

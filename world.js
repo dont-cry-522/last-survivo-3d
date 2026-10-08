@@ -1,28 +1,28 @@
-import{buildConfluence,biomeWeights}from'./confluence.js?v=96';
-import{addTree}from'./tree-scenery.js?v=96';
-import{installTactics}from'./map-tactics.js?v=96';
-import{installRoaming}from'./roaming-events.js?v=96';
-import{installDiscoveries}from'./map-discoveries.js?v=96';
-import{restoreEnemyHit,animateEnemyHit}from'./enemy-feedback.js?v=96';
-import{groveCenters,installScenery,animateScenery}from'./biome-scenery.js?v=96';
-import{districtLayout,buildDistricts}from'./map-districts.js?v=96';
-import{makeCoastEnemy,animateCoastEnemy,coastProp}from'./coast-models.js?v=96';
-import{installCoast}from'./coast.js?v=96';
-import{coastLayout as buildCoastLayout}from'./coast-layout.js?v=96';
-import{makeBoss,animateBoss,makeSandEnemy,animateSandEnemy}from'./expansion-models.js?v=96';
-import{siteSchedule}from'./site-discovery.js?v=96';
-import{MAP_EVENTS,biomeEvent,eventNodes}from'./map-events.js?v=96';
-import{MAP_HALF,MAP_SCALE}from'./map-layout.js?v=96';
-import{buildPonds,animateWater,waterDepth,restoreWaterPose,animateWaterPose}from'./water.js?v=96';
-import{ENEMY_MOTION,animateEnemyIdentity}from'./enemy-motion.js?v=96';
-import{polishEnemyAppearance}from'./enemy-appearance.js?v=96';
-import{REGIONAL_ENEMIES}from'./map-enemies.js?v=96';
-import{groundCue}from'./ground-cues.js?v=96';
-import{heroesReady,createSkinnedHero,animateSkinnedHero}from'./skinned-hero.js?v=96';
+import{buildConfluence,biomeWeights}from'./confluence.js?v=97';
+import{addTree}from'./tree-scenery.js?v=97';
+import{installTactics}from'./map-tactics.js?v=97';
+import{installRoaming}from'./roaming-events.js?v=97';
+import{installDiscoveries}from'./map-discoveries.js?v=97';
+import{restoreEnemyHit,animateEnemyHit}from'./enemy-feedback.js?v=97';
+import{groveCenters,installScenery,animateScenery}from'./biome-scenery.js?v=97';
+import{districtLayout,buildDistricts}from'./map-districts.js?v=97';
+import{makeCoastEnemy,animateCoastEnemy,coastProp}from'./coast-models.js?v=97';
+import{installCoast}from'./coast.js?v=97';
+import{coastLayout as buildCoastLayout}from'./coast-layout.js?v=97';
+import{makeBoss,animateBoss,makeSandEnemy,animateSandEnemy}from'./expansion-models.js?v=97';
+import{siteSchedule}from'./site-discovery.js?v=97';
+import{MAP_EVENTS,biomeEvent,eventNodes}from'./map-events.js?v=97';
+import{MAP_HALF,MAP_SCALE}from'./map-layout.js?v=97';
+import{buildPonds,animateWater,waterDepth,restoreWaterPose,animateWaterPose}from'./water.js?v=97';
+import{ENEMY_MOTION,animateEnemyIdentity}from'./enemy-motion.js?v=97';
+import{polishEnemyAppearance}from'./enemy-appearance.js?v=97';
+import{REGIONAL_ENEMIES}from'./map-enemies.js?v=97';
+import{groundCue}from'./ground-cues.js?v=97';
+import{heroesReady,createSkinnedHero,animateSkinnedHero}from'./skinned-hero.js?v=97';
 import * as T from './vendor/three.module.js';
-import{makeHero,animateHero}from'./hero-model.js?v=96';
-import{makeWraith,animateWraith}from'./wraith-model.js?v=96';
-import{MAPS,seeded}from'./rules.js?v=96';
+import{makeHero,animateHero}from'./hero-model.js?v=97';
+import{makeWraith,animateWraith}from'./wraith-model.js?v=97';
+import{MAPS,seeded}from'./rules.js?v=97';
 const geo=new Map(),materials=new Map(),terrainMaterials=new Map(),detailMaterials=new Map(),weatherMaterials=new Map();
 let fireflyTexture;
 function softFirefly(){
@@ -150,9 +150,9 @@ function groundTexture(id,theme){
 }
 function groundShape(cx,cz,r,rnd,color,segments=24){const points=[0,.014,0],colors=[1,1,1,.68],indices=[];for(let i=0;i<segments;i++){const a=i/segments*Math.PI*2,rad=r*(.87+rnd()*.2);points.push(Math.cos(a)*rad,.014,Math.sin(a)*rad);colors.push(1,1,1,0);if(i)indices.push(0,i,i+1);}indices.push(0,segments,1);const geo=new T.BufferGeometry();geo.setAttribute('position',new T.Float32BufferAttribute(points,3));geo.setAttribute('color',new T.Float32BufferAttribute(colors,4));geo.setIndex(indices);geo.computeVertexNormals();const g=new T.Mesh(geo,detailMaterial(color,1,true));g.userData.ownedGeometry=true;g.position.set(cx,0,cz);g.receiveShadow=true;return g;}
 function trail(group,spawn,site,id,rnd){
- const n=30,verts=[],colors=[],indices=[],shade=id==='snow'?0xb7d0cc:id==='ash'?0x795c52:id==='sand'?0xd2be94:0x6b8065;
+ const n=30,verts=[],colors=[],indices=[],shade=id==='snow'?0xb7d0cc:id==='ash'?0x795c52:id==='sand'?0xd2be94:0x8a7957;
  for(let i=0;i<=n;i++){const f=i/n,curve=Math.sin(f*Math.PI)*4,x=spawn.x+(site.x-spawn.x)*f+curve,z=spawn.z+(site.z-spawn.z)*f,dx=(site.x-spawn.x)+4*Math.PI*Math.cos(f*Math.PI),dz=site.z-spawn.z,l=Math.hypot(dx,dz),w=(1.75+Math.sin(f*19)*.15)*(i===0||i===n?.85:1);
-  const sideX=-dz/l,sideZ=dx/l;for(const [sign,alpha] of [[-1.5,0],[-.72,.24],[.72,.24],[1.5,0]]){const rag=(rnd()-.5)*.12;verts.push(x+sideX*(sign*w+rag),.008,z+sideZ*(sign*w+rag));colors.push(1,1,1,alpha);}
+  const sideX=-dz/l,sideZ=dx/l;for(const [sign,alpha] of [[-1.8,0],[-.62,.13],[.62,.13],[1.8,0]]){const rag=(rnd()-.5)*.12;verts.push(x+sideX*(sign*w+rag),.008,z+sideZ*(sign*w+rag));colors.push(1,1,1,alpha);}
   if(i<n)for(let strip=0;strip<3;strip++){const a=i*4+strip;indices.push(a,a+4,a+1,a+1,a+4,a+5);}
  }
  const geo=new T.BufferGeometry();geo.setAttribute('position',new T.Float32BufferAttribute(verts,3));geo.setAttribute('color',new T.Float32BufferAttribute(colors,4));geo.setIndex(indices);geo.computeVertexNormals();const path=new T.Mesh(geo,detailMaterial(shade,1,true));path.userData.ownedGeometry=true;path.receiveShadow=true;group.add(path);return path;
@@ -173,9 +173,9 @@ function placeWeatherParticle(weather,p,x,z,initial=false){
 }
 function makeWeather(id,rnd,group,spawn,half=MAP_HALF){
  const count=id==='snow'?72:id==='ash'?54:42,colors=id==='snow'?[0xf5ffff,0xc9eafa,0xffffff]:id==='ash'?[0xffaa60,0xf7d39a,0xcb6e51]:id==='coast'?[0xc0d5d0,0x8cbabf,0xa4c7c5]:id==='sand'?[0xdac699,0xc0ac7f,0xe1d4af]:[0xffe9a0,0xc5ef9c,0x95dcc1];
- if(!weatherMaterials.has(id))weatherMaterials.set(id,new T.MeshBasicMaterial({color:0xffffff,map:id==='forest'?softFirefly():null,transparent:true,opacity:id==='forest'?.64:.82,depthWrite:false,blending:['snow','sand'].includes(id)?T.NormalBlending:T.AdditiveBlending}));
+ if(!weatherMaterials.has(id))weatherMaterials.set(id,new T.MeshBasicMaterial({color:0xffffff,map:['forest','snow'].includes(id)?softFirefly():null,transparent:true,opacity:id==='forest'?.64:id==='snow'?.72:.82,depthWrite:false,blending:['snow','sand'].includes(id)?T.NormalBlending:T.AdditiveBlending}));
  const material=weatherMaterials.get(id);
- const cloud=new T.InstancedMesh(id==='forest'?geometry('PlaneGeometry',[.42,.42]):geometry('DodecahedronGeometry',[id==='snow'?.115:.075,0]),material,count);
+ const cloud=new T.InstancedMesh(['forest','snow'].includes(id)?geometry('PlaneGeometry',id==='forest'?[.42,.42]:[.22,.22]):geometry('DodecahedronGeometry',[id==='snow'?.115:.075,0]),material,count);
  cloud.castShadow=false;cloud.receiveShadow=false;cloud.frustumCulled=false;cloud.instanceMatrix.setUsage(T.DynamicDrawUsage);
  const weather={kind:id,half,mesh:cloud,particles:[],dummy:new T.Object3D(),random:rnd,lastTime:undefined};
  for(let i=0;i<count;i++){const p={};placeWeatherParticle(weather,p,spawn.x,spawn.z,true);weather.particles.push(p);cloud.setColorAt(i,new T.Color(colors[i%colors.length]));}
@@ -246,7 +246,7 @@ export function animateWorld(world,t,focusX=world.spawn.x,focusZ=world.spawn.z){
   if(p.life<=0||p.y<.3||p.y>4.3||Math.hypot(p.x-focusX,p.z-focusZ)>30)placeWeatherParticle(weather,p,focusX,focusZ);
   d.position.set(p.x+Math.sin(t*1.3+p.phase)*.05,weather.kind==='forest'?p.y+Math.sin(t*2+p.phase)*.16:p.y,p.z);
   d.scale.setScalar(p.scale*(weather.kind==='snow'?1:.8)*Math.min(1,p.life*1.5)*(world.regional?(biomeWeights(p.x,p.z)[weather.kind]||0):1));
-  if(weather.kind==='forest'){d.rotation.set(-.79,Math.PI/4,0,'YXZ');d.scale.multiplyScalar(.84+.16*Math.sin(t*1.8+p.phase));}
+  if(['forest','snow'].includes(weather.kind)){d.rotation.set(-.79,Math.PI/4,0,'YXZ');d.scale.multiplyScalar(.84+.16*Math.sin(t*1.8+p.phase));}
   else d.rotation.set(0,t*.6+p.phase,0);
   if(weather.kind==='sand'&&world.sandstorm?.active){d.scale.x*=3;d.scale.y*=.5;d.rotation.y=0;}d.updateMatrix();weather.mesh.setMatrixAt(i,d.matrix);
  }

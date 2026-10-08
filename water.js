@@ -1,9 +1,10 @@
-import{onIce,onFord}from'./map-tactics.js?v=96';
-import{onBridge}from'./coast.js?v=96';
-import{MAP_SCALE}from'./map-layout.js?v=96';
-import{coastLayout}from'./coast-layout.js?v=96';
-import{swimStroke,swimLimb,HERO_SWIM,heroSwimPose,swimTravel}from'./swim-motion.js?v=96';
-import{newHeroAttack}from'./new-hero-motion.js?v=96';
+import{onIce,onFord}from'./map-tactics.js?v=97';
+import{onBridge}from'./coast.js?v=97';
+import{MAP_SCALE}from'./map-layout.js?v=97';
+import{coastLayout}from'./coast-layout.js?v=97';
+import{swimStroke,swimLimb,HERO_SWIM,heroSwimPose,swimTravel}from'./swim-motion.js?v=97';
+import{newHeroAttack}from'./new-hero-motion.js?v=97';
+import{naturalRockGeometry}from'./biome-scenery.js?v=97';
 import * as T from './vendor/three.module.js';
 const clamp=T.MathUtils.clamp;
 const shore=a=>1+.07*Math.sin(a*3)+.045*Math.cos(a*5);
@@ -21,7 +22,7 @@ export function terrainAt(world,x,z,kind='hero'){
  if(depth>0)return{kind:'water',depth,floating,speed:floating?1:(1-depth*(heavy?.24:.52))*(world.tide?.high&&tidal?1-.18*depth:1)};
  const slow=world.patches.find(p=>p.kind==='slow'&&Math.hypot(p.x-x,p.z-z)<p.r);return{kind:slow?'slow':'land',depth:0,floating,speed:slow?(kind==='hero'?.72:.75)*(world.sandstorm?.active&&(!slow.biome||slow.biome==='sand')?.72:1):1};
 }
-let surfaceGeometry;const reedGeometry=new T.ConeGeometry(1,1,3),stoneGeometry=new T.DodecahedronGeometry(1,0),surfaces=new Map();
+let surfaceGeometry;const reedGeometry=new T.ConeGeometry(1,1,3),stoneGeometry=naturalRockGeometry,surfaces=new Map();
 // Adjacent reaches shade as one body of water; their internal shores must not
 // fade independently into bright crossing bands.
 // ponytail: eight reaches cover this harbor; expand the uniform arrays and loop together if more are added.
@@ -44,23 +45,40 @@ function waterSurface(id){
   surfaceGeometry=new T.BufferGeometry();surfaceGeometry.setAttribute('position',new T.Float32BufferAttribute(points,3));surfaceGeometry.setAttribute('color',new T.Float32BufferAttribute(colors,3));surfaceGeometry.setIndex(indices);surfaceGeometry.computeVertexNormals();
  }
  if(!surfaces.has(id)){
-  const clock={value:0},coast=id==='coast'?{coastPonds:{value:Array.from({length:8},()=>new T.Vector4())},coastTurns:{value:Array.from({length:8},()=>new T.Vector2())},coastCount:{value:0}}:null,material=new T.MeshStandardMaterial({color:id==='snow'?0x71bdcf:0x398f91,vertexColors:true,roughness:.85,metalness:0,side:T.DoubleSide,transparent:true,depthWrite:false});
+  const clock={value:0},coast=id==='coast'?{coastPonds:{value:Array.from({length:8},()=>new T.Vector4())},coastTurns:{value:Array.from({length:8},()=>new T.Vector2())},coastCount:{value:0}}:null,material=new T.MeshStandardMaterial({color:id==='snow'?0x71bdcf:0x398f91,vertexColors:true,roughness:.38,metalness:0,side:T.DoubleSide,transparent:true,depthWrite:false});
+  material.forceSinglePass=true;
   material.onBeforeCompile=shader=>{shader.uniforms.waterTime=clock;if(coast)Object.assign(shader.uniforms,coast);shader.vertexShader='varying vec3 waterWorld; varying vec2 waterLocal;\n'+shader.vertexShader;shader.vertexShader=shader.vertexShader.replace('#include <begin_vertex>','#include <begin_vertex>\nwaterWorld=(modelMatrix*vec4(position,1.0)).xyz;waterLocal=position.xz;');shader.fragmentShader=(coast?coastUnionShader:'')+'\nuniform float waterTime; varying vec3 waterWorld; varying vec2 waterLocal;\n'+shader.fragmentShader;shader.fragmentShader=shader.fragmentShader.replace('#include <color_fragment>',`#include <color_fragment>
     float angle=atan(waterLocal.y,waterLocal.x);
     float radial=length(waterLocal)/(1.0+.07*sin(angle*3.0)+.045*cos(angle*5.0));
     ${coast?'float ownRadial=radial;radial=coastRadial(waterWorld.xz,1.0,radial);if(ownRadial>radial+.0001)discard;':''}
-    float edge=smoothstep(.48,.98,radial);
-    float wave=sin(waterWorld.x*1.4+waterWorld.z*4.8+sin(waterWorld.x*1.9-waterTime*.6)*.8-waterTime*.8);
-    float light=pow(max(0.0,wave),22.0)*.012*smoothstep(.15,.85,sin(waterWorld.x*.8+waterWorld.z*.3+waterTime*.2))*(1.0-edge*.8);
-    diffuseColor.rgb=mix(vec3(${id==='coast'?'.014,.048,.058':id==='snow'?'.010,.035,.055':'.006,.030,.033'}),vec3(${id==='coast'?'.042,.092,.100':id==='snow'?'.065,.105,.115':'.022,.060,.039'}),${id==='coast'?'edge*.22':'edge'})+vec3(.45,.7,.64)*light;
-    diffuseColor.a*=1.0-smoothstep(.84,1.0,radial);
-`);};
-  material.customProgramCacheKey=()=> 'pond-'+id+(coast?'-union':'');
-  const bank=new T.MeshBasicMaterial({color:id==='snow'?0x677d80:0x263c2f,transparent:true,opacity:id==='coast'?.22:.4,depthWrite:false});
+    float depth=clamp((1.0-radial)/.48,0.0,1.0),edge=1.0-smoothstep(.0,1.0,depth);
+    float swellA=waterWorld.x*.65+waterWorld.z*.95-waterTime*.55;
+    float swellB=waterWorld.x*-1.25+waterWorld.z*.48-waterTime*.41;
+    float ripple=waterWorld.x*2.8+waterWorld.z*3.9+sin(swellA)*.42-waterTime*.83;
+    float light=pow(max(0.0,sin(ripple)),16.0)*smoothstep(.28,.90,sin(swellB)*.5+.5)*.022;
+    vec3 deepWater=vec3(${id==='coast'?'.023,.080,.101':id==='snow'?'.034,.080,.118':'.015,.056,.052'});
+    vec3 shallowWater=vec3(${id==='coast'?'.105,.154,.139':id==='snow'?'.126,.207,.223':'.090,.131,.080'});
+    diffuseColor.rgb=mix(deepWater,shallowWater,edge*.82)+vec3(.58,.78,.74)*light*(1.0-edge*.35);
+    diffuseColor.rgb+=vec3(.011,.015,.012)*edge*pow(max(0.0,sin(swellA+sin(swellB)*.65)),8.0);
+    diffuseColor.a*=(.64+depth*.30)*(1.0-smoothstep(.87,1.0,radial));
+`);
+   shader.fragmentShader=shader.fragmentShader.replace('#include <roughnessmap_fragment>','#include <roughnessmap_fragment>\nroughnessFactor=.37+edge*.20;');
+   shader.fragmentShader=shader.fragmentShader.replace('#include <normal_fragment_maps>',`#include <normal_fragment_maps>
+    float waveDx=cos(swellA)*.018+cos(swellB)*-.012+cos(ripple)*.009;
+    float waveDz=cos(swellA)*.026+cos(swellB)*.0046+cos(ripple)*.0125;
+    normal=normalize((viewMatrix*vec4(-waveDx,1.0,-waveDz,0.0)).xyz);
+   `);
+   shader.fragmentShader=shader.fragmentShader.replace('#include <emissivemap_fragment>',`#include <emissivemap_fragment>
+    float waterFresnel=pow(1.0-clamp(dot(normal,normalize(vViewPosition)),0.0,1.0),3.0);
+    totalEmissiveRadiance+=vec3(.028,.047,.053)*waterFresnel;
+   `);
+  };
+  material.customProgramCacheKey=()=> 'pond-depth-'+id+(coast?'-union':'');
+  const bank=new T.MeshBasicMaterial({color:id==='snow'?0x677d80:0x384536,transparent:true,opacity:id==='coast'?.18:.30,depthWrite:false});
   bank.onBeforeCompile=shader=>{if(coast)Object.assign(shader.uniforms,coast);shader.vertexShader='varying vec2 bankLocal;varying vec2 bankWorld;\n'+shader.vertexShader;shader.vertexShader=shader.vertexShader.replace('#include <begin_vertex>','#include <begin_vertex>\nbankLocal=position.xz;bankWorld=(modelMatrix*vec4(position,1.0)).xz;');shader.fragmentShader=(coast?coastUnionShader:'')+'\nvarying vec2 bankLocal;varying vec2 bankWorld;\n'+shader.fragmentShader;shader.fragmentShader=shader.fragmentShader.replace('#include <color_fragment>',`#include <color_fragment>
    float a=atan(bankLocal.y,bankLocal.x);float r=length(bankLocal)/(1.0+.07*sin(a*3.0)+.045*cos(a*5.0));${coast?'float ownRadial=r;r=coastRadial(bankWorld,1.12,r);if(ownRadial>r+.0001)discard;':''}diffuseColor.a*=1.0-smoothstep(.78,1.0,r);`);};
   bank.customProgramCacheKey=()=> 'pond-bank-'+id+(coast?'-union':'');
-  const reeds=new T.MeshStandardMaterial({color:id==='snow'?0x849d97:0x637950,roughness:1}),stones=new T.MeshStandardMaterial({color:id==='snow'?0x9aaeb0:0x6c7a68,roughness:1});
+  const reeds=new T.MeshStandardMaterial({color:id==='snow'?0x849d97:0x637950,roughness:1}),stones=new T.MeshStandardMaterial({color:id==='snow'?0x9aaeb0:0x6c7a68,roughness:.94,vertexColors:true});
   surfaces.set(id,{material,bank,reeds,stones,clock,coast});
  }
  return surfaces.get(id);
