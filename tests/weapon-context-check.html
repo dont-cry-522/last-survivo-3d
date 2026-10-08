@@ -1,26 +1,27 @@
 <!doctype html>
 <html lang="zh-CN">
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>人物动作与声音检查</title>
+<title>人物动作与声音对比</title>
 <style>
 :root{color-scheme:dark;font:15px/1.6 system-ui;background:#112129;color:#e1eeeb}body{max-width:1120px;margin:auto;padding:20px}button,select{font:inherit;color:inherit;background:#244652;border:1px solid #527078;border-radius:8px;padding:9px 14px}button:disabled{opacity:.5}p{color:#acc4c6}.controls{display:flex;gap:10px;flex-wrap:wrap}iframe{display:block;width:100%;height:560px;border:1px solid #34545a;margin-top:18px}pre{white-space:pre-wrap;overflow-wrap:anywhere;background:#0b171d;padding:14px}#status{min-height:28px}@media(max-width:600px){body{padding:12px}iframe{height:420px}}
 </style>
-<h1>人物动作与声音检查</h1>
-<p>在真实游戏场景中听出手、命中与收放，使用隔离测试存档。这里只检查声音与动作的配合，不代表手感已获人工确认。</p>
-<div class="controls"><button id="run" disabled>运行动作音效检查</button><select id="weapon" aria-label="选择人物与武器"></select><button id="listen" disabled>看人物连续攻击</button><button id="stop" disabled>停止</button></div>
-<p id="status" role="status">正在载入真实游戏…</p><div id="view"></div><pre id="report">等待开始。</pre>
+<h1>边看人物，边比较声音</h1>
+<p>默认霜影短弩。点击「依次听 A / B / C」，看同一段攻击，只需判断哪段听着更顺。三段使用相同音色、音高和动作，只调整声音主次。</p><p>固定林地、石质目标与距离，音乐关闭。使用隔离试玩记录，不影响游戏存档。</p>
+<div class="controls"><select id="weapon" aria-label="选择人物与武器"></select><select id="mix" aria-label="声音对比"><option value="A">A · 当前版</option><option value="B">B · 减轻出手与装填</option><option value="C">C · 减轻命中与受击</option></select><button id="listen" disabled>播放所选片段</button><button id="compare" disabled>依次听 A / B / C</button><button id="stop" disabled>停止</button></div>
+<p id="status" role="status">正在载入真实游戏…</p><div id="view"></div><details><summary>开发检查与对比记录</summary><button id="run" disabled>运行动作音效检查</button><pre id="report">等待开始。</pre><pre id="comparison">尚未比较。</pre></details>
 <script type="module">
 import{HERO_LOADOUTS,WEAPONS}from'../rules.js?v=94';
 const $=s=>document.querySelector(s),sleep=ms=>new Promise(resolve=>setTimeout(resolve,ms)),assert=(ok,message)=>{if(!ok)throw Error(message);};
 const heroNames={scout:'游侠',silver:'霜影',wraith:'影裔',tide:'潮行者',lingya:'铃芽',wuling:'雾苓',mirage:'蜃影'};
 for(const[hero,ids]of Object.entries(HERO_LOADOUTS))for(const[idIndex,id]of ids.entries()){const o=document.createElement('option');o.value=hero+':'+idIndex;o.textContent=heroNames[hero]+' · '+WEAPONS[id].name;$('#weapon').append(o);}
 $('#weapon').value='silver:0';
-let g,win,busy=false,stopRequested=false,events=[],clock=0;
+let g,win,busy=false,stopRequested=false,events=[],clock=0,listening=false,activeMix='A';
+const mixes={A:{shot:1,mechanism:1,impact:1,hurt:1},B:{shot:.75,mechanism:.35,impact:1,hurt:1},C:{shot:1,mechanism:1,impact:.65,hurt:.35}};
 const records=[];
 function publish(){window.weaponContextReport={checks:records,events};$('#report').textContent=JSON.stringify(window.weaponContextReport,null,2);}
-function lock(value){busy=value;$('#run').disabled=value;$('#listen').disabled=value;$('#weapon').disabled=value;$('#stop').disabled=!value;}
+function lock(value){busy=value;const frame=$('#view iframe');if(frame)frame.style.pointerEvents=value?'none':'';$('#run').disabled=value;$('#listen').disabled=value;$('#weapon').disabled=value;$('#mix').disabled=value;$('#compare').disabled=value;$('#stop').disabled=!value;}
 function setup(hero,index=0){
- g.menu();win.document.querySelector('[data-attack-mode=manual]').click();g.select(hero,'forest',index);g.start();win.document.querySelector('#dialog').close();
+ win.qaSeed(522);g.menu();win.document.querySelector('[data-attack-mode=manual]').click();g.select(hero,'forest',index);g.start();win.document.querySelector('#dialog').close();
  Object.assign(g.world,{obstacles:[],patches:[],ponds:[],ice:[],fords:[],bridges:[],sites:[],roaming:[],discoveries:[],breakables:[]});
  Object.assign(g.player,{x:0,z:0,attack:0,inv:999,pending:0});g.hero.position.set(0,0,0);g.hero.rotation.y=0;
  Object.assign(g.controls,{angle:0,held:false,hasAim:true});g.camera.position.set(12,20,16);g.camera.lookAt(0,0,0);g.camera.updateMatrixWorld(true);
@@ -77,15 +78,46 @@ $('#run').onclick=async()=>{
  }catch(error){$('#status').textContent='失败：'+error.message;records.push({name:'初始化 / 浏览器错误',pass:false,error:error.message});}
  finally{g.menu();g.audio.stopMusic();g.audio.stopWeapons();g.audio.stopCreatures();lock(false);publish();}
 };
-$('#listen').onclick=async()=>{if(busy)return;lock(true);stopRequested=false;try{await readyAudio();const[hero,index]=$('#weapon').value.split(':');setup(hero,Number(index));target(0,hero==='tide'?2.8:6);g.controls.held=true;$('#status').textContent='真实角色连续攻击 · 请同时观察动作、弹道与声音。';await advance(3.8);$('#status').textContent='试听结束，可换一位角色继续比较。';}catch(error){$('#status').textContent=error.message;}finally{g.controls.held=false;g.pause();g.audio.stopWeapons();g.audio.stopCreatures();lock(false);publish();}};
+async function listen(sequence){
+ if(busy)return;lock(true);stopRequested=false;listening=true;const clips=[];
+ try{
+  await readyAudio();const[hero,index]=$('#weapon').value.split(':');
+  for(const mix of sequence){
+   if(stopRequested)break;activeMix=mix;$('#mix').value=mix;setup(hero,Number(index));
+   // A closed practice boundary rejects ambient spawn probes at radius 19–26.
+   // The same real target, attack logic and render remain inside the clear centre.
+   g.world.obstacles=Array.from({length:32},(_,i)=>({x:Math.sin(i*Math.PI/16)*23,z:Math.cos(i*Math.PI/16)*23,r:8}));
+   const foe=target(0,hero==='tide'?2.8:6);g.controls.held=true;
+   $('#status').textContent='正在播放 '+$('#mix option:checked').textContent+' · 同一段连续攻击';
+   await advance(3.8);g.controls.held=false;if(g.state==='playing')g.pause();g.audio.stopWeapons();g.audio.stopCreatures();
+   const played=events.filter(e=>e.played&&(e.kind==='weapon'||e.kind==='creature')),signature=played.map(e=>[e.kind,e.time,e.args,e.offset??e.take]);
+   clips.push({mix,hero,weapon:foe&&g.player.weaponId,damage:10000-foe.hp,enemies:g.enemies.filter(e=>e.alive).length,signature,sounds:played.map(e=>({kind:e.args[1],volume:e.actualVolume,gain:e.gain}))});
+   if(!stopRequested&&mix!==sequence.at(-1))await sleep(650);
+  }
+  const signature=clip=>JSON.stringify([clip.hero,clip.weapon,clip.damage,clip.enemies,clip.signature]);
+  const sameSequence=clips.every(clip=>signature(clip)===signature(clips[0]));
+  window.contextComparisonReport={clips,sameSequence,stopped:stopRequested};$('#comparison').textContent=JSON.stringify(window.contextComparisonReport,null,2);
+  $('#status').textContent=stopRequested?'已停止。':sameSequence?'试听结束。哪段更顺：A、B、C，还是三段都不搭？':'对比场景出现差异，请重新试听后比较。';
+ }catch(error){$('#status').textContent='试听未完成：'+error.message;}
+ finally{listening=false;activeMix='A';if(g){g.controls.held=false;if(g.state==='playing')g.pause();g.audio.stopMusic();g.audio.stopWeapons();g.audio.stopCreatures();}lock(false);publish();}
+}
+$('#listen').onclick=()=>listen([$('#mix').value]);
+$('#compare').onclick=()=>listen(['A','B','C']);
 $('#stop').onclick=()=>{stopRequested=true;g.controls.held=false;if(g.state==='playing')g.pause();g.audio.stopMusic();g.audio.stopWeapons();g.audio.stopCreatures();};
 try{
  const html=await(await fetch('../index.html')).text(),frame=document.createElement('iframe');frame.title='真实游戏测试场景';$('#view').append(frame);
- const bootstrap=`<base href="../"><script>window.qaErrors=[];addEventListener('error',e=>qaErrors.push(e.message));addEventListener('unhandledrejection',e=>qaErrors.push(String(e.reason)));window.requestAnimationFrame=cb=>{window.qaFrame=cb;return 0};const memory=new Map();Object.defineProperty(window,'localStorage',{value:{getItem:k=>memory.get(k)||null,setItem:(k,v)=>memory.set(k,String(v)),removeItem:k=>memory.delete(k)}});<\/script>`;
+ const bootstrap=`<base href="../"><script>window.qaErrors=[];addEventListener('error',e=>qaErrors.push(e.message));addEventListener('unhandledrejection',e=>qaErrors.push(String(e.reason)));let seed=522;window.qaSeed=value=>{seed=value>>>0};Math.random=()=>{seed=(Math.imul(seed,1664525)+1013904223)>>>0;return seed/4294967296};window.requestAnimationFrame=cb=>{window.qaFrame=cb;return 0};const memory=new Map();Object.defineProperty(window,'localStorage',{value:{getItem:k=>memory.get(k)||null,setItem:(k,v)=>memory.set(k,String(v)),removeItem:k=>memory.delete(k)}});<\/script>`;
  frame.srcdoc=html.replace('<head>','<head>'+bootstrap);win=frame.contentWindow;
  for(let i=0;i<500;i++){if(win.game3d&&!win.document.querySelector('#start')?.disabled)break;await sleep(50);}
  assert(win.game3d&&!win.document.querySelector('#start')?.disabled,'游戏资源载入超时');g=win.game3d;
- for(const kind of['shot','mechanism','impact','weapon','spell','dodge']){const original=g.audio[kind].bind(g.audio);g.audio[kind]=(...args)=>{const event={kind,time:+clock.toFixed(4),args},before=kind==='weapon'?new Set(g.audio.weaponSources):null;events.push(event);const result=original(...args);if(before){const sources=[...g.audio.weaponSources].filter(source=>!before.has(source));Object.assign(event,{played:result===true,sources:sources.length,material:sources.length>0&&sources.every(source=>source.buffer===g.audio.materialEffects.buffer)});}return result;};}
- win.qaFrame(0);$('#status').textContent='已就绪。点击检查，或选择人物观看连续攻击。';lock(false);
+ for(const kind of['shot','mechanism','impact','weapon','spell','dodge']){const original=g.audio[kind].bind(g.audio);g.audio[kind]=(...args)=>{const actual=[...args];if(kind==='weapon'&&listening){actual[3]=(args[3]??1)*(mixes[activeMix][args[1]]??1);}const event={kind,time:+clock.toFixed(4),args},before=kind==='weapon'?new Set(g.audio.weaponSources):null;events.push(event);const result=original(...actual);if(before){const sources=[...g.audio.weaponSources].filter(source=>!before.has(source));const key=args[0]+':'+args[1]+':'+(args[2]??0),take=(g.audio.weaponTakes.get(key)||2)-1,cue=g.audio.materialEffects.get(g.audio.materialEffects.count(key)?key:args[0]+':'+args[1],take);Object.assign(event,{actualVolume:actual[3]??1,gain:cue?.gain,offset:cue?.offset,played:result===true,sources:sources.length,material:sources.length>0&&sources.every(source=>source.buffer===g.audio.materialEffects.buffer)});}return result;};}
+ const creature=g.audio.creature.bind(g.audio);let hurtBus;
+ g.audio.creature=(...args)=>{if(!listening)return creature(...args);const before=new Set(g.audio.creatureSources),bus=g.audio.sfx,volume=args[1]==='hurt'?mixes[activeMix].hurt:1;let result;
+  if(volume!==1){hurtBus||=g.audio.ctx.createGain();hurtBus.gain.value=volume;hurtBus.disconnect();hurtBus.connect(bus);g.audio.sfx=hurtBus;}
+  try{result=creature(...args);}finally{g.audio.sfx=bus;}
+  const sources=[...g.audio.creatureSources].filter(source=>!before.has(source));events.push({kind:'creature',time:+clock.toFixed(4),args,played:result===true,sources:sources.length,actualVolume:volume,take:g.audio.weaponTakes.get('creature-'+args[0]+'-'+args[1])});return result;
+ };
+ window.addEventListener('pagehide',()=>{stopRequested=true;g.audio.stopWeapons();g.audio.stopCreatures();g.audio.stopMusic();hurtBus?.disconnect();});
+ win.qaFrame(0);$('#status').textContent='已就绪。点击「依次听 A / B / C」，不用描述术语，听哪段更顺即可。';lock(false);
 }catch(error){$('#status').textContent='载入失败：'+error.message;}
 </script></html>
