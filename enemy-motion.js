@@ -1,3 +1,4 @@
+import{updateEnemyGrip}from'./enemy-appearance.js?v=91';
 // Attack timings are shared with the pose driver so the strike matches its hit.
 export const ENEMY_MOTION={
  foamling:{wind:.55,recover:.25,cadence:9,range:2.1},tidecrab:{wind:.7,recover:.35,cadence:10,range:3.1},reefturtle:{wind:1.1,recover:.6,cadence:4,range:4},jellyseer:{wind:.85,recover:.4,cadence:4,range:12},tidestar:{wind:.9,recover:.45,cadence:4,range:11},wreckwarden:{wind:1.25,recover:1.7,cadence:4},
@@ -15,9 +16,64 @@ export function gaitPace(kind,phase){
  return 1;
 }
 const smooth=x=>{x=Math.max(0,Math.min(1,x));return x*x*(3-2*x);};
+// The paw stays low during the longer support phase, then folds for the return.
+// This is a visual two-bone solve; it never changes the actor's world position.
+function plantPaw(leg,phase,stride,crouch,pounce){
+ const u=((phase/(Math.PI*2))%1+1)%1,support=u<.62;
+ const swing=support?0:(u-.62)/.38,travel=support?1-2*u/.62:-1+2*smooth(swing);
+ const lift=Math.sin(swing*Math.PI)*.085*stride;
+ const upper=leg.upperLength,lower=leg.lowerLength,z=travel*.16*stride-crouch*.035+pounce*(leg.joint.position.z>0?.12:-.12);
+ const y=upper+lower-.025-lift-crouch*.075-pounce*.045;
+ const distance=Math.min(upper+lower-.002,Math.max(.08,Math.hypot(y,z)));
+ const clamp=x=>Math.max(-1,Math.min(1,x));
+ const knee=Math.PI-Math.acos(clamp((upper*upper+lower*lower-distance*distance)/(2*upper*lower)));
+ const hip=-Math.atan2(z,y)-Math.acos(clamp((upper*upper+distance*distance-lower*lower)/(2*upper*distance)));
+ leg.joint.rotation.set(hip,0,0);leg.knee.rotation.set(knee,0,0);leg.paw.rotation.set(-hip-knee,0,0);
+}
+function animateForestEnemy(d,t,stride,phase,gather,drive,impact){
+ const rig=d.rig,sway=Math.sin(phase),lag=Math.sin(phase-.55),pounce=d.pounce||0;
+ const airborne=pounce>0?Math.sin(pounce*Math.PI):0,breath=Math.sin(t*2.1),settle=d.previousAttack>0?0:Math.sin(Math.PI*drive);
+ const landing=Math.sin(Math.PI*(1-(d.landing||0)/.18));
+ if(d.kind==='mushroom'){
+  const hop=Math.max(0,sway)*stride,squash=sway*.075*stride-gather*.14+drive*.04-impact*.1;
+  rig.position.y=hop*.15-gather*.07+airborne*.34-landing*.06;
+  rig.scale.set(1-squash*.45,1+squash,1-squash*.45);rig.rotation.set(gather*.08-drive*.12,0,Math.sin(phase*.5)*.055*stride);
+  d.cap.rotation.set(lag*.085*stride+gather*.19-drive*.26-settle*.035,0,Math.sin(phase-.8)*.085*stride);
+  d.feet?.forEach((foot,i)=>{const step=Math.sin(phase+i*Math.PI);foot.position.y=.12+Math.max(0,-step)*.045*stride;foot.position.z=.1+step*.08*stride;foot.rotation.x=step*.18*stride+gather*.12-drive*.14;});
+ }else if(d.kind==='wolf'){
+  rig.position.set(sway*.012*stride,Math.abs(sway)*.025*stride-gather*.09+airborne*.26-landing*.07,-impact*.13-gather*.035+drive*.04);
+  rig.rotation.set(.045*stride+Math.sin(phase*2)*.018*stride-gather*.04+drive*.09+landing*.08,0,sway*.025*stride);
+  d.head.rotation.set(.07*stride+lag*.025*stride+gather*.17-drive*.25+landing*.10,Math.sin(t*1.35)*.025*(1-stride),-sway*.018*stride);
+  d.jaw.position.y=-.21-gather*.04-drive*.065-pounce*.035;
+  d.tail.rotation.set(-.05-gather*.2+airborne*.18,Math.sin(phase*.65-.5)*(.07+.18*stride),0);
+  if(d.tailTip)d.tailTip.rotation.set(Math.sin(phase*.65-.9)*.055*stride,Math.sin(phase*.65-1.25)*(.055+.11*stride),0);
+  d.ears?.forEach((ear,i)=>ear.rotation.set(-.06-Math.sin(phase-.8+i*.35)*.075*stride-gather*.19+drive*.11,0,(i?1:-1)*.07+breath*.025));
+  for(const leg of d.legs)if(leg.knee&&leg.paw)plantPaw(leg,phase+leg.phase,stride,gather,pounce);
+ }else if(d.kind==='golem'){
+  const weight=Math.sin(phase)*stride;
+  rig.position.set(weight*.035,Math.abs(sway)*.025*stride-gather*.13-drive*.045,-impact*.13-gather*.045+drive*.04);
+  rig.rotation.set(.035*stride-gather*.075+drive*.14-impact*.12,Math.sin(phase-.4)*.025*stride,weight*.045);
+  d.legs.forEach(({joint,phase:offset})=>{const step=Math.sin(phase+offset);joint.rotation.set(step*.23*stride,0,0);});
+  d.arms.forEach((arm,i)=>arm.rotation.set(Math.sin(phase+i*Math.PI-.3)*.15*stride-gather*(i?1.02:.9)+drive*(i?.48:.4),0,(i?1:-1)*(.04*stride+.12*gather)));
+  if(d.head)d.head.rotation.set(-gather*.045+drive*.06,-rig.rotation.y*.65,-weight*.025);
+ }else if(d.staff){
+  const spitter=d.kind==='spitter',walk=Math.sin(phase)*stride;
+  rig.position.set(walk*(spitter?.025:.012),Math.abs(sway)*.035*stride+breath*.008-gather*.055+drive*.025,-impact*.13-gather*.025+drive*.045);
+  rig.rotation.set((spitter?.10:.025)*stride+gather*(spitter?.20:-.10)-drive*(spitter?.21:-.07),Math.sin(phase-.3)*.025*stride,walk*(spitter?.11:.055));
+  d.staff.rotation.set(Math.sin(phase-.7)*.055*stride-gather*(spitter?.7:.43)+drive*(spitter?.70:.34),0,(spitter?-.13:.06)+lag*.055*stride);
+  d.staff.position.y=.76+Math.max(0,Math.sin(phase-.5))*.025*stride+gather*(spitter?.20:.30)-drive*(spitter?.03:.13);
+  d.focus.scale.setScalar(1+gather*.28+drive*.07);
+  if(d.head)d.head.rotation.set(-rig.rotation.x*.45+lag*.025*stride+gather*.035-drive*.055,-rig.rotation.y*.5,-rig.rotation.z*.6);
+  if(d.hatTip)d.hatTip.rotation.set(Math.sin(phase-.9)*.045*stride-gather*.07+drive*.1,0,Math.sin(phase-.8)*.09*stride+breath*.018);
+  if(d.hem)d.hem.rotation.set(Math.sin(phase-.6)*.025*stride,0,-Math.sin(phase-.7)*.035*stride);
+  d.arms.forEach(arm=>arm.rotation.set(-lag*.18*stride-gather*.27+drive*.18,0,-.055-gather*.07));
+  d.feet?.forEach((foot,i)=>{const step=Math.sin(phase+i*Math.PI);foot.position.set((i?1:-1)*.15,.08+Math.max(0,-step)*.05*stride,.07+step*.085*stride);foot.rotation.x=step*.15*stride;});
+ }
+}
 export function animateEnemyIdentity(d,t,stride,phase,wind,release,impact){
  const id=d.species||d.kind,rig=d.rig,pounce=d.pounce||0,active=d.previousAttack>0;
  const drive=active?smooth((wind-.66)/.34):release,gather=active?smooth(wind/.6)*(1-.85*drive):release*.15;
+ if(d.appearance){animateForestEnemy(d,t,stride,phase,gather,drive,impact);updateEnemyGrip(d);return;}
  const hand=(i,x,z=0)=>{if(d.arms[i])d.arms[i].rotation.set(x,0,z);};
  const legs=(amp,spread=0)=>d.legs.forEach(({joint,phase:offset})=>{joint.rotation.x=Math.sin(phase+offset)*amp*stride;joint.rotation.z=Math.sign(joint.position.x)*spread;});
  // All poses use absolute offsets: repeated casts cannot accumulate transforms.

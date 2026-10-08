@@ -1,0 +1,24 @@
+<!doctype html><meta charset="utf-8"><title>林地怪物表现检查</title>
+<style>body{background:#192821;color:#f0e9d8;font:15px system-ui;margin:16px}button,select{padding:8px}canvas{display:block;max-width:100%;margin-top:12px}#portraits img{width:160px;background:#25352f;border-radius:12px;margin:6px}pre{white-space:pre-wrap}</style>
+<h1>林地五种怪物 · 实际模型与连续动作</h1>
+<p>左起：蘑菇、狼、石怪、吐毒者、萨满。旧造型仅供对照；本页不写玩家存档。</p>
+<select id="mode"><option value="walk">行走</option><option value="attack">蓄力 → 攻击 → 收招</option><option value="idle">待机</option></select>
+<label><input type="checkbox" id="old">旧造型对照</label><button id="pause">暂停</button><button id="step">前进 0.1 秒</button><button id="portraits-button">生成正式图鉴图片</button>
+<pre id="report">LOADING</pre><div id="stage"></div><div id="portraits"></div>
+<script type="module">
+import * as T from '../vendor/three.module.js';
+import {actor,animateActor} from '../world.js?v=91';
+import {ENEMY_MOTION} from '../enemy-motion.js?v=91';
+const kinds=['mushroom','wolf','golem','spitter','shaman'],scene=new T.Scene(),renderer=new T.WebGLRenderer({antialias:true,preserveDrawingBuffer:true});
+renderer.setSize(1120,380);renderer.setClearColor(0x25382f);renderer.toneMapping=T.ACESFilmicToneMapping;renderer.toneMappingExposure=1.25;
+document.querySelector('#stage').append(renderer.domElement);scene.add(new T.HemisphereLight(0xd8e6f0,0x293c30,2.0));
+const sun=new T.DirectionalLight(0xffe6c2,3.6);sun.position.set(3,7,5);scene.add(sun);const rim=new T.DirectionalLight(0x93cfd9,1.3);rim.position.set(-4,3,-3);scene.add(rim);
+const floor=new T.Mesh(new T.PlaneGeometry(25,10),new T.MeshStandardMaterial({color:0x3b4c3c,roughness:1}));floor.rotation.x=-Math.PI/2;floor.position.y=-.015;scene.add(floor);
+const camera=new T.OrthographicCamera(-8.25,8.25,2.80,-2.80,.1,60);camera.position.set(0,7,14);camera.lookAt(0,.9,0);
+let models=[],clock=0,last=0,paused=false;
+function reset(){for(const m of models)scene.remove(m);models=kinds.map((kind,i)=>{const m=actor(kind,undefined,!document.querySelector('#old').checked);m.position.x=(i-2)*3.1;m.rotation.y=.35;scene.add(m);return m;});clock=0;draw();}
+function draw(){const mode=document.querySelector('#mode').value;for(const [i,m] of models.entries()){const cfg=ENEMY_MOTION[kinds[i]],phase=clock%2.8,wind=mode==='attack'&&phase<cfg.wind?cfg.wind-phase:0;animateActor(m,clock,mode==='walk'?3:0,wind);}renderer.render(scene,camera);document.querySelector('#report').textContent=JSON.stringify({status:'READY',mode,time:+clock.toFixed(2),polished:!document.querySelector('#old').checked,drawCalls:renderer.info.render.calls,triangles:renderer.info.render.triangles});}
+document.querySelector('#mode').onchange=reset;document.querySelector('#old').onchange=reset;document.querySelector('#pause').onclick=()=>{paused=!paused;document.querySelector('#pause').textContent=paused?'继续':'暂停';};document.querySelector('#step').onclick=()=>{paused=true;document.querySelector('#pause').textContent='继续';clock+=.1;draw();};
+document.querySelector('#portraits-button').onclick=()=>{const root=document.querySelector('#portraits');root.replaceChildren();const r=new T.WebGLRenderer({alpha:true,antialias:true,preserveDrawingBuffer:true});r.setSize(256,256);r.setClearColor(0,0);r.toneMapping=T.ACESFilmicToneMapping;r.toneMappingExposure=1.25;const s=new T.Scene();s.add(new T.HemisphereLight(0xd8e6f0,0x293c30,2.0));s.add(sun.clone(),rim.clone());for(const kind of kinds){const m=actor(kind);s.add(m);const bounds=new T.Box3().setFromObject(m),center=bounds.getCenter(new T.Vector3()),size=bounds.getSize(new T.Vector3()),half=Math.max(size.x,size.y,size.z)*.67,c=new T.OrthographicCamera(-half,half,half,-half,.1,60);c.position.copy(center).add(new T.Vector3(4,2.2,6).normalize().multiplyScalar(20));c.lookAt(center);r.render(s,c);const img=document.createElement('img');img.id='portrait-'+kind;img.alt=kind;img.src=r.domElement.toDataURL('image/png');root.append(img);s.remove(m);}r.dispose();};
+reset();function frame(now){if(!paused){clock+=Math.min(.04,(now-last)/1000||0);draw();}last=now;requestAnimationFrame(frame);}requestAnimationFrame(frame);
+</script>

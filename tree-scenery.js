@@ -4,9 +4,9 @@ import{mergeGeometries}from'./vendor/BufferGeometryUtils.js';
 // Six shared templates keep each tree independently removable without per-tree GPU assets.
 const templates=new Map(),material=new T.MeshStandardMaterial({vertexColors:true,roughness:1});
 const up=new T.Vector3(0,1,0);
-function tint(geometry,color){
- const p=geometry.attributes.position,c=new T.Color(color),colors=[];
- for(let i=0;i<p.count;i++){const shade=.94+.06*Math.sin(p.getX(i)*2.3+p.getY(i)*1.7);colors.push(c.r*shade,c.g*shade,c.b*shade);}
+function tint(geometry,color,canopy=false){
+ const p=geometry.attributes.position,n=geometry.attributes.normal,c=new T.Color(color),colors=[];
+ for(let i=0;i<p.count;i++){const light=canopy?Math.max(0,n.getY(i)) : 0,shade=(canopy?.77+light*.25:.92)+.04*Math.sin(p.getX(i)*2.3+p.getY(i)*1.7+p.getZ(i)*1.3);colors.push(c.r*shade*(1+light*.045),c.g*shade,c.b*shade*(1-light*.06));}
  geometry.setAttribute('color',new T.Float32BufferAttribute(colors,3));return geometry;
 }
 function merge(parts){const geometry=mergeGeometries(parts,false);for(const part of parts)part.dispose();geometry.computeBoundingBox();geometry.computeBoundingSphere();return geometry;}
@@ -31,7 +31,7 @@ function treeTemplate(id,variant){
    const [x,y,z,sx,sy,sz]=[[-.65,.92,.10,1.10,.67,1.04],[.65,1.08,.15,1.16,.73,1.04],[-.1,1.23,-.68,1.12,.78,1.07],[-.12,1.32,.73,1.10,.80,1.01],[.08,1.80,-.12,1.15,.75,1.10]][i];
    crown.scale(sx,sy,sz);crown.rotateY(variant*.47+i*.31);crown.translate(x+(variant-1)*.05,y,z);crown.computeVertexNormals();
   }
-  crowns.push(tint(crown,palette[i]));
+  crowns.push(tint(crown,palette[i],true));
  }
  const canopy=merge(crowns),bottom=canopy.boundingBox.min.y;canopy.translate(0,-bottom,0);canopy.computeBoundingBox();
  const template={trunk:merge(branches),trunkHeight,canopy,canopyHeight:canopy.boundingBox.max.y};templates.set(key,template);return template;

@@ -1,5 +1,28 @@
-import{test}from'node:test';import assert from'node:assert/strict';import{actor,animateActor}from'../world.js';import{ENEMY_MOTION,gaitPace}from'../enemy-motion.js';
-const pose=m=>{const d=m.userData;return[d.rig,...d.arms,...d.legs.map(l=>l.joint||l),d.cap,d.head,d.staff,d.satellites,...(d.ears||[]),...(d.feet||[]),...(d.segments||[])].filter(Boolean).flatMap(o=>[...o.position.toArray(),o.rotation.x,o.rotation.y,o.rotation.z,...o.scale.toArray()]);};
+import{test}from'node:test';import assert from'node:assert/strict';import{actor,animateActor}from'../world.js';import{ENEMY_MOTION,gaitPace,animateEnemyIdentity}from'../enemy-motion.js';
+import{polishEnemyAppearance}from'../enemy-appearance.js';import{Vector3,Scene}from'../vendor/three.module.js';import{recordEnemyHit,EnemyDeaths}from'../enemy-feedback.js';
+const pose=m=>{const d=m.userData;return[d.rig,...d.arms,...d.legs.flatMap(l=>[l.joint||l,l.knee,l.paw]),d.cap,d.head,d.staff,d.satellites,d.tail,d.tailTip,d.hatTip,d.hem,...(d.ears||[]),...(d.feet||[]),...(d.segments||[])].filter(Boolean).flatMap(o=>[...o.position.toArray(),o.rotation.x,o.rotation.y,o.rotation.z,...o.scale.toArray()]);};
 test('all walking species have distinct moving and attack poses with bounded transforms',()=>{for(const attack of [false,true]){const signatures=new Set();for(const[id,cfg]of Object.entries(ENEMY_MOTION)){const m=actor(id);if(m.userData.bossModel)continue;for(let i=0;i<40;i++)animateActor(m,i/60,attack?0:3,attack?cfg.wind*(1-i/50):0,0);const values=pose(m);assert(values.every(Number.isFinite),id);signatures.add(values.map(v=>v.toFixed(3)).join(','));}assert.equal(signatures.size,25);}});
 test('release blends from the strike without an arm or staff snap at 30, 60 and 120 FPS',()=>{for(const fps of [30,60,120])for(const[id,cfg]of Object.entries(ENEMY_MOTION)){const m=actor(id),dt=1/fps;if(m.userData.bossModel)continue;let t=0;for(;t<cfg.wind-dt;t+=dt)animateActor(m,t,0,cfg.wind-t,0);animateActor(m,t,0,.001,0);const before=pose(m);animateActor(m,t+dt,0,0,0);const after=pose(m),jump=Math.max(...before.map((v,i)=>Math.abs(v-after[i])));assert(jump<.45,`${id} ${fps} FPS jumps ${jump}`);for(let j=1;j<fps*3;j++)animateActor(m,t+j*dt,0,0,0);assert.equal(m.userData.release,0);}});
 test('rabbit and mushroom advance in bounds while emberling scuttles; no gait reverses movement',()=>{for(const kind of Object.keys(ENEMY_MOTION))for(let phase=0;phase<7;phase+=.1)assert(gaitPace(kind,phase)>0);assert(gaitPace('snowhare',Math.PI/2)>gaitPace('snowhare',Math.PI)*4);assert(gaitPace('emberling',Math.PI/2)<gaitPace('emberling',Math.PI)*1.5);});
+test('forest secondary motion freezes with game time and recovers after stopping',()=>{for(const kind of ['mushroom','wolf','golem','spitter','shaman']){const m=polishEnemyAppearance(actor(kind));for(let i=0;i<120;i++)animateActor(m,i/60,3,0,0);const before=pose(m);for(let i=0;i<30;i++)animateActor(m,119/60,3,0,0);assert.deepEqual(pose(m),before,kind+' moved while paused');for(let i=120;i<=360;i++)animateActor(m,i/60,0,0,0);assert(m.userData.stride<1e-8,kind+' kept walking after stopping');assert(pose(m).every(Number.isFinite));}});
+test('forest gait and delayed follow-through agree at 30, 60 and 120 FPS',()=>{for(const kind of ['mushroom','wolf','golem','spitter','shaman']){const samples=[];for(const fps of [30,60,120]){const m=polishEnemyAppearance(actor(kind));animateActor(m,0,0,0,0);for(let i=1;i<=fps*2;i++){m.userData.walkPhase=i/fps*ENEMY_MOTION[kind].cadence;animateActor(m,i/fps,3,0,0);}samples.push(pose(m));}for(const values of samples.slice(1))assert(Math.max(...values.map((v,i)=>Math.abs(v-samples[0][i])))<1e-8,kind+' gait depended on frame rate');}});
+test('wolf paws support low, lift on the return and keep finite joints through repeated lunges',()=>{
+ const wolf=polishEnemyAppearance(actor('wolf')),d=wolf.userData,foot=new Vector3(),support=[],swing=[];
+ for(let i=0;i<100;i++){animateEnemyIdentity(d,0,1,i/100*Math.PI*2,0,0,0);wolf.updateMatrixWorld(true);d.legs[0].paw.getWorldPosition(foot);(i<62?support:swing).push(foot.y);}
+ assert(Math.max(...support)-Math.min(...support)<.05,'supporting paw bobs above the floor');assert(Math.max(...swing)>Math.max(...support)+.05,'swinging paw never lifts');
+ for(let i=0;i<600;i++){d.pounce=(i%36)/36;d.walkPhase=i/60*12;animateActor(wolf,i/60,3,i%72<36?(36-i%36)/60:0,0);assert(pose(wolf).every(Number.isFinite));}
+ assert.equal(d.legs.length,4);assert(d.legs.every(l=>Math.abs(l.knee.rotation.x)<Math.PI));
+});
+test('forest swimming, recoil and death combine without moving roots, pause drift or leftover bodies',()=>{
+ for(const kind of ['mushroom','wolf','golem','spitter','shaman']){
+  const m=actor(kind),control=actor(kind),d=m.userData,scene=new Scene(),deaths=new EnemyDeaths(scene);scene.add(m);
+  for(const mesh of[m,control]){mesh.position.set(2,0,3);mesh.userData.waterDepth=1;for(let i=0;i<90;i++)animateActor(mesh,i/60,3,0,0);}
+  recordEnemyHit(m,{kind:'hammer',damage:20,maxHp:100,angle:Math.PI/3});animateActor(m,1.5,3,0,0);const paused=pose(m),age=d.hitReaction.age;
+  for(let i=0;i<12;i++)animateActor(m,1.5,3,0,0);assert.deepEqual(pose(m),paused,kind+' recoil/swim moved while paused');assert.equal(d.hitReaction.age,age);
+  animateActor(control,1.5,3,0,0);
+  for(let i=91;i<210;i++){for(const mesh of[m,control]){mesh.userData.waterDepth=i<120?1:0;animateActor(mesh,i/60,i<150?3:0,0,0);}assert.deepEqual(m.position.toArray(),[2,0,3]);}
+  assert(!d.hitReaction);assert.equal(d.waterBlend,0);assert.deepEqual(pose(m),pose(control),kind+' retained a recoil or swimming offset');
+  d.waterDepth=1;for(let i=210;i<270;i++)animateActor(m,i/60,3,0,0);recordEnemyHit(m,{kind:'hammer',damage:20,maxHp:100,angle:1});animateActor(m,4.5,3,0,0);assert(d.waterBlend>.99&&d.hitReaction);
+  deaths.add({mesh:m,role:kind});deaths.update(.18);assert(pose(m).every(Number.isFinite));const dying=pose(m);deaths.update(0);assert.deepEqual(pose(m),dying,kind+' corpse changed while paused');deaths.update(.32);assert.equal(deaths.items.length,0);assert.equal(scene.children.length,0);
+ }
+});

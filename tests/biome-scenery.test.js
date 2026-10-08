@@ -5,10 +5,30 @@ globalThis.document={createElement:()=>({width:256,height:256,getContext:()=>({f
 function dispose(w){w.group.traverse(o=>{if(o.isInstancedMesh)o.dispose();if(o.userData.ownedGeometry)o.geometry.dispose();});}
 test('biome details are bounded, finite, grounded and clear of rewards, bridges and hazard warnings',()=>{
  for(const id of ['forest','snow','ash','sand','coast'])for(let seed=1;seed<=5;seed++){
-  const w=buildWorld(id,seed);assert(w.scenery.records.length>35,id);assert(w.scenery.batches.length<=5);const matrix=new T.Matrix4();let instances=0;
+  const w=buildWorld(id,seed);assert(w.scenery.records.length>35,id);assert(w.scenery.batches.length<=3);const matrix=new T.Matrix4();let instances=0;
   for(const m of w.scenery.batches){instances+=m.count;assert(m.isInstancedMesh&&!m.castShadow);for(let i=0;i<m.count;i++){m.getMatrixAt(i,matrix);assert(matrix.elements.every(Number.isFinite));assert(matrix.elements[13]>=0&&matrix.elements[13]<.4);}}assert(instances<3700);
   for(const p of w.scenery.records)assert(sceneryAllowed(w,p.x,p.z),id+' invalid decoration placement');
   assert(w.ground.userData.ownedGeometry&&w.ground.material.vertexColors);const colors=w.ground.geometry.attributes.color;assert.equal(colors.count,w.ground.geometry.attributes.position.count);assert([...colors.array].every(v=>Number.isFinite(v)&&v>.3&&v<1.4));dispose(w);
+ }
+});
+test('plants stay below the fighting plane and snow accumulation follows a consistent wind',()=>{
+ const matrix=new T.Matrix4(),size=new T.Vector3();
+ for(const id of['forest','snow','sand','coast']){
+  const w=buildWorld(id,7);let snowDirection;
+  for(const batch of w.scenery.batches){
+   const kind=batch.userData.biomeDetail;
+   if(['frond','leaf'].includes(kind)){
+    batch.geometry.computeBoundingBox();const bounds=batch.geometry.boundingBox;
+    assert.equal(bounds.min.y,0,'plants lost their grounded stems');
+    for(let i=0;i<batch.count;i++){batch.getMatrixAt(i,matrix);size.setFromMatrixScale(matrix);assert(bounds.max.y*size.y+matrix.elements[13]<1.05,'detail obscures actors');}
+   }
+   if(kind==='snow')for(let i=0;i<batch.count;i++){
+    batch.getMatrixAt(i,matrix);const direction=new T.Vector3(matrix.elements[8],0,matrix.elements[10]).normalize();
+    snowDirection??=direction;assert(direction.dot(snowDirection)>.9999,'snow drifts contradict the shared wind');
+   }
+  }
+  if(id==='forest'){const fronds=w.scenery.batches.find(m=>m.userData.biomeDetail==='frond');assert(fronds.count<=w.scenery.records.length*4,'forest floor became dense grass');assert(fronds.geometry.index.count<=96,'fern detail exceeds its triangle budget');}
+  dispose(w);
  }
 });
 test('biomes use distinct detail silhouettes and reuse GPU materials on restart',()=>{

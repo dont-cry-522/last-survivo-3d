@@ -3,7 +3,7 @@ import assert from'node:assert/strict';
 import{createHash}from'node:crypto';
 import * as T from'../vendor/three.module.js';
 import{buildWorld,animateWorld}from'../world.js';
-import{damageTerrain,updateTactics}from'../map-tactics.js?v=90';
+import{damageTerrain,updateTactics}from'../map-tactics.js?v=91';
 
 globalThis.document={createElement:()=>({getContext:()=>({fillRect(){}})})};
 const dispose=w=>w.group.traverse(o=>{if(o.isInstancedMesh)o.dispose();if(o.userData.ownedGeometry)o.geometry.dispose();});
@@ -25,6 +25,7 @@ test('tree canopies clear human height and every tree renders as two shared opaq
    assert.equal(o.mesh.children.length,2);const canopy=o.mesh.getObjectByName('tree-canopy'),bounds=new T.Box3().setFromObject(o.mesh,true),crown=new T.Box3().setFromObject(canopy,true),snow=o.mesh.userData.treeBiome==='snow';
    assert(bounds.max.y>6.2&&bounds.max.y<8.5,'tree height lost its human scale');assert(crown.min.y>3.4,'canopy intrudes into the fighting plane');
    assert(crown.max.x-crown.min.x<(snow?3.9:4.5),'crown became excessively broad');assert(canopy.geometry.attributes.normal&&canopy.geometry.attributes.color);
+   assert([...canopy.geometry.attributes.color.array].every(v=>Number.isFinite(v)&&v>=0&&v<=1),'canopy tint contains invalid colors');
    if(!snow){assert(bounds.max.y<7.2,'forest trunk stretched into a pole');assert(crown.max.x-crown.min.x>3.4,'forest crown collapsed into narrow balls');}
    if(o.mesh.userData.treeBiome==='snow')assert(o.mesh.children.reduce((n,m)=>n+(m.geometry.index?.count??m.geometry.attributes.position.count)/3,0)<=272,'snow tree exceeds its geometry budget');
    for(const mesh of o.mesh.children){geometries.add(mesh.geometry);materials.add(mesh.material);assert(!mesh.material.transparent);assert(!mesh.userData.ownedGeometry,'shared tree geometry disposed with a single world');assert.equal(mesh.geometry.groups.length,0,'material groups multiply tree draw calls');}
