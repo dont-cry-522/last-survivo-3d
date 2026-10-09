@@ -1,5 +1,5 @@
 import * as T from './vendor/three.module.js';
-import {wulingOutfit,wulingMask} from './wuling-appearance.js?v=101';
+import {wulingOutfit,wulingMask} from './wuling-appearance.js?v=102';
 
 // Authored procedural prototype on the existing female rig; no extra model download.
 export const MIRAGE_PALETTE=Object.freeze({cloth:0x24142e,violet:0x4a2b63,mist:0xa78cc7,ivory:0xe9e3f2,silver:0x797484,glow:0x8f5cff});

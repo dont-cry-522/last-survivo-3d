@@ -1,7 +1,7 @@
 import * as T from './vendor/three.module.js';
-import{MAP_HALF}from'./map-layout.js?v=101';
-import{bridgeContains}from'./coast.js?v=101';
-import{seeded}from'./rules.js?v=101';
+import{MAP_HALF}from'./map-layout.js?v=102';
+import{bridgeContains}from'./coast.js?v=102';
+import{seeded}from'./rules.js?v=102';
 // One worn silhouette is shared by boulders, bank stones and instanced scree.
 export const naturalRockGeometry=(()=>{
  const g=new T.SphereGeometry(1,10,7),p=g.attributes.position,colors=[];
@@ -83,18 +83,27 @@ function snowGeometry(){
  }
  const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute(positions,3));g.setAttribute('color',new T.Float32BufferAttribute(colors,3));g.setIndex(indices);g.computeVertexNormals();return g;
 }geometries.snow=snowGeometry();
-function leafGeometry(){const pos=[],idx=[];for(let i=0;i<=5;i++){const t=i/5,w=Math.sin(Math.PI*t)*.14;pos.push(-w,t*.48,t*t*.7,w,t*.48,t*t*.7);if(i<5){const a=i*2;idx.push(a,a+1,a+2,a+1,a+3,a+2);}}const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute(pos,3));g.setIndex(idx);g.computeVertexNormals();return g;}geometries.leaf=leafGeometry();
-function frondGeometry(){
- const p=[],ix=[],height=t=>Math.sin(t*Math.PI*.82)*.34;
- for(let i=0;i<=5;i++){const t=i/5;p.push(-.008,height(t),t*.92,.008,height(t),t*.92);if(i<5){const n=i*2;ix.push(n,n+1,n+2,n+1,n+3,n+2);}}
- for(let i=0;i<5;i++){
-  const t=.13+i*.16,y=height(t),z=t*.92,w=Math.sin(Math.PI*t)*.28;
-  for(const side of[-1,1]){const n=p.length/3;p.push(0,y,z,side*w*.48,y+.025,z+.025,side*w,y-.015,z+.12,side*w*.34,y-.025,z+.09);ix.push(n,n+1,n+2,n,n+2,n+3);}
+function leafGeometry(){
+ const pos=[],colors=[],idx=[];
+ // A folded midrib catches light; the arcing tip is softer than a flat upright ribbon.
+ for(let i=0;i<=4;i++){
+  const t=i/4,w=Math.sin(Math.PI*t)*.125,y=Math.sin(t*Math.PI*.72)*.43,z=t*t*.72,shade=.72+t*.27;
+  for(const side of[-1,0,1]){pos.push(side*w+t*t*.035,y-Math.abs(side)*w*.25,z);colors.push(shade*.98,shade,shade*.94);}
+  if(i<4){const a=i*3;for(let strip=0;strip<2;strip++)idx.push(a+strip,a+strip+1,a+strip+3,a+strip+1,a+strip+4,a+strip+3);}
  }
- const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute(p,3));g.setIndex(ix);g.computeVertexNormals();return g;
+ const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute(pos,3));g.setAttribute('color',new T.Float32BufferAttribute(colors,3));g.setIndex(idx);g.computeVertexNormals();return g;
+}geometries.leaf=leafGeometry();
+function frondGeometry(){
+ const p=[],colors=[],ix=[],height=t=>Math.sin(t*Math.PI*.82)*.34,vertex=(x,y,z,shade)=>{p.push(x,y,z);colors.push(shade*.96,shade,shade*.91);};
+ for(let i=0;i<=5;i++){const t=i/5;vertex(-.008,height(t),t*.92,.69+t*.27);vertex(.008,height(t),t*.92,.69+t*.27);if(i<5){const n=i*2;ix.push(n,n+1,n+2,n+1,n+3,n+2);}}
+ for(let i=0;i<5;i++){
+  const t=.13+i*.16,y=height(t),z=t*.92,w=Math.sin(Math.PI*t)*.29,shade=.77+t*.20;
+  for(const side of[-1,1]){const n=p.length/3,reach=w*(side<0?.95:1.04);vertex(0,y,z,shade*.85);vertex(side*reach*.43,y-.020,z+.025,shade*.91);vertex(side*reach,y+.012-i*.005,z+.15,shade*1.06);vertex(side*reach*.40,y-.043,z+.105,shade);ix.push(n,n+1,n+2,n,n+2,n+3);}
+ }
+ const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute(p,3));g.setAttribute('color',new T.Float32BufferAttribute(colors,3));g.setIndex(ix);g.computeVertexNormals();return g;
 }geometries.frond=frondGeometry();
 function material(kind,id){const key=['leaf','frond','ice'].includes(kind)?kind+':'+id:kind;if(!materials.has(key)){
- const m=new T.MeshStandardMaterial({color:0xffffff,roughness:1,vertexColors:['snow','stone'].includes(kind),side:['leaf','frond'].includes(kind)?T.DoubleSide:T.FrontSide});
+ const m=new T.MeshStandardMaterial({color:0xffffff,roughness:1,vertexColors:['snow','stone','leaf','frond'].includes(kind),side:['leaf','frond'].includes(kind)?T.DoubleSide:T.FrontSide});
  if(['leaf','frond','ice'].includes(kind)){
   const clock={value:0},gust={value:1},focus={value:new T.Vector2()};m.userData.motion={clock,gust,focus};
   m.onBeforeCompile=s=>{Object.assign(s.uniforms,{sceneryTime:clock,sceneryGust:gust,sceneryFocus:focus});
@@ -136,7 +145,10 @@ function groundColors(w,id){
 }
 export function installScenery(w,id,rnd){
  if(!w.regional)groundColors(w,id);const batches=new Map(),dummy=new T.Object3D(),records=[];
- const add=(kind,color,x,y,z,sx,sy,sz,angle=0,tilt=0)=>{if(!sceneryAllowed(w,x,z))return;dummy.position.set(x,y,z);dummy.scale.set(sx,sy,sz);dummy.rotation.set(0,angle,0);dummy.rotateX(tilt);dummy.updateMatrix();const key=w.regional?kind+':'+Math.floor(x/32)+','+Math.floor(z/32):kind;if(!batches.has(key))batches.set(key,[]);batches.get(key).push({matrix:dummy.matrix.clone(),color:new T.Color(color)});};
+ // Reuse the rendered routes. This is a build-time visual filter, never a new collider.
+ const routes=w.road?[w.road]:w.sites.filter(s=>s.trail).map(s=>{const p=s.trail.geometry.attributes.position,path=[];for(let i=0;i<p.count;i+=4)path.push({x:(p.getX(i+1)+p.getX(i+2))*.5,z:(p.getZ(i+1)+p.getZ(i+2))*.5});return path;});
+ const onRoute=(x,z)=>routes.some(path=>{for(let i=1;i<path.length;i++){const a=path[i-1],b=path[i],dx=b.x-a.x,dz=b.z-a.z,t=T.MathUtils.clamp(((x-a.x)*dx+(z-a.z)*dz)/(dx*dx+dz*dz||1),0,1);if((x-a.x-dx*t)**2+(z-a.z-dz*t)**2<1.45**2)return true;}return false;});
+ const add=(kind,color,x,y,z,sx,sy,sz,angle=0,tilt=0)=>{if(!sceneryAllowed(w,x,z)||onRoute(x,z))return;dummy.position.set(x,y,z);dummy.scale.set(sx,sy,sz);dummy.rotation.set(0,angle,0);dummy.rotateX(tilt);dummy.updateMatrix();const key=w.regional?kind+':'+Math.floor(x/32)+','+Math.floor(z/32):kind;if(!batches.has(key))batches.set(key,[]);batches.get(key).push({matrix:dummy.matrix.clone(),color:new T.Color(color)});};
  const palette={forest:[0x40664c,0x71904e,0x2f5d50],snow:[0xd8e6e5,0xa6c3cb,0x7d9ea9],ash:[0x383b40,0x69574f,0x89715b],sand:[0x9b895d,0xb6a275,0x857654],coast:[0x627b60,0x899c6c,0x49685c]}[id];
  const snowColor=w.regional?0xacbfc1:0x96b7bd;
  // Most plants grow around existing trees/rocks or along the banks; open areas stay sparse.
@@ -153,7 +165,7 @@ export function installScenery(w,id,rnd){
     const h=scale*(.65+rnd()*.55),px=x+(rnd()-.5)*.3,pz=z+(rnd()-.5)*.3;
     // Consume the same random stream: richer fronds replace fine blades without moving the map.
     if(j>=count)continue;
-    if(id==='forest'){const turn=a+(j-(count-1)/2)*1.15+patch*.25,reach=h*(lush?1.12:.8)*(j===0?.72:1);add('frond',palette[shade?2:patch>.15?1:0],px,.015,pz,reach*1.18,h*(lush?.95:.65),reach*1.15,turn);}
+    if(id==='forest'){const turn=a+(j-(count-1)/2)*1.15+patch*.25,reach=h*(lush?1.12:.8)*(j===0?.72:1);add('frond',palette[shade?2:patch>.15?1:0],px+Math.sin(turn)*.10,.015,pz+Math.cos(turn)*.10,reach*1.18,h*(lush?.95:.65),reach*1.15,turn);}
     else{const turn=(id==='sand'?windAngle:drift)+(j-(count-1)/2)*.48+patch*.2,growth=h*(j%3===0?.68:1);add('leaf',palette[j%3],px,.015,pz,id==='sand'?.22:growth*.52,id==='coast'?growth*1.2:growth,id==='sand'?growth*.75:growth,turn,id==='sand'?.18:0);}
    }
    if(id==='forest'&&i%2===0){add('wood',0x5a5542,x-Math.sin(a)*.24,.045,z-Math.cos(a)*.24,.8,.8+rnd(),.45,a,Math.PI/2);for(let j=0;j<9;j++){const along=(rnd()-.6)*2.2,across=(rnd()-.5)*.85,turn=rnd()*6;if(j<(lush?9:5))add('chip',j%3===0?0x927448:j%3===1?0x637248:0x6d5941,x+Math.sin(a)*along+Math.cos(a)*across,.023,z+Math.cos(a)*along-Math.sin(a)*across,.10+j%3*.025,.018,.17+j%2*.06,a+turn*.18);}}
@@ -166,10 +178,29 @@ export function installScenery(w,id,rnd){
    if(i%4===0)add('wood',0x302d2e,x,.06,z,.9,1.3,.45,a,Math.PI/2);
   }
  }
+ // Sparse shoulders frame the first steps out of camp, never a ring around the player.
+ // Use the existing exit direction and no randomness, preserving all later world generation.
+ const exit=w.sites.find(s=>s.type==='relic')||w.sites[0],dx=(exit?.x??w.spawn.x+1)-w.spawn.x,dz=(exit?.z??w.spawn.z)-w.spawn.z,length=Math.hypot(dx,dz)||1,forwardX=dx/length,forwardZ=dz/length;
+ for(const [i,[along,side]]of[[4.8,-4.1],[8.1,-4.5],[5.6,5.2],[9,4.8]].entries()){
+  const x=w.spawn.x+forwardX*along+forwardZ*side,z=w.spawn.z+forwardZ*along-forwardX*side,angle=Math.atan2(forwardX,forwardZ)+i*.61;
+  if(id==='forest'){
+   for(let j=0;j<3;j++){const turn=angle+j*1.73,size=.55+j*.09;add('frond',palette[(i+j)%3],x+Math.sin(turn)*.14,.015,z+Math.cos(turn)*.14,size,size*.72,size,turn);}
+   for(let j=0;j<2;j++)add('chip',j?0x6d5941:0x927448,x+(j-.5)*.36,.023,z+(j-.5)*.21,.13,.016,.19,angle+j*.8);
+  }else if(id==='snow'){
+   add('snow',snowColor,x,0,z,.47,.15,.98,windAngle);
+   for(let j=0;j<2;j++)add('stone',palette[2],x-windX*(.3+j*.19),.023,z-windZ*(.3+j*.19),.16-j*.04,.055-j*.01,.22-j*.05,windAngle);
+  }else if(id==='ash'){
+   for(let j=0;j<4;j++)add('chip',palette[(i+j)%3],x+Math.sin(angle)*j*.21,.025,z+Math.cos(angle)*j*.21,.18-j*.025,.055-j*.009,.24-j*.035,angle+j*.2);
+  }else{
+   for(let j=0;j<2;j++)add('leaf',palette[(i+j)%3],x+j*.18,.015,z+j*.11,id==='sand'?.2:.33,.56+j*.13,.51+j*.12,id==='sand'?windAngle:angle+j*.6);
+   if(id==='sand')add('chip',0xb6a275,x-windX*.32,.025,z-windZ*.32,.15,.035,.27,windAngle);
+   else add('stone',0xadb2a0,x+.35,.025,z-.23,.14,.045,.19,angle);
+  }
+ }
  // Tie the foot of each obstacle to the terrain instead of leaving a bare cylinder on a flat plane.
  for(const o of w.obstacles){if(!sceneryAllowed(w,o.x,o.z))continue;const a=rnd()*6;
   if(id==='snow')add('snow',snowColor,o.x+windX*.45,0,o.z+windZ*.45,.7+Math.sin(a)*.12,.27,1.6+Math.cos(a)*.25,windAngle);
-  else if(id==='forest'){for(let j=0;j<3;j++){const turn=a+j*2+Math.sin(a+j)*.22,reach=.85+Math.sin(a*2+j)*.2;add('wood',0x595c43,o.x+Math.sin(turn)*.42,.055,o.z+Math.cos(turn)*.42,1.7,reach,.33,turn,Math.PI/2);add('wood',0x4c5942,o.x+Math.sin(turn)*(.72+reach*.25),.025,o.z+Math.cos(turn)*(.72+reach*.25),.7,reach*.65,.18,turn+.24,Math.PI/2);}}
+  else if(id==='forest'){if(o.mesh.userData.treeBiome)for(let j=0;j<3;j++){const turn=a+j*1.47+Math.sin(a+j)*.35,reach=.63+Math.sin(a*2+j)*.23;add('wood',0x595c43,o.x+Math.sin(turn)*.35,.035,o.z+Math.cos(turn)*.35,1.12,reach,.25,turn,Math.PI/2);add('wood',0x4c5942,o.x+Math.sin(turn)*(.55+reach*.25),.016,o.z+Math.cos(turn)*(.55+reach*.25),.52,reach*.54,.12,turn+.32,Math.PI/2);}}
   else{const direction=id==='coast'?bankFrame(w,o.x,o.z).angle:id==='sand'?windAngle:a;for(let j=0;j<3;j++){const turn=direction+(j-1)*.72,reach=.45+j*.25;add('stone',id==='ash'?0x463e40:id==='sand'?0xa89773:0x7d918a,o.x+Math.sin(turn)*reach,.035,o.z+Math.cos(turn)*reach,.42-j*.11,.17-j*.045,.54-j*.12,turn);}}
  }
  w.scenery={records,batches:[]};for(const[key,parts]of batches){const kind=key.split(':')[0],m=new T.InstancedMesh(geometries[kind],material(kind,id),parts.length);parts.forEach((p,i)=>{m.setMatrixAt(i,p.matrix);m.setColorAt(i,p.color);});m.receiveShadow=true;m.castShadow=false;m.userData.biomeDetail=kind;m.userData.sceneryBiome=id;w.group.add(m);w.scenery.batches.push(m);}

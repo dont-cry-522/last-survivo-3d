@@ -32,9 +32,24 @@ test('all six maps retain draw counts, layout and base colors while sharing fini
   const kinds=new Set();for(const [i,o]of after.entries()){
    assert.equal(o.material?.color?.getHex(),colors[i]);const kind=o.material?.userData.propSurface;if(!kind)continue;
    kinds.add(kind);assert(!o.material.transparent);assert(!o.material.map&&!o.material.normalMap);assert(o.material.roughness>=.85);
+   assert.equal(o.material.vertexColors,!!o.geometry.attributes.color,id+' surface requires a missing color attribute');
    if(run)assert(known.has(o.material),'rebuild introduced new persistent material');else known.add(o.material);
   }
   assert(kinds.has('stone')&&kinds.has('wood-y'),id+' did not retain stone and wood identities');
   w.group.traverse(o=>{if(o.isInstancedMesh)o.dispose();if(o.userData.ownedGeometry)o.geometry.dispose();});
  }
+});
+
+test('colored blocks and bare cylinders sharing a source keep separate cached surface variants',()=>{
+ const source=new T.MeshStandardMaterial({color:0x76614c,roughness:.8,emissiveIntensity:0}),group=new T.Group();
+ const add=geometry=>{const mesh=new T.Mesh(geometry,source);group.add(mesh);return mesh;};
+ const bare=add(new T.CylinderGeometry(.2,.3,2,8)),repeat=add(new T.CylinderGeometry(.3,.4,3,8)),block=add(new T.BoxGeometry(.4,2,.4));
+ const colored=add(new T.CylinderGeometry(.2,.3,2,8));colored.geometry.setAttribute('color',new T.Float32BufferAttribute(new Float32Array(colored.geometry.attributes.position.count*3).fill(.9),3));
+ polishEnvironmentModels({group,obstacles:[]});
+ assert.equal(bare.material.vertexColors,false);assert.equal(block.material.vertexColors,true);assert.equal(colored.material.vertexColors,true);
+ assert.strictEqual(bare.material,repeat.material);assert.strictEqual(block.material,colored.material);assert.notStrictEqual(bare.material,block.material);
+ assert.notEqual(bare.material.customProgramCacheKey(),block.material.customProgramCacheKey());
+ for(const mesh of[bare,repeat,block,colored])assert(mesh.material.color.equals(source.color));
+ assert.equal(source.vertexColors,false);assert.equal(source.roughness,.8);
+ const assigned=group.children.map(o=>o.material);polishEnvironmentModels({group,obstacles:[]});assert.deepEqual(group.children.map(o=>o.material),assigned);
 });

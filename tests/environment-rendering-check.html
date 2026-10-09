@@ -1,7 +1,8 @@
 <!doctype html><html lang="zh-CN"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>环境渲染检查</title><style>body{margin:12px;background:#13242b;color:#e1e9e4;font:14px system-ui}button,select{padding:10px;background:#254943;color:inherit;border:1px solid #709582;border-radius:6px}iframe{border:0;display:block;margin-top:12px}#view{overflow:auto}pre{white-space:pre-wrap}</style>
-<button id="run" disabled>运行环境回归</button><select id="map"><option value="forest">林地</option><option value="snow">雪地</option><option value="ash">赤烬</option><option value="sand">沙漠</option><option value="coast">海港</option><option value="confluence">五境</option></select><button id="lobby" disabled>预览大厅</button><button id="battle" disabled>预览实战</button><button id="mobile" disabled>预览手机横屏</button><button id="water" disabled>查看水岸</button><button id="paths">路径显示检查</button><button id="ruins" disabled>查看林中古迹</button><p id="status">载入中。此页使用隔离存档和固定帧进度；手机尺寸是模拟，不代表真机帧率。</p><div id="view"></div><pre id="report"></pre>
+<button id="run" disabled>运行环境回归</button><select id="map"><option value="forest">林地</option><option value="snow">雪地</option><option value="ash">赤烬</option><option value="sand">沙漠</option><option value="coast">海港</option><option value="confluence">五境</option></select><button id="lobby" disabled>预览大厅</button><button id="battle" disabled>预览实战</button><button id="mobile" disabled>预览手机横屏</button><button id="water" disabled>查看水岸</button><button id="paths">路径显示检查</button><button id="ruins" disabled>查看林中古迹</button><button id="capture-button" disabled>保存当前画面</button><p id="status">载入中。此页使用隔离存档和固定帧进度；手机尺寸是模拟，不代表真机帧率。</p><div id="view"></div><pre id="report"></pre><img id="capture" alt="当前游戏环境画面" hidden style="max-width:100%">
 <script type="module">
+import * as T from'../vendor/three.module.js';
 const $=s=>document.querySelector(s),sleep=ms=>new Promise(r=>setTimeout(r,ms)),assert=(v,n)=>{if(!v)throw Error(n);};
 const html=await(await fetch('../index.html')).text(),css=await(await fetch('../style.css')).text();let frame,g,win,now=0;const results=[],errors=[];
 function step(n=1){for(let i=0;i<n;i++)win.qaFrame(now+=1000/60);}
@@ -18,7 +19,10 @@ async function load(mobile=false,width=1180,height=720){
  const media=matchMedia.bind(window);window.matchMedia=q=>q.includes('pointer:coarse')||q.includes('pointer: coarse')?{matches:${mobile},media:q,addEventListener(){},removeEventListener(){}}:media(q);
  <\/script>`;
  frame.srcdoc=html.replace('<head>','<head>'+boot);win=frame.contentWindow;
- for(let i=0;i<600&&!win.game3d;i++)await sleep(50);assert(win.game3d,'加载超时');g=win.game3d;g.audio.init=async()=>true;
+ for(let i=0;i<600&&!win.game3d;i++)await sleep(50);assert(win.game3d,'加载超时');g=win.game3d;g.audio.init=async()=>true;const render=g.renderer.render.bind(g.renderer);g.renderer.render=(scene,camera)=>{win.qaCamera=camera;if(g.state==='menu'&&win.document.querySelector('#preview-detail').getAttribute('aria-pressed')!=='true'){
+ const box=new T.Box3().setFromObject(g.hero,true);if(g.companionMesh)box.union(new T.Box3().setFromObject(g.companionMesh,true));const rect=win.document.querySelector('#hero-preview').getBoundingClientRect();let max=0;
+ for(const x of[box.min.x,box.max.x])for(const y of[box.min.y,box.max.y])for(const z of[box.min.z,box.max.z]){const v=new T.Vector3(x,y,z).project(camera),px=(v.x+1)*win.innerWidth/2,py=(1-v.y)*win.innerHeight/2;max=Math.max(max,Math.abs((px-rect.left)/rect.width*2-1),Math.abs((py-rect.top)/rect.height*2-1));}win.qaFraming=max;
+ }return render(scene,camera);};
  if(mobile){const s=win.document.createElement('style');s.textContent=css.replaceAll(/\(pointer:\s*coarse\)/g,'(min-width:0px)');win.document.head.append(s);}
  now=win.performance.now();step(2);
 }
@@ -41,22 +45,23 @@ $('#run').onclick=async()=>{
   await load();const ids=['forest','snow','ash','sand','coast','confluence'],memory={};
   for(let cycle=0;cycle<3;cycle++)for(const id of ids)await check(id+' 大厅/战斗 '+(cycle+1),()=>{
    const owned=[];g.world.group.traverse(o=>{if(o.userData.ownedGeometry)owned.push(o.geometry);});const released=new Set();for(const geometry of owned)geometry.addEventListener('dispose',()=>released.add(geometry));
-   select(id);assert(owned.every(geometry=>released.has(geometry)),'切图未回收远景/遗迹几何');const lobby=reportFrame();win.qaSeed();g.start();g.player.inv=9999;g.player.attack=9999;step(24);const battle=reportFrame();assert(battle.pixels<=3200000,'电脑像素预算超限');
+   select(id);assert(owned.every(geometry=>released.has(geometry)),'切图未回收远景/遗迹几何');const lobby=reportFrame();assert(win.qaFraming<.99,'大厅人物被裁切 '+win.qaFraming);assert(g.world.lobbyView,'大厅没有地图取景');assert(Math.hypot(g.player.x-g.world.lobbyView.x,g.player.z-g.world.lobbyView.z)<.001,'大厅未站在展示位');win.qaSeed();g.start();assert(Math.hypot(g.player.x-g.world.spawn.x,g.player.z-g.world.spawn.z)<.001,'展示位泄漏到实战出生点');g.player.inv=9999;g.player.attack=9999;step(24);const battle=reportFrame();assert(battle.pixels<=3200000,'电脑像素预算超限');
    if(cycle===1)memory[id]=battle;if(cycle===2){assert(battle.geometries<=memory[id].geometries+2,'同地图重建几何资源持续增长');assert(battle.textures<=memory[id].textures,'同地图重建纹理资源增长');}
    return{lobby,battle};
   });
   for(const id of ['forest','snow','coast','confluence'])await check(id+' 水岸与动态波纹',()=>{
    select(id,'silver',true);const pond=g.world.ponds[0];assert(pond,'没有可预览的水岸');g.player.x=pond.x+pond.rx+1.5;g.player.z=pond.z;step(100);const initial=reportFrame();step(60);const flowing=reportFrame();assert(flowing.textures===initial.textures,'流水逐帧创建纹理');g.pause();const time=g.time;step(60);assert(g.time===time,'暂停推进游戏时间');g.resume();step(2);return flowing;
   });
-  for(const hero of ['scout','silver','wraith','tide','lingya','wuling','mirage'])await check(hero+' 材质与武器',()=>{select('forest',hero);return reportFrame();});
+  for(const hero of ['scout','silver','wraith','tide','lingya','wuling','mirage'])await check(hero+' 材质与武器',()=>{select('forest',hero);assert(win.qaFraming<.99,'角色或伙伴被裁切 '+win.qaFraming);return reportFrame();});
   await check('电脑实战法术触发、暂停与回收',()=>spellBattle());
   for(const [width,height]of [[2560,1440],[3840,2160]])await check(width+'×'+height+' 大屏像素预算',async()=>{await load(false,width,height);select('forest','silver',true);const r=reportFrame();assert(r.pixels<=3200000,'大屏像素预算超限');assert(Math.abs(g.camera.aspect-width/height)<.001,'大屏相机比例错误');return r;});
-  for(const [width,height]of [[844,390],[390,844]])await check(width+'×'+height+' 手机模拟',async()=>{await load(true,width,height);const maps=[];for(const id of ids){select(id,'silver',true);const r=reportFrame();assert(r.pixels<=1800000,'手机像素预算超限');assert(win.document.body.classList.contains('touch'),'手机控制分支失效');maps.push({id,...r});}maps.push({spells:spellBattle()});return maps;});
+  for(const [width,height]of [[844,390],[390,844]])await check(width+'×'+height+' 手机模拟',async()=>{await load(true,width,height);const maps=[];for(const id of ids){select(id);assert(win.qaFraming<.99,'手机大厅人物被裁切 '+win.qaFraming);g.start();g.player.inv=9999;g.player.attack=9999;step(12);const r=reportFrame();assert(r.pixels<=1800000,'手机像素预算超限');assert(win.document.body.classList.contains('touch'),'手机控制分支失效');maps.push({id,...r});}maps.push({spells:spellBattle()});return maps;});
   await check('所有运行日志',()=>{errors.push(...win.qaErrors);assert(!errors.length,errors.join('\n'));return{errors};});
  }catch(e){results.push({name:'初始化',pass:false,error:e.message});}
  publish();for(const b of document.querySelectorAll('button'))b.disabled=false;$('#status').textContent=results.every(r=>r.pass)?'全部 '+results.length+' 项通过（手机尺寸模拟，非真机性能测试）':'有检查失败';
 };
-async function preview(battle=false,mobile=false){await load(mobile,mobile?844:1180,mobile?390:720);select($('#map').value,'silver',battle);$('#status').textContent='固定帧画面预览 · '+$('#map').selectedOptions[0].text;}
+async function preview(battle=false,mobile=false){await load(mobile,mobile?844:1180,mobile?390:720);select($('#map').value,'silver',battle);$('#status').textContent='固定帧画面预览 · '+$('#map').selectedOptions[0].text+' · '+JSON.stringify({view:g.world.lobbyView,heroYaw:g.hero.rotation.y,cameraYaw:Math.atan2(win.qaCamera.position.x-g.hero.position.x,win.qaCamera.position.z-g.hero.position.z)});}
+$('#capture-button').onclick=()=>{step();const image=$('#capture');image.src=g.renderer.domElement.toDataURL('image/png');image.hidden=false;};
 $('#lobby').onclick=()=>preview();$('#battle').onclick=()=>preview(true);$('#mobile').onclick=()=>preview(true,true);
 $('#paths').onclick=()=>{for(const site of g.world.sites)site.trail.visible=!site.trail.visible;step();};
 $('#ruins').onclick=async()=>{if(!['forest','confluence'].includes($('#map').value))$('#map').value='forest';await preview(true);const a=g.world.forestVista?.gateCenter||g.world.forestVista?.anchors?.[0];if(!a){$('#status').textContent='当前地形没有可用古迹锚点';return;}let p={x:a.x,z:a.z+5};for(const dz of [5,6,7,-5,-6])if(g.world.obstacles.every(o=>Math.hypot(a.x-o.x,a.z+dz-o.z)>o.r+.7)){p={x:a.x,z:a.z+dz};break;}g.player.x=p.x;g.player.z=p.z;step(90);$('#status').textContent='林中古迹实景 · '+JSON.stringify({columns:g.world.forestVista.columns,arches:g.world.forestVista.arches,triangles:g.world.forestVista.triangles,drawCalls:g.world.forestVista.drawCalls,anchors:g.world.forestVista.anchors});};

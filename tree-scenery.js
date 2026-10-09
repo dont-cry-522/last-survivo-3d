@@ -71,21 +71,23 @@ function limb(points,radii,sides=7){
  return surface(vertices,indices);
 }
 function broadFan(x,y,z,width,depth,height,phase){
- // Shallow sprays fan along their branches; three rings round the shoulder without pillow-like tiers.
- const sides=14,vertices=[],indices=[],cos=Math.cos(phase),sin=Math.sin(phase);
+ // A thin, sloping spray with a broken leaf edge, rather than a solid round cushion.
+ const sides=16,vertices=[],indices=[],cos=Math.cos(phase),sin=Math.sin(phase);
  const point=(u,h,v)=>vertices.push(x+u*cos-v*sin,y+h*height,z+u*sin+v*cos);
- for(let ring=0;ring<3;ring++)for(let j=0;j<sides;j++){
-  const a=j/sides*Math.PI*2,edge=.94+.055*Math.sin(a*3+phase)+.025*Math.sin(a*5-phase*.7),r=[1,.77,.40][ring]*edge;
-  const h=[.035,.57,.88][ring]+[.045,.035,.016][ring]*Math.sin(a*2+phase);
-  point(Math.cos(a)*width*r+ring*.025*width,h,Math.sin(a)*depth*r);
+ for(let ring=0;ring<2;ring++)for(let j=0;j<sides;j++){
+  const a=j/sides*Math.PI*2,edge=.88+.09*Math.sin(a*5+phase)+.055*Math.sin(a*7-phase*.7)+.055*Math.sin(a*2+phase),r=(ring?.52:1)*edge;
+  const h=(ring?.63:.04)+.11*Math.sin(a+phase)*Math.cos(a*2-phase)+(ring?.035:.07)*Math.sin(a*5+phase);
+  point(Math.cos(a)*width*r+ring*.07*width,h,Math.sin(a)*depth*r);
  }
- const top=vertices.length/3;point(.09*width,1,-.03*depth);const bottom=vertices.length/3;point(0,-.075,0);
+ const top=vertices.length/3;point(.14*width,.82,-.05*depth);const bottom=vertices.length/3;point(.04*width,-.12,0);
+ // Crease the underside: a shared rim normal makes a shallow leaf spray look balloon-inflated.
+ const rim=vertices.length/3;vertices.push(...vertices.slice(0,sides*3));
  for(let j=0;j<sides;j++){
   const next=(j+1)%sides;
-  for(let ring=0;ring<2;ring++){const a=ring*sides+j,b=ring*sides+next;indices.push(a,a+sides,b,b,a+sides,b+sides);}
-  indices.push(top,next+2*sides,j+2*sides,bottom,j,next);
+  indices.push(j,j+sides,next,next,j+sides,next+sides,top,next+sides,j+sides,bottom,rim+j,rim+next);
  }
- const g=surface(vertices,indices),p=g.attributes.position,n=g.attributes.normal,colors=[],shade=new T.Color(),low=new T.Color(0x243e2d),middle=new T.Color(0x426846),topColor=new T.Color(0x79945b);
+ const warm=T.MathUtils.smoothstep(.5+.5*Math.sin(phase*2.7+y*.85),.58,.93);
+ const g=surface(vertices,indices),p=g.attributes.position,n=g.attributes.normal,colors=[],shade=new T.Color(),low=new T.Color(0x203e37),middle=new T.Color(0x37674f).lerp(new T.Color(0x667845),warm*.64),topColor=new T.Color(0x79945b).lerp(new T.Color(0xa1a864),warm*.60);
  for(let i=0;i<p.count;i++){
   const rise=(p.getY(i)-y)/height,sun=Math.max(0,n.getY(i)),leaf=.5+.5*Math.sin(p.getX(i)*7.1+p.getY(i)*4.3+phase)*Math.cos(p.getZ(i)*6.2-phase);
   shade.copy(low).lerp(middle,T.MathUtils.smoothstep(rise,-.12,.65)).lerp(topColor,T.MathUtils.smoothstep(rise,.35,1)*(.46+y*.16)).multiplyScalar(.83+sun*.15+leaf*.15);
@@ -115,7 +117,10 @@ function treeTemplate(id,variant){
  for(let i=0;i<(snow?3:4);i++){
   const a=i*2.15+variant*.71,cos=Math.cos(a),sin=Math.sin(a),start=snow?2.8+i*.42:1.88+i*.48,reach=snow?.62:1.18-(i%2)*.12,tip=snow?start+.65:3.64+i*.31;
   branches.push(tint(limb([[lean*.7,start,0],[cos*reach*.38,start+.48,sin*reach*.30],[cos*reach*.78,tip-.12,sin*reach*.74],[cos*reach,tip,sin*reach]],snow?[.09,.052,.018]:[.19-i*.018,.105,.017],snow?4:6),wood));
-  if(!snow&&i<2)branches.push(tint(limb([[cos*reach*.42,start+.58,sin*reach*.34],[cos*reach*.68,tip-.18,sin*reach*.50],[Math.cos(a+.6)*reach*.86,tip+.32,Math.sin(a+.6)*reach*.86]],[.075,.035,.008],3),wood));
+  if(!snow){
+   branches.push(tint(limb([[cos*reach*.42,start+.58,sin*reach*.34],[cos*reach*.68,tip-.18,sin*reach*.50],[Math.cos(a+.6)*reach*.86,tip+.32,Math.sin(a+.6)*reach*.86]],[.075,.035,.008],3),wood));
+   branches.push(tint(limb([[cos*reach*.69,tip-.22,sin*reach*.64],[Math.cos(a-.35)*reach*.91,tip-.04,Math.sin(a-.35)*reach*.91],[Math.cos(a-.45)*reach*1.1,tip+.08,Math.sin(a-.45)*reach*1.1]],[.048,.025,.005],3),wood));
+  }
  }
  const crowns=[];
  if(snow){
@@ -125,11 +130,18 @@ function treeTemplate(id,variant){
   }
   const leader=new T.LatheGeometry([[0,0],[.31,.08],[.22,.34],[.05,.65],[0,.74]].map(([r,h])=>new T.Vector2(r,h)),6);leader.translate(lean*.25,2.02,.025);crowns.push(tint(leader,0xb7cdc1,true));
  }else{
-  for(let layer=0;layer<2;layer++)for(let j=0;j<3;j++){
-   const a=j*Math.PI*2/3+layer*.95+variant*.31,r=layer?.63:.81,y=layer?.94+j*.12:j*.14;
-   crowns.push(broadFan(Math.cos(a)*r,y,Math.sin(a)*r,layer?.82:.90,layer?.70:.74,layer?.53:.60,a+variant*.7));
+  // Each fork carries three uneven terminal sprays. Their offsets expose branches between them.
+  for(let branch=0;branch<4;branch++){
+   const a=branch*2.15+variant*.71,y=.08+branch*.32,r=.80+(branch%2)*.06;
+   for(let twig=0;twig<3;twig++){
+    const side=twig-1,angle=a+side*.53,reach=r+(twig===1?.18:-.06),rise=y+(twig===1?.17:side*.11);
+    crowns.push(broadFan(Math.cos(angle)*reach,rise,Math.sin(angle)*reach,twig===1?.66:.57,twig===1?.45:.39,.29+(branch%2)*.05,angle+.16*side));
+   }
   }
-  crowns.push(broadFan((variant-1)*.13,1.66,-.07,.67,.61,.49,variant*.8));
+  for(let j=0;j<3;j++){
+   const a=j*2.3+variant*.8,r=j===2?.14:.36;
+   crowns.push(broadFan(Math.cos(a)*r,1.36+j*.22,Math.sin(a)*r,.59-j*.07,.42-j*.025,.32,a));
+  }
  }
  const canopy=merge(crowns),bottom=canopy.boundingBox.min.y;canopy.translate(0,-bottom,0);canopy.computeBoundingBox();
  const trunk=merge(branches);

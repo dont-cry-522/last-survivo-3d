@@ -2,7 +2,7 @@ import * as T from './vendor/three.module.js';
 
 // The same three lights serve every climate; transitions do not allocate lights or shadow maps.
 export const CLIMATE_LIGHT={
- forest:{sky:0x829cad,bounce:0x223d3f,sun:0xffdca0,rim:0x91bcd0,fog:0x36545a,ambient:1,key:3.85,edge:1.05,density:.012,exposure:1.12,ridge:0x253c3e,height:14},
+ forest:{sky:0x829cad,bounce:0x304844,sun:0xffdca0,rim:0x91bcd0,fog:0x36545a,ambient:1.2,key:3.5,edge:1.05,density:.012,exposure:1.12,ridge:0x253c3e,height:14},
  snow:{sky:0xc7e0ef,bounce:0x667983,sun:0xffe5c5,rim:0x97c5ed,fog:0x99b8c7,ambient:1.65,key:2.8,edge:.75,density:.014,exposure:1.04,ridge:0x6e919f,height:23},
  ash:{sky:0xb9a5b6,bounce:0x3d2830,sun:0xffbd86,rim:0xb599c1,fog:0x6f5964,ambient:1.25,key:3.0,edge:.9,density:.015,exposure:1.12,ridge:0x4a3d49,height:17},
  sand:{sky:0xc5d3d9,bounce:0x897153,sun:0xffdfaf,rim:0xb0c5d5,fog:0xbba789,ambient:1.4,key:3.6,edge:.55,density:.010,exposure:1.07,ridge:0x9c8361,height:12},

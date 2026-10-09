@@ -1,7 +1,7 @@
 import{test}from'node:test';import assert from'node:assert/strict';import * as T from'../vendor/three.module.js';
 import{buildWorld,clearAt,animateWorld}from'../world.js';import{sceneryAllowed}from'../biome-scenery.js';
 import{bridgeContains,updateTide}from'../coast.js';import{waterDepth}from'../water.js';
-import{naturalRockGeometry,finishRock,installGroundSurface}from'../biome-scenery.js?v=101';
+import{naturalRockGeometry,finishRock,installGroundSurface}from'../biome-scenery.js?v=102';
 globalThis.document={createElement:()=>({width:256,height:256,getContext:()=>({fillRect(){}})})};
 function dispose(w){w.group.traverse(o=>{if(o.isInstancedMesh)o.dispose();if(o.userData.ownedGeometry)o.geometry.dispose();});}
 test('worn rocks reuse a bounded smooth mesh and preserve placed obstacle transforms',()=>{
@@ -114,5 +114,38 @@ test('all four harbor landmarks are built on dry ground with rotated collision a
   const w=buildWorld('coast',seed);assert.deepEqual(w.districts.map(d=>d.kind).sort(),['beacon','dock','warehouse','wreck']);updateTide(w,21);
   for(const district of w.districts){const parts=w.obstacles.filter(o=>o.mesh.userData.district===district.kind);assert(parts.length>=3,'missing '+district.kind);for(const o of parts){assert(w.ponds.every(p=>waterDepth(p,o.x,o.z)===0));assert(!w.bridges.some(b=>bridgeContains(b,o.x,o.z,o.r+.9)));assert(Math.abs(o.mesh.rotation.y-district.angle)<.0001);}}
   const details=w.group.children.filter(m=>m.userData.districtDetail);assert(details.length<=2);assert(details.reduce((n,m)=>n+m.count,0)<350);dispose(w);
+ }
+});
+
+test('the existing route centers remain free of low cover in local maps and the connected world',()=>{
+ const matrix=new T.Matrix4(),point=new T.Vector3(),closest=new T.Vector3();
+ for(const id of['forest','snow','ash','sand','coast','confluence']){
+  const w=buildWorld(id,7),paths=w.road?[w.road]:w.sites.filter(s=>s.trail).map(s=>{
+   const p=s.trail.geometry.attributes.position,path=[];
+   for(let i=0;i<p.count;i+=4)path.push({x:(p.getX(i+1)+p.getX(i+2))*.5,z:(p.getZ(i+1)+p.getZ(i+2))*.5});
+   return path;
+  }),segments=paths.flatMap(path=>path.slice(1).map((b,i)=>new T.Line3(new T.Vector3(path[i].x,0,path[i].z),new T.Vector3(b.x,0,b.z))));
+  let campDetails=0;
+  for(const batch of w.scenery.batches)for(let i=0;i<batch.count;i++){
+   batch.getMatrixAt(i,matrix);point.set(matrix.elements[12],0,matrix.elements[14]);
+   assert(segments.every(line=>line.closestPointToPoint(point,true,closest).distanceToSquared(point)>=1.45**2-1e-4),id+' cover entered a route center');
+   const distance=Math.hypot(point.x-w.spawn.x,point.z-w.spawn.z);if(distance>3.5&&distance<11)campDetails++;
+  }
+  if(id!=='confluence')assert(campDetails>=6,id+' camp shoulders are empty');
+  dispose(w);
+ }
+});
+
+test('bank leaves and forest fronds have rooted color gradients and folded, curved surfaces',()=>{
+ for(const id of['forest','sand','coast']){
+  const w=buildWorld(id,7),batch=w.scenery.batches.find(m=>m.userData.biomeDetail===(id==='forest'?'frond':'leaf')),g=batch.geometry,p=g.attributes.position,c=g.attributes.color;
+  assert(batch.material.vertexColors);assert.equal(c.count,p.count);assert([...c.array].every(v=>Number.isFinite(v)&&v>.5&&v<1.1));
+  assert(Math.max(...c.array)-Math.min(...c.array)>.2,'leaves lost their shaded root and lighter tip');
+  assert(g.index.count/3<=(id==='forest'?30:16),'plant silhouette exceeded its small shared mesh');
+  if(id!=='forest'){
+   assert(p.getY(7)>p.getY(6),'leaf midrib is flat');
+   assert(p.getY(p.count-2)<p.getY(10),'leaf tip no longer curves down');
+  }
+  dispose(w);
  }
 });
