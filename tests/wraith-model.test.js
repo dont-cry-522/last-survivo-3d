@@ -6,14 +6,14 @@ import {makeWraith,animateWraith} from '../wraith-model.js';
 test('shadow hero has a compact human silhouette and articulated body parts',()=>{
  const hero=makeWraith('shade'),box=new T.Box3().setFromObject(hero);
  assert(hero.userData.wraith);
- assert(box.max.y-box.min.y<1.9);
- assert(box.max.y-box.min.y>1.65);
+ assert(box.max.y-box.min.y<1.68);
+ assert(box.max.y-box.min.y>1.52);
  for(const name of ['head','leftArm','rightArm','leftLeg','rightLeg','cape','weapon'])assert(hero.userData[name],name);
  for(const t of [0,.1,.2,.5,1])animateWraith(hero,t,5,.3,.1);
  hero.traverse(o=>{assert(Number.isFinite(o.position.x));assert(Number.isFinite(o.rotation.x));});
 });
 
-test('shadow silhouette has an adult head, distinct shoulders and naturally resting wrists',()=>{
+test('stocky shadow silhouette retains distinct shoulders and naturally resting wrists',()=>{
  const hero=makeWraith('shade'),d=hero.userData;
  hero.updateMatrixWorld(true);
  const body=new T.Box3().setFromObject(hero,true),head=new T.Box3().setFromObject(d.head,true);
