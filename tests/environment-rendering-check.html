@@ -5,10 +5,10 @@
 import * as T from'../vendor/three.module.js';
 const $=s=>document.querySelector(s),sleep=ms=>new Promise(r=>setTimeout(r,ms)),assert=(v,n)=>{if(!v)throw Error(n);};
 const html=await(await fetch('../index.html')).text(),css=await(await fetch('../style.css')).text();let frame,g,win,now=0;const results=[],errors=[];
-function step(n=1){for(let i=0;i<n;i++)win.qaFrame(now+=1000/60);}
+function step(n=1,ms=1000/60){for(let i=0;i<n;i++)win.qaFrame(now+=ms);}
 function publish(){document.querySelector('#report').textContent=JSON.stringify({results,errors},null,2);}
 async function load(mobile=false,width=1180,height=720){
- if(g){errors.push(...win.qaErrors);g.audio.stopMusic();g.renderer.dispose();g.renderer.forceContextLoss();}frame?.remove();
+ if(g){errors.push(...win.qaErrors);g.audio.stopMusic();g.cinema?.dispose();g.renderer.dispose();g.renderer.forceContextLoss();}frame?.remove();
  frame=document.createElement('iframe');frame.title='真实游戏环境预览';frame.style.width=width+'px';frame.style.height=height+'px';$('#view').append(frame);
  const boot=`<base href="../"><script>
  window.qaErrors=[];addEventListener('error',e=>qaErrors.push(e.message));addEventListener('unhandledrejection',e=>qaErrors.push(String(e.reason)));
@@ -19,7 +19,7 @@ async function load(mobile=false,width=1180,height=720){
  const media=matchMedia.bind(window);window.matchMedia=q=>q.includes('pointer:coarse')||q.includes('pointer: coarse')?{matches:${mobile},media:q,addEventListener(){},removeEventListener(){}}:media(q);
  <\/script>`;
  frame.srcdoc=html.replace('<head>','<head>'+boot);win=frame.contentWindow;
- for(let i=0;i<600&&!win.game3d;i++)await sleep(50);assert(win.game3d,'加载超时');g=win.game3d;g.audio.init=async()=>true;const render=g.renderer.render.bind(g.renderer);g.renderer.render=(scene,camera)=>{win.qaCamera=camera;if(g.state==='menu'&&win.document.querySelector('#preview-detail').getAttribute('aria-pressed')!=='true'){
+ for(let i=0;i<600&&!win.game3d;i++)await sleep(50);assert(win.game3d,'加载超时');g=win.game3d;g.audio.init=async()=>true;const render=g.renderer.render.bind(g.renderer);g.renderer.render=(scene,camera)=>{if(scene!==g.hero.parent)return render(scene,camera);win.qaCamera=camera;if(g.state==='menu'&&win.document.querySelector('#preview-detail').getAttribute('aria-pressed')!=='true'){
  const box=new T.Box3().setFromObject(g.hero,true);if(g.companionMesh)box.union(new T.Box3().setFromObject(g.companionMesh,true));const rect=win.document.querySelector('#hero-preview').getBoundingClientRect();let max=0;
  for(const x of[box.min.x,box.max.x])for(const y of[box.min.y,box.max.y])for(const z of[box.min.z,box.max.z]){const v=new T.Vector3(x,y,z).project(camera),px=(v.x+1)*win.innerWidth/2,py=(1-v.y)*win.innerHeight/2;max=Math.max(max,Math.abs((px-rect.left)/rect.width*2-1),Math.abs((py-rect.top)/rect.height*2-1));}win.qaFraming=max;
  }return render(scene,camera);};
@@ -56,12 +56,13 @@ $('#run').onclick=async()=>{
   await check('电脑实战法术触发、暂停与回收',()=>spellBattle());
   for(const [width,height]of [[2560,1440],[3840,2160]])await check(width+'×'+height+' 大屏像素预算',async()=>{await load(false,width,height);select('forest','silver',true);const r=reportFrame();assert(r.pixels<=3200000,'大屏像素预算超限');assert(Math.abs(g.camera.aspect-width/height)<.001,'大屏相机比例错误');return r;});
   for(const [width,height]of [[844,390],[390,844]])await check(width+'×'+height+' 手机模拟',async()=>{await load(true,width,height);const maps=[];for(const id of ids){select(id);assert(win.qaFraming<.99,'手机大厅人物被裁切 '+win.qaFraming);g.start();g.player.inv=9999;g.player.attack=9999;step(12);const r=reportFrame();assert(r.pixels<=1800000,'手机像素预算超限');assert(win.document.body.classList.contains('touch'),'手机控制分支失效');maps.push({id,...r});}maps.push({spells:spellBattle()});return maps;});
+  await check('暂停时低性能回退与显存释放',()=>{select('forest','silver',true);g.pause();const time=g.time;step(240,60);assert(g.time===time,'性能检查推进暂停时间');assert(g.renderQuality<.8,'暂停没有采样性能');if(g.cinema.enabled)assert(g.cinema.sceneTarget.width===1,'回退没有释放全尺寸缓冲');const low=reportFrame();g.cinema.render(()=>g.renderer.render(g.hero.parent,g.camera),1);if(g.cinema.enabled)assert(g.cinema.sceneTarget.width>1,'恢复高画质后未重建缓冲');return{low,recovered:reportFrame()};});
   await check('所有运行日志',()=>{errors.push(...win.qaErrors);assert(!errors.length,errors.join('\n'));return{errors};});
  }catch(e){results.push({name:'初始化',pass:false,error:e.message});}
  publish();for(const b of document.querySelectorAll('button'))b.disabled=false;$('#status').textContent=results.every(r=>r.pass)?'全部 '+results.length+' 项通过（手机尺寸模拟，非真机性能测试）':'有检查失败';
 };
 async function preview(battle=false,mobile=false){await load(mobile,mobile?844:1180,mobile?390:720);select($('#map').value,'silver',battle);$('#status').textContent='固定帧画面预览 · '+$('#map').selectedOptions[0].text+' · '+JSON.stringify({view:g.world.lobbyView,heroYaw:g.hero.rotation.y,cameraYaw:Math.atan2(win.qaCamera.position.x-g.hero.position.x,win.qaCamera.position.z-g.hero.position.z)});}
-$('#capture-button').onclick=()=>{step();const image=$('#capture');image.src=g.renderer.domElement.toDataURL('image/png');image.hidden=false;};
+$('#capture-button').onclick=()=>{step();const image=$('#capture');image.src=g.renderer.domElement.toDataURL('image/png');image.hidden=false;const link=document.createElement('a');link.href=image.src;link.download='forest-echoes-environment.png';link.click();};
 $('#lobby').onclick=()=>preview();$('#battle').onclick=()=>preview(true);$('#mobile').onclick=()=>preview(true,true);
 $('#paths').onclick=()=>{for(const site of g.world.sites)site.trail.visible=!site.trail.visible;step();};
 $('#ruins').onclick=async()=>{if(!['forest','confluence'].includes($('#map').value))$('#map').value='forest';await preview(true);const a=g.world.forestVista?.gateCenter||g.world.forestVista?.anchors?.[0];if(!a){$('#status').textContent='当前地形没有可用古迹锚点';return;}let p={x:a.x,z:a.z+5};for(const dz of [5,6,7,-5,-6])if(g.world.obstacles.every(o=>Math.hypot(a.x-o.x,a.z+dz-o.z)>o.r+.7)){p={x:a.x,z:a.z+dz};break;}g.player.x=p.x;g.player.z=p.z;step(90);$('#status').textContent='林中古迹实景 · '+JSON.stringify({columns:g.world.forestVista.columns,arches:g.world.forestVista.arches,triangles:g.world.forestVista.triangles,drawCalls:g.world.forestVista.drawCalls,anchors:g.world.forestVista.anchors});};

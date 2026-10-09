@@ -22,7 +22,7 @@ export function finishHeroSurface(root,kind){
   const garment=/Ranger|Peasant/.test(name),softCloth=garment&&/Body|Legs|Hood/.test(o.name);
   if(skin||hair||softCloth)smoothSeams(o.geometry);
   const m=o.material;
-  if(m.normalScale)m.normalScale.multiplyScalar(skin?.65:hair?.55:.48);
+  if(m.normalScale)m.normalScale.multiplyScalar(skin?.65:hair?.55:/Belt|Bracer|Feet/.test(o.name)?.65:.48);
   if(kind==='scout'&&name.includes('Ranger')){
    m.color.set(0xc4cbbb);m.roughness=.83;m.metalness=/Pauldron|Bracer/.test(o.name)?.20:.04;
   }
@@ -32,14 +32,15 @@ export function finishHeroSurface(root,kind){
   if(garment){
    // Keep authored buckles metallic, while cloth and leather retain broad, soft highlights.
    const leather=/Belt|Bracer|Feet/.test(o.name);
-   m.roughness=leather?.80:.94;
-   if(m.metalnessMap)m.metalness=.64;
+   m.roughness=leather?.72:.93;
+   if(m.metalnessMap)m.metalness=.82;
    const compile=m.onBeforeCompile,program=m.customProgramCacheKey();
    m.onBeforeCompile=shader=>{
     compile(shader);
     shader.fragmentShader=shader.fragmentShader.replace('#include <metalnessmap_fragment>',`#include <metalnessmap_fragment>
-     float textile=1.0-smoothstep(.08,.40,metalnessFactor);
-     roughnessFactor=mix(roughnessFactor,max(roughnessFactor,${leather?'.57':'.82'}),textile*.80);`);
+     float textile=1.0-smoothstep(.08,.52,metalnessFactor);
+     float softRoughness=max(roughnessFactor,${leather?'.58':'.86'});
+     roughnessFactor=mix(clamp(roughnessFactor,.30,.50),softRoughness,textile);`);
    };
    m.customProgramCacheKey=()=>program+'-tailored-surface-'+(leather?'leather':'cloth');
   }

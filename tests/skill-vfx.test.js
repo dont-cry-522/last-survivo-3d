@@ -127,3 +127,50 @@ test('flat effects render both faces in one pass and recycled solid fragments re
  }
  for(const id of ['fire','miasmalantern']){const projectile=v.projectile({id});projectile.traverse(part=>{if(part.isMesh&&part.geometry.type==='PlaneGeometry')assert.equal(part.material.forceSinglePass,true,id+' planar aura');});}
 });
+
+test('fire contact expires before flying cinders, without adding to the large burst budget',()=>{
+ const v=new SkillVFX(new T.Scene(),{mobile:true});v.fire(0,0,2.5,true);
+ assert(v.active.length<=26);
+ const flash=v.active.find(p=>p.shape==='flame'&&p.max<=.12),cinders=v.active.filter(p=>p.shape==='crystal');
+ assert(flash&&cinders.length>0);assert(cinders.every(p=>p.size[1]>p.size[0]*4&&p.gravity>0&&p.endColor));
+ const start=cinders.map(p=>p.mesh.position.clone());v.update(.2);
+ assert(!v.active.includes(flash));assert(cinders.every((p,i)=>v.active.includes(p)&&p.mesh.position.distanceTo(start[i])>.1));
+ v.update(.8);assert.equal(v.active.length,0);
+});
+
+test('ice glints follow actual shard edges and fracture after emergence rather than adding a fog layer',()=>{
+ const v=new SkillVFX(new T.Scene(),{mobile:true});v.ice(0,0,3);
+ assert(v.active.length<=43);assert.equal(v.active.filter(p=>p.shape==='vapor').length,2);
+ const shards=v.active.filter(p=>p.shape==='shard'),edges=v.active.filter(p=>p.shape==='ray'&&p.delay>=.16);
+ assert.equal(edges.length,6);
+ for(const edge of edges){
+  assert(!edge.mesh.visible);assert(edge.size[0]<=.012);
+  const tip=new T.Vector3(0,edge.mesh.scale.y/2,0).applyQuaternion(edge.mesh.quaternion).add(edge.mesh.position);
+  assert(shards.some(p=>tip.distanceTo(new T.Vector3(0,p.size[1]*2,0).applyEuler(p.mesh.rotation).add(p.mesh.position))<1e-7),'the highlight must end at a real crystal tip');
+ }
+ const chips=v.active.filter(p=>p.shape==='crystal');assert(chips.every(p=>p.delay>=.16&&!p.mesh.visible));
+ v.update(.28);assert(chips.every(p=>p.mesh.visible));v.update(1);assert.equal(v.active.length,0);
+});
+
+test('lightning uses a short thin contact and delayed forks within its existing budget',()=>{
+ const v=new SkillVFX(new T.Scene(),{mobile:true});v.lightning(0,0,2,1,true);
+ assert(v.active.length<=37);
+ const cores=v.active.filter(p=>p.priority===2),forks=v.active.filter(p=>p.delay>0),contact=v.active.filter(p=>p.max<=.075);
+ assert.equal(cores.length,7);assert(cores.every(p=>p.size[0]<=.018&&p.max<=.1));
+ assert.equal(forks.length,4);assert(forks.every(p=>p.size[0]<=.017&&!p.mesh.visible));assert.equal(contact.length,2);
+ v.update(.08);assert(contact.every(p=>!v.active.includes(p)));assert(forks.every(p=>p.mesh.visible));v.update(1);assert.equal(v.active.length,0);
+});
+
+test('shadow marks and rifts keep dark cores and narrow bright tears instead of luminous balls',()=>{
+ const v=new SkillVFX(new T.Scene(),{mobile:true});
+ for(const strong of[false,true]){
+  v.clear();v.shadowMark(0,0,strong);assert(v.active.length<=(strong?9:3));assert(!v.active.some(p=>p.shape==='ember'||p.shape==='smoke'));
+  const core=v.active.find(p=>p.shape==='claw');assert(core);assert.equal(core.mesh.material.blending,T.NormalBlending);assert(core.mesh.material.color.r<.02);
+  assert.equal(v.active.filter(p=>p.shape==='ray').length,2);
+ }
+ v.clear();v.riftCast(0,0,2,.7,false);assert.equal(v.active.length,6);assert(v.active.every(p=>p.shape==='ray'));
+ v.clear();v.riftCast(0,0,2,.7,true);assert(v.active.length<=20);
+ const bodies=v.active.filter(p=>p.shape==='claw'&&p.opacity===.82),rims=v.active.filter(p=>p.shape==='claw'&&p.delay>0);
+ assert.equal(bodies.length,3);assert.equal(rims.length,3);assert(rims.every(p=>p.size[0]<bodies[0].size[0]/4));
+ v.update(1);assert.equal(v.active.length,0);assert.equal(v.scene.children.length,0);
+});

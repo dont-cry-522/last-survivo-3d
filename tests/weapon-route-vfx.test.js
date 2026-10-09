@@ -118,3 +118,23 @@ test('all route accents survive pool rejection, reuse and cleanup within the unc
  for(const[id,look]of entries)for(const phase of look.phases)assert.doesNotThrow(()=>cast(v,id,phase));
  assert.equal(v.active.length,110);v.update(1);assert.equal(v.active.length,0);assert.equal(scene.children.length,0);
 });
+
+test('burn and blast routes preserve distinct slow tongues versus outward fracture, with timed cooling',()=>{
+ const v=new SkillVFX(new T.Scene());cast(v,'fire_burn','hit');
+ const tongues=v.active.filter(p=>p.shape==='flame');assert.equal(tongues.length,2);assert(tongues.every(p=>p.motion==='combust'&&p.endColor));
+ assert(tongues.some(p=>p.delay>0&&!p.mesh.visible));assert(tongues.every(p=>Math.abs(p.velocity[0])<.3&&p.max>.4));
+ v.clear();cast(v,'fire_blast','hit');assert.equal(v.active.length,5);
+ const sparks=v.active.filter(p=>p.shape==='crystal');assert.equal(sparks.length,2);assert(sparks.every(p=>p.gravity>0&&p.size[1]>p.size[0]*4&&p.endColor));
+ v.update(0);assert(v.active.some(p=>p.delay>0));v.update(1);assert.equal(v.active.length,0);
+});
+
+test('grimoire release pairs dark folded pages with thin delayed bright edges under the same accent cap',()=>{
+ const v=new SkillVFX(new T.Scene());
+ for(const angle of[0,.8,Math.PI]){
+  v.clear();weaponRouteEffect(v,weapon('grimoire_wide'),'hit',0,0,angle,{radius:2});assert.equal(v.active.length,5);
+  const pages=v.active.filter(p=>p.shape==='claw'&&p.delay===0),edges=v.active.filter(p=>p.shape==='claw'&&p.delay>0);
+  assert.equal(pages.length,2);assert.equal(edges.length,2);
+  for(let i=0;i<2;i++){assert(edges[i].size[0]<pages[i].size[0]/3);assert(edges[i].mesh.quaternion.angleTo(pages[i].mesh.quaternion)<1e-7);assert.equal(pages[i].mesh.material.blending,T.NormalBlending);}
+ }
+ v.update(1);assert.equal(v.active.length,0);
+});

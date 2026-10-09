@@ -97,15 +97,15 @@ export function weaponRouteEffect(vfx,w,phase,x,z,angle=0,detail={}){
   }
   break;
  case'fire_burn':
-  for(const side of[-1,1])particle('flame',side<0?0xb9442d:0xe88944,0,side*target*.55,.48,{life:.46,size:[.13,.29*level,1],velocity:velocity(-.08,side*.06,.65),grow:true,priority:side<0?0:1,opacity:.63});
+  for(const side of[-1,1])particle('flame',side<0?0xffb252:0xe16b2d,0,side*target*.55,.48,{life:.46,delay:side<0?0:.045,size:[.13,.33*level,1],velocity:velocity(-.08,side*.06,.65),motion:'combust',endColor:0x67251b,priority:side<0?0:1,opacity:.72});
   particle('ember',0x9b3927,.04,0,.28,{life:.44,size:[.08,.035,.08],opacity:.6});
   break;
  case'fire_blast':{
   const r=Math.max(.5,detail.radius||w.radius||2.5+.5*rank);
   particle('veil',0x9b422b,0,0,.055,{life:.35,size:[r*.48,r*.38,1],opacity:.16});
   for(const side of[-1,1]){
-   curl(side<0?0xd2602f:0xeaa058,.02,side*.13,.35,r*.32,r*.25,{rotation:-.65,life:.3,velocity:velocity(.15,side*.8,.4),roll:side*1.3,priority:1,opacity:.62});
-   chip('ember',0xda9255,0,side*.12,.45,[.045,.055,.045],.4,1.4);
+   curl(side<0?0xffcf85:0xe57735,.02,side*.13,.35,r*.32,r*.25,{rotation:-.65,life:.3,delay:side<0?0:.025,velocity:velocity(.15,side*.8,.4),roll:side*1.3,endColor:0x853221,priority:1,opacity:.71});
+   particle('crystal',0xffd18b,0,side*.12,.45,{life:.36,size:[.018,.10,.018],velocity:velocity(.4,side*.9,1.4),gravity:4,spin:4,endColor:0x96341e,opacity:.75});
   }
   break;
  }
@@ -166,7 +166,7 @@ export function weaponRouteEffect(vfx,w,phase,x,z,angle=0,detail={}){
  case'shade_blight':{
   const strong=!!detail.empowered,count=strong?3:Math.max(1,Math.min(2,detail.combo||1));
   for(let i=0;i<count;i++){
-   const side=(i-(count-1)/2)*.18,m=particle('claw',strong?0xc3cfdd:0x697b92,0,side,.5,{life:strong?.34:.3,size:[strong?.75:.45,(strong?.65:.25)*level,1],velocity:strong?velocity(.15,side*2.4,.35):[0,0,0],motion:strong?'lash':'erupt',priority:i===0?1:0,opacity:strong?.76:.62});
+   const side=(i-(count-1)/2)*.18,core=strong&&i===1,m=particle('claw',strong?(core?0x142030:0xd8e2eb):0x869ab0,0,side,.5,{life:strong?.34:.3,size:[strong?(core?.75:.20):.45,(strong?.65:.25)*level,1],velocity:strong?velocity(.15,side*2.4,.35):[0,0,0],motion:strong?'lash':'erupt',endColor:strong?(core?0x142030:0x566781):null,priority:i===0?1:0,opacity:strong?.76:.62});
    orient(m,-.2,a,side*2);
   }
   if(strong){particle('veil',0x16202c,0,0,.07,{life:.28,size:[.58,.46,1],opacity:.24});for(const side of[-1,1])chip('crystal',0x9aaabd,.03,side*.15,.7,[.04,.13,.04],.6,1);}
@@ -184,9 +184,9 @@ export function weaponRouteEffect(vfx,w,phase,x,z,angle=0,detail={}){
  case'grimoire_wide':{
   const r=Math.max(.5,detail.radius||w.radius||1.7+.4*rank),release=phase==='hit';
   for(const side of[-1,1]){
-   const m=particle('claw',side<0?0x788ca1:0xbac8d8,0,side*r*.27,.07,{life:release?.4:.28,size:[r*.45,r*(release?.55:.2),1],motion:'erupt',priority:side<0?1:0,opacity:release?.66:.44});
+   const m=particle('claw',release?0x182331:0x7f94aa,0,side*r*.27,.07,{life:release?.4:.28,size:[r*.45,r*(release?.55:.2),1],motion:'erupt',priority:side<0?1:0,opacity:release?.76:.44});
    orient(m,-.3,a,side*.38);
-   if(release)chip('crystal',0x9dabbc,0,side*r*.35,.3,[.10,.018,.14],.1,.9);
+   if(release){const edge=particle('claw',0xd8e4ec,.03,side*r*.27+.035,.08,{life:.28,delay:.03,size:[r*.10,r*.53,1],motion:'erupt',endColor:0x657a91,opacity:.78});orient(edge,-.3,a,side*.38);}
   }
   line([-.07,-r*.55,.065],[.08,r*.55,.065],0x53677e,.045,.25,0,.5);
   break;
