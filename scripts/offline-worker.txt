@@ -25,7 +25,7 @@ function download(){
       const response=await fetch(request,{cache:'reload',signal:controller.signal});
       if(!response.ok||response.type==='opaque')throw Error('资源下载失败');
       // A host's HTML error page must never count as a downloaded script/model.
-      if(!url.endsWith('index.html')&&(response.headers.get('content-type')||'').includes('text/html'))throw Error('资源内容不正确');
+      if(!/\/(?:index|play)\.html$/.test(url)&&(response.headers.get('content-type')||'').includes('text/html'))throw Error('资源内容不正确');
       await cache.put(url,response);
      }finally{clearTimeout(timer);}
     }
@@ -58,11 +58,20 @@ self.addEventListener('message',event=>{
 self.addEventListener('fetch',event=>{
  const request=event.request,url=new URL(request.url);
  if(request.method!=='GET'||url.origin!==BASE.origin||!url.pathname.startsWith(BASE.pathname))return;
- if(request.mode==='navigate'&&(url.pathname===BASE.pathname||url.pathname===BASE.pathname+'index.html')){
+ if(request.mode==='navigate'&&[BASE.pathname,BASE.pathname+'index.html',BASE.pathname+'play.html'].includes(url.pathname)){
   event.respondWith((async()=>{
-   const cache=await caches.open(CACHE),saved=await cache.match(new URL('index.html',BASE));
-   // Launch directly from the installed version. Updating is an explicit menu action.
-   return saved||fetch(request);
+   // A fresh online entry must not remain pinned to an old installed HTML page.
+   // Bound slow-network waiting; an intact installed release remains the fallback.
+   const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),3500);
+   try{
+    const response=await fetch(request,{cache:'no-store',signal:controller.signal});
+    if(response.ok&&response.type!=='opaque'&&(response.headers.get('content-type')||'').includes('text/html'))return response;
+    throw Error('在线页面暂时不可用');
+   }catch(error){
+    const cache=await caches.open(CACHE),saved=await cache.match(new URL('index.html',BASE));
+    if(saved&&await complete())return saved;
+    throw error;
+   }finally{clearTimeout(timer);}
   })());return;
  }
  const canonical=new URL(url.pathname,BASE.origin).href;

@@ -4,7 +4,13 @@ import {CHARACTER_ASSETS as assets} from '../character-assets.js';
 const root=new URL('../',import.meta.url),read=path=>readFile(new URL(path,root));
 const html=(await read('index.html')).toString(),version=html.match(/main\.js\?v=(\d+)/)?.[1];
 if(!version)throw Error('Missing release version');
-const files=['index.html','style.css','manifest.webmanifest','THIRD_PARTY_ASSETS.md'];
+// Older installed workers only intercept / and index.html. This new full-page
+// entry can load the latest release without asking players to erase site data.
+const play=new URL('play.html',root);
+if(process.argv.includes('--check')){
+ if((await readFile(play,'utf8')).replace(/\r\n/g,'\n')!==html.replace(/\r\n/g,'\n'))throw Error('Fresh online entry is stale. Run npm run offline:build.');
+}else await writeFile(play,html);
+const files=['index.html','play.html','style.css','manifest.webmanifest','THIRD_PARTY_ASSETS.md'];
 for(const f of await readdir(root))if(f.endsWith('.js')&&f!=='sw.js')files.push(f);
 for(const dir of ['vendor','assets/bestiary','assets/icons','assets/audio'])for(const f of await readdir(new URL(dir+'/',root)))if(/\.(js|png|ogg|mp3)$/.test(f))files.push(dir+'/'+f);
 const characterFiles=[...assets.textures,assets.motion.file,assets.motionFallback.file];

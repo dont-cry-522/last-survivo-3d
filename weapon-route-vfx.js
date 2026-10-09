@@ -20,7 +20,7 @@ export const WEAPON_ROUTE_LOOKS=Object.freeze({
  dark_seek:look('dark','追魂魔矢','紫黑彗尾包住淡紫核心，命中留下短尾迹',['cast','hit']),
  shade_echo:look('shade','残响弹射','转折碎影与已完成弹射路径的短暂连线',['bounce']),
  shade_blight:look('shade','蚀影刻印','逐击加深的刻痕，第三击向外撕开',['mark']),
- shadowblade_fan:look('shadowblade','双月分影','出手时分离的双层紫色镰影',['cast','hit']),
+ shadowblade_fan:look('shadowblade','双月分影','出手时分离的双层月白镰影',['cast','hit']),
  shadowblade_return:look('shadowblade','追魂弧刃','折返镰影拖出暗色回声，返程留下反向裂痕',['turn','hit','catch']),
  grimoire_wide:look('grimoire','裂界之页','裂口两翼向外展开的裂页和碎纸',['cast','hit']),
  grimoire_echo:look('grimoire','复诵禁咒','窄裂页留下余痕，二次爆发重新撕开双层裂缝',['cast','hit','echo']),
@@ -157,49 +157,49 @@ export function weaponRouteEffect(vfx,w,phase,x,z,angle=0,detail={}){
   // Endpoints describe a completed flight, never a predicted next target.
   if(Number.isFinite(detail.x2)&&Number.isFinite(detail.z2)){
    const distance=Math.hypot(detail.x2-x,detail.z2-z);
-   if(distance>.05&&distance<=7.5)vfx.segment({x:detail.x2,y:.95,z:detail.z2},{x,y:.95,z},0x85669e,.022,.14,false,0,.43);
+   if(distance>.05&&distance<=7.5)vfx.segment({x:detail.x2,y:.95,z:detail.z2},{x,y:.95,z},0x7a8aa1,.022,.14,false,0,.43);
   }
-  line([-.19,-.13,.88],[0,0,1.03],0xbba0d0,.036,.22,1,.8);
-  line([0,0,1.03],[.2,-.1,1.16],0x8b70a6,.024,.26,0,.6);
+  line([-.19,-.13,.88],[0,0,1.03],0xc9d3df,.036,.22,1,.8);
+  line([0,0,1.03],[.2,-.1,1.16],0x8c9eb5,.024,.26,0,.6);
   break;
  }
  case'shade_blight':{
   const strong=!!detail.empowered,count=strong?3:Math.max(1,Math.min(2,detail.combo||1));
   for(let i=0;i<count;i++){
-   const side=(i-(count-1)/2)*.18,m=particle('claw',strong?0xbd91ce:0x866197,0,side,.5,{life:strong?.34:.3,size:[strong?.75:.45,(strong?.65:.25)*level,1],velocity:strong?velocity(.15,side*2.4,.35):[0,0,0],motion:strong?'lash':'erupt',priority:i===0?1:0,opacity:strong?.76:.62});
+   const side=(i-(count-1)/2)*.18,m=particle('claw',strong?0xc3cfdd:0x697b92,0,side,.5,{life:strong?.34:.3,size:[strong?.75:.45,(strong?.65:.25)*level,1],velocity:strong?velocity(.15,side*2.4,.35):[0,0,0],motion:strong?'lash':'erupt',priority:i===0?1:0,opacity:strong?.76:.62});
    orient(m,-.2,a,side*2);
   }
-  if(strong){particle('veil',0x402545,0,0,.07,{life:.28,size:[.58,.46,1],opacity:.24});for(const side of[-1,1])chip('crystal',0x9275ac,.03,side*.15,.7,[.04,.13,.04],.6,1);}
+  if(strong){particle('veil',0x16202c,0,0,.07,{life:.28,size:[.58,.46,1],opacity:.24});for(const side of[-1,1])chip('crystal',0x9aaabd,.03,side*.15,.7,[.04,.13,.04],.6,1);}
   break;
  }
  case'shadowblade_fan':
-  if(phase==='cast')for(const side of[-1,1])curl(side<0?0x745291:0xb497ce,.17,side*.25,1,.46,.38*level,{roll:side*2,velocity:velocity(.5,side*.55),priority:side<0?1:0,opacity:.76});
-  else curl(0x9778af,.02,0,.95,.38,.27,{rotation:-.5,roll:2,life:.19,priority:1,opacity:.62});
+  if(phase==='cast')for(const side of[-1,1])curl(side<0?0x718397:0xc1cedc,.17,side*.25,1,.46,.38*level,{roll:side*2,velocity:velocity(.5,side*.55),priority:side<0?1:0,opacity:.76});
+  else curl(0xa4b3c6,.02,0,.95,.38,.27,{rotation:-.5,roll:2,life:.19,priority:1,opacity:.62});
   break;
  case'shadowblade_return':
   if(phase==='hit'&&!detail.returning)return false;
-  curl(0x9875b4,0,0,.95,.52*level,.42,{rotation:phase==='hit'?-.65:-Math.PI/2,roll:-2.4,priority:1,opacity:.76});
-  curl(0x4d3d65,-.14,.13,.9,.38,.3,{roll:-1.9,life:.32,opacity:.43});
+  curl(0xb4c2d1,0,0,.95,.52*level,.42,{rotation:phase==='hit'?-.65:-Math.PI/2,roll:-2.4,priority:1,opacity:.76});
+  curl(0x253346,-.14,.13,.9,.38,.3,{roll:-1.9,life:.32,opacity:.43});
   break;
  case'grimoire_wide':{
   const r=Math.max(.5,detail.radius||w.radius||1.7+.4*rank),release=phase==='hit';
   for(const side of[-1,1]){
-   const m=particle('claw',side<0?0x856b9e:0xb49acb,0,side*r*.27,.07,{life:release?.4:.28,size:[r*.45,r*(release?.55:.2),1],motion:'erupt',priority:side<0?1:0,opacity:release?.66:.44});
+   const m=particle('claw',side<0?0x788ca1:0xbac8d8,0,side*r*.27,.07,{life:release?.4:.28,size:[r*.45,r*(release?.55:.2),1],motion:'erupt',priority:side<0?1:0,opacity:release?.66:.44});
    orient(m,-.3,a,side*.38);
-   if(release)chip('crystal',0x9983ae,0,side*r*.35,.3,[.10,.018,.14],.1,.9);
+   if(release)chip('crystal',0x9dabbc,0,side*r*.35,.3,[.10,.018,.14],.1,.9);
   }
-  line([-.07,-r*.55,.065],[.08,r*.55,.065],0x6a587c,.045,.25,0,.5);
+  line([-.07,-r*.55,.065],[.08,r*.55,.065],0x53677e,.045,.25,0,.5);
   break;
  }
  case'grimoire_echo':{
   const echo=phase==='echo',release=phase==='hit',r=Math.max(.5,detail.radius||w.radius||1.7),width=r*(echo?.44:.31);
-  line([0,-width,.07],[.11,0,echo?.22:.1],echo?0xb49ac7:0x6f5685,echo?.04:.027,echo?.3:.25,1,echo?.73:.46);
-  line([.11,0,echo?.22:.1],[-.08,width,.07],echo?0x9474ae:0x6f5685,echo?.034:.022,echo?.34:.25,0,.6);
+  line([0,-width,.07],[.11,0,echo?.22:.1],echo?0xc1cfdd:0x65788e,echo?.04:.027,echo?.3:.25,1,echo?.73:.46);
+  line([.11,0,echo?.22:.1],[-.08,width,.07],echo?0xa8b9cb:0x65788e,echo?.034:.022,echo?.34:.25,0,.6);
   if(echo)for(const side of[-1,1]){
-   const m=particle('claw',side<0?0x71528b:0xad8dc4,.05,side*.52,.1,{life:.38,size:[.75,.68*level,1],motion:'erupt',opacity:.76,priority:side<0?1:0});
+   const m=particle('claw',side<0?0x718296:0xb5c4d3,.05,side*.52,.1,{life:.38,size:[.75,.68*level,1],motion:'erupt',opacity:.76,priority:side<0?1:0});
    orient(m,-.3,a,side*.35);
   }
-  else if(release)particle('veil',0x3e314d,0,0,.05,{life:.31,size:[.43,.33,1],opacity:.21});
+  else if(release)particle('veil',0x182230,0,0,.05,{life:.31,size:[.43,.33,1],opacity:.21});
   break;
  }
  case'harpoon_reef':

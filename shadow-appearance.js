@@ -1,5 +1,5 @@
 import * as T from './vendor/three.module.js';
-import {smoothSeams} from './hero-finish.js?v=109';
+import {smoothSeams} from './hero-finish.js?v=110';
 
 // Reuse the Ranger's authored cloth, UVs and skinning; each template owns its tints.
 export function shadowOutfit(root){
@@ -10,7 +10,7 @@ export function shadowOutfit(root){
   const tintMaterial=source=>{
    const m=source.clone();
    if(!source.name.includes('Ranger'))return m;
-   const leather=/Belt|Bracer|Feet/.test(o.name),color=/Feet/.test(o.name)?0x1d2029:/Belt|Bracer/.test(o.name)?0x2d2935:/Legs/.test(o.name)?0x252837:/Arms/.test(o.name)?0x323447:0x2d3040;
+   const leather=/Belt|Bracer|Feet/.test(o.name),color=/Feet/.test(o.name)?0x1c2228:/Belt|Bracer/.test(o.name)?0x252b32:/Legs/.test(o.name)?0x232c38:/Arms/.test(o.name)?0x2e3b4a:0x263340;
    const tint=new T.Color(color).toArray().join(',');
    m.color.set(0xffffff);m.roughness=leather?.86:.94;m.metalness=.015;
    m.roughnessMap=null;m.metalnessMap=null;m.normalScale?.setScalar(leather?.24:.18);
@@ -27,13 +27,13 @@ export function shadowOutfit(root){
 }
 
 const scarfMaterial=new T.MeshStandardMaterial({vertexColors:true,roughness:.96,metalness:0,side:T.DoubleSide});
-const claspMaterial=new T.MeshStandardMaterial({color:0x7c8890,roughness:.72,metalness:.22});
+const claspMaterial=new T.MeshStandardMaterial({color:0x9da8b0,roughness:.70,metalness:.32});
 let scarfGeometry,claspGeometry;
 
 function shortScarf(){
  if(scarfGeometry)return scarfGeometry;
  const positions=[],colors=[],indices=[],slices=40,rows=10;
- const cloth=new T.Color(0x2d3044),edge=new T.Color(0x5a6376);
+ const cloth=new T.Color(0x273644),edge=new T.Color(0xaeb9bf);
  for(let j=0;j<=rows;j++)for(let i=0;i<=slices;i++){
   const v=j/rows,a=.56+i/slices*(Math.PI*2-.94),s=Math.sin(a),c=Math.cos(a),left=Math.max(0,-s),front=Math.max(0,c),spread=Math.sin(v*Math.PI/2);
   // Open at the front, with a longer left fold; avoid a solid breastplate silhouette.
@@ -43,7 +43,7 @@ function shortScarf(){
   const y=1.548-v*(.105+.135*left+.020*front)+Math.sin(a*5+v*4)*.008*v+worn;
   const z=-.035+c*(.090+.090*spread+fold)+front*(.012+.016*spread);
   positions.push(x,y,z);
-  const hem=T.MathUtils.smoothstep(v,.88,1)*.32+(1-T.MathUtils.smoothstep(v,0,.10))*.12;
+  const hem=j===rows&&((i>=5&&i<=6)||(i>=27&&i<=28))?.24:0;
   const color=cloth.clone().lerp(edge,hem).multiplyScalar(.94+.06*Math.cos(a*5-v*3));
   colors.push(color.r,color.g,color.b);
   if(j<rows&&i<slices){const n=j*(slices+1)+i;indices.push(n,n+slices+1,n+1,n+1,n+slices+1,n+slices+2);}
@@ -59,12 +59,11 @@ export function shadowAccessories(){
  const chest=new T.Group();chest.name='Shadow_traveller_scarf';
  const scarf=new T.Mesh(shortScarf(),scarfMaterial);scarf.name='Shadow_short_scarf';chest.add(scarf);
  if(!claspGeometry){
-  const moon=new T.Shape();moon.moveTo(.011,.022);
-  moon.bezierCurveTo(-.031,.028,-.031,-.028,.011,-.022);
-  moon.quadraticCurveTo(-.012,0,.011,.022);
-  claspGeometry=new T.ExtrudeGeometry(moon,{depth:.004,bevelEnabled:true,bevelThickness:.001,bevelSize:.001,bevelSegments:2,curveSegments:16});
+  const upper=new T.Shape();upper.moveTo(-.013,.017);upper.lineTo(-.007,.020);upper.lineTo(.009,.004);upper.lineTo(.003,-.001);upper.closePath();
+  const lower=new T.Shape();lower.moveTo(.007,-.006);lower.lineTo(.013,-.003);lower.lineTo(.016,-.012);lower.lineTo(.002,-.021);lower.lineTo(-.002,-.016);lower.lineTo(.009,-.011);lower.closePath();
+  claspGeometry=new T.ExtrudeGeometry([upper,lower],{depth:.004,bevelEnabled:true,bevelThickness:.001,bevelSize:.001,bevelSegments:1,curveSegments:1});
  }
- const clasp=new T.Mesh(claspGeometry,claspMaterial);clasp.name='Shadow_moon_clasp';
+ const clasp=new T.Mesh(claspGeometry,claspMaterial);clasp.name='Shadow_broken_clasp';
  clasp.position.set(-.112,1.438,.137);clasp.rotation.set(0,-.5,-.17);chest.add(clasp);
  chest.traverse(o=>{if(o.isMesh)o.castShadow=o.receiveShadow=true;});
  // Coordinates are the source model's rest space; attachAtRest handles the chest bone.

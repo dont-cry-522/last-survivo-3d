@@ -1,23 +1,23 @@
-import {shadowOutfit,shadowAccessories} from './shadow-appearance.js?v=109';
-import {shadowFocus} from './shadow-gear.js?v=109';
-import {GRIP_POINTS,primaryGripFrame,fitWeaponToPalm,createHandGrips,restoreGripWrists,captureGripWrists,aimGrip,supportGripTarget,aimSupportGrip,poseGripFingers} from './weapon-grips.js?v=109';
-import {refineLingyaHead,lingyaHeadY} from './lingya-face.js?v=109';
-import {finishHeroSurface,smoothSeams} from './hero-finish.js?v=109';
-import{tideHarness}from'./tide-appearance.js?v=109';
-import{WULING_PALETTE,wulingOutfit,wulingAccessories,wulingMask,sporeLantern,sporeSatchel,sporePod}from'./wuling-appearance.js?v=109';
-import{MIRAGE_PALETTE,mirageOutfit,mirageHair,prepareMirageHair,animateMirageHair,mirageMask,mirageAccessories,miragePetalTails,miasmaLantern}from'./mirage-appearance.js?v=109';
-import{newHeroAttack,heroCarryPose,committedWeaponYaw}from'./new-hero-motion.js?v=109';
-import{heroDodgePose}from'./hero-dodge.js?v=109';
-import{lingyaHopPose}from'./lingya-motion.js?v=109';
-import{lingyaOutfit,lingyaAccessories,lingyaLegs}from'./lingya-appearance.js?v=109';
-import{boneBoomerang}from'./beast-model.js?v=109';
-import{makeHarpoon}from'./coast-models.js?v=109';
-import{weaponGesture,shotStarted}from'./weapon-performance.js?v=109';
-import{rollProgress,rollWeight}from'./dodge-motion.js?v=109';
+import {shadowOutfit,shadowAccessories} from './shadow-appearance.js?v=110';
+import {shadowFocus} from './shadow-gear.js?v=110';
+import {GRIP_POINTS,primaryGripFrame,fitWeaponToPalm,createHandGrips,restoreGripWrists,captureGripWrists,aimGrip,supportGripTarget,aimSupportGrip,poseGripFingers} from './weapon-grips.js?v=110';
+import {refineLingyaHead,lingyaHeadY} from './lingya-face.js?v=110';
+import {finishHeroSurface,smoothSeams} from './hero-finish.js?v=110';
+import{tideHarness}from'./tide-appearance.js?v=110';
+import{WULING_PALETTE,wulingOutfit,wulingAccessories,wulingMask,sporeLantern,sporeSatchel,sporePod}from'./wuling-appearance.js?v=110';
+import{MIRAGE_PALETTE,mirageOutfit,mirageHair,prepareMirageHair,animateMirageHair,mirageMask,mirageAccessories,miragePetalTails,miasmaLantern}from'./mirage-appearance.js?v=110';
+import{newHeroAttack,heroCarryPose,committedWeaponYaw}from'./new-hero-motion.js?v=110';
+import{heroDodgePose}from'./hero-dodge.js?v=110';
+import{lingyaHopPose}from'./lingya-motion.js?v=110';
+import{lingyaOutfit,lingyaAccessories,lingyaLegs}from'./lingya-appearance.js?v=110';
+import{boneBoomerang}from'./beast-model.js?v=110';
+import{makeHarpoon}from'./coast-models.js?v=110';
+import{weaponGesture,shotStarted}from'./weapon-performance.js?v=110';
+import{rollProgress,rollWeight}from'./dodge-motion.js?v=110';
 import * as T from './vendor/three.module.js';
 import {clone} from './vendor/SkeletonUtils.js';
-import {loadCharacterData} from './character-loader.js?v=109';
-import {makeHero as makePrototype} from './hero-model.js?v=109';
+import {loadCharacterData} from './character-loader.js?v=110';
+import {makeHero as makePrototype} from './hero-model.js?v=110';
 
 const templates=new Map(),clips=new Map();
 let lingyaFace;
@@ -147,7 +147,7 @@ function attachAtRest(bone,object,root){
 }
 function capeMesh(kind){
   const pos=[],uv=[],colors=[],ix=[],cols=24,rows=28;
-  for(let y=0;y<=rows;y++)for(let x=0;x<=cols;x++){const u=x/cols,v=y/rows,w=.22+.13*Math.sin(v*Math.PI*.86),split=.10*Math.exp(-(((u-.5)/.065)**2))*v**8;if(kind==='lingya'){const a=.56+u*(Math.PI*2-1.12),r=.12+.145*Math.sin(v*Math.PI/2);pos.push(Math.sin(a)*r,-v*.25+Math.sin(a*7)*.007*v,Math.cos(a)*r);}else if(kind==='mirage'){const a=.52+u*(Math.PI*2-1.04),r=.14+.09*Math.sin(v*Math.PI/2);pos.push(Math.sin(a)*r,-v*(.25+.14*Math.sin(a-.4))-.026*Math.cos(a*2)*v**4,Math.cos(a)*r*.82);}else if(kind==='wuling'){const a=.48+u*(Math.PI*2-.96),r=.143+.088*Math.sin(v*Math.PI/2);pos.push(Math.sin(a)*r,-v*(.295+.12*Math.sin(a+.6))-.018*Math.cos(a*3)*v**4,Math.cos(a)*r*.79);}else pos.push((u-.5)*w*2,-v*.86+split+(kind==='wraith'?(Math.sin(u*23+.7)*.035+Math.sin(u*49)*.015)*v**10:0)+Math.cos(u*Math.PI*4)*.013*v,-.12*v-.04*Math.sin(u*Math.PI)+Math.sin(u*Math.PI*8)*.016*v);uv.push(u,v);const base=kind==='lingya'?0x688a74:kind==='mirage'?MIRAGE_PALETTE.cloth:kind==='wuling'?WULING_PALETTE.cloak:kind==='tide'?0x3b686e:kind==='wraith'?0x232535:0x252936,trim=kind==='lingya'?0xd7c8a5:kind==='mirage'?MIRAGE_PALETTE.mist:kind==='wuling'?WULING_PALETTE.trim:kind==='tide'?0xbba879:0x65727d;const edge=T.MathUtils.smoothstep(Math.max(Math.abs(u-.5)*2,v),.93,1),color=new T.Color(base).lerp(new T.Color(trim),edge*.72).multiplyScalar(.86+.14*v+.045*Math.cos(u*Math.PI*8)*v);colors.push(color.r,color.g,color.b);}
+  for(let y=0;y<=rows;y++)for(let x=0;x<=cols;x++){const u=x/cols,v=y/rows,w=.22+.13*Math.sin(v*Math.PI*.86),split=.10*Math.exp(-(((u-.5)/.065)**2))*v**8;if(kind==='lingya'){const a=.56+u*(Math.PI*2-1.12),r=.12+.145*Math.sin(v*Math.PI/2);pos.push(Math.sin(a)*r,-v*.25+Math.sin(a*7)*.007*v,Math.cos(a)*r);}else if(kind==='mirage'){const a=.52+u*(Math.PI*2-1.04),r=.14+.09*Math.sin(v*Math.PI/2);pos.push(Math.sin(a)*r,-v*(.25+.14*Math.sin(a-.4))-.026*Math.cos(a*2)*v**4,Math.cos(a)*r*.82);}else if(kind==='wuling'){const a=.48+u*(Math.PI*2-.96),r=.143+.088*Math.sin(v*Math.PI/2);pos.push(Math.sin(a)*r,-v*(.295+.12*Math.sin(a+.6))-.018*Math.cos(a*3)*v**4,Math.cos(a)*r*.79);}else pos.push((u-.5)*w*2,-v*.86+split+(kind==='wraith'?(Math.sin(u*23+.7)*.035+Math.sin(u*49)*.015+.10+u*.17)*v**10:0)+Math.cos(u*Math.PI*4)*.013*v,-.12*v-.04*Math.sin(u*Math.PI)+Math.sin(u*Math.PI*8)*.016*v);uv.push(u,v);const base=kind==='lingya'?0x688a74:kind==='mirage'?MIRAGE_PALETTE.cloth:kind==='wuling'?WULING_PALETTE.cloak:kind==='tide'?0x3b686e:kind==='wraith'?0x1a202c:0x252936,trim=kind==='lingya'?0xd7c8a5:kind==='mirage'?MIRAGE_PALETTE.mist:kind==='wuling'?WULING_PALETTE.trim:kind==='tide'?0xbba879:0x65727d;const edge=T.MathUtils.smoothstep(Math.max(Math.abs(u-.5)*2,v),.93,1),color=new T.Color(base).lerp(new T.Color(trim),edge*.72).multiplyScalar(.86+.14*v+.045*Math.cos(u*Math.PI*8)*v);colors.push(color.r,color.g,color.b);}
   for(let y=0;y<rows;y++)for(let x=0;x<cols;x++){const a=y*(cols+1)+x;ix.push(a,a+cols+1,a+1,a+1,a+cols+1,a+cols+2);}
   const geometry=new T.BufferGeometry();geometry.setAttribute('position',new T.Float32BufferAttribute(pos,3));geometry.setAttribute('uv',new T.Float32BufferAttribute(uv,2));geometry.setAttribute('color',new T.Float32BufferAttribute(colors,3));geometry.setIndex(ix);geometry.computeVertexNormals();
   const material=new T.MeshStandardMaterial({color:0xffffff,vertexColors:true,roughness:.87,side:T.DoubleSide}),wind={time:{value:0},run:{value:0},turn:{value:0}};
@@ -164,22 +164,20 @@ function faceMask(model,kind='silver'){
   const shadow=kind==='wraith',material=new T.MeshStandardMaterial({color:shadow?0xffffff:0x111924,roughness:shadow?.94:.86,side:T.DoubleSide});
   if(shadow){
     material.onBeforeCompile=s=>{
-      s.vertexShader='varying vec3 vDeathMask;\n'+s.vertexShader;
-      s.vertexShader=s.vertexShader.replace('#include <begin_vertex>','#include <begin_vertex>\nvDeathMask=position;');
-      s.fragmentShader='varying vec3 vDeathMask;\n'+s.fragmentShader;
+      s.vertexShader='varying vec3 vShadowVeil;\n'+s.vertexShader;
+      s.vertexShader=s.vertexShader.replace('#include <begin_vertex>','#include <begin_vertex>\nvShadowVeil=position;');
+      s.fragmentShader='varying vec3 vShadowVeil;\n'+s.fragmentShader;
       s.fragmentShader=s.fragmentShader.replace('#include <color_fragment>',`#include <color_fragment>
-        float x=abs(vDeathMask.x),y=vDeathMask.y;
-        float eyeY=y-(1.695+.17*(x-.02));
-        float socket=exp(-pow((x-.036)/.026,4.0)-pow(eyeY/.011,2.0));
-        float cheek=exp(-pow((x-.056)/.015,2.0)-pow((y-1.658)/.021,2.0));
-        float nose=(1.0-smoothstep(.004,.012,x))*smoothstep(1.647,1.657,y)*(1.0-smoothstep(1.666,1.676,y));
-        float jaw=(1.0-smoothstep(.002,.004,abs(mod(vDeathMask.x+.005,.019)-.0095)))*smoothstep(1.600,1.609,y)*(1.0-smoothstep(1.621,1.630,y));
-        float eye=(1.0-smoothstep(.002,.0035,abs(eyeY)))*smoothstep(.014,.022,x)*(1.0-smoothstep(.047,.058,x));
-        vec3 ash=mix(vec3(.17,.22,.29),vec3(.055,.070,.10),smoothstep(1.725,1.77,y));
-        diffuseColor.rgb=mix(ash,vec3(.006,.009,.017),clamp(socket+cheek*.73+nose+jaw*.67,0.0,1.0));
-        diffuseColor.rgb=mix(diffuseColor.rgb,vec3(.22,.43,.53),eye);`);
-      s.fragmentShader=s.fragmentShader.replace('#include <emissivemap_fragment>','#include <emissivemap_fragment>\ntotalEmissiveRadiance+=vec3(.16,.43,.57)*eye;');
-    };material.customProgramCacheKey=()=> 'wraith-ashen-death-mask';
+        float x=vShadowVeil.x,y=vShadowVeil.y;
+        float fold=.75+.25*sin(y*230.0+x*32.0);
+        float cutX=.011+.18*(y-1.699)+.003*sin((y-1.66)*140.0);
+        float cut=(1.0-smoothstep(.0012,.0032,abs(x-cutX)))*smoothstep(1.651,1.667,y)*(1.0-smoothstep(1.731,1.749,y));
+        float brow=(1.0-smoothstep(.0012,.0028,abs(y-1.698-.12*abs(x))))*smoothstep(.021,.028,abs(x))*(1.0-smoothstep(.046,.057,abs(x)));
+        diffuseColor.rgb=vec3(.006,.009,.016)*fold;
+        diffuseColor.rgb=mix(diffuseColor.rgb,vec3(.45,.51,.60),cut);
+        diffuseColor.rgb+=vec3(.05,.07,.10)*brow;`);
+      s.fragmentShader=s.fragmentShader.replace('#include <emissivemap_fragment>','#include <emissivemap_fragment>\ntotalEmissiveRadiance+=vec3(.38,.45,.55)*cut+vec3(.07,.09,.13)*brow;');
+    };material.customProgramCacheKey=()=> 'wraith-fractured-shadow-veil';
   }
   // Fit to the actual rest-pose face instead of suspending a flat shell in front.
   const probe=new T.Mesh(skin.geometry,material),ray=new T.Raycaster(),pos=[],ix=[],cols=24,rows=shadow?24:10;
@@ -197,7 +195,7 @@ function faceMask(model,kind='silver'){
   // A cloth envelope bridges the nose and lips instead of copying every facial crease.
   for(let pass=0;pass<32;pass++)for(let row=1;row<rows;row++)for(let col=0;col<=cols;col++){const k=(row*(cols+1)+col)*3+2;pos[k]=Math.max(pos[k],(pos[k-(cols+1)*3]+pos[k+(cols+1)*3])*.5);}
   const geometry=new T.BufferGeometry();geometry.setAttribute('position',new T.Float32BufferAttribute(pos,3));geometry.setIndex(ix);geometry.computeVertexNormals();smoothSeams(geometry);
-  const mask=new T.Mesh(geometry,material);mask.name=shadow?'wraith-death-mask':'silver-face-mask';mask.castShadow=true;return mask;
+  const mask=new T.Mesh(geometry,material);mask.name=shadow?'wraith-shadow-veil':'silver-face-mask';mask.castShadow=true;return mask;
 }
 const stringUp=new T.Vector3(0,1,0);
 function drawCrossbow(gun,pull,phase){
