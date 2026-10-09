@@ -52,7 +52,7 @@ export class HeroPreview {
    this.camera.setViewOffset(rect.width,rect.height,-rect.left,-rect.top,width,height);
    this.camera.updateMatrixWorld(true);
    // A slight side fill reveals cloth folds without flattening the map's key light.
-   this.fill.intensity=hero.userData.wraith?2.3:2.9;this.fill.position.copy(center).addScaledVector(direction,1.8).addScaledVector(right,.6);this.fill.position.y+=.55;scene.add(this.fill);
+   this.fill.intensity=hero.userData.kind==='wraith'?2.3:2.9;this.fill.position.copy(center).addScaledVector(direction,1.8).addScaledVector(right,.6);this.fill.position.y+=.55;scene.add(this.fill);
    this.renderer.render(scene,this.camera);
   }finally{
    if(fogDensity!==undefined)scene.fog.density=fogDensity;

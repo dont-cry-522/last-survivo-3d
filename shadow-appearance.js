@@ -1,5 +1,5 @@
 import * as T from './vendor/three.module.js';
-import {smoothSeams} from './hero-finish.js?v=112';
+import {smoothSeams} from './hero-finish.js?v=113';
 
 // Reuse the Ranger's authored cloth, UVs and skinning; each template owns its tints.
 export function shadowOutfit(root){
@@ -10,7 +10,7 @@ export function shadowOutfit(root){
   const tintMaterial=source=>{
    const m=source.clone();
    if(!source.name.includes('Ranger'))return m;
-   const leather=/Belt|Bracer|Feet/.test(o.name),color=/Feet/.test(o.name)?0x212a35:/Belt|Bracer/.test(o.name)?0x29313c:/Legs/.test(o.name)?0x2a3b51:/Arms/.test(o.name)?0x344962:/Head_Hood/.test(o.name)?0x3d536d:0x344c67;
+   const leather=/Belt|Bracer|Feet/.test(o.name),color=/Feet/.test(o.name)?0x131318:/Belt|Bracer/.test(o.name)?0x1a191f:/Legs/.test(o.name)?0x202027:/Arms/.test(o.name)?0x25242c:/Head_Hood/.test(o.name)?0x303038:0x282730;
    const tint=new T.Color(color).toArray().join(',');
    m.color.set(0xffffff);m.roughness=leather?.86:.94;m.metalness=.015;
    m.roughnessMap=null;m.metalnessMap=null;m.normalScale?.setScalar(leather?.24:.18);
@@ -27,7 +27,7 @@ export function shadowOutfit(root){
 }
 
 const scarfMaterial=new T.MeshStandardMaterial({vertexColors:true,roughness:.96,metalness:0,side:T.DoubleSide});
-const claspMaterial=new T.MeshStandardMaterial({color:0x9da8b0,roughness:.70,metalness:.32});
+const claspMaterial=new T.MeshStandardMaterial({color:0x8a8991,roughness:.70,metalness:.32});
 const scarves=new Map();
 let claspGeometry;
 
@@ -60,7 +60,7 @@ function clothForm(weapon){
   panels=[neck,sash];claspPanel=sash;claspV=.18;
  }
  const positions=[],colors=[],indices=[],slices=8,rows=14;
- const cloth=new T.Color(0x46627f),edge=new T.Color(0x697f93);
+ const cloth=new T.Color(0x303039),edge=new T.Color(0x55545e);
  for(const surface of panels){
   const offset=positions.length/3;
   for(let j=0;j<=rows;j++)for(let i=0;i<=slices;i++){
@@ -97,4 +97,17 @@ export function shadowAccessories(weapon='shade'){
  chest.traverse(o=>{if(o.isMesh)o.castShadow=o.receiveShadow=true;});
  // Coordinates are the source model's rest space; attachAtRest handles the chest bone.
  return{chest};
+}
+
+// Keep the shadow cloth achromatic under warm forest light without changing the scene.
+export function finishShadowTone(material){
+ if(!material.isMeshStandardMaterial||material.userData.shadowTone)return;
+ const compile=material.onBeforeCompile,key=material.customProgramCacheKey();
+ material.onBeforeCompile=shader=>{
+  compile(shader);
+  shader.fragmentShader=shader.fragmentShader.replace('#include <opaque_fragment>',`float shadowLight=dot(outgoingLight,vec3(.2126,.7152,.0722));
+    outgoingLight=mix(outgoingLight,vec3(shadowLight)*vec3(.98,.97,1.03),.88);
+    #include <opaque_fragment>`);
+ };
+ material.customProgramCacheKey=()=>key+'-neutral-shadow';material.userData.shadowTone=true;
 }

@@ -87,7 +87,7 @@ void main(){
  float core=exp(-seam*seam*34.0);
  float presence=mix(baseOpacity+flare*attack,min(.15,.105*motion+.038*dash+.035*attack),vTrail);
  float opacity=edge*ends*presence*(.58+.24*fold+.18*core);
- vec3 color=mix(vec3(.20,.29,.36),vec3(.35,.48,.57),core*.65+attack*.12);
+ vec3 color=mix(vec3(.013,.011,.020),vec3(.070,.061,.090),core*.65+attack*.12);
  gl_FragColor=vec4(color,opacity);
  #include <tonemapping_fragment>
  #include <colorspace_fragment>

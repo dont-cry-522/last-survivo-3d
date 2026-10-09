@@ -1,6 +1,6 @@
-import {shadowFocus} from './shadow-gear.js?v=112';
-import{weaponGesture,shotStarted}from'./weapon-performance.js?v=112';
-import{miasmaLantern}from'./mirage-appearance.js?v=112';
+import {shadowFocus} from './shadow-gear.js?v=113';
+import{weaponGesture,shotStarted}from'./weapon-performance.js?v=113';
+import{miasmaLantern}from'./mirage-appearance.js?v=113';
 import * as T from './vendor/three.module.js';
 // Shared smooth geometry: detail is concentrated on the two heroes, not multiplied across the forest.
 const geometries=new Map(),materials=new Map();

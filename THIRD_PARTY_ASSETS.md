@@ -84,3 +84,5 @@ Adaptations: onset editing, material layering, selected reverse textures for sha
 The v94 edit shortens handheld weapon reports and recovery cues, separates pull/latch stages, removes contact layers from harpoon air swings, and uses breath/air textures with quieter wet accents for lanterns. Shadow magic keeps paper only for page handling. Per-cue playback gains range from 0.32 to 1. The current mono 32 kHz atlas uses 128 kbps MP3 encoding (910,124 bytes, 56.8 seconds, 130 unique edits and 70 lookup keys including aliases). These are new edits of the same licensed sources, not new claims of field recording or subjective listening approval.
 
 - v111 影裔沿用现有 Quaternius CC0 人体、兜帽和动画；蓝灰材质、不对称披肩、分叉消散披风与肩背薄影均为项目代码制作，没有新增第三方素材或依赖。
+
+- v113 仅调整影裔三种装备外形的煤黑/冷灰配色、独立材质去环境染色和低透明黑烟，未增加第三方素材或依赖。

@@ -78,8 +78,8 @@ test('the actual v109 worker pins versioned home URLs but lets the new play entr
   fetch:async()=>{network++;return new Response('fresh page');},self:{addEventListener(type,callback){assert.equal(type,'fetch');handler=callback;}}
  });
  const request=async path=>{let response;handler({request:{url:new URL(path,base).href,method:'GET',mode:'navigate'},respondWith(value){responds++;response=value;}});return response&&await response;};
- assert.equal(await (await request('?v=112')).text(),'old installed v109 page');assert.equal(responds,1);assert.equal(network,0);
- assert.equal(await request('play.html?v=112'),undefined,'old worker intercepts the fresh entry');assert.equal(responds,1,'play entry called respondWith');assert.equal(network,0,'unhandled navigation should be left to the browser');
+ assert.equal(await (await request('?v=113')).text(),'old installed v109 page');assert.equal(responds,1);assert.equal(network,0);
+ assert.equal(await request('play.html?v=113'),undefined,'old worker intercepts the fresh entry');assert.equal(responds,1,'play entry called respondWith');assert.equal(network,0,'unhandled navigation should be left to the browser');
 });
 
 function pageHarness({registered=true,online=true,waiting=false,updateFailure=false}={}){
@@ -94,7 +94,7 @@ function pageHarness({registered=true,online=true,waiting=false,updateFailure=fa
   window:{addEventListener:(type,fn)=>(events[type]??=[]).push(fn)},location:{reload(){calls.reload++;}},
   localStorage:{clear(){throw Error('must never erase player saves');},removeItem(){throw Error('must never erase player saves');}}
  };
- const source=readFileSync(new URL('../offline.js',import.meta.url),'utf8').replaceAll('import.meta.url',JSON.stringify('https://example.test/game/offline.js?v=112'));
+ const source=readFileSync(new URL('../offline.js',import.meta.url),'utf8').replaceAll('import.meta.url',JSON.stringify('https://example.test/game/offline.js?v=113'));
  vm.runInNewContext(source,sandbox);
  return{nodes,calls,messages,body,async settle(){for(let i=0;i<5;i++)await new Promise(resolve=>setImmediate(resolve));},online(){sandbox.navigator.onLine=true;for(const callback of events.online||[])callback();},click:()=>element('#offline-download').onclick()};
 }
