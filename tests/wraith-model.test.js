@@ -28,10 +28,10 @@ test('stocky shadow silhouette retains distinct shoulders and naturally resting 
  // Guard the actual dressed silhouette, not the hidden shoulder joint spacing.
  hero.traverse(o=>o.rotation.set(0,0,0));hero.updateMatrixWorld(true);
  const shoulders=new T.Box3(),tunic=hero.getObjectByName('wraith-tailored-tunic'),points=[],p=tunic.geometry.attributes.position;
- hero.traverse(o=>{if(o.name==='wraith-shoulder-guard')shoulders.union(new T.Box3().setFromObject(o,true));});
+ hero.traverse(o=>{if(o.name==='wraith-cloth-sleeve')shoulders.union(new T.Box3().setFromObject(o,true));});
  for(let i=0;i<p.count;i++)if(p.getY(i)<.075)points.push(new T.Vector3().fromBufferAttribute(p,i).applyMatrix4(tunic.matrixWorld));
  const hips=new T.Box3().setFromPoints(points),ratio=(shoulders.max.x-shoulders.min.x)/(hips.max.x-hips.min.x);
- assert(ratio>1.25&&ratio<1.65,`shoulder armor overwhelms the hip silhouette: ${ratio.toFixed(3)}`);
+ assert(ratio>1.25&&ratio<1.65,`sleeves overwhelm the hip silhouette: ${ratio.toFixed(3)}`);
 });
 
 test('rounded cloth hood overlaps its collar and the back cape is one connected drape',()=>{

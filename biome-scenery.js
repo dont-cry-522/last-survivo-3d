@@ -1,7 +1,7 @@
 import * as T from './vendor/three.module.js';
-import{MAP_HALF}from'./map-layout.js?v=105';
-import{bridgeContains}from'./coast.js?v=105';
-import{seeded}from'./rules.js?v=105';
+import{MAP_HALF}from'./map-layout.js?v=106';
+import{bridgeContains}from'./coast.js?v=106';
+import{seeded}from'./rules.js?v=106';
 // One worn silhouette is shared by boulders, bank stones and instanced scree.
 export const naturalRockGeometry=(()=>{
  const g=new T.SphereGeometry(1,10,7),p=g.attributes.position,colors=[];

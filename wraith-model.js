@@ -1,14 +1,14 @@
-import {smoothSeams} from './hero-finish.js?v=105';
-import{weaponGesture,shotStarted}from'./weapon-performance.js?v=105';
+import {smoothSeams} from './hero-finish.js?v=106';
+import{weaponGesture,shotStarted}from'./weapon-performance.js?v=106';
 import * as T from './vendor/three.module.js';
-import{shadowCrescentGeometry,shadowCrescentEdge}from'./shadow-weapons.js?v=105';
+import{shadowCrescentGeometry,shadowCrescentEdge}from'./shadow-weapons.js?v=106';
 
 // Continuous cloth surfaces share geometry; each actor owns its pose and morph weights.
 const geometry=new Map(),materials=new Map();
-const C={robe:0x30374e,hood:0x414763,fold:0x252d40,lining:0x171e2b,armor:0x465361,trim:0x788995,void:0x050b13,mask:0x111d29,light:0x79cbdc};
+const C={robe:0x41445f,hood:0x505273,fold:0x30354d,lining:0x222a3b,trim:0x788995,void:0x050b13,mask:0x111d29,light:0x79cbdc};
 const HIP_HEIGHT=.802,THIGH=.335,SHIN=.335,RIG_SCALE=.91;
 function cached(key,create){if(!geometry.has(key))geometry.set(key,create());return geometry.get(key);}
-function material(color,glow=false){const key=color+':'+glow;if(!materials.has(key)){const metal=color===C.trim||color===C.armor||color===C.mask;materials.set(key,glow?new T.MeshBasicMaterial({color,toneMapped:false}):new T.MeshStandardMaterial({color,roughness:metal?.63:.94,metalness:metal?.27:.015,side:T.DoubleSide}));}return materials.get(key);}
+function material(color,glow=false){const key=color+':'+glow;if(!materials.has(key)){const metal=color===C.trim;materials.set(key,glow?new T.MeshBasicMaterial({color,toneMapped:false}):new T.MeshStandardMaterial({color,roughness:metal?.63:.94,metalness:metal?.27:.015,side:T.DoubleSide}));}return materials.get(key);}
 function mesh(parent,geo,color,pos=[0,0,0],scale=[1,1,1],glow=false){const m=new T.Mesh(geo,material(color,glow));m.position.set(...pos);m.scale.set(...scale);m.castShadow=!glow;m.receiveShadow=true;parent.add(m);return m;}
 const joint=(parent,x,y,z)=>{const g=new T.Group();g.position.set(x,y,z);parent.add(g);return g;};
 const ell=(p,c,pos,scale,glow=false)=>{const small=Math.max(...scale)<=.06;return mesh(p,cached(small?'small-sphere':'sphere',()=>new T.SphereGeometry(1,small?14:20,small?10:14)),c,pos,scale,glow);};
@@ -35,45 +35,25 @@ function hoodGeometry(){return cached('hollow-hood',()=>{
  }
  return surface(vertices,indices);
 });}
-function hoodOpening(a){const sy=Math.sin(a),sx=Math.cos(a);return[sx*.191*(1-.16*Math.max(0,-sy)),sy*.213+Math.max(0,sy)**2*.020,.166+sy*.034];}
+function hoodOpening(a){const sy=Math.sin(a),sx=Math.cos(a);return[sx*.191*(1-.30*Math.max(0,-sy)),sy*.213+Math.max(0,sy)**2*.020,.166+sy*.034];}
 
-// A rib cage has a flatter chest, shoulder blades and a waist, not a lathed barrel.
+// Soft elliptical sections and shallow gathers keep the tunic continuous through the waist.
 function torsoGeometry(){return cached('human-tunic',()=>{
- const vertices=[],indices=[],slices=32,rows=[[-.145,.199,.153],[-.092,.267,.181],[-.02,.293,.191],[.07,.281,.188],[.17,.279,.195],[.28,.289,.205],[.38,.302,.205],[.46,.300,.182],[.515,.253,.145],[.558,.130,.107]];
+ const vertices=[],indices=[],slices=32,profile=[[-.145,.199,.153],[-.092,.267,.181],[-.02,.293,.191],[.07,.281,.188],[.17,.279,.195],[.28,.289,.205],[.38,.302,.205],[.46,.300,.182],[.515,.253,.145],[.558,.130,.107]];
+ const rows=new T.CatmullRomCurve3(profile.map(([y,w,d])=>new T.Vector3(w,y,d))).getPoints(36).map(p=>[p.y,p.x,p.z]);
  for(let j=0;j<rows.length;j++)for(let i=0;i<=slices;i++){
-  const [y,w,d]=rows[j],a=i/slices*Math.PI*2,s=Math.sin(a),c=Math.cos(a),chest=Math.exp(-(((y-.37)/.12)**2)),x=Math.sign(s)*Math.abs(s)**.86*w;
-  const fold=.003*Math.sin(a*7+y*11)*(1-chest*.7),z=Math.sign(c)*Math.abs(c)**.76*d+(c>0?.016*chest*Math.abs(s):-.008*chest)+fold;
+  const [y,w,d]=rows[j],a=i/slices*Math.PI*2,s=Math.sin(a),c=Math.cos(a),chest=Math.exp(-(((y-.37)/.12)**2)),gather=Math.exp(-(((y-.065)/.22)**2)),crease=.006*Math.sin(a*5-y*8)*gather,x=Math.sign(s)*Math.abs(s)**.98*(w+crease);
+  const fold=.008*Math.sin(a*5+y*9)*gather,z=Math.sign(c)*Math.abs(c)**.96*d+(c>0?.008*chest*Math.abs(s):-.008*chest)+fold;
   vertices.push(x,y,z);if(j<rows.length-1&&i<slices){const n=j*(slices+1)+i;indices.push(n,n+1,n+slices+1,n+1,n+slices+2,n+slices+1);}
- }return surface(vertices,indices);
-});}
-
-function chestGeometry(){return cached('fitted-breastplate',()=>{
- const vertices=[],indices=[];
- const plate=points=>{const base=vertices.length/3,n=points.length,center=points.reduce((v,p)=>v.add(new T.Vector3(...p)),new T.Vector3()).multiplyScalar(1/n);
-  for(const p of points)vertices.push(...p);
-  for(const p of points)vertices.push(center.x+(p[0]-center.x)*.84,center.y+(p[1]-center.y)*.84,p[2]+.009);
-  vertices.push(center.x,center.y,center.z+.025);
-  for(let i=0;i<n;i++){const j=(i+1)%n;indices.push(base+i,base+j,base+n+i,base+j,base+n+j,base+n+i,base+n+i,base+n+j,base+n*2);}
- };
- for(const s of [-1,1]){const p=[[.020,.443,.220],[.228,.426,.195],[.236,.311,.200],[.147,.266,.223],[.020,.302,.235]].map(([x,y,z])=>[x*s,y,z]);if(s>0)p.reverse();plate(p);}
- plate([[-.170,.237,.218],[-.133,.131,.208],[0,.110,.216],[.133,.131,.208],[.170,.237,.218],[0,.261,.231]]);
- return surface(vertices,indices);
-});}
-
-function shoulderGeometry(){return cached('fitted-shoulder',()=>{
- const vertices=[],indices=[],cols=16,rows=8;
- for(let y=0;y<=rows;y++)for(let x=0;x<=cols;x++){
-  const v=y/rows,a=-Math.PI*.2+x/cols*Math.PI*1.4,r=.098+Math.sin(v*Math.PI)*.016+.004*v,px=Math.cos(a)*r,pz=Math.sin(a)*r*(1.04+.10*v);
-  vertices.push(px,.014-v*.119+.015*Math.cos(a),pz);if(x<cols&&y<rows){const n=y*(cols+1)+x;indices.push(n,n+1,n+cols+1,n+1,n+cols+2,n+cols+1);}
  }return surface(vertices,indices);
 });}
 
 function mantleGeometry(){return cached('draped-mantle',()=>{
  const vertices=[],indices=[],rings=10,slices=40;
  for(let j=0;j<=rings;j++)for(let i=0;i<=slices;i++){
-  const v=j/rings,a=i/slices*Math.PI*2,front=Math.cos(a),side=Math.sin(a),radius=.105+Math.sin(v*Math.PI*.5)*.230;
-  const edge=.456-.026*Math.max(0,front)**2-.012*Math.abs(side),y=.605+(edge-.605)*v+.006*Math.cos(a*4)*v*v;
-  vertices.push(side*radius,y,front*radius*.72-.012+.038*Math.max(0,front)*Math.sin(v*Math.PI/2)+.008*Math.cos(a*6-v*3)*v);
+  const v=j/rings,a=i/slices*Math.PI*2,front=Math.cos(a),side=Math.sin(a),radius=.105+Math.sin(v*Math.PI*.5)*(.230-.035*Math.max(0,front))+.025*Math.sin(v*Math.PI);
+  const frontDrape=Math.max(0,front),edge=.455-.12*frontDrape**1.3+.035*side*(.35+.65*frontDrape),y=.605+(edge-.605)*v+.012*Math.sin(v*Math.PI*3)*frontDrape+.006*Math.cos(a*4)*v*v;
+  vertices.push(side*radius,y,front*radius*.72-.012+.025*frontDrape*Math.sin(v*Math.PI/2)+.045*frontDrape*Math.sin(v*Math.PI)+.02*frontDrape*(1-v)**2+.012*Math.sin(v*Math.PI*3)*frontDrape+.008*Math.cos(a*6-v*3)*v);
   if(i<slices&&j<rings){const n=j*(slices+1)+i;indices.push(n,n+slices+1,n+1,n+1,n+slices+1,n+slices+2);}
  }
  return surface(vertices,indices);
@@ -82,12 +62,6 @@ function mantleGeometry(){return cached('draped-mantle',()=>{
 function maskGeometry(){return cached('recessed-mask',()=>{
  const vertices=[],indices=[],cols=16,rows=16;
  for(let y=0;y<=rows;y++)for(let x=0;x<=cols;x++){const u=x/cols*2-1,v=y/rows,width=.151*(1-.56*v*v),z=.127+.046*(1-Math.abs(u))-.035*Math.pow(v,3);vertices.push(u*width,.105-v*.298,z);if(x<cols&&y<rows){const n=y*(cols+1)+x;indices.push(n,n+cols+1,n+1,n+1,n+cols+1,n+cols+2);}}
- return surface(vertices,indices);
-});}
-
-function kneeGeometry(){return cached('fitted-knee-guard',()=>{
- const vertices=[],indices=[],cols=8,rows=8;
- for(let y=0;y<=rows;y++)for(let x=0;x<=cols;x++){const u=x/cols*2-1,v=y/rows,width=.073*(.65+.35*Math.sin(v*Math.PI));vertices.push(u*width,.029-v*.155,.098+.021*(1-u*u)+.004*Math.sin(v*Math.PI));if(x<cols&&y<rows){const n=y*(cols+1)+x;indices.push(n,n+cols+1,n+1,n+1,n+cols+1,n+cols+2);}}
  return surface(vertices,indices);
 });}
 
@@ -146,8 +120,7 @@ export function makeWraith(weapon='shade'){
  const tunic=mesh(torso,torsoGeometry(),C.robe);tunic.name='wraith-tailored-tunic';
  shape(torso,C.lining,[[.102,.50],[.09,.59],[.084,.71]],[0,0,0],.84,.002);
  const mantle=mesh(torso,mantleGeometry(),C.hood);mantle.name='wraith-draped-mantle';
- shape(torso,C.lining,[[.288,.008],[.297,.018],[.286,.066],[.281,.074]],[0,0,0],.66);
- mesh(torso,chestGeometry(),C.armor).name='wraith-fitted-chest';
+ curve(torso,C.fold,[[-.26,.036,.106],[-.16,.036,.176],[0,.022,.207],[.16,.008,.176],[.26,.004,.106]],.012).name='wraith-cloth-waist-tie';
  const cape=joint(torso,0,.53,-.191);d.cape=cape;
  cloth(cape,d,C.hood,.74,.72,[0,0,0]).name='wraith-continuous-cape';
  for(const s of [-1,1]){const coat=cloth(torso,d,C.robe,.21,.22,[s*.148,-.005,.193],true);coat.rotation.y=s*.16;coat.rotation.z=s*-.035;}
@@ -159,17 +132,14 @@ export function makeWraith(weapon='shade'){
  for(const s of [-1,1]){
   const side=s<0?'left':'right',leg=joint(hips,s*.160,-.04,0);d[side+'Leg']=leg;
   shape(leg,C.fold,[[.089,-THIGH-.018],[.104,-.272],[.136,-.168],[.146,-.064],[.135,.012]],[0,0,0],1.08,.003);
-  const knee=joint(leg,0,-THIGH,0);d[side+'Knee']=knee;mesh(knee,kneeGeometry(),C.armor);
-  shape(knee,C.lining,[[.079,-SHIN],[.090,-.258],[.108,-.145],[.098,-.065],[.090,.010]],[0,0,-.008],1.05,.002);
-  curve(knee,C.armor,[[0,-.068,.098],[0,-.161,.108],[0,-.282,.085]],.004);
+  const knee=joint(leg,0,-THIGH,0);d[side+'Knee']=knee;
+  shape(knee,C.fold,[[.079,-SHIN],[.090,-.258],[.108,-.145],[.098,-.065],[.090,.010],[.078,.050],[.050,.075],[0,.090]],[0,0,-.008],1.05,.003);
   const foot=joint(knee,0,-SHIN,.02);d[side+'Foot']=foot;const boot=mesh(foot,bootGeometry(),C.lining);boot.name='wraith-leather-boot';
   const arm=joint(torso,s*.310,.456,-.012);d[side+'Arm']=arm;
-  shape(arm,C.robe,[[.065,-.293],[.071,-.227],[.088,-.142],[.100,-.049],[.080,.022]],[0,0,0],1.09,.003);
-  const shoulder=mesh(arm,shoulderGeometry(),C.armor);shoulder.scale.x=s;shoulder.name='wraith-shoulder-guard';
+  shape(arm,C.robe,[[.065,-.293],[.071,-.227],[.088,-.142],[.100,-.049],[.080,.022],[.047,.048],[0,.064]],[0,0,0],1.09,.004).name='wraith-cloth-sleeve';
   const elbow=joint(arm,0,-.285,0);d[side+'Elbow']=elbow;
-  shape(elbow,C.lining,[[.052,-.237],[.065,-.165],[.082,-.083],[.072,-.026],[.063,.01]],[0,0,0],1.12,.002);
-  shape(elbow,C.armor,[[.066,-.213],[.083,-.148],[.090,-.084],[.083,-.054]],[0,0,.004],1.18);
-  curve(elbow,C.trim,[[-.052,-.188,.042],[0,-.202,.061],[.052,-.188,.042]],.003);hand(elbow,d,side);
+  shape(elbow,C.robe,[[.052,-.237],[.065,-.165],[.082,-.083],[.072,-.026],[.063,.01],[.048,.038],[0,.061]],[0,0,0],1.12,.003);
+  shape(elbow,C.fold,[[.057,-.228],[.066,-.207],[.073,-.181]],[0,0,0],1.16,.002);hand(elbow,d,side);
  }
  const w=joint(weapon==='grimoire'?d.leftHand:d.rightHand,0,-.035,.06);d.weapon=w;
  if(weapon==='shadowblade'){
