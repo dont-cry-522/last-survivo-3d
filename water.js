@@ -1,10 +1,10 @@
-import{onIce,onFord}from'./map-tactics.js?v=99';
-import{onBridge}from'./coast.js?v=99';
-import{MAP_SCALE}from'./map-layout.js?v=99';
-import{coastLayout}from'./coast-layout.js?v=99';
-import{swimStroke,swimLimb,HERO_SWIM,heroSwimPose,swimTravel}from'./swim-motion.js?v=99';
-import{newHeroAttack}from'./new-hero-motion.js?v=99';
-import{naturalRockGeometry,environmentDetailTexture}from'./biome-scenery.js?v=99';
+import{onIce,onFord}from'./map-tactics.js?v=100';
+import{onBridge}from'./coast.js?v=100';
+import{MAP_SCALE}from'./map-layout.js?v=100';
+import{coastLayout}from'./coast-layout.js?v=100';
+import{swimStroke,swimLimb,HERO_SWIM,heroSwimPose,swimTravel}from'./swim-motion.js?v=100';
+import{newHeroAttack}from'./new-hero-motion.js?v=100';
+import{naturalRockGeometry,environmentDetailTexture}from'./biome-scenery.js?v=100';
 import * as T from './vendor/three.module.js';
 const clamp=T.MathUtils.clamp;
 const shore=a=>1+.07*Math.sin(a*3)+.045*Math.cos(a*5);

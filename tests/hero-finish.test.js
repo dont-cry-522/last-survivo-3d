@@ -16,3 +16,17 @@ test('wraith hood closes continuously at its side seam',()=>{
  const h=makeWraith().userData.head.children[0],p=h.geometry.attributes.position;
  for(let row=0;row<=18;row++){const a=new T.Vector3().fromBufferAttribute(p,row*49),b=new T.Vector3().fromBufferAttribute(p,row*49+48);assert(a.distanceTo(b)<1e-6,'open hood side seam');}
 });
+
+test('garment finishing retains texture masks and earlier palette shaders without changing the rig',()=>{
+ const root=new T.Group(),texture=new T.Texture(),material=new T.MeshStandardMaterial({map:texture,metalnessMap:texture});
+ material.name='Ranger';material.onBeforeCompile=s=>{s.fragmentShader+='\n// authored palette';};material.customProgramCacheKey=()=> 'violet-palette';
+ for(const name of ['Body','Belt']){const mesh=new T.Mesh(new T.CylinderGeometry(.2,.3,.6,12),material);mesh.name=name;root.add(mesh);}
+ const positions=root.children.map(m=>Array.from(m.geometry.attributes.position.array));finishHeroSurface(root,'mirage');
+ for(const [i,mesh]of root.children.entries()){
+  assert.equal(mesh.material.map,texture);assert.equal(mesh.material.metalnessMap,texture);assert.deepEqual(Array.from(mesh.geometry.attributes.position.array),positions[i]);
+  const shader={fragmentShader:'#include <metalnessmap_fragment>'};mesh.material.onBeforeCompile(shader);assert.match(shader.fragmentShader,/authored palette/);assert.match(shader.fragmentShader,/roughnessFactor/);
+  assert.match(mesh.material.customProgramCacheKey(),/^violet-palette-/);
+ }
+ assert.notEqual(root.children[0].material.customProgramCacheKey(),root.children[1].material.customProgramCacheKey());
+ assert.equal(material.metalness,0);assert.equal(material.roughness,1);
+});

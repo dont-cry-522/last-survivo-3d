@@ -1,9 +1,9 @@
 import * as T from './vendor/three.module.js';
 import{mergeGeometries}from'./vendor/BufferGeometryUtils.js';
-import{mesh,mat}from'./world.js?v=99';
-import{naturalRockGeometry}from'./biome-scenery.js?v=99';
-import{polishEnvironmentModels}from'./environment-props.js?v=99';
-import{seeded,segmentDistance}from'./rules.js?v=99';
+import{mesh,mat}from'./world.js?v=100';
+import{naturalRockGeometry}from'./biome-scenery.js?v=100';
+import{polishEnvironmentModels}from'./environment-props.js?v=100';
+import{seeded,segmentDistance}from'./rules.js?v=100';
 
 // All new pieces share the existing scene geometry/material families. Bake the
 // few ruined structures into three opaque batches, with no extra lights or ticks.
@@ -14,6 +14,14 @@ for(const kind of['stone','leaf','gold']){
  if(kind==='gold'){material.emissive.setHex(0x806a35);material.emissiveIntensity=.08;}
  finishes[kind]=material;
 }
+// A closed, pointed leaf with a raised midrib replaces the tiny oval beads.
+// Twelve triangles remain readable from above without a transparent material.
+const vineLeafGeometry=(()=>{
+ const g=new T.BufferGeometry(),positions=[0,0,-1,-.70,0,-.40,-.88,0,.18,0,.12,1,.88,0,.18,.70,0,-.40,0,.30,0,0,-.09,0],indices=[],colors=[];
+ for(let i=0;i<6;i++){indices.push(6,i,(i+1)%6,7,(i+1)%6,i);colors.push(.90,.95,.88);}
+ colors.push(1.03,1.04,.97,.68,.76,.66);
+ g.setAttribute('position',new T.Float32BufferAttribute(positions,3));g.setAttribute('color',new T.Float32BufferAttribute(colors,3));g.setIndex(indices);g.computeVertexNormals();return g;
+})();
 
 export function installForestVista(world,mapId){
  if(world.forestVista)return world.forestVista;
@@ -72,7 +80,7 @@ export function installForestVista(world,mapId){
   const direction=new T.Vector3().subVectors(b,a),o=mesh('CylinderGeometry',[r,r*.85,1,6],color,0,0,0,parts[kind]);
   o.position.copy(a).add(b).multiplyScalar(.5);o.scale.y=direction.length();o.quaternion.setFromUnitVectors(new T.Vector3(0,1,0),direction.normalize());return o;
  };
- const leaf=(x,y,z,angle)=>{const o=mesh('SphereGeometry',[1,6,4],leaves%3===0?0x688050:0x435c42,x,y,z,parts.leaf);o.rotation.set(.15,angle,-.3);o.scale.set(.16,.026,.085);leaves++;};
+ const leaf=(x,y,z,angle)=>{const o=new T.Mesh(vineLeafGeometry,mat(leaves%3===0?0x688050:0x435c42));o.position.set(x,y,z);o.rotation.set(.15+Math.sin(x*2+y)*.15,angle,-.3);o.scale.set(.19,.065,.15);parts.leaf.add(o);leaves++;};
  for(const [i,o]of selected.entries()){
   const height=i===0?3.1:i===1?2.7:1.4+i*.37,angle=Math.atan2(relic.x-o.x,relic.z-o.z),s=Math.sin(angle),c=Math.cos(angle);
   block('stone',0x66725f,o.x,.10,o.z,.88,.25,.86,angle);
@@ -128,8 +136,23 @@ export function installForestVista(world,mapId){
  for(const [kind,source]of Object.entries(parts)){
   polishEnvironmentModels({group:source,obstacles:[]});source.updateMatrixWorld(true);const geometryParts=[];
   source.traverse(o=>{if(!o.isMesh)return;const g=o.geometry.clone(),position=g.attributes.position,color=[];
-   for(let i=0;i<position.count;i++){const existing=g.attributes.color,shade=new T.Color().copy(o.material.color);if(existing)shade.multiply(new T.Color().setRGB(existing.getX(i),existing.getY(i),existing.getZ(i)));color.push(shade.r,shade.g,shade.b);}
-   g.setAttribute('color',new T.Float32BufferAttribute(color,3));g.deleteAttribute('uv');g.applyMatrix4(o.matrixWorld);geometryParts.push(g);
+   if(kind==='stone'&&g.type==='BoxGeometry'){
+    for(let i=0;i<position.count;i++){
+     const x=position.getX(i),y=position.getY(i),z=position.getZ(i),a=Math.abs(x),b=Math.abs(y),c=Math.abs(z),edge=Math.max(Math.min(a,b),Math.min(b,c),Math.min(a,c));
+     const wear=1-.042*T.MathUtils.smoothstep(edge,.28,.48)*(.5+.5*Math.sin(x*9+y*7+z*11+o.position.x*.17+o.position.z*.21));position.setXYZ(i,x*wear,y*wear,z*wear);
+    }
+    g.computeVertexNormals();
+   }
+   g.applyMatrix4(o.matrixWorld);
+   for(let i=0;i<position.count;i++){
+    const existing=g.attributes.color,shade=new T.Color().copy(o.material.color);if(existing)shade.multiply(new T.Color().setRGB(existing.getX(i),existing.getY(i),existing.getZ(i)));
+    if(kind==='stone'){
+     const x=position.getX(i),y=position.getY(i),z=position.getZ(i),patch=.5+.5*Math.sin(x*2.1+z*1.7+y*.8),damp=(1-T.MathUtils.smoothstep(y,.02,1.1))*.20,lichen=Math.max(0,g.attributes.normal.getY(i))*.09*patch;
+     shade.multiplyScalar(.94+patch*.06).lerp(new T.Color(0x3d5034),damp).lerp(new T.Color(0x8b9272),lichen);
+    }
+    color.push(shade.r,shade.g,shade.b);
+   }
+   g.setAttribute('color',new T.Float32BufferAttribute(color,3));g.deleteAttribute('uv');geometryParts.push(g);
   });
   if(!geometryParts.length)continue;
   const geometry=mergeGeometries(geometryParts);for(const g of geometryParts)g.dispose();

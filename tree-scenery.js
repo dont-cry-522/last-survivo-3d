@@ -71,15 +71,20 @@ function limb(points,radii,sides=7){
  return surface(vertices,indices);
 }
 function broadFan(x,y,z,width,depth,height,phase){
- // Closed, scalloped leaf sprays overlap at different heights, leaving a broken crown silhouette.
- const sides=12,vertices=[],indices=[];
- for(let ring=0;ring<2;ring++)for(let j=0;j<sides;j++){
-  const a=j/sides*Math.PI*2,edge=(j%2?.87:1)+.045*Math.sin(a*3+phase),r=ring?.56+.06*Math.sin(a*3+phase):edge;
-  const h=ring?.72+.14*Math.sin(a*2+phase):.18+.12*Math.sin(a*3+phase)+(j%2?.08:0);
-  vertices.push(x+Math.cos(a)*width*r+(ring?.06:0),y+h*height,z+Math.sin(a)*depth*r);
+ // Shallow sprays fan along their branches; three rings round the shoulder without pillow-like tiers.
+ const sides=14,vertices=[],indices=[],cos=Math.cos(phase),sin=Math.sin(phase);
+ const point=(u,h,v)=>vertices.push(x+u*cos-v*sin,y+h*height,z+u*sin+v*cos);
+ for(let ring=0;ring<3;ring++)for(let j=0;j<sides;j++){
+  const a=j/sides*Math.PI*2,edge=.94+.055*Math.sin(a*3+phase)+.025*Math.sin(a*5-phase*.7),r=[1,.77,.40][ring]*edge;
+  const h=[.035,.57,.88][ring]+[.045,.035,.016][ring]*Math.sin(a*2+phase);
+  point(Math.cos(a)*width*r+ring*.025*width,h,Math.sin(a)*depth*r);
  }
- const top=vertices.length/3;vertices.push(x+.12*width,y+height,z-.07*depth);const bottom=vertices.length/3;vertices.push(x,y-.12*height,z);
- for(let j=0;j<sides;j++){const next=(j+1)%sides;indices.push(j,j+sides,next,next,j+sides,next+sides,top,next+sides,j+sides,bottom,j,next);}
+ const top=vertices.length/3;point(.09*width,1,-.03*depth);const bottom=vertices.length/3;point(0,-.075,0);
+ for(let j=0;j<sides;j++){
+  const next=(j+1)%sides;
+  for(let ring=0;ring<2;ring++){const a=ring*sides+j,b=ring*sides+next;indices.push(a,a+sides,b,b,a+sides,b+sides);}
+  indices.push(top,next+2*sides,j+2*sides,bottom,j,next);
+ }
  const g=surface(vertices,indices),p=g.attributes.position,n=g.attributes.normal,colors=[],shade=new T.Color(),low=new T.Color(0x243e2d),middle=new T.Color(0x426846),topColor=new T.Color(0x79945b);
  for(let i=0;i<p.count;i++){
   const rise=(p.getY(i)-y)/height,sun=Math.max(0,n.getY(i)),leaf=.5+.5*Math.sin(p.getX(i)*7.1+p.getY(i)*4.3+phase)*Math.cos(p.getZ(i)*6.2-phase);
@@ -121,10 +126,10 @@ function treeTemplate(id,variant){
   const leader=new T.LatheGeometry([[0,0],[.31,.08],[.22,.34],[.05,.65],[0,.74]].map(([r,h])=>new T.Vector2(r,h)),6);leader.translate(lean*.25,2.02,.025);crowns.push(tint(leader,0xb7cdc1,true));
  }else{
   for(let layer=0;layer<2;layer++)for(let j=0;j<3;j++){
-   const a=j*Math.PI*2/3+layer*.95+variant*.31,r=layer?.57:.72,y=layer?.94+j*.12:j*.14;
-   crowns.push(broadFan(Math.cos(a)*r,y,Math.sin(a)*r,layer?.87:.94,layer?.84:.91,layer?.82:.91,a+variant*.7));
+   const a=j*Math.PI*2/3+layer*.95+variant*.31,r=layer?.63:.81,y=layer?.94+j*.12:j*.14;
+   crowns.push(broadFan(Math.cos(a)*r,y,Math.sin(a)*r,layer?.82:.90,layer?.70:.74,layer?.53:.60,a+variant*.7));
   }
-  crowns.push(broadFan((variant-1)*.13,1.63,-.07,.73,.71,.76,variant*.8));
+  crowns.push(broadFan((variant-1)*.13,1.66,-.07,.67,.61,.49,variant*.8));
  }
  const canopy=merge(crowns),bottom=canopy.boundingBox.min.y;canopy.translate(0,-bottom,0);canopy.computeBoundingBox();
  const trunk=merge(branches);

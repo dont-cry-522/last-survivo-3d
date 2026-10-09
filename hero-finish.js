@@ -19,7 +19,8 @@ export function finishHeroSurface(root,kind){
   const name=o.material.name||'',skin=name.includes('Superhero')||name.includes('Regular'),hair=name.includes('Hair')||o.userData.hairstyle||o.name.startsWith('Guardian_');
   // Every template receives its own surfaces; polishing one must not recolor another.
   const original=o.material;o.geometry=o.geometry.clone();o.material=original.clone();o.material.onBeforeCompile=original.onBeforeCompile;o.material.customProgramCacheKey=original.customProgramCacheKey;
-  if(skin||hair)smoothSeams(o.geometry);
+  const garment=/Ranger|Peasant/.test(name),softCloth=garment&&/Body|Legs|Hood/.test(o.name);
+  if(skin||hair||softCloth)smoothSeams(o.geometry);
   const m=o.material;
   if(m.normalScale)m.normalScale.multiplyScalar(skin?.65:hair?.55:.48);
   if(kind==='scout'&&name.includes('Ranger')){
@@ -28,5 +29,19 @@ export function finishHeroSurface(root,kind){
   if(kind==='guardian'&&/Body$|Pauldron|Bracer/.test(o.name)){m.metalness=.32;m.roughness=.64;}
   if(kind==='tide'&&!skin&&!hair){m.roughness=.78;m.metalness=/Bracer|Belt/.test(o.name)?.18:.035;}
   if(kind==='lingya'&&!skin&&!hair){m.roughness=.90;m.metalness=.01;}
+  if(garment){
+   // Keep authored buckles metallic, while cloth and leather retain broad, soft highlights.
+   const leather=/Belt|Bracer|Feet/.test(o.name);
+   m.roughness=leather?.80:.94;
+   if(m.metalnessMap)m.metalness=.64;
+   const compile=m.onBeforeCompile,program=m.customProgramCacheKey();
+   m.onBeforeCompile=shader=>{
+    compile(shader);
+    shader.fragmentShader=shader.fragmentShader.replace('#include <metalnessmap_fragment>',`#include <metalnessmap_fragment>
+     float textile=1.0-smoothstep(.08,.40,metalnessFactor);
+     roughnessFactor=mix(roughnessFactor,max(roughnessFactor,${leather?'.57':'.82'}),textile*.80);`);
+   };
+   m.customProgramCacheKey=()=>program+'-tailored-surface-'+(leather?'leather':'cloth');
+  }
  });
 }

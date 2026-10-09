@@ -1,21 +1,21 @@
-import {GRIP_POINTS,primaryGripFrame,fitWeaponToPalm,createHandGrips,restoreGripWrists,captureGripWrists,aimGrip,supportGripTarget,aimSupportGrip,poseGripFingers} from './weapon-grips.js?v=99';
-import {refineLingyaHead,lingyaHeadY} from './lingya-face.js?v=99';
-import {finishHeroSurface,smoothSeams} from './hero-finish.js?v=99';
-import{tideHarness}from'./tide-appearance.js?v=99';
-import{WULING_PALETTE,wulingOutfit,wulingAccessories,wulingMask,sporeLantern,sporeSatchel,sporePod}from'./wuling-appearance.js?v=99';
-import{MIRAGE_PALETTE,mirageOutfit,mirageHair,prepareMirageHair,animateMirageHair,mirageMask,mirageAccessories,miragePetalTails,miasmaLantern}from'./mirage-appearance.js?v=99';
-import{newHeroAttack,heroCarryPose,committedWeaponYaw}from'./new-hero-motion.js?v=99';
-import{heroDodgePose}from'./hero-dodge.js?v=99';
-import{lingyaHopPose}from'./lingya-motion.js?v=99';
-import{lingyaOutfit,lingyaAccessories,lingyaLegs}from'./lingya-appearance.js?v=99';
-import{boneBoomerang}from'./beast-model.js?v=99';
-import{makeHarpoon}from'./coast-models.js?v=99';
-import{weaponGesture,shotStarted}from'./weapon-performance.js?v=99';
-import{rollProgress,rollWeight}from'./dodge-motion.js?v=99';
+import {GRIP_POINTS,primaryGripFrame,fitWeaponToPalm,createHandGrips,restoreGripWrists,captureGripWrists,aimGrip,supportGripTarget,aimSupportGrip,poseGripFingers} from './weapon-grips.js?v=100';
+import {refineLingyaHead,lingyaHeadY} from './lingya-face.js?v=100';
+import {finishHeroSurface,smoothSeams} from './hero-finish.js?v=100';
+import{tideHarness}from'./tide-appearance.js?v=100';
+import{WULING_PALETTE,wulingOutfit,wulingAccessories,wulingMask,sporeLantern,sporeSatchel,sporePod}from'./wuling-appearance.js?v=100';
+import{MIRAGE_PALETTE,mirageOutfit,mirageHair,prepareMirageHair,animateMirageHair,mirageMask,mirageAccessories,miragePetalTails,miasmaLantern}from'./mirage-appearance.js?v=100';
+import{newHeroAttack,heroCarryPose,committedWeaponYaw}from'./new-hero-motion.js?v=100';
+import{heroDodgePose}from'./hero-dodge.js?v=100';
+import{lingyaHopPose}from'./lingya-motion.js?v=100';
+import{lingyaOutfit,lingyaAccessories,lingyaLegs}from'./lingya-appearance.js?v=100';
+import{boneBoomerang}from'./beast-model.js?v=100';
+import{makeHarpoon}from'./coast-models.js?v=100';
+import{weaponGesture,shotStarted}from'./weapon-performance.js?v=100';
+import{rollProgress,rollWeight}from'./dodge-motion.js?v=100';
 import * as T from './vendor/three.module.js';
 import {clone} from './vendor/SkeletonUtils.js';
-import {loadCharacterData} from './character-loader.js?v=99';
-import {makeHero as makePrototype} from './hero-model.js?v=99';
+import {loadCharacterData} from './character-loader.js?v=100';
+import {makeHero as makePrototype} from './hero-model.js?v=100';
 
 const templates=new Map(),clips=new Map();
 let lingyaFace;
@@ -132,11 +132,6 @@ float weave=dot(diffuseColor.rgb,vec3(.21,.72,.07));diffuseColor.rgb=vec3(${tint
   mirageHair(mirageLocks);bindParts(mirage,mirageLocks);mirage.traverse(o=>{if(['Eyes','Eyebrows'].includes(o.name))o.visible=false;});mirage.updateMatrixWorld(true);templates.set('mirage',mirage);
   for(const [kind,root] of templates){
     finishHeroSurface(root,kind);
-    if(['silver','scout','tide'].includes(kind))root.traverse(o=>{
-      if(!o.isMesh||!o.material.metalnessMap||!/Ranger|Peasant/.test(o.material.name))return;
-      // The authored atlas masks buckles and rivets separately from cloth and leather.
-      o.material.metalness=.72;o.material.roughness=/Belt|Bracer|Feet/.test(o.name)?.82:.96;
-    });
   }
   for(const c of bakedClips)clips.set(c.name,c);
   loaded=true;
@@ -147,7 +142,7 @@ function attachAtRest(bone,object,root){
 }
 function capeMesh(kind){
   const pos=[],uv=[],colors=[],ix=[],cols=24,rows=28;
-  for(let y=0;y<=rows;y++)for(let x=0;x<=cols;x++){const u=x/cols,v=y/rows,w=.22+.13*Math.sin(v*Math.PI*.86),split=.10*Math.exp(-(((u-.5)/.065)**2))*v**8;if(kind==='lingya'){const a=.56+u*(Math.PI*2-1.12),r=.12+.145*Math.sin(v*Math.PI/2);pos.push(Math.sin(a)*r,-v*.25+Math.sin(a*7)*.007*v,Math.cos(a)*r);}else if(kind==='mirage'){const a=.52+u*(Math.PI*2-1.04),r=.14+.09*Math.sin(v*Math.PI/2);pos.push(Math.sin(a)*r,-v*(.25+.14*Math.sin(a-.4))-.026*Math.cos(a*2)*v**4,Math.cos(a)*r*.82);}else if(kind==='wuling'){const a=.48+u*(Math.PI*2-.96),r=.143+.088*Math.sin(v*Math.PI/2);pos.push(Math.sin(a)*r,-v*(.295+.12*Math.sin(a+.6))-.018*Math.cos(a*3)*v**4,Math.cos(a)*r*.79);}else pos.push((u-.5)*w*2,-v*.86+split+Math.cos(u*Math.PI*4)*.013*v,-.12*v-.04*Math.sin(u*Math.PI)+Math.sin(u*Math.PI*8)*.016*v);uv.push(u,v);const edge=x===0||x===cols||y===rows,color=new T.Color(kind==='lingya'?(edge?0xd7c8a5:0x688a74):kind==='mirage'?(edge?MIRAGE_PALETTE.mist:MIRAGE_PALETTE.cloth):kind==='wuling'?(edge?WULING_PALETTE.trim:WULING_PALETTE.cloak):kind==='tide'?(edge?0xbba879:0x3b686e):(edge?0x65727d:0x252936));colors.push(color.r,color.g,color.b);}
+  for(let y=0;y<=rows;y++)for(let x=0;x<=cols;x++){const u=x/cols,v=y/rows,w=.22+.13*Math.sin(v*Math.PI*.86),split=.10*Math.exp(-(((u-.5)/.065)**2))*v**8;if(kind==='lingya'){const a=.56+u*(Math.PI*2-1.12),r=.12+.145*Math.sin(v*Math.PI/2);pos.push(Math.sin(a)*r,-v*.25+Math.sin(a*7)*.007*v,Math.cos(a)*r);}else if(kind==='mirage'){const a=.52+u*(Math.PI*2-1.04),r=.14+.09*Math.sin(v*Math.PI/2);pos.push(Math.sin(a)*r,-v*(.25+.14*Math.sin(a-.4))-.026*Math.cos(a*2)*v**4,Math.cos(a)*r*.82);}else if(kind==='wuling'){const a=.48+u*(Math.PI*2-.96),r=.143+.088*Math.sin(v*Math.PI/2);pos.push(Math.sin(a)*r,-v*(.295+.12*Math.sin(a+.6))-.018*Math.cos(a*3)*v**4,Math.cos(a)*r*.79);}else pos.push((u-.5)*w*2,-v*.86+split+Math.cos(u*Math.PI*4)*.013*v,-.12*v-.04*Math.sin(u*Math.PI)+Math.sin(u*Math.PI*8)*.016*v);uv.push(u,v);const base=kind==='lingya'?0x688a74:kind==='mirage'?MIRAGE_PALETTE.cloth:kind==='wuling'?WULING_PALETTE.cloak:kind==='tide'?0x3b686e:0x252936,trim=kind==='lingya'?0xd7c8a5:kind==='mirage'?MIRAGE_PALETTE.mist:kind==='wuling'?WULING_PALETTE.trim:kind==='tide'?0xbba879:0x65727d;const edge=T.MathUtils.smoothstep(Math.max(Math.abs(u-.5)*2,v),.93,1),color=new T.Color(base).lerp(new T.Color(trim),edge*.72).multiplyScalar(.86+.14*v+.045*Math.cos(u*Math.PI*8)*v);colors.push(color.r,color.g,color.b);}
   for(let y=0;y<rows;y++)for(let x=0;x<cols;x++){const a=y*(cols+1)+x;ix.push(a,a+cols+1,a+1,a+1,a+cols+1,a+cols+2);}
   const geometry=new T.BufferGeometry();geometry.setAttribute('position',new T.Float32BufferAttribute(pos,3));geometry.setAttribute('uv',new T.Float32BufferAttribute(uv,2));geometry.setAttribute('color',new T.Float32BufferAttribute(colors,3));geometry.setIndex(ix);geometry.computeVertexNormals();
   const material=new T.MeshStandardMaterial({color:0xffffff,vertexColors:true,roughness:.87,side:T.DoubleSide}),wind={time:{value:0},run:{value:0},turn:{value:0}};

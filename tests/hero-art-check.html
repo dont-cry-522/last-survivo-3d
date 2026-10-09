@@ -1,0 +1,30 @@
+<!doctype html><html lang="zh-CN"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>角色比例与材质预览</title><style>body{margin:0;background:#213333;color:#e4e7db;font:14px system-ui}header{padding:12px}button,select{padding:8px;background:#344b49;color:inherit;border:1px solid #859f97;margin:3px}canvas{display:block;width:100%;height:560px}pre{white-space:pre-wrap;margin:12px}</style>
+<header>同一光线 / 同一比例 · <select id="pose"><option value="idle">待机</option><option value="run">行走</option><option value="attack">攻击</option><option value="water">水中</option></select><button id="turn">转身</button><button id="check" disabled>检查全部武器与动作</button><span id="status">载入中</span></header><canvas id="view"></canvas><pre id="report"></pre>
+<script type="module">
+import * as T from '../vendor/three.module.js';
+import {actor,animateActor} from '../world.js?v=100';
+import {loadHeroAssets,disposeHero} from '../skinned-hero.js?v=100';
+import {HERO_LOADOUTS} from '../rules.js?v=100';
+const $=id=>document.getElementById(id),canvas=$('view'),scene=new T.Scene(),renderer=new T.WebGLRenderer({canvas,antialias:true}),camera=new T.PerspectiveCamera(31,1,.1,60),errors=[];
+window.addEventListener('error',e=>errors.push(e.message));window.addEventListener('unhandledrejection',e=>errors.push(String(e.reason)));
+renderer.setPixelRatio(1);renderer.setSize(innerWidth,560,false);renderer.shadowMap.enabled=true;renderer.shadowMap.type=T.PCFSoftShadowMap;renderer.toneMapping=T.ACESFilmicToneMapping;renderer.toneMappingExposure=1.12;
+scene.background=new T.Color(0x344f50);scene.add(new T.HemisphereLight(0x829cad,0x223d3f,1.25));
+const sun=new T.DirectionalLight(0xffdca0,3.85);sun.position.set(-8,14,10);sun.castShadow=true;sun.shadow.mapSize.set(1536,1536);Object.assign(sun.shadow.camera,{left:-12,right:12,top:8,bottom:-8});sun.shadow.normalBias=.025;scene.add(sun);
+const rim=new T.DirectionalLight(0x91bcd0,1.05);rim.position.set(4,7,-6);scene.add(rim);
+const floor=new T.Mesh(new T.PlaneGeometry(80,40),new T.MeshStandardMaterial({color:0x526450,roughness:1}));floor.rotation.x=-Math.PI/2;floor.receiveShadow=true;scene.add(floor);
+camera.position.set(0,4.3,13.7);camera.lookAt(0,1.1,0);camera.aspect=innerWidth/560;camera.updateProjectionMatrix();
+const ids=['scout','silver','wraith','tide','lingya','wuling','mirage'],labels=['游侠','霜影','影裔','潮行者','铃芽','雾苓','蜃影'],models=[];let turn=0,t=0,last=performance.now(),checking=false;
+await loadHeroAssets();
+function populate(){for(let i=0;i<ids.length;i++){const h=actor(ids[i],HERO_LOADOUTS[ids[i]][0]);h.position.x=(i-3)*1.85;h.rotation.y=.12;scene.add(h);models.push(h);}}
+populate();$('status').textContent=labels.join(' / ');$('check').disabled=false;
+$('turn').onclick=()=>turn+=Math.PI/2;
+function pose(h,time,mode){const d=h.userData;d.aimActive=mode==='attack';d.waterDepth=mode==='water'?.8:0;d.travelAngle=h.rotation.y;d.turnRate=0;d.dashTime=0;if(mode==='attack'){d.shotSerial=Math.floor(time)+1;d.reloadDuration=1;d.reloadPhase=time%1;}animateActor(h,time,mode==='run'?5.5:mode==='water'?2:0,mode==='attack'?Math.max(0,.24-time%1):0);}
+function report(){return models.map((h,i)=>{let calls=0,triangles=0;h.traverse(o=>{if(o.isMesh){calls++;triangles+=(o.geometry.index?.count||o.geometry.attributes.position.count)/3;}});const bounds=new T.Box3().setFromObject(h,true);return{hero:labels[i],height:+(bounds.max.y-bounds.min.y).toFixed(2),meshes:calls,triangles};});}
+function frame(now){const dt=Math.min(.04,(now-last)/1000);last=now;t+=dt;if(!checking){for(const h of models){h.rotation.y=turn+.12;pose(h,t,$('pose').value);}renderer.render(scene,camera);}requestAnimationFrame(frame);}requestAnimationFrame(frame);
+$('check').onclick=async()=>{checking=true;$('check').disabled=true;const results=[];try{
+ for(const h of models)h.visible=false;
+ for(const id of ids)for(const weapon of HERO_LOADOUTS[id]){const h=actor(id,weapon);scene.add(h);let finite=true;for(const [m,mode]of ['idle','run','attack','water'].entries())for(let i=0;i<90;i++){pose(h,10+m*1.5+i/60,mode);h.updateMatrixWorld(true);h.traverse(o=>{if(!o.matrixWorld.elements.every(Number.isFinite))finite=false;});if(i%30===0)renderer.render(scene,camera);}const gpu=renderer.getContext().getError();results.push({hero:id,weapon,pass:finite&&gpu===0&&renderer.info.programs.every(p=>p.diagnostics?.runnable!==false)});scene.remove(h);disposeHero(h);await new Promise(r=>setTimeout(r,0));}
+}catch(e){errors.push(e.message);}finally{for(const h of models)h.visible=true;$('report').textContent=JSON.stringify({results,models:report(),errors},null,2);$('status').textContent=results.length+' 种武器姿态检查 · '+(results.every(r=>r.pass)&&!errors.length?'通过':'有失败');checking=false;$('check').disabled=false;}};
+$('report').textContent=JSON.stringify(report(),null,2);
+</script></html>

@@ -3,14 +3,27 @@ import assert from 'node:assert/strict';
 import * as T from '../vendor/three.module.js';
 import {makeWraith,animateWraith} from '../wraith-model.js';
 
-test('shadow hero is shorter than a human and has articulated body parts',()=>{
+test('shadow hero has a compact human silhouette and articulated body parts',()=>{
  const hero=makeWraith('shade'),box=new T.Box3().setFromObject(hero);
  assert(hero.userData.wraith);
- assert(box.max.y-box.min.y<2);
- assert(box.max.y-box.min.y>1.3);
+ assert(box.max.y-box.min.y<1.9);
+ assert(box.max.y-box.min.y>1.65);
  for(const name of ['head','leftArm','rightArm','leftLeg','rightLeg','cape','weapon'])assert(hero.userData[name],name);
  for(const t of [0,.1,.2,.5,1])animateWraith(hero,t,5,.3,.1);
  hero.traverse(o=>{assert(Number.isFinite(o.position.x));assert(Number.isFinite(o.rotation.x));});
+});
+
+test('all shadow loadouts reuse bounded shared surfaces with only three lights on the face',()=>{
+ for(const weapon of ['shade','shadowblade','grimoire']){
+  const a=makeWraith(weapon),b=makeWraith(weapon),meshes=[],copies=[];
+  a.traverse(o=>{if(o.isMesh)meshes.push(o);});b.traverse(o=>{if(o.isMesh)copies.push(o);});
+  assert.equal(meshes.length,copies.length);assert(meshes.length<=72,'shadow model exceeds its mesh budget');
+  assert(meshes.reduce((n,m)=>n+(m.geometry.index?.count??m.geometry.attributes.position.count)/3,0)<33000,'shadow model exceeds its triangle budget');
+  meshes.forEach((m,i)=>{assert.equal(m.geometry,copies[i].geometry,'repeated previews must reuse geometry');assert.equal(m.material,copies[i].material,'repeated previews must reuse materials');});
+  const face=a.userData.head.children.filter(o=>o.material?.isMeshBasicMaterial);
+  assert.equal(face.length,3);assert(face.every(o=>o.name==='wraith-face-slit'));
+  for(const geometry of new Set(meshes.map(m=>m.geometry))){assert([...geometry.attributes.position.array].every(Number.isFinite));assert([...geometry.attributes.normal.array].every(Number.isFinite));}
+ }
 });
 
 test('book stays level through running casts and cloth settles at mobile and desktop frame rates',()=>{

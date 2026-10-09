@@ -5,7 +5,7 @@ export class HeroPreview {
  constructor(renderer,element){
   this.renderer=renderer;this.element=element;
   this.camera=new T.PerspectiveCamera(35,1,.1,180);
-  this.fill=new T.PointLight(0xfff2ea,3,4,2);this.yaw=0;this.portrait=false;this.clipFrustum=new T.Frustum();this.renderer.localClippingEnabled=true;
+  this.fill=new T.PointLight(0xe7edf1,3,4.5,2);this.yaw=0;this.portrait=false;this.clipFrustum=new T.Frustum();this.renderer.localClippingEnabled=true;
   this.full=document.querySelector('#preview-full');this.detail=document.querySelector('#preview-detail');
   this.full.onclick=()=>this.setPortrait(false);this.detail.onclick=()=>this.setPortrait(true);
   element.addEventListener('pointerdown',e=>{if(e.button!==0)return;this.pointer={id:e.pointerId,x:e.clientX};element.setPointerCapture(e.pointerId);});
@@ -49,7 +49,8 @@ export class HeroPreview {
    // with the hero still centered in the reserved area (including mobile scroll).
    this.camera.setViewOffset(rect.width,rect.height,-rect.left,-rect.top,width,height);
    this.camera.updateMatrixWorld(true);
-   this.fill.intensity=hero.userData.wraith?1.2:3.2;this.fill.position.copy(center).addScaledVector(direction,1.8);this.fill.position.y+=.65;scene.add(this.fill);
+   // A slight side fill reveals cloth folds without flattening the map's key light.
+   this.fill.intensity=hero.userData.wraith?2.3:2.9;this.fill.position.copy(center).addScaledVector(direction,1.8).addScaledVector(right,.6);this.fill.position.y+=.55;scene.add(this.fill);
    this.renderer.render(scene,this.camera);
   }finally{
    this.fill.removeFromParent();
