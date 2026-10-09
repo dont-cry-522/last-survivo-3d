@@ -17,17 +17,21 @@ test('shadow silhouette has an adult head, distinct shoulders and naturally rest
  const hero=makeWraith('shade'),d=hero.userData;
  hero.updateMatrixWorld(true);
  const body=new T.Box3().setFromObject(hero,true),head=new T.Box3().setFromObject(d.head,true);
- const height=body.max.y-body.min.y,headHeight=head.max.y-head.min.y,headWidth=head.max.x-head.min.x;
- const left=d.leftArm.getWorldPosition(new T.Vector3()),right=d.rightArm.getWorldPosition(new T.Vector3());
+ const height=body.max.y-body.min.y,headHeight=head.max.y-head.min.y;
  assert(headHeight/height<.245,`hood occupies ${(headHeight/height).toFixed(3)} of the full height`);
- const shoulderRatio=left.distanceTo(right)/headWidth;
- assert(shoulderRatio>1.6&&shoulderRatio<2.15,`shoulder / hood proportion is ${shoulderRatio.toFixed(3)}`);
  const hipY=d.hips.getWorldPosition(new T.Vector3()).y;
  for(const side of ['left','right']){
   const wristY=d[side+'Hand'].getWorldPosition(new T.Vector3()).y,kneeY=d[side+'Knee'].getWorldPosition(new T.Vector3()).y;
   assert(wristY<hipY,`${side} resting wrist is above the hip`);
   assert(wristY>kneeY,`${side} resting wrist extends below the knee`);
  }
+ // Guard the actual dressed silhouette, not the hidden shoulder joint spacing.
+ hero.traverse(o=>o.rotation.set(0,0,0));hero.updateMatrixWorld(true);
+ const shoulders=new T.Box3(),tunic=hero.getObjectByName('wraith-tailored-tunic'),points=[],p=tunic.geometry.attributes.position;
+ hero.traverse(o=>{if(o.name==='wraith-shoulder-guard')shoulders.union(new T.Box3().setFromObject(o,true));});
+ for(let i=0;i<p.count;i++)if(p.getY(i)<.075)points.push(new T.Vector3().fromBufferAttribute(p,i).applyMatrix4(tunic.matrixWorld));
+ const hips=new T.Box3().setFromPoints(points),ratio=(shoulders.max.x-shoulders.min.x)/(hips.max.x-hips.min.x);
+ assert(ratio>1.25&&ratio<1.65,`shoulder armor overwhelms the hip silhouette: ${ratio.toFixed(3)}`);
 });
 
 test('rounded cloth hood overlaps its collar and the back cape is one connected drape',()=>{
