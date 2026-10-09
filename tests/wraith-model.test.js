@@ -13,6 +13,22 @@ test('shadow hero has a compact human silhouette and articulated body parts',()=
  hero.traverse(o=>{assert(Number.isFinite(o.position.x));assert(Number.isFinite(o.rotation.x));});
 });
 
+test('shadow silhouette has an adult head, distinct shoulders and naturally resting wrists',()=>{
+ const hero=makeWraith('shade'),d=hero.userData;
+ hero.updateMatrixWorld(true);
+ const body=new T.Box3().setFromObject(hero,true),head=new T.Box3().setFromObject(d.head,true);
+ const height=body.max.y-body.min.y,headHeight=head.max.y-head.min.y,headWidth=head.max.x-head.min.x;
+ const left=d.leftArm.getWorldPosition(new T.Vector3()),right=d.rightArm.getWorldPosition(new T.Vector3());
+ assert(headHeight/height<.245,`hood occupies ${(headHeight/height).toFixed(3)} of the full height`);
+ assert(left.distanceTo(right)/headWidth>1.8,`shoulders span only ${(left.distanceTo(right)/headWidth).toFixed(3)} hood widths`);
+ const hipY=d.hips.getWorldPosition(new T.Vector3()).y;
+ for(const side of ['left','right']){
+  const wristY=d[side+'Hand'].getWorldPosition(new T.Vector3()).y,kneeY=d[side+'Knee'].getWorldPosition(new T.Vector3()).y;
+  assert(wristY<hipY,`${side} resting wrist is above the hip`);
+  assert(wristY>kneeY,`${side} resting wrist extends below the knee`);
+ }
+});
+
 test('all shadow loadouts reuse bounded shared surfaces with only three lights on the face',()=>{
  for(const weapon of ['shade','shadowblade','grimoire']){
   const a=makeWraith(weapon),b=makeWraith(weapon),meshes=[],copies=[];
