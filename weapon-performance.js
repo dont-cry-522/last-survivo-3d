@@ -1,5 +1,5 @@
-import{POISON}from'./poison-config.js?v=97';
-import{MIRAGE}from'./mirage-config.js?v=97';
+import{POISON}from'./poison-config.js?v=98';
+import{MIRAGE}from'./mirage-config.js?v=98';
 const clamp=x=>Math.max(0,Math.min(1,x));
 const smooth=(a,b,t)=>{const x=clamp((t-a)/(b-a));return x*x*(3-2*x);};
 const pulse=(t,a,b,c)=>smooth(a,b,t)*(1-smooth(b,c,t));

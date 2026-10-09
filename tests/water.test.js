@@ -1,6 +1,7 @@
 import{test}from'node:test';import assert from'node:assert/strict';
-import{waterDepth,terrainAt}from'../water.js';
+import{waterDepth,terrainAt,buildPonds,animateWater}from'../water.js';
 import{buildWorld,actor,animateActor}from'../world.js';
+import * as T from'../vendor/three.module.js';import{seeded}from'../rules.js';
 globalThis.document={createElement:()=>({getContext:()=>({fillRect(){}})})};
 test('water depth follows the rotated shoreline and slows gradually without stacking mud',()=>{
  const pond={kind:'water',x:5,z:7,rx:6,rz:4,angle:Math.PI/2},world={patches:[pond,{kind:'slow',x:5,z:7,r:10}]};
@@ -20,6 +21,18 @@ test('water depth finish keeps a single surface pass and the existing two-layer 
   const w=buildWorld(id,7),waterMaterials=new Set(w.ponds.map(p=>p.mesh.material));assert.equal(waterMaterials.size,1);
   for(const p of w.ponds){assert(p.mesh.material.forceSinglePass);assert(!p.mesh.material.depthWrite);assert(p.mesh.material.transparent);assert.equal(p.mesh.position.y,.075);assert.equal(p.bank.position.y,.045);assert.equal(p.mesh.geometry.attributes.position.count,192);assert.equal(waterDepth(p,p.x,p.z),1);}
   w.group.traverse(o=>{if(o.isInstancedMesh)o.dispose();if(o.userData.ownedGeometry)o.geometry.dispose();});
+ }
+});
+test('flow and wet banks share filtered detail and a simulation clock without moving water bounds',()=>{
+ let texture;for(const id of['forest','snow','coast']){
+  const group=new T.Group(),ponds=buildPonds(group,id,seeded(3),{x:-30,z:-30},[],[{x:2,z:4,rx:6,rz:5,angle:.3}]),p=ponds[0];
+  const compile=(material,kind)=>{const shader={uniforms:{},vertexShader:T.ShaderLib[kind].vertexShader,fragmentShader:T.ShaderLib[kind].fragmentShader};material.onBeforeCompile(shader);return shader;};
+  const surface=compile(p.mesh.material,'standard'),bank=compile(p.bank.material,'basic'),detail=surface.uniforms.waterDetail.value;
+  assert.strictEqual(surface.uniforms.waterTime,bank.uniforms.waterTime);assert.strictEqual(detail,bank.uniforms.waterDetail.value);if(texture)assert.strictEqual(detail,texture);texture=detail;assert(detail.generateMipmaps);assert.equal(detail.minFilter,T.LinearMipmapLinearFilter);
+  const before=[p.rx,p.rz,p.mesh.position.toArray(),p.mesh.scale.toArray(),waterDepth(p,6,6)],draws=group.children.length;
+  for(const time of[8,8,12,0]){animateWater(id,time);assert.equal(surface.uniforms.waterTime.value,time);assert.equal(bank.uniforms.waterTime.value,time);assert.deepEqual([p.rx,p.rz,p.mesh.position.toArray(),p.mesh.scale.toArray(),waterDepth(p,6,6)],before);assert.equal(group.children.length,draws);}
+  if(id==='coast')assert(surface.fragmentShader.indexOf('dFdx(waveHeight)')<surface.fragmentShader.indexOf('if(ownRadial>radial+.0001)discard'),'overlap clipping invalidates normal derivatives');
+  group.traverse(o=>{if(o.isInstancedMesh)o.dispose();});
  }
 });
 test('water pose does not accumulate and returns to land for heroes and ground creatures',()=>{

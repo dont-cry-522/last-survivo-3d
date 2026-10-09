@@ -43,6 +43,11 @@ export const BIOME_THEMES={
 export function instrumentSample(kind,note,rate){
  const duration=1.8,out=new Float32Array(Math.ceil(rate*duration)),f=440*2**((note-69)/12);
  const wind=kind==='reed'||kind==='flute';let seed=173+note*37,breath=0,phase=0;
+ // A damped string has a noisy pick, then loses its bright overtones naturally.
+ // The half-sample correction keeps the averaging filter from detuning the loop.
+ const period=rate/f-.5,string=kind==='lute'?new Float32Array(Math.ceil(period)+2):null;
+ let previous=0;
+ if(string)for(let i=0;i<string.length;i++){seed=(Math.imul(seed,1664525)+1013904223)>>>0;string[i]=(seed/2147483648-1)*.7;}
  for(let i=0;i<out.length;i++){
   const t=i/rate;seed=(Math.imul(seed,1664525)+1013904223)>>>0;
   const n=seed/2147483648-1;breath+=(n-breath)*(1-Math.exp(-2*Math.PI*1400/rate));
@@ -50,7 +55,10 @@ export function instrumentSample(kind,note,rate){
   const vibrato=wind?4*Math.min(1,Math.max(0,t-.18)/.3)*Math.sin(t*2*Math.PI*4.8):0;
   phase+=2*Math.PI*f*2**(vibrato/1200)/rate;
   const p=phase,edge=Math.max(0,Math.min(1,t/.012,(duration-t)/.055));let v;
-  if(kind==='lute')v=(Math.sin(p)*Math.exp(-t*3.3)+.32*Math.sin(p*2)*Math.exp(-t*6)+.16*Math.sin(p*3)*Math.exp(-t*9)+.065*Math.sin(p*4)*Math.exp(-t*13)+breath*.09*Math.exp(-t*65))*.68;
+  if(string){
+   const read=(i-period+string.length*2)%string.length,j=Math.floor(read),mix=read-j,s=string[j]*(1-mix)+string[(j+1)%string.length]*mix;
+   v=(s+previous)*.5*Math.exp(-1.8/f);previous=s;string[i%string.length]=v;v*=2.2;
+  }
   else if(kind==='reed')v=(Math.sin(p)+.13*Math.sin(p*2)+.10*Math.sin(p*3)+breath*.028)*Math.min(1,t/.045)*Math.exp(-t*.65)*.63;
   else if(kind==='flute')v=(Math.sin(p)+.15*Math.sin(p*2)+.035*Math.sin(p*3)+breath*.012)*Math.min(1,t/.055)*Math.exp(-t*.5)*.65;
   else if(kind==='wood')v=(Math.sin(p)*Math.exp(-t*4.5)+.18*Math.sin(p*4)*Math.exp(-t*12)+.045*Math.sin(p*8)*Math.exp(-t*19)+breath*.08*Math.exp(-t*70))*.68;
@@ -63,28 +71,30 @@ export function instrumentSample(kind,note,rate){
 export function scoreBiome(a,th,b,t,step,pressure){
  const sand=th.arrangement==='sand',meter=th.meter,barIndex=Math.floor(b/meter)%th.bars.length;
  const beat=b%meter,{chord,lead}=th.bars[barIndex],root=th.root,n=lead[beat];
+ const phraseEnd=barIndex%4===3,answer=sand&&barIndex%4===2;
  const note=(kind,pitch,d,v,pan=0)=>a.musicNote(kind,pitch,d,v,t,pan);
  const combat=Math.max(0,Math.min(1,(pressure-.18)/.82));
  if(n!==null){
   let length=1;while(beat+length<meter&&lead[beat+length]===null)length++;
-  note(sand?'reed':'flute',root+n,Math.min(3.4,length)*step-.035,sand?.235:.22,.10);
+  // The caravan theme answers its reed with a plucked phrase, then breathes.
+  note(sand?(answer?'lute':'reed'):'flute',root+n,Math.min(3.4,length)*step-.035,sand?(answer?.34:.235):.22,answer?-.12:.10);
  }
  // Four-square caravan strum versus a lilting 6/8 harbour accompaniment.
- if(sand?beat%2===0:beat===0||beat===2||beat===3||beat===5){
+ if((sand?beat%2===0:beat===0||beat===2||beat===3||beat===5)&&!(sand&&phraseEnd&&beat>=6&&combat<.4)){
   const i=sand?Math.floor(beat/2):[0,0,1,2,0,1][beat];
-  note(sand?'lute':'wood',root+chord[[0,1,2,1][i]],step*1.75,sand?.15:.115,-.28);
+  note(sand?'lute':'wood',root+chord[[0,1,2,1][i]],step*1.75,sand?(beat===0?.25:.19):.115,-.28);
  }
  if(beat===0||beat===(sand?4:3)){
   note('lute',root-12+chord[beat===0?0:2],step*1.65,.17+combat*.055,-.08);
-  if(beat===0){note('bow',root+chord[1],step*3,.045,.3);note('bow',root+chord[2],step*3,.035,-.3);}
+  if(beat===0&&(!sand||barIndex%2===0||combat>.5)){note('bow',root+chord[1],step*3,.045,.3);note('bow',root+chord[2],step*3,.035,-.3);}
   a.voice(sand?125:115,.16,.035+combat*.08,'sine',sand?66:62,t,'music');
   a.noise(.055,.009+combat*.012,950,380,t,'music');
  }
- if(beat===(sand?6:4)||sand&&beat===3){
+ if((beat===(sand?6:4)||sand&&beat===3)&&!(sand&&phraseEnd&&combat<.4)){
   a.noise(.07,.017+combat*.035,sand?2200:1700,800,t,'music');
   a.voice(sand?185:210,.085,.02+combat*.035,'sine',sand?140:170,t,'music');
  }
- if(combat>0){
+ if(combat>.08){
   // Rhythmic urgency without dissonant drones or replacing the melody.
   if(beat%2===1)note('lute',root+chord[beat%3],step*.72,.115*combat,.3);
   a.noise(.035,.026*combat,5800,3800,t,'music','highpass');

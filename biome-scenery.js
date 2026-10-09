@@ -1,7 +1,7 @@
 import * as T from './vendor/three.module.js';
-import{MAP_HALF}from'./map-layout.js?v=97';
-import{bridgeContains}from'./coast.js?v=97';
-import{seeded}from'./rules.js?v=97';
+import{MAP_HALF}from'./map-layout.js?v=98';
+import{bridgeContains}from'./coast.js?v=98';
+import{seeded}from'./rules.js?v=98';
 // One worn silhouette is shared by boulders, bank stones and instanced scree.
 export const naturalRockGeometry=(()=>{
  const g=new T.SphereGeometry(1,10,7),p=g.attributes.position,colors=[];
@@ -24,17 +24,21 @@ export function finishRock(rock){
  rock.geometry=naturalRockGeometry;rock.material=rockMaterials.get(key);rock.scale.multiplyScalar(radius);return rock;
 }
 let groundDetailTexture;
-export function installGroundSurface(ground,id='confluence'){
- const material=ground.material;if(material.userData.groundSurface===id)return;
+export function environmentDetailTexture(){
  if(!groundDetailTexture){
   const size=128,pixels=new Uint8Array(size*size*4),random=seeded(5629),layers=[4,16,64].map(n=>({n,values:Float32Array.from({length:n*n},()=>random())}));
   const sample=(layer,x,y)=>{const u=x/size*layer.n,v=y/size*layer.n,ix=Math.floor(u),iy=Math.floor(v),fx=u-ix,fy=v-iy,s=fx*fx*(3-2*fx),t=fy*fy*(3-2*fy),at=(a,b)=>layer.values[(b%layer.n)*layer.n+a%layer.n];return T.MathUtils.lerp(T.MathUtils.lerp(at(ix,iy),at(ix+1,iy),s),T.MathUtils.lerp(at(ix,iy+1),at(ix+1,iy+1),s),t);};
   for(let y=0;y<size;y++)for(let x=0;x<size;x++){const k=(y*size+x)*4;for(let channel=0;channel<3;channel++)pixels[k+channel]=Math.round(sample(layers[channel],x,y)*255);pixels[k+3]=255;}
   groundDetailTexture=new T.DataTexture(pixels,size,size);groundDetailTexture.wrapS=groundDetailTexture.wrapT=T.RepeatWrapping;groundDetailTexture.magFilter=T.LinearFilter;groundDetailTexture.minFilter=T.LinearMipmapLinearFilter;groundDetailTexture.generateMipmaps=true;groundDetailTexture.anisotropy=4;groundDetailTexture.needsUpdate=true;
  }
+ return groundDetailTexture;
+}
+export function installGroundSurface(ground,id='confluence'){
+ const material=ground.material;if(material.userData.groundSurface===id)return;
+ const detail=environmentDetailTexture();
  material.userData.groundSurface=id;
  material.onBeforeCompile=shader=>{
-  shader.uniforms.groundDetail={value:groundDetailTexture};
+  shader.uniforms.groundDetail={value:detail};
   shader.vertexShader='varying vec3 groundWorld;\n'+shader.vertexShader;
   shader.vertexShader=shader.vertexShader.replace('#include <begin_vertex>','#include <begin_vertex>\ngroundWorld=(modelMatrix*vec4(position,1.0)).xyz;');
   shader.fragmentShader='uniform sampler2D groundDetail; varying vec3 groundWorld;\n'+shader.fragmentShader;
@@ -42,13 +46,16 @@ export function installGroundSurface(ground,id='confluence'){
    vec2 soilPoint=groundWorld.xz;
    float soilField=texture2D(groundDetail,soilPoint*.013).r;
    float soilClump=texture2D(groundDetail,soilPoint*.046+vec2(.23,.61)).g;
-   float soilGrain=texture2D(groundDetail,soilPoint*.18).b;
+   // Mipmaps filter the texture; this also fades its tiny normal slopes before they become subpixel.
+   float soilPixel=max(length(dFdx(soilPoint)),length(dFdy(soilPoint)));
+   float soilGrainDetail=1.0-smoothstep(.025,.12,soilPixel);
+   float soilGrain=mix(.5,texture2D(groundDetail,soilPoint*.18).b,soilGrainDetail);
    float soilPatch=smoothstep(.43,.73,soilField+soilClump*.13);
    diffuseColor.rgb*=.91+soilClump*.14+soilGrain*.045;
    ${id==='forest'?`diffuseColor.rgb=mix(diffuseColor.rgb,vec3(.083,.070,.037),soilPatch*.53);float moss=smoothstep(.58,.81,soilClump)*(1.0-soilPatch);diffuseColor.rgb=mix(diffuseColor.rgb,vec3(.064,.103,.037),moss*.30);`
     :id==='snow'?`diffuseColor.rgb=mix(diffuseColor.rgb,diffuseColor.rgb*vec3(.77,.88,.99),soilPatch*.38);diffuseColor.rgb+=vec3(.035,.039,.038)*smoothstep(.59,.83,soilClump);`
     :id==='ash'?`diffuseColor.rgb=mix(diffuseColor.rgb,vec3(.075,.071,.075),soilPatch*.40);diffuseColor.rgb*=1.0-smoothstep(.68,.86,soilClump)*.16;`
-    :id==='sand'?`float sandRidge=sin((soilPoint.x*.765+soilPoint.y*.644)*3.2+soilField*8.0)*.5+.5;diffuseColor.rgb*=.94+sandRidge*.085;diffuseColor.rgb=mix(diffuseColor.rgb,diffuseColor.rgb*vec3(.91,.84,.72),soilPatch*.23);`
+    :id==='sand'?`float sandRidge=.5+sin((soilPoint.x*.765+soilPoint.y*.644)*3.2+soilField*8.0)*.5*(1.0-smoothstep(.16,.65,soilPixel));diffuseColor.rgb*=.94+sandRidge*.085;diffuseColor.rgb=mix(diffuseColor.rgb,diffuseColor.rgb*vec3(.91,.84,.72),soilPatch*.23);`
     :id==='coast'?`diffuseColor.rgb=mix(diffuseColor.rgb,vec3(.110,.117,.082),soilPatch*.36);diffuseColor.rgb*=.96+soilClump*.08;`
     :`float soilSnow=smoothstep(.25,.48,max(diffuseColor.r,max(diffuseColor.g,diffuseColor.b)));diffuseColor.rgb=mix(diffuseColor.rgb,diffuseColor.rgb*mix(vec3(1.17,.95,.77),vec3(.91,.97,1.04),soilSnow),soilPatch*.30);`}
    float soilRelief=soilClump*.055+soilGrain*.006;
@@ -60,7 +67,7 @@ export function installGroundSurface(ground,id='confluence'){
    normal=normalize(abs(soilDet)*normal-sign(soilDet)*(dFdx(soilRelief)*soilRx+dFdy(soilRelief)*soilRy));
   `);
  };
- material.customProgramCacheKey=()=> 'ground-surface-'+id;material.needsUpdate=true;
+ material.customProgramCacheKey=()=> 'ground-filtered-'+id;material.needsUpdate=true;
 }
 // Shared geometry and instanced details: decoration stays low, leaving combat and collision legible.
 const geometries={stone:naturalRockGeometry,snow:null,chip:new T.OctahedronGeometry(1,0),wood:new T.CylinderGeometry(.10,.15,1,7),leaf:null,ice:new T.ConeGeometry(1,1,5),frond:null},materials=new Map();

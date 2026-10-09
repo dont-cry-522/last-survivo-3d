@@ -17,14 +17,15 @@ material.onBeforeCompile=shader=>{
  `+shader.fragmentShader;
  shader.fragmentShader=shader.fragmentShader.replace('#include <color_fragment>',`#include <color_fragment>
   float treeFootprint=max(length(dFdx(treePoint)),length(dFdy(treePoint)));
-  float treeDetail=1.0-smoothstep(.035,.13,treeFootprint),treeRelief=0.0;
+  float treeDetail=1.0-smoothstep(.035,.13,treeFootprint),treeRelief=0.0,treeScatter=0.0;
   if(treeKind>.5){
    float treeClump=treeNoise(treePoint*5.0),treeLeaf=smoothstep(.28,.72,treeNoise(treePoint*19.0+vec3(3.1,8.7,1.3)));
    float treeSnow=step(1.5,treeKind);
-   vec3 treePigment=mix(vec3(.69,.76,.63),vec3(1.20,1.18,1.07),treeLeaf);
+   treeScatter=(.35+.65*smoothstep(.38,.78,treeClump))*(1.0-treeSnow);
+   vec3 treePigment=mix(vec3(.84,.89,.78),vec3(1.12,1.11,1.02),treeLeaf);
    treePigment=mix(treePigment,vec3(.89+treeLeaf*.18),treeSnow);
-   diffuseColor.rgb*=mix(vec3(1.0),treePigment,treeDetail)*(.91+treeClump*.18);
-   treeRelief=(treeClump*.018+treeLeaf*.012)*treeDetail*mix(1.0,.45,treeSnow);
+   diffuseColor.rgb*=mix(vec3(1.0),treePigment,treeDetail)*(.94+treeClump*.12);
+   treeRelief=(treeClump*.010+treeLeaf*.004)*treeDetail*mix(1.0,.45,treeSnow);
   }else{
    float treeGrain=treeNoise(treePoint*vec3(27.0,1.15,27.0)),treeFissure=smoothstep(.30,.65,treeGrain);
    float treeBark=treeNoise(treePoint*vec3(53.0,5.0,53.0));
@@ -32,13 +33,22 @@ material.onBeforeCompile=shader=>{
    treeRelief=(treeFissure*.018+treeBark*.005)*treeDetail;
   }
  `);
+ // A leaf crown scatters a little back-light; bark and snow keep opaque material response.
+ shader.fragmentShader=shader.fragmentShader.replace('#include <lights_fragment_end>',`#include <lights_fragment_end>
+  #if NUM_DIR_LIGHTS > 0
+   if(treeKind>.5 && treeKind<1.5){
+    float leafTransmission=pow(max(0.0,dot(-normal,directionalLights[0].direction)),2.0);
+    reflectedLight.indirectDiffuse+=diffuseColor.rgb*directionalLights[0].color*vec3(.035,.065,.018)*leafTransmission*treeScatter;
+   }
+  #endif
+ `);
  shader.fragmentShader=shader.fragmentShader.replace('#include <normal_fragment_maps>',`#include <normal_fragment_maps>
   vec3 treeDx=dFdx(-vViewPosition),treeDy=dFdy(-vViewPosition),treeRx=cross(treeDy,normal),treeRy=cross(normal,treeDx);
   float treeDet=dot(treeDx,treeRx);
   normal=normalize(abs(treeDet)*normal-sign(treeDet)*(dFdx(treeRelief)*treeRx+dFdy(treeRelief)*treeRy));
  `);
 };
-material.customProgramCacheKey=()=> 'tree-surface-detail';
+material.customProgramCacheKey=()=> 'tree-soft-leaf-light';
 function tint(geometry,color,canopy=false){
  const p=geometry.attributes.position,n=geometry.attributes.normal,c=new T.Color(color),colors=[];
  for(let i=0;i<p.count;i++){

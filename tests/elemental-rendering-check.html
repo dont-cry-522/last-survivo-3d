@@ -1,0 +1,20 @@
+<!doctype html><html lang="zh-CN"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>元素表现检查</title>
+<style>body{margin:0;background:#152321;color:#e6eee7;font:14px system-ui}header{padding:12px;display:flex;flex-wrap:wrap;gap:8px;align-items:center}button{padding:8px 12px;background:#344841;color:#fff;border:1px solid #8ba199;border-radius:6px}#view{width:100%;height:calc(100vh - 130px);min-height:280px;display:block}#status{padding:0 12px}small{padding:0 12px;display:block;color:#bacfc5}</style>
+<header><strong>火焰 · 冰霜 · 暗影 · 雷电</strong><button id="play">连续预览</button><button data-time="0.03">接触 0.03 秒</button><button data-time="0.14">展开 0.14 秒</button><button data-time="0.36">余势 0.36 秒</button><button data-time="0.65">尾迹 0.65 秒</button><button id="check">运行特效回归</button></header>
+<canvas id="view"></canvas><p id="status">载入中</p><small>上方：火焰、冰霜；下方：暗影、雷电。灰色标靶用于检查遮挡；这是实际特效的独立预览，不代表完整战斗帧率。</small>
+<script type="module">
+import*as T from'../vendor/three.module.js';
+import{SkillVFX}from'../skill-vfx.js';
+const canvas=document.querySelector('#view'),status=document.querySelector('#status'),renderer=new T.WebGLRenderer({canvas,antialias:true});renderer.setPixelRatio(Math.min(1.5,devicePixelRatio));renderer.outputColorSpace=T.SRGBColorSpace;
+const scene=new T.Scene();scene.background=new T.Color(0x253b36);const camera=new T.PerspectiveCamera(42,1,.1,100);camera.position.set(15,24,24);camera.lookAt(0,0,0);scene.add(new T.HemisphereLight(0xd4ece8,0x4a4f37,2.1));const sun=new T.DirectionalLight(0xffedcf,2.4);sun.position.set(-12,20,8);scene.add(sun);
+const floor=new T.Mesh(new T.PlaneGeometry(36,32),new T.MeshStandardMaterial({color:0x546657,roughness:1}));floor.rotation.x=-Math.PI/2;floor.position.y=-.02;scene.add(floor);
+const targets=[[-5,-4],[5,-4],[-5,5],[5,5]],body=new T.CapsuleGeometry(.32,.48,3,7),material=new T.MeshStandardMaterial({color:0xaab2ab,roughness:.8});for(const [x,z]of targets)for(const [dx,dz]of[[0,0],[1.3,.7],[-1.1,-.8]]){const m=new T.Mesh(body,material);m.position.set(x+dx,.62,z+dz);scene.add(m);}
+const effects=new T.Group();scene.add(effects);const v=new SkillVFX(effects,{mobile:true});let looping=false,last=0,age=0;
+function cast(){v.clear();let seed=731;const random=Math.random;try{Math.random=()=>{seed=(Math.imul(seed,1664525)+1013904223)>>>0;return seed/4294967296;};v.fire(-5,-4,2.5,true);v.ice(5,-4,3.1);v.dark(-5,5,2.5,true);v.lightning(5,5,5,5,true);}finally{Math.random=random;}age=0;}
+function render(){renderer.setSize(canvas.clientWidth,canvas.clientHeight,false);camera.aspect=canvas.clientWidth/canvas.clientHeight;camera.updateProjectionMatrix();renderer.render(scene,camera);}
+function sample(t){looping=false;cast();let elapsed=0;while(elapsed<t){const dt=Math.min(1/120,t-elapsed);v.update(dt);elapsed+=dt;}render();status.textContent=`静态检查 ${t.toFixed(2)} 秒 · ${v.active.length} / ${v.limit} 个受控特效 · ${renderer.info.render.calls} 次绘制`;}
+document.querySelectorAll('[data-time]').forEach(b=>b.onclick=()=>sample(Number(b.dataset.time)));
+document.querySelector('#play').onclick=()=>{cast();looping=true;status.textContent='连续预览中 · 移动端 110 个特效上限';};
+document.querySelector('#check').onclick=()=>{looping=false;let checks=0,maxCalls=0;try{for(const time of[0,.03,.14,.36,.65,1.1]){sample(time);if(v.active.length+v.pool.length>110)throw Error('特效池超过上限');for(const p of v.active)if(!p.mesh.position.toArray().every(Number.isFinite)||!p.mesh.scale.toArray().every(Number.isFinite))throw Error('无效变换');maxCalls=Math.max(maxCalls,renderer.info.render.calls);checks++;}if(effects.children.length)throw Error('尾迹未回收');for(let i=0;i<12;i++){cast();v.update(1.2);}if(effects.children.length)throw Error('重复播放未回收');sample(.14);status.textContent=`通过 ${checks+2} 项 · GPU 实际渲染 · 上限 110 · 采样最大 ${maxCalls} 次绘制 · 重复播放已回收`;status.dataset.result='passed';}catch(e){status.textContent=e.stack;status.dataset.result='failed';}};
+function frame(now){requestAnimationFrame(frame);const dt=Math.min(.05,(now-last)/1000||0);last=now;if(looping){age+=dt;if(age>1.5)cast();else v.update(dt);}render();}sample(.14);requestAnimationFrame(frame);
+</script></html>

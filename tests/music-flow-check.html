@@ -1,0 +1,50 @@
+<!doctype html><meta charset="utf-8"><title>音乐衔接回归</title>
+<style>body{font:16px system-ui;color:#e0eee6;background:#10231f;padding:24px}button{font:inherit;padding:12px 18px;margin-right:12px}pre{white-space:pre-wrap;line-height:1.55}</style>
+<h1>音乐衔接回归</h1><p>使用真实浏览器音频节点与本地录音；检查时静音，不修改游戏设置或存档。</p>
+<button id="run">运行音乐回归</button><pre id="status">等待开始</pre>
+<script type="module">
+import{RecordedMusic,MUSIC_TRANSITIONS}from'../recorded-music.js';
+import{MUSIC_TRACKS}from'../music-tracks.js';
+import{GameAudio}from'../audio.js';
+import{BIOME_THEMES,scoreBiome}from'../biome-music.js';
+const status=document.querySelector('#status'),button=document.querySelector('#run'),wait=ms=>new Promise(resolve=>setTimeout(resolve,ms));
+const assert=(ok,message)=>{if(!ok)throw Error(message);};
+button.onclick=async()=>{
+ button.disabled=true;status.textContent='正在检查…';let ctx,music;const reports=[];
+ try{
+  ctx=new AudioContext();await ctx.resume();const bus=ctx.createGain(),fallback=ctx.createGain();bus.gain.value=0;bus.connect(ctx.destination);fallback.connect(bus);
+  const sources=[],native=ctx.createBufferSource.bind(ctx);ctx.createBufferSource=()=>{const s=native(),stop=s.stop.bind(s),start=s.start.bind(s),entry={s,start:Infinity,stop:Infinity};sources.push(entry);s.start=(at=0,...args)=>{entry.start=at;return start(at,...args);};s.stop=(at=0)=>{entry.stop=at;return stop(at);};return s;};
+  const alive=()=>sources.filter(s=>s.start<=ctx.currentTime&&s.stop>ctx.currentTime).length;
+  music=new RecordedMusic(ctx,bus,fallback);
+  const tick=(dt=0,options={})=>music.update(dt,{map:'forest',mode:'playing',...options});
+  const load=async()=>{await music.loading?.promise;assert(!music.lastError,JSON.stringify(music.lastError));assert(music.current,'录音未开始');};
+  for(const key of Object.keys(MUSIC_TRACKS)){
+   tick(0,{map:key,boss:key==='battle',mode:key==='battle'?'playing':'menu'});await load();
+   const {buffer}=music.current;assert(buffer.numberOfChannels===2&&buffer.duration>10,'录音格式异常 '+key);
+   let peak=0,jump=0;for(let ch=0;ch<buffer.numberOfChannels;ch++){const d=buffer.getChannelData(ch);jump=Math.max(jump,Math.abs(d[0]-d.at(-1)));for(let i=0;i<d.length;i+=32)peak=Math.max(peak,Math.abs(d[i]));}
+   assert(peak>0&&peak<1,'录音为空或削波 '+key);assert(jump<=.008,'解码循环接缝跳变过大 '+key);await wait(40);assert(alive()<=2,'录音叠加超过两路');
+   reports.push({recording:key,duration:+buffer.duration.toFixed(2),samplePeak:+peak.toFixed(4),loopSampleJump:+jump.toFixed(5)});
+  }
+  tick(0,{mode:'menu'});await load();await wait(45);
+  const voice=music.current;tick(0,{mode:'paused'});const offset=music.offsets.get('forest');await wait(140);
+  assert(!music.current&&alive()===0,'暂停未释放录音');tick();assert(Math.abs(music.current.offset-offset)<.0001,'暂停后没有原位续播');assert(music.current.started>voice.started,'没有恢复播放');
+  for(let i=0;i<8;i++){tick(.2,{map:'snow',seamless:true});tick(.2,{map:'forest',seamless:true});}assert(music.desired==='forest'&&!music.loading,'边界反复加载音乐');
+  tick(1.21,{map:'snow',seamless:true});await load();assert(music.current.key==='snow','稳定进入区域后未换曲');
+  tick(0,{map:'snow',boss:true,seamless:true});await load();assert(music.current.key==='battle','首领未进入战斗音乐');
+  tick(8.9,{map:'snow',pressure:.1});assert(music.battle,'战斗过早退回探索');tick(.2,{map:'snow',pressure:.1});await load();assert(music.current.key==='snow','平静后没有回到探索音乐');
+  // Cancelling a still-running value curve used to be the risky browser-only case.
+  for(let i=0;i<12;i++){tick(0,{map:'snow',boss:true});await load();tick(0,{map:'snow',mode:'paused'});tick(0,{map:'snow',mode:'menu'});await load();await wait(12);}
+  music.reset();await wait(120);assert(alive()===0&&music.fading.size===0,'重置后仍有声音');assert(music.cache.size<=2,'解码缓存超出上限');
+  reports.push({flow:'PASS',borderHold:MUSIC_TRANSITIONS.borderHold,battleFade:MUSIC_TRANSITIONS.battle,recoveryFade:MUSIC_TRANSITIONS.recovery,remainingVoices:alive()});
+  // Render the actual sand fallback arrangement, both calm and under pressure.
+  for(const pressure of[0,1]){
+   const rate=22050,duration=12,offline=new OfflineAudioContext(2,rate*duration,rate),a=new GameAudio(offline);a.setup();a.muted=false;a.available=()=>a.ready&&a.nodes<1000;
+   const theme=BIOME_THEMES.sand,step=60/theme.bpm/2;for(let b=0;b*step<duration-2;b++)scoreBiome(a,theme,b,b*step,step,pressure);
+   const out=await offline.startRendering();let sum=0,peak=0;for(let ch=0;ch<2;ch++)for(const v of out.getChannelData(ch)){assert(Number.isFinite(v),'荒漠音乐含无效采样');sum+=v*v;peak=Math.max(peak,Math.abs(v));}
+   const rms=Math.sqrt(sum/(out.length*2));assert(rms>.003&&peak<.98,'荒漠音乐静音或削波');reports.push({sandPressure:pressure,rms:+rms.toFixed(4),peak:+peak.toFixed(4)});
+  }
+  status.textContent='PASS 音乐回归\n'+JSON.stringify(reports,null,2);
+ }catch(error){status.textContent='FAIL '+error.stack;}
+ finally{music?.reset();await ctx?.close();button.disabled=false;}
+};
+</script>

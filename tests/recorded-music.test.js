@@ -1,6 +1,6 @@
 import{test}from'node:test';
 import assert from'node:assert/strict';
-import{RecordedMusic}from'../recorded-music.js';
+import{RecordedMusic,MUSIC_TRANSITIONS,softenLoopSeam}from'../recorded-music.js';
 import{weaponSample,weaponTakeCount}from'../weapon-audio.js';
 
 function harness(){
@@ -19,9 +19,9 @@ function harness(){
 
 test('recordings load once, fade between maps, resume their position, and keep two decoded buffers',async()=>{
  const h=harness();h.tick();for(let i=0;i<30;i++)h.tick(.04);assert.equal(h.requests.length,1);await h.loaded();
- assert.equal(h.music.current.key,'forest');assert.deepEqual(h.sources[0].started,[0,0]);assert.deepEqual(h.music.current.gain.gain.events.at(-1),[.6,2]);
+ assert.equal(h.music.current.key,'forest');assert.deepEqual(h.sources[0].started,[0,0]);assert.deepEqual(h.music.current.gain.gain.events.at(-1),[.6,MUSIC_TRANSITIONS.map]);
  h.context.currentTime=12;h.tick(0,{mode:'paused'});assert.equal(h.music.current,null);assert.equal(h.music.offsets.get('forest'),12);
- h.context.currentTime=40;h.tick();assert.equal(h.music.current.key,'forest');assert.deepEqual(h.sources.at(-1).started,[40,12]);assert.equal(h.requests.length,1);
+ h.context.currentTime=40;h.tick();assert.equal(h.music.current.key,'forest');assert.deepEqual(h.sources.at(-1).started,[40,12]);assert.equal(h.requests.length,1);assert.deepEqual(h.music.current.gain.gain.events.at(-1),[.6,40+MUSIC_TRANSITIONS.resume]);
  h.context.currentTime=45;h.tick(0,{map:'snow'});assert.equal(h.music.current.key,'forest');await h.loaded();assert.equal(h.music.current.key,'snow');assert.equal(h.music.fading.size,1);
  const count=h.sources.length;for(let i=0;i<20;i++)h.tick(.04,{map:'snow'});assert.equal(h.sources.length,count,'updates restarted the recording');
  h.tick(0,{map:'ash'});await h.loaded();assert.deepEqual([...h.music.cache.keys()],['snow','ash']);
@@ -53,10 +53,41 @@ test('battle music needs sustained pressure, boss enters immediately, and explor
  const h=harness();h.tick();await h.loaded();
  h.tick(3.9,{pressure:.9});assert(!h.music.battle);h.tick(.1,{pressure:.4});h.tick(3.9,{pressure:.9});assert(!h.music.battle);
  h.tick(.2,{pressure:.9});assert(h.music.battle);assert.equal(h.music.desired,'battle');await h.loaded();
- h.tick(6.9,{pressure:.2});assert(h.music.battle);h.tick(99,{mode:'paused',pressure:0});assert(h.music.battle,'pause advanced recovery');
+ h.tick(MUSIC_TRANSITIONS.calmHold-.1,{pressure:.2});assert(h.music.battle);h.tick(99,{mode:'paused',pressure:0});assert(h.music.battle,'pause advanced recovery');
  h.tick(.2,{pressure:.2});assert(!h.music.battle);assert.equal(h.music.current.key,'forest');
  h.tick(0,{boss:true});assert(h.music.battle);assert.equal(h.music.current.key,'battle');
  h.tick(0,{mode:'menu'});assert(!h.music.battle);assert.equal(h.music.current.key,'forest');
+});
+
+test('regional border hesitation does not fetch repeatedly, while menus and bosses stay immediate',async()=>{
+ const h=harness();h.tick();await h.loaded();
+ for(let i=0;i<10;i++){h.tick(.2,{map:'snow',seamless:true});h.tick(.2,{map:'forest',seamless:true});}
+ assert.equal(h.requests.length,1);assert.equal(h.music.current.key,'forest');
+ h.tick(.7,{map:'snow',seamless:true});h.tick(20,{map:'snow',mode:'upgrade',seamless:true});assert.equal(h.requests.length,1,'upgrade advanced regional hold');
+ h.tick(.6,{map:'snow',seamless:true});assert.equal(h.requests.length,2);await h.loaded();assert.equal(h.music.current.key,'snow');
+ h.tick(0,{map:'ash',seamless:true,boss:true});assert.equal(h.music.desired,'battle');await h.loaded();assert.equal(h.music.current.key,'battle');
+ assert.deepEqual(h.music.current.gain.gain.events.at(-1),[.6,MUSIC_TRANSITIONS.battle]);
+ h.tick(0,{map:'coast',mode:'menu',seamless:true});assert.equal(h.music.desired,'coast');await h.loaded();
+ assert.deepEqual(h.music.current.gain.gain.events.at(-1),[.6,MUSIC_TRANSITIONS.recovery]);
+ h.music.reset();assert.equal(h.music.region,null);assert.equal(h.music.regionCandidate,null);
+});
+
+test('a pending load retains the short resume envelope across multiple update frames',async()=>{
+ const h=harness();h.tick();h.tick(0,{mode:'paused'});h.tick();h.tick(.05);h.tick(.05);await h.loaded();
+ assert.deepEqual(h.music.current.gain.gain.events.at(-1),[.6,MUSIC_TRANSITIONS.resume]);
+ h.music.reset();
+});
+
+test('decoded loop edge repair removes only a discontinuity within six milliseconds per end',()=>{
+ const data=[new Float32Array(48000).fill(.2),new Float32Array(48000).fill(-.1)];data[0][0]=.26;
+ const buffer={sampleRate:48000,length:48000,numberOfChannels:2,getChannelData:ch=>data[ch]};
+ softenLoopSeam(buffer);
+ for(let ch=0;ch<2;ch++){
+  const value=ch?-.1:.2;assert.equal(Math.abs(data[ch][0]),0);assert.equal(Math.abs(data[ch].at(-1)),0);
+  for(let i=288;i<48000-288;i++)assert(Math.abs(data[ch][i]-value)<1e-7,'repair changed a musical phrase');
+ }
+ const seamless=new Float32Array(1000).fill(.1),untouched=seamless.slice();
+ softenLoopSeam({sampleRate:22050,length:1000,numberOfChannels:1,getChannelData:()=>seamless});assert.deepEqual(seamless,untouched);
 });
 
 test('old weapon textures rotate three bounded takes without overloading strong-hit or combo variants',()=>{

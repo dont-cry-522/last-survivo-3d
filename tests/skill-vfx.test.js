@@ -101,3 +101,29 @@ test('harpoon and returning bone fragments follow the strike direction',()=>{
   for(let i=0;i<front.length;i++){assert(Math.abs(right[i].velocity[0]-front[i][2])<1e-8);assert(Math.abs(right[i].velocity[2]+front[i][0])<1e-8);}v.clear();
  }
 });
+
+test('staged material effects use game time, consume only delay overshoot and clear before onset',()=>{
+ const scene=new T.Scene(),v=new SkillVFX(scene,{mobile:true}),m=v.particle('vapor',0xffffff,1,2,3,{delay:.1,life:.4,velocity:[2,0,0],endColor:0x222222}),p=v.active[0];
+ assert.equal(m.visible,false);v.update(.05);const remaining=p.life;v.update(0);assert.equal(p.life,remaining);assert.equal(m.visible,false);assert.equal(m.position.x,1);
+ v.update(.1);assert.equal(m.visible,true);assert(Math.abs(p.life-.35)<1e-9);assert(Math.abs(m.position.x-1.1)<1e-9,'only time after onset may move the plume');
+ v.clear();const delayed=v.particle('shard',0xffffff,0,0,0,{delay:.2,motion:'erupt'});assert.equal(delayed.visible,false);v.clear();const reused=v.particle('ember',0xff0000,0,0,0);assert.equal(delayed,reused);assert.equal(reused.visible,true);assert.equal(v.active[0].endColor,null);assert.equal(v.active[0].delay,0);assert.equal(scene.children.length,1);
+ v.update(2);assert.equal(scene.children.length,0);assert.equal(v.active.length,0);
+});
+
+test('elemental phases retain core priority and finite geometry through coarse and paused updates',()=>{
+ const v=new SkillVFX(new T.Scene(),{mobile:true});
+ v.fire(0,0,3,true);v.ice(6,0,3);v.dark(0,6,3,true);v.lightning(5,6,6,6,true);
+ assert(v.active.some(p=>p.delay>0&&!p.mesh.visible),'outer fractures and vapour should follow the contact');
+ const before=v.active.map(p=>[p.life,p.delay,...p.mesh.position.toArray()]);v.update(0);assert.deepEqual(v.active.map(p=>[p.life,p.delay,...p.mesh.position.toArray()]),before);
+ for(const dt of [.016,.033,.09,.15,.20,.4]){v.update(dt);for(const p of v.active){assert(p.mesh.scale.toArray().every(n=>Number.isFinite(n)&&n>=0));assert(p.mesh.material.color.toArray().every(Number.isFinite));assert(p.mesh.material.opacity>=0&&p.mesh.material.opacity<=1);assert(p.delay>=0);}}
+ assert.equal(v.active.length,0);assert(v.pool.length<=110);
+});
+
+test('flat effects render both faces in one pass and recycled solid fragments restore volume passes',()=>{
+ const v=new SkillVFX(new T.Scene());let mesh;
+ for(const shape of ['flame','veil','vapor','crest','sweep','claw','waterArc']){
+  mesh=v.particle(shape,0xffffff,0,0,0);assert.equal(mesh.material.forceSinglePass,true,shape);assert.equal(mesh.material.side,T.DoubleSide);v.clear();
+  const solid=v.particle('shard',0xffffff,0,0,0);assert.equal(solid,mesh);assert.equal(solid.material.forceSinglePass,false);assert.equal(solid.material.side,T.DoubleSide);v.clear();
+ }
+ for(const id of ['fire','miasmalantern']){const projectile=v.projectile({id});projectile.traverse(part=>{if(part.isMesh&&part.geometry.type==='PlaneGeometry')assert.equal(part.material.forceSinglePass,true,id+' planar aura');});}
+});

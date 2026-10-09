@@ -23,6 +23,16 @@ async function load(mobile=false,width=1180,height=720){
  now=win.performance.now();step(2);
 }
 function select(map,hero='silver',battle=false){g.menu();win.qaSeed();g.select(hero,map,0);if(battle){win.qaSeed();g.start();g.player.inv=9999;g.player.attack=9999;}step(12);}
+function spellBattle(){
+ select('forest','scout',true);g.world.obstacles=[];g.world.patches=[];g.player.inv=9999;
+ const {x,z}=g.player,events=[],v=g.vfx,originals={};
+ for(let i=0;i<3;i++){const e=g.spawn('golem',x+(i-1)*2,z+2.5);assert(e,'生成技能标靶失败');e.hp=e.maxHp=10000;e.speed=0;e.cool=999;}
+ for(const id of ['fire','ice','storm']){g.player.upgrades[id]=1;g.player.spell[id]=0;}
+ for(const id of ['fire','ice','lightning']){originals[id]=v[id];v[id]=function(...args){events.push(id);return originals[id].apply(v,args);};}
+ try{step(70);for(const id of Object.keys(originals))assert(events.includes(id),'实战没有触发 '+id);assert(g.enemies.some(e=>e.hp<e.maxHp),'实战技能未结算伤害');const r=reportFrame();
+  v.fire(x,z,2.5,true);step(2);g.pause();const life=v.active.map(p=>[p.life,p.delay]);step(30);assert(JSON.stringify(v.active.map(p=>[p.life,p.delay]))===JSON.stringify(life),'暂停仍在推进特效');g.menu();assert(v.active.length===0,'退出未清理特效');return{events:[...new Set(events)],limit:v.limit,...r};
+ }finally{for(const id of Object.keys(originals))v[id]=originals[id];}
+}
 async function check(name,fn){$('#status').textContent=name;try{results.push({name,pass:true,detail:await fn()});}catch(e){results.push({name,pass:false,error:e.message});}publish();await sleep(0);}
 function reportFrame(){const r=g.renderer;assert(!win.qaErrors.length,win.qaErrors.join('\n'));assert(r.info.programs.every(p=>p.diagnostics?.runnable!==false),'GPU 着色器未通过');assert(r.getContext().getError()===0,'WebGL 错误');return{calls:r.info.render.calls,triangles:r.info.render.triangles,geometries:r.info.memory.geometries,textures:r.info.memory.textures,pixels:r.domElement.width*r.domElement.height};}
 $('#run').onclick=async()=>{
@@ -35,9 +45,13 @@ $('#run').onclick=async()=>{
    if(cycle===1)memory[id]=battle;if(cycle===2){assert(battle.geometries<=memory[id].geometries+2,'同地图重建几何资源持续增长');assert(battle.textures<=memory[id].textures,'同地图重建纹理资源增长');}
    return{lobby,battle};
   });
+  for(const id of ['forest','snow','coast','confluence'])await check(id+' 水岸与动态波纹',()=>{
+   select(id,'silver',true);const pond=g.world.ponds[0];assert(pond,'没有可预览的水岸');g.player.x=pond.x+pond.rx+1.5;g.player.z=pond.z;step(100);const initial=reportFrame();step(60);const flowing=reportFrame();assert(flowing.textures===initial.textures,'流水逐帧创建纹理');g.pause();const time=g.time;step(60);assert(g.time===time,'暂停推进游戏时间');g.resume();step(2);return flowing;
+  });
   for(const hero of ['scout','silver','wraith','tide','lingya','wuling','mirage'])await check(hero+' 材质与武器',()=>{select('forest',hero);return reportFrame();});
+  await check('电脑实战法术触发、暂停与回收',()=>spellBattle());
   for(const [width,height]of [[2560,1440],[3840,2160]])await check(width+'×'+height+' 大屏像素预算',async()=>{await load(false,width,height);select('forest','silver',true);const r=reportFrame();assert(r.pixels<=3200000,'大屏像素预算超限');assert(Math.abs(g.camera.aspect-width/height)<.001,'大屏相机比例错误');return r;});
-  for(const [width,height]of [[844,390],[390,844]])await check(width+'×'+height+' 手机模拟',async()=>{await load(true,width,height);const maps=[];for(const id of ids){select(id,'silver',true);const r=reportFrame();assert(r.pixels<=1800000,'手机像素预算超限');assert(win.document.body.classList.contains('touch'),'手机控制分支失效');maps.push({id,...r});}return maps;});
+  for(const [width,height]of [[844,390],[390,844]])await check(width+'×'+height+' 手机模拟',async()=>{await load(true,width,height);const maps=[];for(const id of ids){select(id,'silver',true);const r=reportFrame();assert(r.pixels<=1800000,'手机像素预算超限');assert(win.document.body.classList.contains('touch'),'手机控制分支失效');maps.push({id,...r});}maps.push({spells:spellBattle()});return maps;});
   await check('所有运行日志',()=>{errors.push(...win.qaErrors);assert(!errors.length,errors.join('\n'));return{errors};});
  }catch(e){results.push({name:'初始化',pass:false,error:e.message});}
  publish();for(const b of document.querySelectorAll('button'))b.disabled=false;$('#status').textContent=results.every(r=>r.pass)?'全部 '+results.length+' 项通过（手机尺寸模拟，非真机性能测试）':'有检查失败';

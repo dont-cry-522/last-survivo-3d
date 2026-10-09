@@ -1,9 +1,9 @@
-import{BIOME_THEMES,instrumentSample,scoreBiome,biomeThreat}from'./biome-music.js?v=97';
-import{companionSample}from'./companion-audio.js?v=97';
-import{weaponSample,weaponTakeCount}from'./weapon-audio.js?v=97';
-import{creatureSample,creatureSpatial,ENEMY_VOICES}from'./enemy-audio.js?v=97';
-import{RecordedMusic}from'./recorded-music.js?v=97';
-import{RecordedEffects}from'./recorded-effects.js?v=97';
+import{BIOME_THEMES,instrumentSample,scoreBiome,biomeThreat}from'./biome-music.js?v=98';
+import{companionSample}from'./companion-audio.js?v=98';
+import{weaponSample,weaponTakeCount}from'./weapon-audio.js?v=98';
+import{creatureSample,creatureSpatial,ENEMY_VOICES}from'./enemy-audio.js?v=98';
+import{RecordedMusic}from'./recorded-music.js?v=98';
+import{RecordedEffects}from'./recorded-effects.js?v=98';
 // Local licensed recordings, with the original procedural score as a loading/offline fallback.
 const midi=n=>440*2**((n-69)/12);
 // Sound preferences only: attack timing, damage and music keep their existing behavior.
@@ -170,7 +170,7 @@ export class GameAudio{
   update(dt,{map='forest',mode='playing',boss=false,pressure=0,seamless=false}={}){
     const previousMode=this.mode;this.mode=mode;if(map!==this.map){if(seamless)this.map=map;else this.reset(map,true);}if(!this.ready)return;
     const c=this.ctx,paused=mode==='paused'||mode==='event-choice'||mode==='lost'||mode==='won';
-    this.recorded?.update(dt,{map,mode,boss,pressure});
+    this.recorded?.update(dt,{map,mode,boss,pressure,seamless});
     this.music.gain.setTargetAtTime(paused?0:this.musicVolume*(mode==='upgrade'?.3:mode==='menu'?.6:1),c.currentTime,.2);
     if(paused){if(!['paused','event-choice','lost','won'].includes(previousMode)){this.stopMusic();this.stopWeapons();this.stopCreatures();}this.next=c.currentTime+.05;return;}
     if(!this.available())return;
