@@ -1,15 +1,16 @@
 import * as T from './vendor/three.module.js';
-import {smoothSeams} from './hero-finish.js?v=108';
+import {smoothSeams} from './hero-finish.js?v=109';
 
 // Reuse the Ranger's authored cloth, UVs and skinning; each template owns its tints.
 export function shadowOutfit(root){
  root.traverse(o=>{
-  if(/Pauldron|Head_Hood/.test(o.name))o.visible=false;
+  if(/Pauldron/.test(o.name))o.visible=false;
+  if(/Head_Hood/.test(o.name))o.visible=true;
   if(!o.isMesh)return;
   const tintMaterial=source=>{
    const m=source.clone();
    if(!source.name.includes('Ranger'))return m;
-   const leather=/Belt|Bracer|Feet/.test(o.name),color=/Feet/.test(o.name)?0x2d313b:/Belt|Bracer/.test(o.name)?0x413e49:/Legs/.test(o.name)?0x343f52:/Arms/.test(o.name)?0x535c76:0x465167;
+   const leather=/Belt|Bracer|Feet/.test(o.name),color=/Feet/.test(o.name)?0x1d2029:/Belt|Bracer/.test(o.name)?0x2d2935:/Legs/.test(o.name)?0x252837:/Arms/.test(o.name)?0x323447:0x2d3040;
    const tint=new T.Color(color).toArray().join(',');
    m.color.set(0xffffff);m.roughness=leather?.86:.94;m.metalness=.015;
    m.roughnessMap=null;m.metalnessMap=null;m.normalScale?.setScalar(leather?.24:.18);
@@ -26,19 +27,20 @@ export function shadowOutfit(root){
 }
 
 const scarfMaterial=new T.MeshStandardMaterial({vertexColors:true,roughness:.96,metalness:0,side:T.DoubleSide});
-const claspMaterial=new T.MeshStandardMaterial({color:0xa4afba,roughness:.58,metalness:.42});
+const claspMaterial=new T.MeshStandardMaterial({color:0x7c8890,roughness:.72,metalness:.22});
 let scarfGeometry,claspGeometry;
 
 function shortScarf(){
  if(scarfGeometry)return scarfGeometry;
  const positions=[],colors=[],indices=[],slices=40,rows=10;
- const cloth=new T.Color(0x515b79),edge=new T.Color(0x8796ae);
+ const cloth=new T.Color(0x2d3044),edge=new T.Color(0x5a6376);
  for(let j=0;j<=rows;j++)for(let i=0;i<=slices;i++){
   const v=j/rows,a=.56+i/slices*(Math.PI*2-.94),s=Math.sin(a),c=Math.cos(a),left=Math.max(0,-s),front=Math.max(0,c),spread=Math.sin(v*Math.PI/2);
   // Open at the front, with a longer left fold; avoid a solid breastplate silhouette.
   const fold=Math.sin(v*Math.PI)*Math.cos(a*7-v*2)*.011;
   const x=s*(.085+(.122+.018*left)*spread+fold);
-  const y=1.548-v*(.105+.135*left+.020*front)+Math.sin(a*5+v*4)*.008*v;
+  const worn=(.012+.01*Math.sin(a*13))*Math.pow(v,9);
+  const y=1.548-v*(.105+.135*left+.020*front)+Math.sin(a*5+v*4)*.008*v+worn;
   const z=-.035+c*(.090+.090*spread+fold)+front*(.012+.016*spread);
   positions.push(x,y,z);
   const hem=T.MathUtils.smoothstep(v,.88,1)*.32+(1-T.MathUtils.smoothstep(v,0,.10))*.12;

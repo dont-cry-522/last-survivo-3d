@@ -1,5 +1,5 @@
 import * as T from './vendor/three.module.js';
-import {MIRAGE} from './mirage-config.js?v=108';
+import {MIRAGE} from './mirage-config.js?v=109';
 
 const clamp=n=>Math.max(0,Math.min(1,n));
 const fogVertex=`varying vec2 fogUv;void main(){fogUv=uv;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);}`;
