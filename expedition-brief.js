@@ -1,6 +1,6 @@
-import{MAP_ROSTERS}from'./map-enemies.js?v=102';
-import{ENEMY_GUIDE}from'./battle-guide.js?v=102';
-import{EXPEDITION_BOSS_TIME}from'./encounters.js?v=102';
+import{MAP_ROSTERS}from'./map-enemies.js?v=103';
+import{ENEMY_GUIDE}from'./battle-guide.js?v=103';
+import{EXPEDITION_BOSS_TIME}from'./encounters.js?v=103';
 
 // Use the same roster, attack descriptions and timing as the playable encounter.
 export function mapBrief(mapId){

@@ -1,11 +1,11 @@
-import {smoothSeams} from './hero-finish.js?v=102';
-import{weaponGesture,shotStarted}from'./weapon-performance.js?v=102';
+import {smoothSeams} from './hero-finish.js?v=103';
+import{weaponGesture,shotStarted}from'./weapon-performance.js?v=103';
 import * as T from './vendor/three.module.js';
-import{shadowCrescentGeometry,shadowCrescentEdge}from'./shadow-weapons.js?v=102';
+import{shadowCrescentGeometry,shadowCrescentEdge}from'./shadow-weapons.js?v=103';
 
 // Continuous cloth surfaces share geometry; each actor owns its pose and morph weights.
 const geometry=new Map(),materials=new Map();
-const C={robe:0x30374e,hood:0x414763,fold:0x252d40,lining:0x171e2b,armor:0x64727f,trim:0x8797a1,void:0x050b13,mask:0x111d29,light:0x79cbdc};
+const C={robe:0x30374e,hood:0x414763,fold:0x252d40,lining:0x171e2b,armor:0x465361,trim:0x788995,void:0x050b13,mask:0x111d29,light:0x79cbdc};
 const HIP_HEIGHT=.967,THIGH=.42,SHIN=.415,RIG_SCALE=.93;
 function cached(key,create){if(!geometry.has(key))geometry.set(key,create());return geometry.get(key);}
 function material(color,glow=false){const key=color+':'+glow;if(!materials.has(key)){const metal=color===C.trim||color===C.armor||color===C.mask;materials.set(key,glow?new T.MeshBasicMaterial({color,toneMapped:false}):new T.MeshStandardMaterial({color,roughness:metal?.63:.94,metalness:metal?.27:.015,side:T.DoubleSide}));}return materials.get(key);}
@@ -21,17 +21,21 @@ function surface(vertices,indices){const g=new T.BufferGeometry();g.setAttribute
 
 function hoodGeometry(){return cached('hollow-hood',()=>{
  const vertices=[],indices=[],slices=48,rings=18;
- for(let j=0;j<=rings;j++){const v=j/rings,shrink=(1-v)**.58;
-  for(let i=0;i<=slices;i++){const a=i/slices*Math.PI*2,p=hoodOpening(a),fold=Math.sin(v*Math.PI)*(.007*Math.cos(a*5+v*3)+.002*Math.cos(a*9-v*5)),x=p[0]*shrink+Math.cos(a)*fold,y=p[1]*shrink-v*.070+Math.sin(a)*fold,z=p[2]*(1-v)-v*.195;
+ for(let j=0;j<=rings;j++){const v=j/rings,shrink=Math.cos(v*Math.PI/2),recess=Math.sin(v*Math.PI/2);
+  for(let i=0;i<=slices;i++){const a=i/slices*Math.PI*2,p=hoodOpening(a),fold=Math.sin(v*Math.PI)*(.004*Math.cos(a*5+v*3)+.0015*Math.cos(a*9-v*5)),x=p[0]*shrink+Math.cos(a)*fold,y=p[1]*shrink-recess*.025+Math.sin(a)*fold+Math.max(0,Math.sin(a))*.08*Math.sin(v*Math.PI),z=p[2]*(1-recess)-recess*.185;
    vertices.push(x,y,z);if(i<slices&&j<rings){const n=j*(slices+1)+i;indices.push(n,n+slices+1,n+1,n+1,n+slices+1,n+slices+2);}
   }
  }
- // The cloth brow projects over the face; the pointed outer hood is not an oval helmet rim.
- const brow=vertices.length/3;vertices.push(0,.315,.162,-.143,.094,.218,0,-.004,.233,.143,.094,.218,0,.147,.251);
- indices.push(brow,brow+1,brow+4,brow+1,brow+2,brow+4,brow+2,brow+3,brow+4,brow+3,brow,brow+4);
+ // Turn the opening inward: a soft cloth hem frames the face, with no separate pointed brow.
+ const hem=vertices.length/3;
+ for(let row=1;row<=3;row++)for(let i=0;i<=slices;i++){
+  const a=i/slices*Math.PI*2,p=hoodOpening(a),v=row/3,sy=Math.sin(a);
+  vertices.push(p[0]*(1-v*.105),p[1]-Math.max(0,sy)*v*.048-Math.min(0,sy)*v*.009,p[2]+Math.sin(v*Math.PI)*.014-v*.006);
+  if(i<slices){const before=row===1?i:hem+(row-2)*(slices+1)+i,n=hem+(row-1)*(slices+1)+i;indices.push(before,before+1,n,n,before+1,n+1);}
+ }
  return surface(vertices,indices);
 });}
-function hoodOpening(a){const sy=Math.sin(a),sx=Math.cos(a);return[sx*.191*(1-.30*Math.max(0,-sy)),sy*.213+Math.pow(Math.max(0,sy),16)*.102,.162+sy*.052-Math.pow(Math.max(0,sy),12)*.055];}
+function hoodOpening(a){const sy=Math.sin(a),sx=Math.cos(a);return[sx*.191*(1-.16*Math.max(0,-sy)),sy*.213+Math.max(0,sy)**2*.020,.166+sy*.034];}
 
 // A rib cage has a flatter chest, shoulder blades and a waist, not a lathed barrel.
 function torsoGeometry(){return cached('human-tunic',()=>{
@@ -67,9 +71,9 @@ function shoulderGeometry(){return cached('fitted-shoulder',()=>{
 function mantleGeometry(){return cached('draped-mantle',()=>{
  const vertices=[],indices=[],rings=10,slices=40;
  for(let j=0;j<=rings;j++)for(let i=0;i<=slices;i++){
-  const v=j/rings,a=i/slices*Math.PI*2,front=Math.cos(a),side=Math.sin(a),radius=.096+Math.sin(v*Math.PI*.5)*(.245-.043*side);
-  const edge=.46-.052*Math.max(0,front)**4-.09*side,y=.633+(edge-.633)*v+.012*Math.cos(a*3+.4)*v*v;
-  vertices.push(side*radius,y,front*radius*.63-.012+.070*Math.max(0,front)*Math.sin(v*Math.PI/2)+.013*Math.cos(a*5-v*3)*v);
+  const v=j/rings,a=i/slices*Math.PI*2,front=Math.cos(a),side=Math.sin(a),radius=.092+Math.sin(v*Math.PI*.5)*.224;
+  const edge=.464-.029*Math.max(0,front)**2+.012*Math.abs(side),y=.625+(edge-.625)*v+.006*Math.cos(a*4)*v*v;
+  vertices.push(side*radius,y,front*radius*.67-.012+.038*Math.max(0,front)*Math.sin(v*Math.PI/2)+.008*Math.cos(a*6-v*3)*v);
   if(i<slices&&j<rings){const n=j*(slices+1)+i;indices.push(n,n+slices+1,n+1,n+1,n+slices+1,n+slices+2);}
  }
  return surface(vertices,indices);
@@ -77,7 +81,7 @@ function mantleGeometry(){return cached('draped-mantle',()=>{
 
 function maskGeometry(){return cached('recessed-mask',()=>{
  const vertices=[],indices=[],cols=16,rows=16;
- for(let y=0;y<=rows;y++)for(let x=0;x<=cols;x++){const u=x/cols*2-1,v=y/rows,width=.151*(1-.54*v*v),z=.127+.046*(1-Math.abs(u))-.035*Math.pow(v,3);vertices.push(u*width,.105-v*.298,z);if(x<cols&&y<rows){const n=y*(cols+1)+x;indices.push(n,n+cols+1,n+1,n+1,n+cols+1,n+cols+2);}}
+ for(let y=0;y<=rows;y++)for(let x=0;x<=cols;x++){const u=x/cols*2-1,v=y/rows,width=.151*(1-.56*v*v),z=.127+.046*(1-Math.abs(u))-.035*Math.pow(v,3);vertices.push(u*width,.105-v*.298,z);if(x<cols&&y<rows){const n=y*(cols+1)+x;indices.push(n,n+cols+1,n+1,n+1,n+cols+1,n+cols+2);}}
  return surface(vertices,indices);
 });}
 
@@ -99,9 +103,10 @@ function bootGeometry(){return cached('leather-boot',()=>{
 function clothGeometry(width,length,front=false){return cached(`cloth:${width}:${length}:${front}`,()=>{
  const positions=[],trail=[],twist=[],waveA=[],waveB=[],indices=[],cols=12,rows=14;
  for(let y=0;y<=rows;y++)for(let x=0;x<=cols;x++){
-  const u=x/cols,v=y/rows,px=(u-.5)*width*(.72+.28*v),py=-length*v+(front?Math.abs(u-.5)*.13*v*v:Math.cos(u*Math.PI*3)*.038*v*v),pz=-Math.sin(v*Math.PI/2)*(front?.015:.17)+Math.cos(u*Math.PI*6+v*.5)*.018*v;
-  const free=v*v,phase=v*7-u*2.3,amplitude=front?.042:.105;
-  positions.push(px,py,pz);trail.push(px*(1+.1*v),py+free*(front?.045:.20),pz-free*(front?.06:.42));twist.push(px+free*(front?.06:.22),py,pz+px*v*.65);
+  const u=x/cols,v=y/rows,spread=front?.72+.28*v:(.46+.54*T.MathUtils.smoothstep(v,0,.25))*(1-.13*v),px=(u-.5)*width*spread;
+  const py=-length*v+(front?Math.abs(u-.5)*.13*v*v:Math.abs(u-.5)*.05*v*v),pz=-Math.sin(v*Math.PI*.8)*(front?.015:.105)+Math.cos(u*Math.PI*6+v*.5)*.012*v+(front?0:.04*(2*u-1)**2*(1-T.MathUtils.smoothstep(v,0,.2)));
+  const free=v*v,phase=v*7-u*2.3,amplitude=front?.035:.060;
+  positions.push(px,py,pz);trail.push(px*(1+.06*v),py+free*(front?.045:.12),pz-free*(front?.06:.26));twist.push(px+free*(front?.06:.16),py,pz+px*v*.45);
   waveA.push(px,py+Math.sin(phase)*free*.018,pz+Math.sin(phase)*free*amplitude);
   waveB.push(px,py+Math.cos(phase)*free*.018,pz+Math.cos(phase)*free*amplitude);
   if(x<cols&&y<rows){const n=y*(cols+1)+x;indices.push(n,n+cols+1,n+1,n+1,n+cols+1,n+cols+2);}
@@ -143,11 +148,11 @@ export function makeWraith(weapon='shade'){
  const mantle=mesh(torso,mantleGeometry(),C.hood);mantle.name='wraith-draped-mantle';
  shape(torso,C.lining,[[.224,.008],[.230,.018],[.214,.066],[.211,.074]],[0,0,0],.68);
  mesh(torso,chestGeometry(),C.armor).name='wraith-fitted-chest';
- const cape=joint(torso,0,.49,-.145);d.cape=cape;
- for(const s of [-1,1]){const panel=cloth(cape,d,s<0?C.robe:C.hood,s<0?.37:.32,s<0?.85:.72,[s*.145,0,-.035]);panel.rotation.y=s*-.12;panel.rotation.z=s*.035;}
- for(const s of [-1,1]){const coat=cloth(torso,d,C.robe,.205,s<0?.32:.26,[s*.129,-.005,.137],true);coat.rotation.y=s*.20;coat.rotation.z=s*-.06;}
+ const cape=joint(torso,0,.56,-.155);d.cape=cape;
+ cloth(cape,d,C.hood,.69,.88,[0,0,0]).name='wraith-continuous-cape';
+ for(const s of [-1,1]){const coat=cloth(torso,d,C.robe,.18,.28,[s*.115,-.005,.137],true);coat.rotation.y=s*.16;coat.rotation.z=s*-.035;}
  // Recessed face, hollow hood and three cold light slits are visible from the game camera.
- const head=joint(torso,0,.815,-.012);head.scale.set(.79,.73,.80);d.head=head;const hood=mesh(head,hoodGeometry(),C.hood);hood.name='wraith-hood';
+ const head=joint(torso,0,.785,-.012);head.scale.set(.90,.86,.90);d.head=head;const hood=mesh(head,hoodGeometry(),C.hood);hood.name='wraith-hood';
  ell(head,C.void,[0,-.025,.02],[.150,.173,.066]);
  const mask=mesh(head,maskGeometry(),C.mask);mask.name='wraith-recessed-mask';d.mask=mask;
  for(const x of [-.063,0,.063]){const slit=curve(head,C.light,[[x,x===0?-.010:.055,.184],[x*.78,-.050,.182],[x*.58,-.105,.173],[x*.25,-.160,.151]],x===0?.0065:.0055,true);slit.name='wraith-face-slit';}
@@ -246,12 +251,12 @@ export function animateWraith(g,t,speed=0,attack=0,hurt=0){
   d.leftHand.getWorldQuaternion(d.bookParentQ);d.bookEuler.set(-.10+Math.sin(t*2.5)*.015,g.rotation.y+.12,.025*Math.sin(t*2));d.bookLevelQ.setFromEuler(d.bookEuler);d.book.quaternion.copy(d.bookParentQ).invert().multiply(d.bookLevelQ);
   d.book.position.y=-.025+Math.sin(t*2.5)*.018+cast*.035;d.page.rotation.z=Math.sin(t*2.4)*.10-motion.sweep*1.8+recoil*.6;d.page.position.y=.075+Math.sin(stroke*Math.PI)*cast*.025;
  }
- d.cape.rotation.x=.025+drag*.09+recoil*.12;d.cape.rotation.z=sway*.10+recoil*(blade?.18:.04);d.cape.rotation.y=-d.turn*.035;
+ // The sewn neckline stays attached; weighted cloth deformation moves only the loose fabric.
  d.clothPhase=(d.clothPhase||0)+dt*(4+run*5);
  d.panels.forEach((panel,i)=>{
   const front=panel.userData.front,flutter=(front?.08:.16)+run*(front?.20:.52),phase=d.clothPhase-i*.8;
-  panel.morphTargetInfluences[0]=T.MathUtils.clamp(front?run*.16+Math.max(0,step*(i===2?1:-1))*.28:drag,-.15,1.25);
-  panel.morphTargetInfluences[1]=T.MathUtils.clamp(sway*(front?.35:1),-.9,.9);
+  panel.morphTargetInfluences[0]=T.MathUtils.clamp(front?run*.16+Math.max(0,step*(panel.position.x<0?1:-1))*.28:drag+recoil*.25,-.15,1.25);
+  panel.morphTargetInfluences[1]=T.MathUtils.clamp(sway*(front?.35:1)+(front?0:recoil*(blade?.18:.04)),-.9,.9);
   panel.morphTargetInfluences[2]=Math.sin(phase)*flutter;panel.morphTargetInfluences[3]=Math.cos(phase)*flutter;
  });
  if(d.focus){d.focus.scale.copy(d.focus.userData.baseScale).multiplyScalar(1+Math.sin(t*4)*.045+cast*.12);d.focus.rotation.y=t*.55;}

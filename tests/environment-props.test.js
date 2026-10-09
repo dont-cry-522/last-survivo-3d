@@ -53,3 +53,22 @@ test('colored blocks and bare cylinders sharing a source keep separate cached su
  assert.equal(source.vertexColors,false);assert.equal(source.roughness,.8);
  const assigned=group.children.map(o=>o.material);polishEnvironmentModels({group,obstacles:[]});assert.deepEqual(group.children.map(o=>o.material),assigned);
 });
+
+test('eroded stone silhouettes stay inside their authored bounds and reuse geometry without altering source meshes',()=>{
+ const group=new T.Group(),material=new T.MeshStandardMaterial({color:0xa49173,emissiveIntensity:0}),box=new T.BoxGeometry(1,1,1),column=new T.CylinderGeometry(.4,.6,2,10);
+ const add=geometry=>{const mesh=new T.Mesh(geometry,material);group.add(mesh);return mesh;};
+ const blocks=[add(box),add(box)],columns=[add(column),add(column)],source=Array.from(column.attributes.position.array);
+ polishEnvironmentModels({group,obstacles:[]});
+ assert.strictEqual(blocks[0].geometry,blocks[1].geometry);assert.strictEqual(columns[0].geometry,columns[1].geometry);
+ assert.notStrictEqual(columns[0].geometry,column);assert.deepEqual(Array.from(column.attributes.position.array),source);
+ for(const mesh of[blocks[0],columns[0]]){
+  const p=mesh.geometry.attributes.position,n=mesh.geometry.attributes.normal,isBlock=mesh===blocks[0],top=[];
+  for(let i=0;i<p.count;i++){
+   assert(Math.abs(p.getX(i))<=(isBlock?.5:.600001));assert(Math.abs(p.getZ(i))<=(isBlock?.5:.600001));assert(Math.abs(p.getY(i))<=(isBlock?.5:1));
+   assert(Number.isFinite(n.getX(i))&&Number.isFinite(n.getY(i))&&Number.isFinite(n.getZ(i)));
+   if(p.getY(i)>(isBlock?.3:.9))top.push(p.getY(i));
+  }
+  assert(Math.max(...top)-Math.min(...top)>.025,'stone crown remained perfectly level');
+ }
+ const geometries=group.children.map(o=>o.geometry);polishEnvironmentModels({group,obstacles:[]});assert.deepEqual(group.children.map(o=>o.geometry),geometries);
+});

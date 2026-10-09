@@ -1,10 +1,10 @@
-import{onIce,onFord}from'./map-tactics.js?v=102';
-import{onBridge}from'./coast.js?v=102';
-import{MAP_SCALE}from'./map-layout.js?v=102';
-import{coastLayout}from'./coast-layout.js?v=102';
-import{swimStroke,swimLimb,HERO_SWIM,heroSwimPose,swimTravel}from'./swim-motion.js?v=102';
-import{newHeroAttack}from'./new-hero-motion.js?v=102';
-import{naturalRockGeometry,environmentDetailTexture}from'./biome-scenery.js?v=102';
+import{onIce,onFord}from'./map-tactics.js?v=103';
+import{onBridge}from'./coast.js?v=103';
+import{MAP_SCALE}from'./map-layout.js?v=103';
+import{coastLayout}from'./coast-layout.js?v=103';
+import{swimStroke,swimLimb,HERO_SWIM,heroSwimPose,swimTravel}from'./swim-motion.js?v=103';
+import{newHeroAttack}from'./new-hero-motion.js?v=103';
+import{naturalRockGeometry,environmentDetailTexture}from'./biome-scenery.js?v=103';
 import * as T from './vendor/three.module.js';
 const clamp=T.MathUtils.clamp;
 const shore=a=>1+.07*Math.sin(a*3)+.045*Math.cos(a*5);
@@ -54,6 +54,8 @@ function waterSurface(id){
     float depth=clamp((1.0-radial)/.48,0.0,1.0),edge=1.0-smoothstep(.0,1.0,depth);
     // A slowly advecting field bends and breaks crests across intersecting reaches.
     vec2 waterFlow=texture2D(waterDetail,waterWorld.xz*.035+vec2(waterTime*.0012,-waterTime*.0008)).rg;
+    vec2 shoreGrain=texture2D(waterDetail,waterWorld.xz*.065).rg;
+    float shoreBreak=smoothstep(.23,.76,shoreGrain.y);
     float waterPixel=max(length(dFdx(waterWorld.xz)),length(dFdy(waterWorld.xz)));
     float rippleDetail=1.0-smoothstep(.09,.36,waterPixel);
     float swellA=waterWorld.x*.65+waterWorld.z*.95-waterTime*.55+waterFlow.x*2.6;
@@ -62,14 +64,14 @@ function waterSurface(id){
     float rippleB=sin(waterWorld.x*-3.5+waterWorld.z*2.1+sin(swellB)*1.1+waterFlow.y*2.2-waterTime*.62);
     float light=pow(max(0.0,rippleA*rippleB),6.0)*(.3+waterFlow.y*.7)*.018*rippleDetail;
     float lapPhase=(1.0-radial)*42.0+waterTime*.92+waterFlow.x*3.0;
-    float shoreLap=pow(max(0.0,sin(lapPhase)),6.0)*smoothstep(.72,.88,radial)*(1.0-smoothstep(.95,1.0,radial))*(.3+waterFlow.y*.7);
+    float shoreLap=pow(max(0.0,sin(lapPhase)),6.0)*smoothstep(.72,.88,radial)*(1.0-smoothstep(.95,1.0,radial))*(.3+waterFlow.y*.7)*shoreBreak;
     float waveHeight=(sin(swellA)*.026+sin(swellB)*.016+(rippleA+rippleB)*.0025*rippleDetail)*(1.0-edge*.72)+shoreLap*.003;
     vec3 deepWater=vec3(${id==='coast'?'.023,.080,.101':id==='snow'?'.034,.080,.118':'.015,.056,.052'});
     vec3 shallowWater=vec3(${id==='coast'?'.105,.154,.139':id==='snow'?'.126,.207,.223':'.090,.131,.080'});
-    diffuseColor.rgb=mix(deepWater,shallowWater,edge*.82)+vec3(.58,.78,.74)*light*(1.0-edge*.35);
+    diffuseColor.rgb=mix(deepWater,shallowWater,edge*(.60+shoreGrain.x*.22))+vec3(.58,.78,.74)*light*(1.0-edge*.35);
     diffuseColor.rgb+=vec3(.011,.015,.012)*shoreLap;
     // Lapping shifts only the inner fade: the visible shore never exceeds the gameplay boundary.
-    diffuseColor.a*=(.64+depth*.30)*(1.0-smoothstep(.87+shoreLap*.012,1.0,radial));
+    diffuseColor.a*=(.64+depth*.30)*(1.0-smoothstep(.80+shoreGrain.y*.12+shoreLap*.012,1.0,radial));
 `);
    shader.fragmentShader=shader.fragmentShader.replace('#include <roughnessmap_fragment>','#include <roughnessmap_fragment>\nroughnessFactor=.37+edge*.20+(.5-waterFlow.y)*.055;');
    shader.fragmentShader=shader.fragmentShader.replace('#include <normal_fragment_maps>',`#include <normal_fragment_maps>
@@ -90,9 +92,10 @@ function waterSurface(id){
   bank.onBeforeCompile=shader=>{shader.uniforms.waterTime=clock;shader.uniforms.waterDetail=detail;if(coast)Object.assign(shader.uniforms,coast);shader.vertexShader='varying vec2 bankLocal;varying vec2 bankWorld;\n'+shader.vertexShader;shader.vertexShader=shader.vertexShader.replace('#include <begin_vertex>','#include <begin_vertex>\nbankLocal=position.xz;bankWorld=(modelMatrix*vec4(position,1.0)).xz;');shader.fragmentShader=(coast?coastUnionShader:'')+'\nuniform float waterTime; uniform sampler2D waterDetail; varying vec2 bankLocal;varying vec2 bankWorld;\n'+shader.fragmentShader;shader.fragmentShader=shader.fragmentShader.replace('#include <color_fragment>',`#include <color_fragment>
    float a=atan(bankLocal.y,bankLocal.x);float r=length(bankLocal)/(1.0+.07*sin(a*3.0)+.045*cos(a*5.0));${coast?'float ownRadial=r;r=coastRadial(bankWorld,1.12,r);':''}
    vec2 bankGrain=texture2D(waterDetail,bankWorld*.035+vec2(waterTime*.0012,-waterTime*.0008)).rg;
+   vec2 shoreGrain=texture2D(waterDetail,bankWorld*.065).rg;
    float wetContact=smoothstep(.77,.85,r)*(1.0-smoothstep(.88,.98,r));
    float wetLap=sin((1.0-r*1.12)*42.0+waterTime*.92+bankGrain.x*3.0)*.5+.5;
-   diffuseColor.a*=(1.0-smoothstep(.78,1.0,r))*(.84+bankGrain.y*.16)+wetContact*wetLap*.09;
+   diffuseColor.a*=(1.0-smoothstep(.69+shoreGrain.x*.16,1.0,r))*(.55+shoreGrain.y*.45)+wetContact*wetLap*.09*smoothstep(.23,.76,shoreGrain.y);
    ${coast?'if(ownRadial>r+.0001)discard;':''}
   `);};
   bank.customProgramCacheKey=()=> 'pond-wet-bank-'+id+(coast?'-union':'');

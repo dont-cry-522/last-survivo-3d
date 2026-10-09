@@ -20,13 +20,32 @@ test('shadow silhouette has an adult head, distinct shoulders and naturally rest
  const height=body.max.y-body.min.y,headHeight=head.max.y-head.min.y,headWidth=head.max.x-head.min.x;
  const left=d.leftArm.getWorldPosition(new T.Vector3()),right=d.rightArm.getWorldPosition(new T.Vector3());
  assert(headHeight/height<.245,`hood occupies ${(headHeight/height).toFixed(3)} of the full height`);
- assert(left.distanceTo(right)/headWidth>1.8,`shoulders span only ${(left.distanceTo(right)/headWidth).toFixed(3)} hood widths`);
+ const shoulderRatio=left.distanceTo(right)/headWidth;
+ assert(shoulderRatio>1.6&&shoulderRatio<2.15,`shoulder / hood proportion is ${shoulderRatio.toFixed(3)}`);
  const hipY=d.hips.getWorldPosition(new T.Vector3()).y;
  for(const side of ['left','right']){
   const wristY=d[side+'Hand'].getWorldPosition(new T.Vector3()).y,kneeY=d[side+'Knee'].getWorldPosition(new T.Vector3()).y;
   assert(wristY<hipY,`${side} resting wrist is above the hip`);
   assert(wristY>kneeY,`${side} resting wrist extends below the knee`);
  }
+});
+
+test('rounded cloth hood overlaps its collar and the back cape is one connected drape',()=>{
+ const h=makeWraith(),d=h.userData,hood=h.getObjectByName('wraith-hood'),mantle=h.getObjectByName('wraith-draped-mantle');
+ const p=hood.geometry.attributes.position,top=Math.max(...Array.from({length:p.count},(_,i)=>p.getY(i))),crown=[];
+ for(let i=0;i<p.count;i++)if(p.getY(i)>top-.03)crown.push([p.getX(i),p.getZ(i)]);
+ assert(Math.max(...crown.map(v=>v[0]))-Math.min(...crown.map(v=>v[0]))>.14,'hood has a narrow pointed crown');
+ assert(Math.min(...crown.map(v=>v[1]))<.12,'crown must curve back over the skull, not peak at the front lip');
+ h.updateMatrixWorld(true);const headBox=new T.Box3().setFromObject(hood,true),collarBox=new T.Box3().setFromObject(mantle,true);
+ assert(headBox.min.y<collarBox.max.y,'hood floats above the collar');
+ const capes=d.panels.filter(m=>!m.userData.front);assert.equal(capes.length,1,'back cape is split into separate hanging strips');
+ const cloth=capes[0].geometry.attributes.position,edge=[];for(let i=0;i<cloth.count;i++)if(cloth.getY(i)>-.001)edge.push(new T.Vector3().fromBufferAttribute(cloth,i));
+ assert(edge.some(v=>Math.abs(v.x)<.001),'cape top has a central gap');
+ assert(edge[0].z>edge[Math.floor(edge.length/2)].z+.02,'cape edges do not wrap toward the shoulders');
+ for(const target of capes[0].geometry.morphAttributes.position)for(let i=0;i<cloth.count;i++)if(cloth.getY(i)>-.001){
+  assert(new T.Vector3().fromBufferAttribute(cloth,i).distanceTo(new T.Vector3().fromBufferAttribute(target,i))<1e-6,'cloth movement unsews its neckline');
+ }
+ for(let i=1;i<=120;i++){d.turnRate=5;animateWraith(h,i/60,6,.15);assert(Math.abs(d.cape.rotation.x)+Math.abs(d.cape.rotation.y)+Math.abs(d.cape.rotation.z)<1e-6,'cape group pulls its neckline off the shoulders');}
 });
 
 test('all shadow loadouts reuse bounded shared surfaces with only three lights on the face',()=>{

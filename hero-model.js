@@ -1,5 +1,5 @@
-import{weaponGesture,shotStarted}from'./weapon-performance.js?v=102';
-import{miasmaLantern}from'./mirage-appearance.js?v=102';
+import{weaponGesture,shotStarted}from'./weapon-performance.js?v=103';
+import{miasmaLantern}from'./mirage-appearance.js?v=103';
 import * as T from './vendor/three.module.js';
 // Shared smooth geometry: detail is concentrated on the two heroes, not multiplied across the forest.
 const geometries=new Map(),materials=new Map();

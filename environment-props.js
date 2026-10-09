@@ -1,5 +1,5 @@
 import * as T from './vendor/three.module.js';
-import{finishRock,installGroundSurface}from'./biome-scenery.js?v=102';
+import{finishRock,installGroundSurface}from'./biome-scenery.js?v=103';
 
 // Shared rounded edges catch side light without adding meshes or changing collision footprints.
 const block=new T.BoxGeometry(1,1,1,3,3,3),p=block.attributes.position,colors=[],v=new T.Vector3(),core=new T.Vector3();
@@ -8,6 +8,25 @@ for(let i=0;i<p.count;i++){
  const wear=.95+.035*Math.sin(v.x*12+v.y*7-v.z*9);colors.push(wear,wear,wear);
 }
 block.setAttribute('color',new T.Float32BufferAttribute(colors,3));block.computeVertexNormals();
+// Eroded corners and an uneven crown stay inside the original solid footprint.
+export const wornStoneBlock=block.clone();
+const stonePosition=wornStoneBlock.attributes.position,stoneColor=wornStoneBlock.attributes.color;
+for(let i=0;i<stonePosition.count;i++){
+ const x=stonePosition.getX(i),y=stonePosition.getY(i),z=stonePosition.getZ(i),edge=Math.max(Math.abs(x),Math.abs(z)),chip=Math.max(0,x+z+.18),wear=.94+.035*Math.sin(x*13+z*7-y*5);
+ stonePosition.setXYZ(i,x*(.97-.13*Math.max(0,z+.1)),y-(y+.5)*(.014+chip*.12),z*(.96-.10*Math.max(0,-x+.1)));
+ const shade=wear-Math.max(0,edge-.3)*.22;stoneColor.setXYZ(i,shade*1.015,shade,shade*.98);
+}
+wornStoneBlock.computeVertexNormals();
+const wornColumns=new Map();
+function stoneColumn(source){
+ if(wornColumns.has(source))return wornColumns.get(source);
+ const geometry=source.clone(),p=geometry.attributes.position,h=source.parameters.height;
+ for(let i=0;i<p.count;i++){
+  const x=p.getX(i),y=p.getY(i),z=p.getZ(i),a=Math.atan2(z,x),t=y/h+.5,inset=.976-.017*Math.sin(a*3+t*2)-.007*Math.cos(a*7-t*3);
+  p.setXYZ(i,x*inset,y-t*h*(.020+.011*Math.sin(a*2+.4)+.007*Math.cos(a*5)),z*inset);
+ }
+ geometry.computeVertexNormals();wornColumns.set(source,geometry);return geometry;
+}
 const materials=new Map();
 // Explicit scene palettes keep bronze, cloth, crystals and gameplay cues out of
 // the wood/stone finish. Original biome colors remain the base of every surface.
@@ -51,10 +70,11 @@ export function polishEnvironmentModels(world){
   const kind=woodTones.has(o.material.color.getHex())?'wood':stoneTones.has(o.material.color.getHex())?'stone':'plain';
   if(o.geometry.type==='BoxGeometry'){
    const size=o.geometry.parameters,source=o.material;
-   o.geometry=block;o.scale.multiply(new T.Vector3(size.width,size.height,size.depth));
+   o.geometry=kind==='stone'?wornStoneBlock:block;o.scale.multiply(new T.Vector3(size.width,size.height,size.depth));
    const dims=o.scale,axis=dims.x>dims.y&&dims.x>dims.z?'x':dims.z>dims.y?'z':'y';
    o.material=surfaceMaterial(source,kind,axis);o.userData.environmentFinish=true;
   }else if(o.geometry.type==='CylinderGeometry'&&kind!=='plain'){
+   if(kind==='stone')o.geometry=stoneColumn(o.geometry);
    // Bare cylinders have no color attribute; enabling it reads black in the shader.
    o.material=surfaceMaterial(o.material,kind,'y',!!o.geometry.attributes.color);o.userData.environmentFinish=true;
   }
