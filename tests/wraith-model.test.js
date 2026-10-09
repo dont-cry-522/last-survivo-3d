@@ -24,7 +24,7 @@ function meshes(root){const out=[];root.traverse(o=>{if(o.isMesh)out.push(o);});
 function finite(root){root.updateMatrixWorld(true);root.traverse(o=>assert(o.matrixWorld.elements.every(Number.isFinite),o.name+' has an invalid pose'));}
 function checkRig(hero){
  const d=hero.userData;assert.equal(d.skinned,true);assert.equal(d.kind,'wraith');assert.equal(d.wraith,undefined);
- assert(d.model.skeleton.bones.length>50);assert(d.gun);assert(!hero.getObjectByName('wraith-tailored-tunic'));
+ assert(d.shadowAura?.parent===hero,'shadow presence is missing from the real actor');assert(d.model.skeleton.bones.length>50);assert(d.gun);assert(!hero.getObjectByName('wraith-tailored-tunic'));
  for(const name of ['pelvis','spine_01','Head','upperarm_r','hand_r','thigh_l','calf_l','foot_l'])assert(d.model.skeleton.bones.some(b=>b.name===name),'missing '+name);
  assert(meshes(d.model).filter(m=>m.isSkinnedMesh).length>=3,'only an isolated body fragment is skinned');finite(hero);
 }
@@ -94,14 +94,15 @@ test('shadow outfit materials do not recolor the existing scout or share its pal
 test('disposing shadow actors frees only owned rig resources and preserves another actor',()=>{
  const a=createSkinnedHero('wraith','grimoire'),b=createSkinnedHero('wraith','grimoire');let disposed=false;
  const aMeshes=meshes(a),bMeshes=meshes(b),skeletons=new Set(aMeshes.filter(m=>m.isSkinnedMesh).map(m=>m.skeleton)),others=new Set(bMeshes.filter(m=>m.isSkinnedMesh).map(m=>m.skeleton));
- const shared=new Set(aMeshes.flatMap(m=>[m.geometry,m.material]).filter(resource=>bMeshes.some(m=>m.geometry===resource||m.material===resource)));let boneDisposals=0,otherDisposals=0,sharedDisposals=0;
+ const shared=new Set(aMeshes.flatMap(m=>[m.geometry,m.material]).filter(resource=>bMeshes.some(m=>m.geometry===resource||m.material===resource)));let boneDisposals=0,otherDisposals=0,sharedDisposals=0,auraDisposals=0;
+ a.userData.shadowAura.children[0].material.addEventListener('dispose',()=>auraDisposals++);
  const onShared=()=>sharedDisposals++;
  for(const skeleton of skeletons){skeleton.computeBoneTexture();skeleton.boneTexture.addEventListener('dispose',()=>boneDisposals++);}
  for(const skeleton of others){skeleton.computeBoneTexture();skeleton.boneTexture.addEventListener('dispose',()=>otherDisposals++);assert(!skeletons.has(skeleton));}
  for(const resource of shared)resource.addEventListener('dispose',onShared);
  try{
   assert(shared.size>0,'templates are copied instead of reusing surfaces');disposeHero(a);disposed=true;
-  assert.equal(boneDisposals,skeletons.size);assert.equal(otherDisposals,0);assert.equal(sharedDisposals,0);
+  assert.equal(auraDisposals,1);assert.equal(b.userData.shadowAura.userData.shadowAura.disposed,false);assert.equal(boneDisposals,skeletons.size);assert.equal(otherDisposals,0);assert.equal(sharedDisposals,0);
   animateActor(b,1/60,6,.2,0);finite(b);
   for(const mesh of bMeshes.filter(m=>m.isSkinnedMesh))assert(mesh.getVertexPosition(0,new T.Vector3()).toArray().every(Number.isFinite));
  }finally{for(const resource of shared)resource.removeEventListener('dispose',onShared);if(!disposed)disposeHero(a);disposeHero(b);}

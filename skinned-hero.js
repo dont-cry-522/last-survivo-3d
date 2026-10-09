@@ -1,23 +1,24 @@
-import {shadowOutfit,shadowAccessories} from './shadow-appearance.js?v=110';
-import {shadowFocus} from './shadow-gear.js?v=110';
-import {GRIP_POINTS,primaryGripFrame,fitWeaponToPalm,createHandGrips,restoreGripWrists,captureGripWrists,aimGrip,supportGripTarget,aimSupportGrip,poseGripFingers} from './weapon-grips.js?v=110';
-import {refineLingyaHead,lingyaHeadY} from './lingya-face.js?v=110';
-import {finishHeroSurface,smoothSeams} from './hero-finish.js?v=110';
-import{tideHarness}from'./tide-appearance.js?v=110';
-import{WULING_PALETTE,wulingOutfit,wulingAccessories,wulingMask,sporeLantern,sporeSatchel,sporePod}from'./wuling-appearance.js?v=110';
-import{MIRAGE_PALETTE,mirageOutfit,mirageHair,prepareMirageHair,animateMirageHair,mirageMask,mirageAccessories,miragePetalTails,miasmaLantern}from'./mirage-appearance.js?v=110';
-import{newHeroAttack,heroCarryPose,committedWeaponYaw}from'./new-hero-motion.js?v=110';
-import{heroDodgePose}from'./hero-dodge.js?v=110';
-import{lingyaHopPose}from'./lingya-motion.js?v=110';
-import{lingyaOutfit,lingyaAccessories,lingyaLegs}from'./lingya-appearance.js?v=110';
-import{boneBoomerang}from'./beast-model.js?v=110';
-import{makeHarpoon}from'./coast-models.js?v=110';
-import{weaponGesture,shotStarted}from'./weapon-performance.js?v=110';
-import{rollProgress,rollWeight}from'./dodge-motion.js?v=110';
+import {createShadowAura,updateShadowAura,disposeShadowAura} from './shadow-aura.js?v=111';
+import {shadowOutfit,shadowAccessories} from './shadow-appearance.js?v=111';
+import {shadowFocus} from './shadow-gear.js?v=111';
+import {GRIP_POINTS,primaryGripFrame,fitWeaponToPalm,createHandGrips,restoreGripWrists,captureGripWrists,aimGrip,supportGripTarget,aimSupportGrip,poseGripFingers} from './weapon-grips.js?v=111';
+import {refineLingyaHead,lingyaHeadY} from './lingya-face.js?v=111';
+import {finishHeroSurface,smoothSeams} from './hero-finish.js?v=111';
+import{tideHarness}from'./tide-appearance.js?v=111';
+import{WULING_PALETTE,wulingOutfit,wulingAccessories,wulingMask,sporeLantern,sporeSatchel,sporePod}from'./wuling-appearance.js?v=111';
+import{MIRAGE_PALETTE,mirageOutfit,mirageHair,prepareMirageHair,animateMirageHair,mirageMask,mirageAccessories,miragePetalTails,miasmaLantern}from'./mirage-appearance.js?v=111';
+import{newHeroAttack,heroCarryPose,committedWeaponYaw}from'./new-hero-motion.js?v=111';
+import{heroDodgePose}from'./hero-dodge.js?v=111';
+import{lingyaHopPose}from'./lingya-motion.js?v=111';
+import{lingyaOutfit,lingyaAccessories,lingyaLegs}from'./lingya-appearance.js?v=111';
+import{boneBoomerang}from'./beast-model.js?v=111';
+import{makeHarpoon}from'./coast-models.js?v=111';
+import{weaponGesture,shotStarted}from'./weapon-performance.js?v=111';
+import{rollProgress,rollWeight}from'./dodge-motion.js?v=111';
 import * as T from './vendor/three.module.js';
 import {clone} from './vendor/SkeletonUtils.js';
-import {loadCharacterData} from './character-loader.js?v=110';
-import {makeHero as makePrototype} from './hero-model.js?v=110';
+import {loadCharacterData} from './character-loader.js?v=111';
+import {makeHero as makePrototype} from './hero-model.js?v=111';
 
 const templates=new Map(),clips=new Map();
 let lingyaFace;
@@ -147,7 +148,7 @@ function attachAtRest(bone,object,root){
 }
 function capeMesh(kind){
   const pos=[],uv=[],colors=[],ix=[],cols=24,rows=28;
-  for(let y=0;y<=rows;y++)for(let x=0;x<=cols;x++){const u=x/cols,v=y/rows,w=.22+.13*Math.sin(v*Math.PI*.86),split=.10*Math.exp(-(((u-.5)/.065)**2))*v**8;if(kind==='lingya'){const a=.56+u*(Math.PI*2-1.12),r=.12+.145*Math.sin(v*Math.PI/2);pos.push(Math.sin(a)*r,-v*.25+Math.sin(a*7)*.007*v,Math.cos(a)*r);}else if(kind==='mirage'){const a=.52+u*(Math.PI*2-1.04),r=.14+.09*Math.sin(v*Math.PI/2);pos.push(Math.sin(a)*r,-v*(.25+.14*Math.sin(a-.4))-.026*Math.cos(a*2)*v**4,Math.cos(a)*r*.82);}else if(kind==='wuling'){const a=.48+u*(Math.PI*2-.96),r=.143+.088*Math.sin(v*Math.PI/2);pos.push(Math.sin(a)*r,-v*(.295+.12*Math.sin(a+.6))-.018*Math.cos(a*3)*v**4,Math.cos(a)*r*.79);}else pos.push((u-.5)*w*2,-v*.86+split+(kind==='wraith'?(Math.sin(u*23+.7)*.035+Math.sin(u*49)*.015+.10+u*.17)*v**10:0)+Math.cos(u*Math.PI*4)*.013*v,-.12*v-.04*Math.sin(u*Math.PI)+Math.sin(u*Math.PI*8)*.016*v);uv.push(u,v);const base=kind==='lingya'?0x688a74:kind==='mirage'?MIRAGE_PALETTE.cloth:kind==='wuling'?WULING_PALETTE.cloak:kind==='tide'?0x3b686e:kind==='wraith'?0x1a202c:0x252936,trim=kind==='lingya'?0xd7c8a5:kind==='mirage'?MIRAGE_PALETTE.mist:kind==='wuling'?WULING_PALETTE.trim:kind==='tide'?0xbba879:0x65727d;const edge=T.MathUtils.smoothstep(Math.max(Math.abs(u-.5)*2,v),.93,1),color=new T.Color(base).lerp(new T.Color(trim),edge*.72).multiplyScalar(.86+.14*v+.045*Math.cos(u*Math.PI*8)*v);colors.push(color.r,color.g,color.b);}
+  for(let y=0;y<=rows;y++)for(let x=0;x<=cols;x++){const u=x/cols,v=y/rows,w=.22+.13*Math.sin(v*Math.PI*.86),split=.10*Math.exp(-(((u-.5)/.065)**2))*v**8;if(kind==='lingya'){const a=.56+u*(Math.PI*2-1.12),r=.12+.145*Math.sin(v*Math.PI/2);pos.push(Math.sin(a)*r,-v*.25+Math.sin(a*7)*.007*v,Math.cos(a)*r);}else if(kind==='mirage'){const a=.52+u*(Math.PI*2-1.04),r=.14+.09*Math.sin(v*Math.PI/2);pos.push(Math.sin(a)*r,-v*(.25+.14*Math.sin(a-.4))-.026*Math.cos(a*2)*v**4,Math.cos(a)*r*.82);}else if(kind==='wuling'){const a=.48+u*(Math.PI*2-.96),r=.143+.088*Math.sin(v*Math.PI/2);pos.push(Math.sin(a)*r,-v*(.295+.12*Math.sin(a+.6))-.018*Math.cos(a*3)*v**4,Math.cos(a)*r*.79);}else pos.push((u-.5)*w*2,-v*.86+split+(kind==='wraith'?(.24*Math.pow(Math.abs(Math.sin((u-.04)*Math.PI*3)),6)+.07*u)*v**8:0)+Math.cos(u*Math.PI*4)*.013*v,-.12*v-.04*Math.sin(u*Math.PI)+Math.sin(u*Math.PI*8)*.016*v);uv.push(u,v);const base=kind==='lingya'?0x688a74:kind==='mirage'?MIRAGE_PALETTE.cloth:kind==='wuling'?WULING_PALETTE.cloak:kind==='tide'?0x3b686e:kind==='wraith'?0x344958:0x252936,trim=kind==='lingya'?0xd7c8a5:kind==='mirage'?MIRAGE_PALETTE.mist:kind==='wuling'?WULING_PALETTE.trim:kind==='tide'?0xbba879:0x65727d;const edge=T.MathUtils.smoothstep(Math.max(Math.abs(u-.5)*2,v),.93,1),color=new T.Color(base).lerp(new T.Color(trim),edge*.72).multiplyScalar(.86+.14*v+.045*Math.cos(u*Math.PI*8)*v);colors.push(color.r,color.g,color.b);}
   for(let y=0;y<rows;y++)for(let x=0;x<cols;x++){const a=y*(cols+1)+x;ix.push(a,a+cols+1,a+1,a+1,a+cols+1,a+cols+2);}
   const geometry=new T.BufferGeometry();geometry.setAttribute('position',new T.Float32BufferAttribute(pos,3));geometry.setAttribute('uv',new T.Float32BufferAttribute(uv,2));geometry.setAttribute('color',new T.Float32BufferAttribute(colors,3));geometry.setIndex(ix);geometry.computeVertexNormals();
   const material=new T.MeshStandardMaterial({color:0xffffff,vertexColors:true,roughness:.87,side:T.DoubleSide}),wind={time:{value:0},run:{value:0},turn:{value:0}};
@@ -156,7 +157,18 @@ function capeMesh(kind){
     transformed.z+=sin(position.y*9.0+capeTime*5.0)*(.009+capeRun*.026)*freeHem;
     transformed.x+=(sin(capeTime*3.0+position.y*6.0)*.012+capeTurn*.14)*freeHem*freeHem;
     transformed.z+=sin(position.x*14.0+position.y*7.0-capeTime*3.0)*capeRun*.009*freeHem;
-    ${kind==='wraith'?'transformed.z-=.16*freeHem*freeHem*(.25+capeRun); transformed.y+=.035*freeHem*freeHem*capeRun;':''}`);};
+    ${kind==='wraith'?'transformed.z-=.16*freeHem*freeHem*(.25+capeRun); transformed.y+=.035*freeHem*freeHem*capeRun;':''}`);
+    if(kind==='wraith'){
+      s.vertexShader='varying vec2 vShadowHem;\n'+s.vertexShader;
+      s.vertexShader=s.vertexShader.replace('#include <begin_vertex>','#include <begin_vertex>\nvShadowHem=uv;');
+      s.fragmentShader='uniform float capeTime; varying vec2 vShadowHem;\n'+s.fragmentShader;
+      s.fragmentShader=s.fragmentShader.replace('#include <color_fragment>',`#include <color_fragment>
+        float shroudEdge=.947+.025*sin(vShadowHem.x*61.0+sin(vShadowHem.x*19.0-capeTime*.7))+.012*sin(vShadowHem.x*137.0);
+        if(vShadowHem.y>shroudEdge)discard;
+        float fray=(1.0-smoothstep(.002,.022,shroudEdge-vShadowHem.y))*smoothstep(.87,.92,vShadowHem.y);`);
+      s.fragmentShader=s.fragmentShader.replace('#include <emissivemap_fragment>','#include <emissivemap_fragment>\ntotalEmissiveRadiance+=vec3(.065,.11,.17)*fray;');
+    }
+  };
   material.customProgramCacheKey=()=> 'hero-cape-'+kind;const m=new T.Mesh(geometry,material);m.userData.wind=wind;m.position.set(0,['lingya','wuling','mirage'].includes(kind)?1.49:1.43,['lingya','wuling','mirage'].includes(kind)?-.025:-.14);m.castShadow=true;m.receiveShadow=true;return m;
 }
 function faceMask(model,kind='silver'){
@@ -173,10 +185,10 @@ function faceMask(model,kind='silver'){
         float cutX=.011+.18*(y-1.699)+.003*sin((y-1.66)*140.0);
         float cut=(1.0-smoothstep(.0012,.0032,abs(x-cutX)))*smoothstep(1.651,1.667,y)*(1.0-smoothstep(1.731,1.749,y));
         float brow=(1.0-smoothstep(.0012,.0028,abs(y-1.698-.12*abs(x))))*smoothstep(.021,.028,abs(x))*(1.0-smoothstep(.046,.057,abs(x)));
-        diffuseColor.rgb=vec3(.006,.009,.016)*fold;
+        diffuseColor.rgb=vec3(.018,.028,.044)*fold;
         diffuseColor.rgb=mix(diffuseColor.rgb,vec3(.45,.51,.60),cut);
-        diffuseColor.rgb+=vec3(.05,.07,.10)*brow;`);
-      s.fragmentShader=s.fragmentShader.replace('#include <emissivemap_fragment>','#include <emissivemap_fragment>\ntotalEmissiveRadiance+=vec3(.38,.45,.55)*cut+vec3(.07,.09,.13)*brow;');
+        diffuseColor.rgb+=vec3(.10,.16,.22)*brow;`);
+      s.fragmentShader=s.fragmentShader.replace('#include <emissivemap_fragment>','#include <emissivemap_fragment>\ntotalEmissiveRadiance+=vec3(.38,.45,.55)*cut+vec3(.13,.21,.29)*brow;');
     };material.customProgramCacheKey=()=> 'wraith-fractured-shadow-veil';
   }
   // Fit to the actual rest-pose face instead of suspending a flat shell in front.
@@ -231,10 +243,10 @@ export function createSkinnedHero(kind,weapon){
   model.skeleton.pose();model.updateMatrixWorld(true);
   const owned=[];let cape;
   if(['silver','tide','lingya','wuling','mirage','wraith'].includes(kind)){
-    cape=capeMesh(kind);if(kind==='wraith')cape.scale.set(.92,.98,.88);if(kind==='tide')cape.scale.set(1.02,.40,1);if(kind==='wuling')cape.scale.set(1,1,1);if(kind==='lingya')cape.scale.set(1,1,1);owned.push(cape);attachAtRest(bones.get('spine_03'),cape,model);
+    cape=capeMesh(kind);if(kind==='wraith')cape.scale.set(1.10,1.04,.88);if(kind==='tide')cape.scale.set(1.02,.40,1);if(kind==='wuling')cape.scale.set(1,1,1);if(kind==='lingya')cape.scale.set(1,1,1);owned.push(cape);attachAtRest(bones.get('spine_03'),cape,model);
     if(kind==='silver'||kind==='wraith'){const mask=faceMask(model,kind);owned.push(mask);attachAtRest(bones.get('Head'),mask,model);}
   }
-  if(kind==='wraith'){const a=shadowAccessories();attachAtRest(bones.get('spine_03'),a.chest,model);}
+  if(kind==='wraith'){const a=shadowAccessories();attachAtRest(bones.get('spine_03'),a.chest,model);g.userData.shadowAura=createShadowAura();g.add(g.userData.shadowAura);}
   if(kind==='wuling'){const mask=wulingMask(model);owned.push(mask);attachAtRest(bones.get('Head'),mask,model);const pod=sporePod();pod.position.set(.036,.097,0);bones.get('hand_l').add(pod);g.userData.sporePod=pod;const a=wulingAccessories();attachAtRest(bones.get('spine_03'),a.chest,model);attachAtRest(bones.get('Head'),a.head,model);attachAtRest(bones.get('spine_03'),a.basket,model);const satchel=sporeSatchel();satchel.position.set(.23,1.0,.02);attachAtRest(bones.get('pelvis'),satchel,model);}
   if(kind==='mirage'){
     const mask=mirageMask(model),tails=miragePetalTails(),a=mirageAccessories();owned.push(mask,tails);attachAtRest(bones.get('Head'),mask,model);attachAtRest(bones.get('Head'),a.head,model);attachAtRest(bones.get('spine_03'),a.chest,model);attachAtRest(bones.get('pelvis'),tails,model);g.userData.mirageTails=tails;
@@ -452,13 +464,14 @@ export function animateSkinnedHero(g,t,speed,attack,hurt){
   if(newHero){d.finalArmPose??=[d.aimArm,d.firingForearm,d.offArm,d.offForearm].map(b=>[b,b.quaternion.clone()]);for(const [bone,previous]of d.finalArmPose){previous.rotateTowards(bone.quaternion,dt*14);bone.quaternion.copy(previous).normalize();}}
   if(d.cape){d.cape.quaternion.copy(d.restCape);d.cape.rotateX(.06+d.blend*.13+Math.sin(t*5)*.015-d.motionLean*.6+kick*.025);d.cape.rotateZ(-bank*.65-d.carryTurn*.6);d.cape.rotateX(-d.carryTurn*d.blend*.12);if(d.kind==='lingya'){const hop=lingyaHopPose(d.dashTime||0);d.cape.rotateX(hop.air*.13-hop.land*.07);}d.cape.userData.wind.time.value=t;d.cape.userData.wind.run.value=d.blend;d.cape.userData.wind.turn.value=d.carryTurn;}
   if(d.kind==='wraith'){
-    // Keep the heavy shroud hanging under gravity while the torso leans into a cast.
+    // Cloth retains gravity while its frayed hem and detached back traces drift.
     const fall=new T.Quaternion().setFromEuler(new T.Euler(.055+d.blend*.10,g.rotation.y,-bank*.4));
     d.cape.quaternion.copy(d.cape.parent.getWorldQuaternion(new T.Quaternion()).invert().multiply(fall));
+    updateShadowAura(d.shadowAura,t,d.smoothedSpeed,attack||0,d.dashTime||0);
   }
   g.visible=!(hurt>0&&Math.floor(hurt*28)%2===0)&&!(d.kind==='tide'&&dodge.depth>.985);
 }
 export function disposeHero(g){
-  if(!g?.userData.skinned)return;const d=g.userData,skeletons=new Set();d.mixer.stopAllAction();d.mixer.uncacheRoot(d.model);
+  if(!g?.userData.skinned)return;const d=g.userData,skeletons=new Set();d.mixer.stopAllAction();d.mixer.uncacheRoot(d.model);if(d.shadowAura)disposeShadowAura(d.shadowAura);
   g.traverse(o=>{if(o.isSkinnedMesh)skeletons.add(o.skeleton);});for(const s of skeletons)s.dispose();for(const o of d.owned){o.geometry.dispose();o.material.dispose();}for(const material of d.mirageOwnedMaterials||[])material.dispose();
 }

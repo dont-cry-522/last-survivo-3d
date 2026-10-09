@@ -1,5 +1,5 @@
 import * as T from './vendor/three.module.js';
-import {smoothSeams} from './hero-finish.js?v=110';
+import {smoothSeams} from './hero-finish.js?v=111';
 
 // Reuse the Ranger's authored cloth, UVs and skinning; each template owns its tints.
 export function shadowOutfit(root){
@@ -10,7 +10,7 @@ export function shadowOutfit(root){
   const tintMaterial=source=>{
    const m=source.clone();
    if(!source.name.includes('Ranger'))return m;
-   const leather=/Belt|Bracer|Feet/.test(o.name),color=/Feet/.test(o.name)?0x1c2228:/Belt|Bracer/.test(o.name)?0x252b32:/Legs/.test(o.name)?0x232c38:/Arms/.test(o.name)?0x2e3b4a:0x263340;
+   const leather=/Belt|Bracer|Feet/.test(o.name),color=/Feet/.test(o.name)?0x29343e:/Belt|Bracer/.test(o.name)?0x35424e:/Legs/.test(o.name)?0x3b4e63:/Arms/.test(o.name)?0x496179:/Head_Hood/.test(o.name)?0x52687d:0x516b82;
    const tint=new T.Color(color).toArray().join(',');
    m.color.set(0xffffff);m.roughness=leather?.86:.94;m.metalness=.015;
    m.roughnessMap=null;m.metalnessMap=null;m.normalScale?.setScalar(leather?.24:.18);
@@ -33,18 +33,19 @@ let scarfGeometry,claspGeometry;
 function shortScarf(){
  if(scarfGeometry)return scarfGeometry;
  const positions=[],colors=[],indices=[],slices=40,rows=10;
- const cloth=new T.Color(0x273644),edge=new T.Color(0xaeb9bf);
+ const cloth=new T.Color(0x6b8295),edge=new T.Color(0x9aafbd);
  for(let j=0;j<=rows;j++)for(let i=0;i<=slices;i++){
-  const v=j/rows,a=.56+i/slices*(Math.PI*2-.94),s=Math.sin(a),c=Math.cos(a),left=Math.max(0,-s),front=Math.max(0,c),spread=Math.sin(v*Math.PI/2);
-  // Open at the front, with a longer left fold; avoid a solid breastplate silhouette.
-  const fold=Math.sin(v*Math.PI)*Math.cos(a*7-v*2)*.011;
-  const x=s*(.085+(.122+.018*left)*spread+fold);
-  const worn=(.012+.01*Math.sin(a*13))*Math.pow(v,9);
-  const y=1.548-v*(.105+.135*left+.020*front)+Math.sin(a*5+v*4)*.008*v+worn;
-  const z=-.035+c*(.090+.090*spread+fold)+front*(.012+.016*spread);
+  const v=j/rows,start=.50-v*.90,a=start+i/slices*(Math.PI*2-.85-start),s=Math.sin(a),c=Math.cos(a),left=Math.max(0,s),right=Math.max(0,-s),front=Math.max(0,c),spread=Math.sin(v*Math.PI/2);
+  // +X is the wearer's left: wrap that shoulder, then let the open front fall diagonally.
+  const wave=Math.cos(a*5+v*7),fold=Math.sin(v*Math.PI)*wave*.009;
+  const x=s*(.085+(.070+.145*left)*spread+fold);
+  const worn=(.006+.005*Math.sin(a*9))*Math.pow(v,9);
+  const drop=Math.pow(v,1+left*(1-front));
+  const y=1.557-drop*(.075+.115*left-.035*right+.185*front)+Math.sin(a*5+v*4)*.005*v+worn;
+  const z=-.035+c*(.090+.094*spread+fold)+front*(.012+.016*spread+.022*Math.sin(v*Math.PI));
   positions.push(x,y,z);
-  const hem=j===rows&&((i>=5&&i<=6)||(i>=27&&i<=28))?.24:0;
-  const color=cloth.clone().lerp(edge,hem).multiplyScalar(.94+.06*Math.cos(a*5-v*3));
+  const hem=j===rows&&((i>=2&&i<=3)||(i>=12&&i<=13))?.18:0;
+  const color=cloth.clone().lerp(edge,hem).multiplyScalar(.90+.10*wave);
   colors.push(color.r,color.g,color.b);
   if(j<rows&&i<slices){const n=j*(slices+1)+i;indices.push(n,n+slices+1,n+1,n+1,n+slices+1,n+slices+2);}
  }
@@ -64,7 +65,7 @@ export function shadowAccessories(){
   claspGeometry=new T.ExtrudeGeometry([upper,lower],{depth:.004,bevelEnabled:true,bevelThickness:.001,bevelSize:.001,bevelSegments:1,curveSegments:1});
  }
  const clasp=new T.Mesh(claspGeometry,claspMaterial);clasp.name='Shadow_broken_clasp';
- clasp.position.set(-.112,1.438,.137);clasp.rotation.set(0,-.5,-.17);chest.add(clasp);
+ clasp.position.set(.085,1.478,.114);clasp.rotation.set(-.68,.17,.30);chest.add(clasp);
  chest.traverse(o=>{if(o.isMesh)o.castShadow=o.receiveShadow=true;});
  // Coordinates are the source model's rest space; attachAtRest handles the chest bone.
  return{chest};

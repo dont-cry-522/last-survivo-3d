@@ -1,5 +1,5 @@
 import * as T from './vendor/three.module.js';
-import {shadowCrescentGeometry,shadowCrescentEdge} from './shadow-weapons.js?v=110';
+import {shadowCrescentGeometry,shadowCrescentEdge} from './shadow-weapons.js?v=111';
 
 const geometry=new Map(),materials=new Map();
 function part(parent,key,create,color,position=[0,0,0],scale=[1,1,1],glow=false){
