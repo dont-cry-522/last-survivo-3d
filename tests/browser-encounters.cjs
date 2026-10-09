@@ -11,7 +11,7 @@ const {chromium}=require(process.env.PLAYWRIGHT_MODULE||'playwright'),assert=req
    const total=()=>{let n=g.player.xp;for(let l=1;l<g.player.level;l++)n+=experienceNeeded(l);return n;};
    const reset=()=>{g.start();g.world.obstacles.length=0;g.world.patches.length=0;g.world.sites.length=0;g.player.inv=10000;g.player.attack=10000;};
    for(const map of ['forest','snow','ash']){
-    g.select('silver',map,0);reset();advance(43);if(g.encounter.mode!=='warning')throw Error('warning missing');
+    g.select('silver',map,0);reset();advance(27);if(g.encounter.mode!=='warning')throw Error('warning missing');
     const time=g.time,positions=g.enemies.map(e=>[e.x,e.z]);g.pause();g.step(3);if(g.time!==time||JSON.stringify(g.enemies.map(e=>[e.x,e.z]))!==JSON.stringify(positions))throw Error('pause advanced hunt');g.resume();advance(6);
     if(!g.encounter.hunt||g.encounter.hunt.remaining!==5||g.enemies.filter(e=>e.elite).length!==1)throw Error(map+' hunt formation missing');
     let rewards=0;const resolve=g.audio.resolve;g.audio.resolve=()=>rewards++;g.player.hp=60;
@@ -21,9 +21,9 @@ const {chromium}=require(process.env.PLAYWRIGHT_MODULE||'playwright'),assert=req
    }
    reset();const e=g.spawn('mushroom',g.player.x+18,g.player.z);g.hurtEnemy(e,9999);const xp=e.xp;advance(11);if(total()!==0)throw Error('distant XP collected too early');advance(3);if(total()!==xp)throw Error('auto-aim distance strands XP');
    reset();for(let i=0;i<220;i++){const e=g.spawn('mushroom',g.player.x+18,g.player.z);g.hurtEnemy(e,9999);}const expected=g.orbs.reduce((n,o)=>n+o.xp,0);g.step(1/30);if(g.orbs.length>200||g.orbs.reduce((n,o)=>n+o.xp,0)+total()!==expected)throw Error('orb cap lost XP');
-   reset();let max=0;for(let i=0;i<185*30;i++){g.step(1/30);g.vfx.update(1/30);max=Math.max(max,g.enemies.length);}if(max>30||!g.boss||g.encounter.mode!=='boss')throw Error('unbounded spawns or boss missing');
+   reset();let max=0;for(let i=0;i<125*30;i++){g.step(1/30);g.vfx.update(1/30);max=Math.max(max,g.enemies.length);}if(max>30||!g.boss||g.encounter.mode!=='boss')throw Error('unbounded spawns or boss missing');
    reset();document.querySelector('[data-attack-mode=auto]').click();const first=g.spawn('golem',g.player.x+6,g.player.z),second=g.spawn('golem',g.player.x,g.player.z+6.2);first.speed=second.speed=0;first.cool=second.cool=99;g.step(1/30);first.x=g.player.x+6.2;second.z=g.player.z+6;g.step(1/30);if(Math.abs(g.controls.angle-Math.PI/2)>.01)throw Error('auto target flickered');second.z=g.player.z+2;g.step(1/30);if(Math.abs(g.controls.angle)>.01)throw Error('auto ignored urgent nearby target');document.querySelector('[data-attack-mode=manual]').click();
-   reset();if(g.encounter.hunt||g.orbs.length||g.enemies.length||g.encounter.mode!=='opening')throw Error('restart leaked encounter');advance(43);for(let i=1;i<=4;i++)renderNext(performance.now()+i*34);
+   reset();if(g.encounter.hunt||g.orbs.length||g.enemies.length||g.encounter.mode!=='opening')throw Error('restart leaked encounter');advance(27);for(let i=1;i<=4;i++)renderNext(performance.now()+i*34);
    return {max,phase:g.encounter.mode};
   });
   assert.equal(result.phase,'warning');

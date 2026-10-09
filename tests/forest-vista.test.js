@@ -1,0 +1,53 @@
+import test from'node:test';
+import assert from'node:assert/strict';
+import{buildWorld,clearAt}from'../world.js';
+import{installForestVista}from'../forest-vista.js';
+globalThis.document={createElement:()=>({getContext:()=>({fillRect(){}})})};
+
+test('forest ruins reuse trunk footprints without changing collision, rewards, discovery or other biomes',()=>{
+ for(const id of['forest','confluence','snow','ash','sand','coast']){
+  const w=buildWorld(id,7),before=JSON.stringify({obstacles:w.obstacles.map(o=>[o.x,o.z,o.r]),sites:w.sites.map(s=>[s.x,s.z,s.claimed,s.discovered,s.mesh.visible])}),childCount=w.group.children.length;
+  const priorOrphans=new Set([w,...(w.regions||[])].flatMap(scope=>scope.foliage.filter(f=>!f.leaf.parent).map(f=>f.leaf)));
+  const breakables=w.breakables.map(o=>({o,children:o.mesh.children.slice(),scale:o.mesh.scale.toArray()}));
+  const result=installForestVista(w,id);
+  for(const b of breakables){assert.deepEqual(b.o.mesh.children,b.children,'ruin replaced a destructible model');assert.deepEqual(b.o.mesh.scale.toArray(),b.scale);}
+  assert.equal(JSON.stringify({obstacles:w.obstacles.map(o=>[o.x,o.z,o.r]),sites:w.sites.map(s=>[s.x,s.z,s.claimed,s.discovered,s.mesh.visible])}),before);
+  assert(clearAt(w,w.spawn.x,w.spawn.z,1));
+  if(!['forest','confluence'].includes(id)){assert.equal(result,null);assert.equal(w.group.children.length,childCount);continue;}
+  assert(result.columns>=2&&result.columns<=4);assert.equal(result.removedCanopies,result.columns);assert(result.thinnedCanopies<=3);
+  for(const a of result.anchors){const o=w.obstacles.find(o=>o.x===a.x&&o.z===a.z);assert(!w.breakables.includes(o));assert(!o.mesh.children.some(m=>m.userData.treeCanopy));}
+  for(const scope of[w,...(w.regions||[])])assert(scope.foliage.every(f=>f.leaf.parent||priorOrphans.has(f.leaf)),'newly removed canopy remains in animation list');assert.equal(installForestVista(w,id),result,'reinstallation duplicates scenery');
+  for(const a of result.anchors)assert(w.obstacles.some(o=>o.x===a.x&&o.z===a.z&&o.r===a.r&&o.mesh.userData.treeBiome==='forest'));
+  if(id==='confluence'){
+   const forest=w.regions.find(r=>r.id==='forest');assert.equal(result.group.parent,forest.group);
+   for(const m of result.group.children){const p=m.geometry.attributes.position;for(let i=0;i<p.count;i++)assert(forest.contains(p.getX(i),p.getZ(i)),'forest ruin crosses into another biome');}
+  }
+ }
+});
+
+test('ruin batches have bounded opaque geometry, finite shared materials and existing disposal ownership',()=>{
+ const materials=new Set();
+ for(const id of['forest','confluence'])for(const seed of[1,7,43,97,522]){
+  const w=buildWorld(id,seed),r=installForestVista(w,id);assert(r.drawCalls<=3);assert(r.triangles<15000);assert(r.anchors.length<=4);
+  assert(!r.group.children.some(o=>o.isLight));
+  for(const m of r.group.children){
+   materials.add(m.material);assert(!m.material.transparent);assert(m.userData.ownedGeometry);
+   const p=m.geometry.attributes.position;for(let i=0;i<p.count;i++){assert(Number.isFinite(p.getX(i)+p.getY(i)+p.getZ(i)));assert(p.getY(i)<5,'ruin obstructs the whole camera');}
+   let disposed=0;m.geometry.addEventListener('dispose',()=>disposed++);m.geometry.dispose();assert.equal(disposed,1);
+  }
+ }
+ assert.equal(materials.size,3,'new builds create permanent material variants');
+});
+
+test('the actual browser seed finds a gateway pair before choosing a lone nearest tree',()=>{
+ // environment-rendering-check resets qaSeed to 522, then main.build consumes
+ // the first LCG sample for its world seed; it does not buildWorld(map, 522).
+ const worldSeed=Math.floor(((Math.imul(522,1664525)+1013904223)>>>0)/4294967296*1e8);
+ assert.equal(worldSeed,43837033);
+ for(const id of['forest','confluence']){
+  const w=buildWorld(id,worldSeed),r=installForestVista(w,id);
+  assert.equal(r.arches,1);assert.equal(r.archFragments,2);assert(clearAt(w,r.gateCenter.x,r.gateCenter.z,.75));
+ }
+ const anchor=installForestVista(buildWorld('forest',7),'forest').anchors[0],solo=buildWorld('forest',7);solo.obstacles=solo.obstacles.filter(o=>o.x===anchor.x&&o.z===anchor.z);
+ const fragment=installForestVista(solo,'forest');assert.equal(fragment.columns,1);assert.equal(fragment.arches,0);assert.equal(fragment.archFragments,1,'a sparse map has a plain pillar with no identifiable arch');
+});

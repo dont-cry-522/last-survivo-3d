@@ -1,5 +1,5 @@
 import{test}from'node:test';import assert from'node:assert/strict';import*as Rules from'../rules.js';const{experienceNeeded,grantExperience,seeded,weaponFor,chooseUpgrades,takeUpgrade,registerShadowHit}=Rules;
-test('experience preserves every pending level',()=>{const p={level:1,xp:0,pending:0,hp:30,maxHp:100};grantExperience(p,100);assert(p.level>2);assert.equal(p.pending,p.level-1);assert(p.xp<experienceNeeded(p.level));});
+test('experience preserves every pending level',()=>{const p={level:1,xp:0,pending:0,hp:30,maxHp:100};grantExperience(p,experienceNeeded(1)+experienceNeeded(2)+5);assert.equal(p.level,3);assert.equal(p.pending,2);assert.equal(p.xp,5);});
 test('random layouts reproducible',()=>{const a=seeded(42),b=seeded(42);for(let i=0;i<20;i++)assert.equal(a(),b());});
 test('hero weapons are distinct',()=>{assert.equal(weaponFor('silver',0).id,'crossbow');assert.equal(weaponFor('scout',0).id,'rifle');});
 test('public roster has seven heroes, thirteen weapons and twenty-six matching routes',()=>{

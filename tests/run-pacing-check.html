@@ -1,0 +1,118 @@
+<!doctype html><html lang="zh-CN"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>远征节奏回归</title><style>body{margin:12px;background:#13242b;color:#e1e9e4;font:14px system-ui}button{padding:10px;background:#254943;color:inherit;border:1px solid #709582;border-radius:6px}iframe{border:0;display:block;margin-top:12px}#view{overflow:auto}pre{white-space:pre-wrap}</style>
+<button id="run" disabled>运行节奏回归</button><p id="status">载入中。隔离存档、固定 30 Hz 游戏时钟；手机尺寸是模拟。战斗读数仅为固定种子与脚本操作的观察，不是平衡验收。</p><div id="view"></div><pre id="report"></pre>
+<script type="module">
+const $=s=>document.querySelector(s),sleep=ms=>new Promise(r=>setTimeout(r,ms)),assert=(v,n)=>{if(!v)throw Error(n);};
+const html=await(await fetch('../index.html')).text(),css=await(await fetch('../style.css')).text(),results=[],errors=[],combat=[];
+let frame,win,g,now=0,frameCount=0,held=[];
+const dom=s=>win.document.querySelector(s);
+function publish(){ $('#report').textContent=JSON.stringify({results,combat,errors},null,2); }
+async function load(mobile=false,width=1180,height=720){
+ if(g){errors.push(...win.qaErrors);g.audio.stopMusic();g.renderer.dispose();g.renderer.forceContextLoss();}frame?.remove();
+ frame=document.createElement('iframe');frame.title='真实游戏节奏测试';frame.style.width=width+'px';frame.style.height=height+'px';$('#view').append(frame);
+ const boot=`<base href="../"><script>
+ window.qaErrors=[];addEventListener('error',e=>qaErrors.push(e.message));addEventListener('unhandledrejection',e=>qaErrors.push(String(e.reason)));
+ const log=console.error.bind(console);console.error=(...a)=>{qaErrors.push(a.map(String).join(' '));log(...a)};
+ let seed=522;window.qaSeed=()=>seed=522;Math.random=()=>{seed=(Math.imul(seed,1664525)+1013904223)>>>0;return seed/4294967296};
+ window.requestAnimationFrame=cb=>{window.qaFrame=cb;return 0};
+ const data=new Map([['forest-echoes-attack-mode','auto']]);window.qaData=data;
+ Object.defineProperty(window,'localStorage',{value:{getItem:k=>data.get(k)??null,setItem:(k,v)=>data.set(k,String(v)),removeItem:k=>data.delete(k)}});
+ const media=matchMedia.bind(window);window.matchMedia=q=>q.includes('pointer:coarse')||q.includes('pointer: coarse')?{matches:${mobile},media:q,addEventListener(){},removeEventListener(){}}:media(q);
+ <\/script>`;
+ frame.srcdoc=html.replace('<head>','<head>'+boot);win=frame.contentWindow;
+ for(let i=0;i<600&&!win.game3d;i++)await sleep(50);assert(win.game3d,'加载超时');g=win.game3d;g.audio.init=async()=>true;g.audio.setMuted(true);
+ if(mobile){const style=win.document.createElement('style');style.textContent=css.replaceAll(/\(pointer:\s*coarse\)/g,'(min-width:0px)');win.document.head.append(style);}
+ // Every simulation frame still uses the actual frame loop, including notices,
+ // effects and camera. Only redundant GPU draws are skipped during fast-forward.
+ const render=g.renderer.render.bind(g.renderer);g.renderer.render=(...args)=>{if(win.qaDraw||frameCount%30===0)return render(...args);};
+ now=win.performance.now();frameCount=0;held=[];draw();
+}
+function tick(){frameCount++;win.qaFrame(now+=1000/30);}
+function draw(){win.qaDraw=true;tick();win.qaDraw=false;}
+function reset(hero='silver',map='forest'){g.menu();win.qaSeed();g.select(hero,map,0);win.qaSeed();g.start();held=[];}
+function keys(next=[]){for(const key of ['w','a','s','d'])win.dispatchEvent(new win.KeyboardEvent(next.includes(key)?'keydown':'keyup',{key,bubbles:true}));held=next;}
+async function advance(seconds,{before,after,resolve=false}={}){
+ const end=g.time+seconds,max=Math.ceil(seconds*35)+200;
+ for(let i=0;i<max&&g.time<end-.0001;i++){
+  if(resolve)chooseDialogs();if(g.state!=='playing')break;before?.();tick();after?.();if(i%90===0)await sleep(0);
+ }
+}
+function chooseDialogs(stats){
+ if(g.state==='upgrade'){if(stats){if(!stats.manualOpening)stats.autoDialogs++;stats.manualOpening=false;}const card=dom('[data-upgrade]');assert(card,'升级没有可选卡');card.click();}
+ else if(g.state==='event-choice'){if(stats)stats.eventChoices++;const button=dom('#dialog-content .dialog-actions button');assert(button,'遭遇奖励没有按钮');button.click();}
+}
+function safeEnemies(){g.player.attack=9999;for(const e of g.enemies){e.speed=0;e.cool=999;e.wind=0;e.pounce=0;}}
+function fixedFoe(kind='mushroom',distance=3){
+ g.world.obstacles=[];const e=g.spawn(kind,g.player.x+distance,g.player.z);assert(e,'受控标靶生成失败');e.speed=0;e.cool=999;e.xp=0;return e;
+}
+function noticeTracker(){
+ const records=[];let active=null;
+ return{records,sample(){const card=dom('#encounter'),title=card.querySelector('strong').textContent;if(!card.hidden){if(!active){active={title,start:g.time};records.push(active);}else assert(active.title===title,'提示未经过空档直接切换');}else if(active){active.end=g.time;active=null;}}};
+}
+async function check(name,fn){$('#status').textContent=name;try{results.push({name,pass:true,detail:await fn()});}catch(e){results.push({name,pass:false,error:e.message});}publish();await sleep(0);}
+function fits(selector){const e=dom(selector),r=e.getBoundingClientRect();assert(!e.hidden&&r.width>0&&r.height>0,selector+' 未显示');assert(r.left>=-.5&&r.right<=win.innerWidth+.5,selector+' 横向溢出');assert(r.top>=-.5&&r.bottom<=win.innerHeight+.5,selector+' 纵向溢出');return{x:Math.round(r.x),y:Math.round(r.y),width:Math.round(r.width),height:Math.round(r.height)};}
+async function layout(mobile,width,height){
+ await load(mobile,width,height);const maps=[];
+ for(const map of ['forest','snow','ash','sand','coast','confluence']){
+  g.select('silver',map,0);dom('#travel-tab').click();dom('.expedition-brief').scrollIntoView({block:'center'});await sleep(0);draw();
+  const name=dom('#map-boss-name').textContent,arrival=dom('#map-boss-arrival').textContent;assert(name,'地图没有首领名称');assert(map==='confluence'?arrival.includes('地标'):arrival.includes('2 分钟'),'地图首领时机不正确');maps.push({map,name,arrival,brief:fits('.expedition-brief')});
+ }
+ reset();g.player.attack=9999;fixedFoe();g.grant(160);for(let i=0;i<5;i++)tick();assert(g.state==='playing','布局测试被自动升级打断');const ready=fits('#upgrade-ready'),button=dom('#upgrade-ready'),rect=button.getBoundingClientRect(),hit=win.document.elementFromPoint(rect.x+rect.width/2,rect.y+rect.height/2);assert(hit&&(hit===button||button.contains(hit)),'成长入口被其他界面遮住：'+hit?.id);assert(!!dom('#boss-arrival').textContent,'HUD 缺少首领倒计时');button.click();assert(g.state==='upgrade','可见成长入口无法打开选卡');draw();return{width,height,mobileSimulation:mobile,maps,ready,readyHitTest:true};
+}
+async function combatSample(hero,moving=false,manualGrowth=false){
+ reset(hero);dom('[data-attack-mode="auto"]').click();const stats={hero,operation:moving?'8 向循环移动，不闪避':'原地自动攻击，不闪避',growthPolicy:manualGrowth?'出现待选入口就主动领取成长':'仅领取自动弹出的成长',seed:522,autoDialogs:0,manualDialogs:0,eventChoices:0,maxEnemies:0,firstDamage:null,firstHunt:null};
+ let previousHp=g.player.hp;
+ for(let i=0;i<2200&&g.time<60-.0001&&!['lost','won'].includes(g.state);i++){
+  if(manualGrowth&&g.state==='playing'&&g.player.pending>0&&!dom('#upgrade-ready').hidden){dom('#upgrade-ready').click();assert(g.state==='upgrade','主动成长入口未打开');stats.manualDialogs++;stats.manualOpening=true;}
+  chooseDialogs(stats);
+  if(g.state!=='playing')break;
+  if(moving){const dirs=[['d'],['d','s'],['s'],['s','a'],['a'],['a','w'],['w'],['w','d']];keys(dirs[Math.floor(g.time/2.5)%8]);}
+  tick();if(g.player.hp<previousHp-.01&&stats.firstDamage===null)stats.firstDamage=+g.time.toFixed(2);previousHp=g.player.hp;
+  stats.maxEnemies=Math.max(stats.maxEnemies,g.enemies.length);if(g.encounter.hunt&&stats.firstHunt===null)stats.firstHunt=+g.time.toFixed(2);if(i%90===0)await sleep(0);
+ }
+ keys();draw();delete stats.manualOpening;Object.assign(stats,{time:+g.time.toFixed(2),state:g.state,hp:+g.player.hp.toFixed(1),maxHp:g.player.maxHp,kills:Number(dom('#kills').textContent.replace(/\D/g,'')),level:g.player.level,pending:g.player.pending});combat.push(stats);publish();return stats;
+}
+$('#run').onclick=async()=>{
+ $('#run').disabled=true;results.length=0;combat.length=0;errors.length=0;
+ try{
+  await load();
+  await check('介绍提示限频、留出空档、跨局记住已读物种',async()=>{
+   reset();fixedFoe('mushroom',12);const first=noticeTracker();await advance(60,{before:safeEnemies,after:()=>first.sample()});
+   assert(g.time>=59.9,'提示测试未跑完一分钟');assert(first.records.length>=1&&first.records.length<=3,'一分钟提示数量异常：'+first.records.length);
+   for(let i=1;i<first.records.length;i++)assert(first.records[i].start-first.records[i-1].end>=19.95,'提示没有留出 20 秒空档');
+   for(const record of first.records)if(record.end)assert(record.end-record.start<=4.1,'介绍停留超过 4 秒');
+   const known=JSON.parse(win.localStorage.getItem('forest3d-known-notices')||'[]');assert(known.includes('enemy:mushroom'),'已读物种未保存');
+   reset();fixedFoe('mushroom',12);const second=noticeTracker();await advance(15,{before:safeEnemies,after:()=>second.sample()});assert(!second.records.some(r=>first.records.some(old=>old.title===r.title)),'重开重复提示已读物种');return{firstRun:first.records,restart:second.records,known};
+  });
+  await check('近敌不弹升级、主动打开、稍后保留原卡、逐次领取',async()=>{
+   reset();g.player.attack=9999;const enemy=fixedFoe();g.grant(200);const pending=g.player.pending;assert(pending>=2&&g.state==='playing','近敌时升级强制弹出');
+   for(let i=0;i<5;i++)tick();dom('#upgrade-ready').click();assert(g.state==='upgrade','主动成长入口无效');const cards=()=>[...win.document.querySelectorAll('[data-upgrade]')].map(e=>e.dataset.upgrade),draft=cards();assert(draft.length===3&&g.player.pendingDraft?.length===3,'没有保留候选卡');
+   dom('#upgrade-later').click();assert(g.state==='playing'&&g.player.pending===pending,'稍后选择消耗了次数');dom('#upgrade-ready').click();assert(JSON.stringify(cards())===JSON.stringify(draft),'稍后再打开重抽了卡片');
+   dom('[data-upgrade]').click();assert(g.state==='playing'&&g.player.pending===pending-1&&!g.player.pendingDraft,'领取成长未正确消耗一次');g.hurtEnemy(enemy,99999);await advance(2);assert(g.state==='playing'&&g.player.pending===pending-1,'领取一张后立即连续弹窗');
+   const t=g.time,pos={x:g.player.x,z:g.player.z};g.pause();for(let i=0;i<30;i++)tick();g.step(5);assert(g.time===t&&g.player.x===pos.x&&g.player.z===pos.z,'暂停仍推进对局');g.resume();
+   g.player.inv=0;g.damage(99999,g.player.x+1,g.player.z);assert(g.state==='lost','失败流程未进入');const deathTime=g.time;for(let i=0;i<10;i++)tick();assert(g.time===deathTime,'失败后时间仍增加');
+   reset();assert(g.time===0&&!g.player.pending&&!g.player.pendingDraft&&!g.enemies.length&&!g.boss&&dom('#encounter').hidden,'重新开始遗留对局状态');return{pendingBefore:pending,cards:draft,pauseAndRestart:true};
+  });
+  await check('远程怪留下危险地面时不弹成长，离开后恢复',async()=>{
+   reset();g.player.attack=9999;const caster=fixedFoe('spitter',9);caster.cool=0;
+   for(let i=0;i<90&&!g.zones.some(z=>z.source==='spitter');i++){tick();if(i%30===0)await sleep(0);}
+   const zone=g.zones.find(z=>z.source==='spitter'&&z.life>0);assert(zone,'实际吐毒怪没有生成毒雾落点');assert(zone.delay>0&&Math.hypot(zone.x-g.player.x,zone.z-g.player.z)<zone.r,'预警没有覆盖玩家');
+   assert(g.enemies.every(e=>!e.alive||e.wind<=0&&!(e.pounce>0)&&Math.hypot(e.x-g.player.x,e.z-g.player.z)>=7),'有近敌或蓄力遮盖危险地面检查');
+   g.grant(100);assert(g.player.pending>0&&g.state==='playing','危险地面出现时强制弹成长');tick();assert(g.state==='playing','危险地面下一帧强制弹成长');
+   g.player.x=zone.x-zone.r-2;g.player.z=zone.z;tick();assert(g.state==='upgrade','离开危险地面后成长仍被阻塞');return{source:zone.source,kind:zone.kind,delay:+zone.delay.toFixed(2),casterDistance:+Math.hypot(caster.x-g.player.x,caster.z-g.player.z).toFixed(2)};
+  });
+  await check('首领 120 秒出现、HUD 倒计时、胜利与重开',async()=>{
+   reset();g.player.inv=9999;g.player.attack=9999;await advance(119.8);assert(g.state==='playing'&&!g.boss,'首领提前出现或计时测试被打断');assert(dom('#boss-arrival').textContent.includes('1 秒'),'首领倒计时没有同步');
+   await advance(.7);assert(g.boss?.alive&&g.encounter.mode==='boss','120 秒后首领没有出现');assert(dom('#boss-arrival').hidden&&!dom('#boss-hud').hidden,'首领 HUD 未切换');const arrival=+g.time.toFixed(2),name=dom('#boss-hud span').textContent;
+   g.hurtEnemy(g.boss,99999);assert(g.state==='won','首领死亡没有胜利');reset();assert(!g.boss&&!g.encounter.hunt&&!g.player.pending&&g.time===0,'胜利重开残留首领/成长状态');return{arrival,name,invulnerableClockFixture:true};
+  });
+  for(const hero of ['scout','silver','tide','wuling'])await check(hero+' 首分钟固定种子观察（原地）',()=>combatSample(hero));
+  await check('silver 首分钟固定种子观察（移动）',()=>combatSample('silver',true));
+  await check('silver 首分钟固定种子观察（移动并主动领取成长）',()=>combatSample('silver',true,true));
+  for(const [mobile,width,height]of [[false,1180,720],[true,844,390],[true,390,844]])await check(width+'×'+height+' 地图目标与待选成长布局',()=>layout(mobile,width,height));
+  await check('运行日志',()=>{errors.push(...win.qaErrors);assert(!errors.length,errors.join('\n'));assert(g.renderer.getContext().getError()===0,'WebGL 错误');return{errors};});
+ }catch(e){results.push({name:'测试执行',pass:false,error:e.stack||e.message});}
+ publish();$('#run').disabled=false;$('#status').textContent=results.every(r=>r.pass)?'全部 '+results.length+' 项通过；战斗读数仅是观察，手机尺寸模拟非真机':'有检查失败，请查看记录';
+};
+await load();$('#run').disabled=false;$('#status').textContent='准备完成，可运行节奏回归。只使用本页隔离存档。';
+</script></html>

@@ -36,7 +36,7 @@ const {chromium}=require(process.env.PLAYWRIGHT_MODULE||'playwright'),assert=req
   const p=await b.newPage({viewport,hasTouch:viewport.width<1000});await p.goto(process.env.TEST_URL||'http://127.0.0.1:8897/');await p.waitForFunction(()=>window.game3d&&!document.querySelector('#start').disabled);await p.locator('#start').click();
   await p.evaluate(()=>{game3d.player.level=3;game3d.player.upgradeDraft={shown:[],routeMisses:2};game3d.player.pending=1;game3d.grant(0);});assert.equal(await p.locator('.weapon-upgrade').count(),1);
   const chosen=(await p.locator('.weapon-upgrade').getAttribute('data-upgrade')).slice(5);await p.locator('.weapon-upgrade').click();assert.equal(await p.evaluate(()=>game3d.player.weaponPath.id),chosen);
-  await p.evaluate(()=>{game3d.player.level=5;game3d.player.upgradeDraft.routeMisses=2;game3d.player.pending=1;game3d.grant(0);});assert.equal(await p.locator('.weapon-upgrade').count(),1);await p.locator('.weapon-upgrade').click();
+  await p.evaluate(()=>{game3d.player.level=5;game3d.player.upgradeDraft.routeMisses=2;game3d.player.pending=1;game3d.grant(0);document.querySelector('#upgrade-ready').click();});assert.equal(await p.locator('.weapon-upgrade').count(),1);await p.locator('.weapon-upgrade').click();
   assert.equal(await p.evaluate(()=>game3d.state),'playing');assert.equal(await p.evaluate(()=>game3d.player.weaponPath.rank),2);await p.close();console.log('PASS route UI '+viewport.width+'x'+viewport.height);
  }
 }finally{await b.close();}})().catch(e=>{console.error(e);process.exit(1);});

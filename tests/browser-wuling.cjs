@@ -32,7 +32,7 @@ const url=process.env.TEST_URL||'http://127.0.0.1:8899/';
    const before=e.hp;advance(.35);check(e.hp<before,'cloud did not continue dealing damage');
    const frozen={time:g.time,poison:g.poison.now,hp:e.hp};g.pause();g.step(3);
    check(g.time===frozen.time&&g.poison.now===frozen.poison&&e.hp===frozen.hp,'poison continued while paused');g.resume();
-   g.player.pending=1;g.grant(0);check(g.state==='upgrade','upgrade pause not entered');
+   g.player.pending=1;g.grant(0);document.querySelector('#upgrade-ready').click();check(g.state==='upgrade','upgrade pause not entered');
    const upgradeNow=g.poison.now;g.step(2);check(g.poison.now===upgradeNow,'poison advanced during upgrade selection');
    document.querySelector('[data-upgrade]').click();check(g.state==='playing','upgrade could not resume');
 

@@ -1,6 +1,6 @@
 <!doctype html><html lang="zh-CN"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>环境渲染检查</title><style>body{margin:12px;background:#13242b;color:#e1e9e4;font:14px system-ui}button,select{padding:10px;background:#254943;color:inherit;border:1px solid #709582;border-radius:6px}iframe{border:0;display:block;margin-top:12px}#view{overflow:auto}pre{white-space:pre-wrap}</style>
-<button id="run" disabled>运行环境回归</button><select id="map"><option value="forest">林地</option><option value="snow">雪地</option><option value="ash">赤烬</option><option value="sand">沙漠</option><option value="coast">海港</option><option value="confluence">五境</option></select><button id="lobby" disabled>预览大厅</button><button id="battle" disabled>预览实战</button><button id="mobile" disabled>预览手机横屏</button><button id="water" disabled>查看水岸</button><button id="paths">路径显示检查</button><p id="status">载入中。此页使用隔离存档和固定帧进度；手机尺寸是模拟，不代表真机帧率。</p><div id="view"></div><pre id="report"></pre>
+<button id="run" disabled>运行环境回归</button><select id="map"><option value="forest">林地</option><option value="snow">雪地</option><option value="ash">赤烬</option><option value="sand">沙漠</option><option value="coast">海港</option><option value="confluence">五境</option></select><button id="lobby" disabled>预览大厅</button><button id="battle" disabled>预览实战</button><button id="mobile" disabled>预览手机横屏</button><button id="water" disabled>查看水岸</button><button id="paths">路径显示检查</button><button id="ruins" disabled>查看林中古迹</button><p id="status">载入中。此页使用隔离存档和固定帧进度；手机尺寸是模拟，不代表真机帧率。</p><div id="view"></div><pre id="report"></pre>
 <script type="module">
 const $=s=>document.querySelector(s),sleep=ms=>new Promise(r=>setTimeout(r,ms)),assert=(v,n)=>{if(!v)throw Error(n);};
 const html=await(await fetch('../index.html')).text(),css=await(await fetch('../style.css')).text();let frame,g,win,now=0;const results=[],errors=[];
@@ -40,8 +40,8 @@ $('#run').onclick=async()=>{
  try{
   await load();const ids=['forest','snow','ash','sand','coast','confluence'],memory={};
   for(let cycle=0;cycle<3;cycle++)for(const id of ids)await check(id+' 大厅/战斗 '+(cycle+1),()=>{
-   const old=g.world.group.getObjectByName('distant-landscape');let disposed=!old;old?.geometry.addEventListener('dispose',()=>disposed=true);
-   select(id);assert(disposed,'切图未回收远景');const lobby=reportFrame();win.qaSeed();g.start();g.player.inv=9999;g.player.attack=9999;step(24);const battle=reportFrame();assert(battle.pixels<=3200000,'电脑像素预算超限');
+   const owned=[];g.world.group.traverse(o=>{if(o.userData.ownedGeometry)owned.push(o.geometry);});const released=new Set();for(const geometry of owned)geometry.addEventListener('dispose',()=>released.add(geometry));
+   select(id);assert(owned.every(geometry=>released.has(geometry)),'切图未回收远景/遗迹几何');const lobby=reportFrame();win.qaSeed();g.start();g.player.inv=9999;g.player.attack=9999;step(24);const battle=reportFrame();assert(battle.pixels<=3200000,'电脑像素预算超限');
    if(cycle===1)memory[id]=battle;if(cycle===2){assert(battle.geometries<=memory[id].geometries+2,'同地图重建几何资源持续增长');assert(battle.textures<=memory[id].textures,'同地图重建纹理资源增长');}
    return{lobby,battle};
   });
@@ -59,6 +59,7 @@ $('#run').onclick=async()=>{
 async function preview(battle=false,mobile=false){await load(mobile,mobile?844:1180,mobile?390:720);select($('#map').value,'silver',battle);$('#status').textContent='固定帧画面预览 · '+$('#map').selectedOptions[0].text;}
 $('#lobby').onclick=()=>preview();$('#battle').onclick=()=>preview(true);$('#mobile').onclick=()=>preview(true,true);
 $('#paths').onclick=()=>{for(const site of g.world.sites)site.trail.visible=!site.trail.visible;step();};
+$('#ruins').onclick=async()=>{if(!['forest','confluence'].includes($('#map').value))$('#map').value='forest';await preview(true);const a=g.world.forestVista?.gateCenter||g.world.forestVista?.anchors?.[0];if(!a){$('#status').textContent='当前地形没有可用古迹锚点';return;}let p={x:a.x,z:a.z+5};for(const dz of [5,6,7,-5,-6])if(g.world.obstacles.every(o=>Math.hypot(a.x-o.x,a.z+dz-o.z)>o.r+.7)){p={x:a.x,z:a.z+dz};break;}g.player.x=p.x;g.player.z=p.z;step(90);$('#status').textContent='林中古迹实景 · '+JSON.stringify({columns:g.world.forestVista.columns,arches:g.world.forestVista.arches,triangles:g.world.forestVista.triangles,drawCalls:g.world.forestVista.drawCalls,anchors:g.world.forestVista.anchors});};
 $('#water').onclick=()=>{const pond=g.world.ponds[0];if(!pond)return;g.start();g.player.inv=9999;g.player.attack=9999;g.player.x=pond.x+pond.rx+1.5;g.player.z=pond.z;step(100);$('#status').textContent='水岸实景';};
 await load();for(const b of document.querySelectorAll('button'))b.disabled=false;$('#status').textContent='准备完成';
 </script></html>

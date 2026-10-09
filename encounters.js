@@ -1,13 +1,14 @@
-// One three-minute expedition: learn, mixed encounters, telegraphed hunts,
+// Two-minute expedition: a short opening, mixed encounters, telegraphed hunts,
 // recovery. The schedule and rewards are identical for manual and auto aim.
+export const EXPEDITION_BOSS_TIME=120;
 export function encounterPhase(time,boss=false){
  if(boss)return{key:'boss',mode:'boss',label:'首领决战',remaining:0,interval:3.4,cap:14,mood:1,cycle:-1};
- if(time<20)return{key:'opening',mode:'opening',label:'荒野探路',remaining:20-time,interval:1.9,cap:12,mood:.12,cycle:-1};
- const cycle=Math.floor((time-20)/54),t=(time-20)%54,growth=Math.min(6,Math.floor(time/30));
- if(t<22)return{key:cycle+':build',mode:'build',label:'遭遇战',remaining:22-t,interval:Math.max(1.4,1.9-time*.0018),cap:18+growth,mood:.3,cycle};
- if(t<27)return{key:cycle+':warning',mode:'warning',label:'精锐围猎将至',remaining:27-t,interval:Infinity,cap:24+growth,mood:.65,cycle};
- if(t<42)return{key:cycle+':assault',mode:'assault',label:'精锐围猎',remaining:42-t,interval:2.4,cap:24+growth,mood:.85,cycle};
- return{key:cycle+':rest',mode:'rest',label:'收集与喘息',remaining:54-t,interval:Infinity,cap:0,mood:.06,cycle};
+ if(time<8)return{key:'opening',mode:'opening',label:'荒野探路',remaining:8-time,interval:1.55,cap:10,mood:.12,cycle:-1};
+ const cycle=Math.floor((time-8)/48),t=(time-8)%48,growth=Math.min(6,Math.floor(time/30));
+ if(t<18)return{key:cycle+':build',mode:'build',label:'遭遇战',remaining:18-t,interval:Math.max(1.25,1.5-time*.0018),cap:20+growth,mood:.4,cycle};
+ if(t<23)return{key:cycle+':warning',mode:'warning',label:'精锐围猎将至',remaining:23-t,interval:Infinity,cap:24+growth,mood:.65,cycle};
+ if(t<39)return{key:cycle+':assault',mode:'assault',label:'精锐围猎',remaining:39-t,interval:2.1,cap:24+growth,mood:.85,cycle};
+ return{key:cycle+':rest',mode:'rest',label:'收集与喘息',remaining:48-t,interval:Infinity,cap:0,mood:.06,cycle};
 }
 export function enemyGrowth(time,baseXp){
  const t=Math.max(0,Math.min(time,240));
@@ -15,9 +16,10 @@ export function enemyGrowth(time,baseXp){
 }
 export function encounterRole(time,random=Math.random,boss=false){
  const r=random();
- if(time<14)return'mushroom';
- if(time<35||boss)return r<.6?'mushroom':'wolf';
- if(time<44)return r<.4?'mushroom':r<.75?'wolf':'spitter';
+ if(time<8)return'mushroom';
+ if(time<18||boss)return r<.6?'mushroom':'wolf';
+ if(time<38)return r<.4?'mushroom':r<.75?'wolf':'spitter';
+ if(time<50)return r<.32?'mushroom':r<.60?'wolf':r<.78?'golem':'spitter';
  return r<.32?'mushroom':r<.60?'wolf':r<.74?'golem':r<.92?'spitter':'shaman';
 }
 export const HUNT_SQUAD=[

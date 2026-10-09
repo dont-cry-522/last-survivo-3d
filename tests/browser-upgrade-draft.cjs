@@ -7,7 +7,7 @@ const{chromium}=require(process.env.PLAYWRIGHT_MODULE||'playwright'),assert=requ
   await p.evaluate(hero=>{const g=game3d;g.select(hero,'forest',0);g.start();g.player.inv=999;g.player.attack=999;g.world.obstacles=[];g.world.sites=[];g.world.discoveries=[];g.world.roaming=[];},hero);
   let previous=[];
   for(let level=2;level<=9;level++){
-   await p.evaluate(level=>{const g=game3d;g.player.level=level;g.player.pending=1;g.player.xp=0;g.grant(0);},level);
+   await p.evaluate(level=>{const g=game3d;g.player.level=level;g.player.pending=1;g.player.xp=0;g.grant(0);document.querySelector('#upgrade-ready').click();},level);
    const cards=p.locator('[data-upgrade]'),ids=await cards.evaluateAll(nodes=>nodes.map(n=>n.dataset.upgrade));
    assert.equal(ids.length,3);assert.equal(new Set(ids).size,3);assert(ids.filter(id=>id.startsWith('path:')).length<=1);
    assert(ids.filter(id=>previous.includes(id)).length<=1,hero+' repetitive hand');previous=ids;
@@ -15,7 +15,7 @@ const{chromium}=require(process.env.PLAYWRIGHT_MODULE||'playwright'),assert=requ
    await cards.nth(level%3).click();assert.equal(await p.evaluate(()=>game3d.state),'playing');assert.equal(await p.evaluate(()=>game3d.player.pending),0);
    await p.keyboard.down('d');await p.evaluate(()=>{for(let i=0;i<12;i++)game3d.step(1/60)});await p.keyboard.up('d');assert.notEqual(await p.evaluate(()=>game3d.player.x),before.x,'movement stuck after choosing');
   }
-  await p.evaluate(()=>{game3d.player.pending=3;game3d.grant(0)});for(let i=0;i<3;i++)await p.locator('[data-upgrade]').first().click();assert.equal(await p.evaluate(()=>game3d.state),'playing');assert.equal(await p.evaluate(()=>game3d.player.pending),0);
+  await p.evaluate(()=>{game3d.player.pending=3;game3d.grant(0)});for(let i=0;i<3;i++){await p.evaluate(()=>document.querySelector('#upgrade-ready').click());await p.locator('[data-upgrade]').first().click();}assert.equal(await p.evaluate(()=>game3d.state),'playing');assert.equal(await p.evaluate(()=>game3d.player.pending),0);
   await p.evaluate(()=>game3d.start());assert.equal(await p.evaluate(()=>game3d.player.upgradeDraft),undefined);
   for(let run=0;run<3;run++){
    const old=await p.evaluate(()=>JSON.parse(localStorage.getItem('forest-echoes-opening:'+game3d.player.heroId+':'+game3d.player.weaponId)));

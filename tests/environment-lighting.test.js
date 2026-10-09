@@ -13,6 +13,22 @@ test('climate transitions reuse lights and interpolate physical colors without f
  lighting.update('forest');const before=scene.fog.color.clone();lighting.update('snow',null,1/60);assert(!before.equals(scene.fog.color));assert.notEqual(scene.fog.color.getHex(),CLIMATE_LIGHT.snow.fog);
  lighting.update('confluence',{forest:.5,snow:.5});assert(Math.abs(scene.fog.density-(CLIMATE_LIGHT.forest.density+CLIMATE_LIGHT.snow.density)/2)<1e-9);assert.equal(scene.children.length,3);
 });
+test('forest-to-border light changes stay bounded and take the same time at 30 and 60 Hz',()=>{
+ const rig=()=>{
+  const scene=new T.Scene(),renderer={toneMappingExposure:1},hemi=new T.HemisphereLight(),sun=new T.DirectionalLight(),rim=new T.DirectionalLight();
+  scene.fog=new T.FogExp2();scene.background=new T.Color();scene.add(hemi,sun,rim);
+  const light=new EnvironmentLighting(scene,renderer,hemi,sun,rim),values=()=>[...hemi.color.toArray(),...hemi.groundColor.toArray(),...sun.color.toArray(),...rim.color.toArray(),...scene.fog.color.toArray(),hemi.intensity,sun.intensity,rim.intensity,scene.fog.density,renderer.toneMappingExposure];
+  light.update('forest');return{scene,light,values};
+ };
+ for(const neighbor of ['snow','ash','sand','coast']){
+  const slow=rig(),fast=rig(),target=rig(),weights={forest:.35,[neighbor]:.65},start=slow.values();target.light.update('confluence',weights);const end=target.values();
+  for(let i=0;i<60;i++){
+   slow.light.update('confluence',weights,1/30);fast.light.update('confluence',weights,1/60);fast.light.update('confluence',weights,1/60);
+   const a=slow.values(),b=fast.values();for(let j=0;j<a.length;j++){assert(Number.isFinite(a[j]));assert(a[j]>=Math.min(start[j],end[j])-1e-12&&a[j]<=Math.max(start[j],end[j])+1e-12,'climate lighting overshot its color/exposure range');assert(Math.abs(a[j]-b[j])<1e-12,'transition speed changed with refresh rate');}
+  }
+  assert.equal(slow.scene.children.length,3);assert.equal(fast.scene.children.length,3);
+ }
+});
 test('distant scenery stays beyond map bounds and scenery finish preserves playable layouts',()=>{
  for(const id of ['forest','snow','ash','sand','coast','confluence']){
   const w=buildWorld(id,7),snapshot=JSON.stringify(w.obstacles.map(o=>[o.x,o.z,o.r])),draws=[];
