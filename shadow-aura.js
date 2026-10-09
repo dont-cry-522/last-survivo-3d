@@ -1,29 +1,45 @@
 import * as T from './vendor/three.module.js';
 
-// Five feathered cloth-like traces share one surface/draw. No particles accumulate.
-const positions=[],uvs=[],phases=[],trails=[],indices=[],segments=12;
-const bands=[
- {x:-.43,y:.80,height:.68,z:-.04,tail:.10,width:.17,phase:.2,trail:0},
- {x:.43,y:.84,height:.64,z:-.04,tail:.10,width:.16,phase:2.3,trail:0},
- {x:.035,y:.62,height:.64,z:-.27,tail:.10,width:.19,phase:4.5,trail:0},
- {x:-.11,y:.66,height:.53,z:-.27,tail:.32,width:.13,phase:1.3,trail:1},
- {x:.15,y:.70,height:.40,z:-.30,tail:.26,width:.11,phase:3.5,trail:1}
-];
-for(const band of bands){
+// Each loadout has one shared surface/draw; only its actor-owned material animates.
+const profiles={
+ shade:{drift:.35,flow:.85,opacity:.086,flare:.055,bands:[
+  {x:-.052,y:-.06,height:.32,z:.045,tail:.05,width:.035,phase:.2,trail:0},
+  {x:.008,y:-.08,height:.40,z:.080,tail:.065,width:.042,phase:2.3,trail:0},
+  {x:.056,y:-.03,height:.26,z:-.01,tail:.045,width:.032,phase:4.5,trail:0}
+ ]},
+ shadowblade:{drift:1,flow:.90,opacity:.073,flare:.075,bands:[
+  {x:-.32,y:.45,height:.64,z:-.12,tail:.12,width:.16,phase:.2,trail:0},
+  {x:.32,y:.46,height:.64,z:-.12,tail:.12,width:.15,phase:2.3,trail:0},
+  {x:.025,y:.42,height:.52,z:-.30,tail:.14,width:.19,phase:4.5,trail:0},
+  {x:-.11,y:.38,height:.52,z:-.28,tail:.34,width:.13,phase:1.3,trail:1},
+  {x:.15,y:.40,height:.45,z:-.30,tail:.28,width:.11,phase:3.5,trail:1}
+ ]},
+ grimoire:{drift:.65,flow:.42,opacity:.10,flare:.033,bands:[
+  {x:-.34,y:.36,height:.50,z:-.02,tail:.15,width:.14,phase:.2,trail:0},
+  {x:.34,y:.40,height:.53,z:-.02,tail:.15,width:.14,phase:2.3,trail:0},
+  {x:.025,y:.30,height:.59,z:-.26,tail:.10,width:.24,phase:4.5,trail:0}
+ ]}
+},geometries=new Map();
+function surface(weapon){
+ if(geometries.has(weapon))return geometries.get(weapon);
+ const profile=profiles[weapon],positions=[],uvs=[],phases=[],trails=[],indices=[],segments=12;
+ for(const band of profile.bands){
  const base=positions.length/3;
  for(let row=0;row<=segments;row++)for(let side=0;side<=1;side++){
   const v=row/segments,curve=Math.sin(v*Math.PI),width=band.width*(.32+.68*curve);
-  positions.push(band.x+Math.sin(v*3.5+band.phase)*.035+(side-.5)*width,band.y+v*band.height,band.z-band.tail*(1-v)+curve*.025);
+  positions.push(band.x+Math.sin(v*3.5+band.phase)*.035*profile.drift+(side-.5)*width,band.y+v*band.height,band.z-band.tail*(1-v)+curve*.025*profile.drift);
   uvs.push(side,v);phases.push(band.phase);trails.push(band.trail);
   if(row<segments&&side===0){const i=base+row*2;indices.push(i,i+1,i+2,i+1,i+3,i+2);}
  }
-}
-const geometry=new T.BufferGeometry();
+ }
+ const geometry=new T.BufferGeometry();
 geometry.setAttribute('position',new T.Float32BufferAttribute(positions,3));
 geometry.setAttribute('uv',new T.Float32BufferAttribute(uvs,2));
 geometry.setAttribute('aPhase',new T.Float32BufferAttribute(phases,1));
 geometry.setAttribute('aTrail',new T.Float32BufferAttribute(trails,1));
-geometry.setIndex(indices);geometry.computeBoundingSphere();geometry.boundingSphere.radius+=.04;
+ geometry.setIndex(indices);geometry.computeBoundingSphere();geometry.boundingSphere.radius+=.04*profile.drift;
+ geometries.set(weapon,geometry);return geometry;
+}
 
 const vertexShader=`
 #include <clipping_planes_pars_vertex>
@@ -31,6 +47,7 @@ const vertexShader=`
 uniform float clock;
 uniform float motion;
 uniform float dash;
+uniform float drift;
 attribute float aPhase;
 attribute float aTrail;
 varying vec2 vUv;
@@ -40,9 +57,9 @@ void main(){
  vUv=uv;vPhase=aPhase;vTrail=aTrail;
  vec3 p=position;
  float freeEdge=sin(uv.y*3.14159265);
- p.x+=sin(clock*.85+uv.y*5.0+aPhase)*(.009+motion*.012)*freeEdge;
- p.y+=sin(clock*.65+aPhase)*.014*freeEdge;
- p.z+=cos(clock*.72+uv.y*4.0+aPhase)*.012*freeEdge-aTrail*dash*.012*freeEdge;
+ p.x+=sin(clock*.85+uv.y*5.0+aPhase)*(.009+motion*.012)*freeEdge*drift;
+ p.y+=sin(clock*.65+aPhase)*.014*freeEdge*drift;
+ p.z+=(cos(clock*.72+uv.y*4.0+aPhase)*.012*freeEdge-aTrail*dash*.012*freeEdge)*drift;
  vec4 mvPosition=modelViewMatrix*vec4(p,1.0);
  gl_Position=projectionMatrix*mvPosition;
  #include <clipping_planes_vertex>
@@ -55,6 +72,9 @@ uniform float clock;
 uniform float motion;
 uniform float attack;
 uniform float dash;
+uniform float flow;
+uniform float baseOpacity;
+uniform float flare;
 varying vec2 vUv;
 varying float vPhase;
 varying float vTrail;
@@ -62,10 +82,10 @@ void main(){
  #include <clipping_planes_fragment>
  float edge=smoothstep(0.0,.30,vUv.x)*(1.0-smoothstep(.70,1.0,vUv.x));
  float ends=pow(max(0.0,sin(vUv.y*3.14159265)),1.5);
- float fold=.5+.5*sin(vUv.y*7.0-clock*.75+vPhase);
+ float fold=.5+.5*sin(vUv.y*7.0-clock*flow+vPhase);
  float seam=vUv.x-.48-.065*sin(vUv.y*5.0+clock*.60+vPhase);
  float core=exp(-seam*seam*34.0);
- float presence=mix(.118+.025*attack,.105*motion+.038*dash,vTrail);
+ float presence=mix(baseOpacity+flare*attack,min(.15,.105*motion+.038*dash+.035*attack),vTrail);
  float opacity=edge*ends*presence*(.58+.24*fold+.18*core);
  vec3 color=mix(vec3(.20,.29,.36),vec3(.35,.48,.57),core*.65+attack*.12);
  gl_FragColor=vec4(color,opacity);
@@ -74,11 +94,13 @@ void main(){
  #include <fog_fragment>
 }`;
 
-export function createShadowAura(){
- const group=new T.Group();group.name='Shadow_soft_traces';
- const material=new T.ShaderMaterial({vertexShader,fragmentShader,uniforms:T.UniformsUtils.merge([T.UniformsLib.fog,{clock:{value:0},motion:{value:0},attack:{value:0},dash:{value:0}}]),transparent:true,depthWrite:false,side:T.DoubleSide,forceSinglePass:true,clipping:true,fog:true});
- const mesh=new T.Mesh(geometry,material);mesh.name='Shadow_feathered_back_traces';group.add(mesh);
- group.userData.shadowAura={material,lastTime:undefined,disposed:false};
+export function createShadowAura(weapon='shade'){
+ const variant=Object.hasOwn(profiles,weapon)?weapon:'shade',profile=profiles[variant],group=new T.Group();group.name='Shadow_'+variant+'_traces';
+ const material=new T.ShaderMaterial({vertexShader,fragmentShader,uniforms:T.UniformsUtils.merge([T.UniformsLib.fog,{clock:{value:0},motion:{value:0},attack:{value:0},dash:{value:0},drift:{value:profile.drift},flow:{value:profile.flow},baseOpacity:{value:profile.opacity},flare:{value:profile.flare}}]),transparent:true,depthWrite:false,side:T.DoubleSide,forceSinglePass:true,clipping:true,fog:true});
+ const mesh=new T.Mesh(surface(variant),material);mesh.name='Shadow_feathered_'+variant;group.add(mesh);
+ // Shade is authored in weapon-local coordinates; attach the whole group to gun.
+ if(variant==='shade')group.userData.handTrace=mesh;
+ group.userData.shadowAura={material,variant,lastTime:undefined,disposed:false};
  return group;
 }
 

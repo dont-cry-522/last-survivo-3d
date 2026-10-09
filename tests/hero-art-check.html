@@ -1,11 +1,11 @@
 <!doctype html><html lang="zh-CN"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>角色比例与材质预览</title><style>body{margin:0;background:#213333;color:#e4e7db;font:14px system-ui}header{padding:12px}button,select{padding:8px;background:#344b49;color:inherit;border:1px solid #859f97;margin:3px}canvas{display:block;width:100%;height:560px}pre{white-space:pre-wrap;margin:12px}</style>
-<header>同一光线 / 同一比例 · <select id="subject" aria-label="预览角色"><option value="all">全部角色</option><option value="wraith">影裔单人</option></select><select id="gear" aria-label="影裔武器"><option value="shade">噬影掌</option><option value="shadowblade">回魂影镰</option><option value="grimoire">悬影魔典</option></select><select id="pose" aria-label="预览动作"><option value="idle">待机</option><option value="run">行走</option><option value="attack">攻击</option><option value="runattack">边走边攻击</option><option value="turn">转向行走</option><option value="startstop">起步与停步</option><option value="water">水中</option></select><button id="turn">转身</button><button id="check" disabled>检查全部武器与动作</button><button id="save" disabled>保存当前模型画面</button><span id="status">载入中</span></header><canvas id="view"></canvas><pre id="report"></pre>
+<header>同一光线 / 同一比例 · <select id="subject" aria-label="预览角色"><option value="all">全部角色</option><option value="wraith">影裔单人</option><option value="wraith-forms">影裔三形态并排</option></select><select id="gear" aria-label="影裔武器"><option value="shade">噬影掌</option><option value="shadowblade">回魂影镰</option><option value="grimoire">悬影魔典</option></select><select id="pose" aria-label="预览动作"><option value="idle">待机</option><option value="run">行走</option><option value="attack">攻击</option><option value="runattack">边走边攻击</option><option value="turn">转向行走</option><option value="startstop">起步与停步</option><option value="water">水中</option></select><button id="turn">转身</button><button id="check" disabled>检查全部武器与动作</button><button id="save" disabled>保存当前模型画面</button><span id="status">载入中</span></header><canvas id="view"></canvas><pre id="report"></pre>
 <script type="module">
 import * as T from '../vendor/three.module.js';
-import {actor,animateActor} from '../world.js?v=111';
-import {loadHeroAssets,disposeHero} from '../skinned-hero.js?v=111';
-import {HERO_LOADOUTS} from '../rules.js?v=111';
+import {actor,animateActor} from '../world.js?v=112';
+import {loadHeroAssets,disposeHero} from '../skinned-hero.js?v=112';
+import {HERO_LOADOUTS} from '../rules.js?v=112';
 const $=id=>document.getElementById(id),canvas=$('view'),scene=new T.Scene(),renderer=new T.WebGLRenderer({canvas,antialias:true}),camera=new T.PerspectiveCamera(31,1,.1,60),errors=[];
 window.addEventListener('error',e=>errors.push(e.message));window.addEventListener('unhandledrejection',e=>errors.push(String(e.reason)));
 renderer.setPixelRatio(1);renderer.setSize(innerWidth,560,false);renderer.shadowMap.enabled=true;renderer.shadowMap.type=T.PCFSoftShadowMap;renderer.toneMapping=T.ACESFilmicToneMapping;renderer.toneMappingExposure=1.12;
@@ -14,12 +14,19 @@ const sun=new T.DirectionalLight(0xffdca0,3.85);sun.position.set(-8,14,10);sun.c
 const rim=new T.DirectionalLight(0x91bcd0,1.05);rim.position.set(4,7,-6);scene.add(rim);
 const floor=new T.Mesh(new T.PlaneGeometry(80,40),new T.MeshStandardMaterial({color:0x526450,roughness:1}));floor.rotation.x=-Math.PI/2;floor.receiveShadow=true;scene.add(floor);
 camera.position.set(0,4.3,13.7);camera.lookAt(0,1.1,0);camera.aspect=innerWidth/560;camera.updateProjectionMatrix();
-const ids=['scout','silver','wraith','tide','lingya','wuling','mirage'],labels=['游侠','霜影','影裔','潮行者','铃芽','雾苓','蜃影'],models=[];let turn=0,t=0,last=performance.now(),checking=false;
+const ids=['scout','silver','wraith','tide','lingya','wuling','mirage'],labels=['游侠','霜影','影裔','潮行者','铃芽','雾苓','蜃影'],models=[],shadowForms=[],shadowWeapons=['shade','shadowblade','grimoire'];let turn=0,t=0,last=performance.now(),checking=false;
 await loadHeroAssets();
 function populate(){for(let i=0;i<ids.length;i++){const h=actor(ids[i],HERO_LOADOUTS[ids[i]][0]);h.position.x=(i-3)*1.85;h.rotation.y=.12;scene.add(h);models.push(h);}}
 populate();$('status').textContent=labels.join(' / ');$('check').disabled=false;$('save').disabled=false;
 $('save').onclick=()=>{renderer.render(scene,camera);const a=document.createElement('a');a.download='forest-echoes-hero-preview.png';a.href=canvas.toDataURL('image/png');a.click();};
-function frameSubject(){const single=$('subject').value==='wraith',x=single?models[2].position.x:0;models.forEach((h,i)=>h.visible=!single||i===2);camera.position.set(x,single?2.1:4.3,single?4.6:13.7);camera.lookAt(x,single?.94:1.1,0);camera.updateProjectionMatrix();}
+function frameSubject(){
+ const single=$('subject').value==='wraith',triple=$('subject').value==='wraith-forms',x=single?models[2].position.x:0;
+ if(triple&&!shadowForms.length)for(const [i,weapon]of shadowWeapons.entries()){const h=actor('wraith',weapon);h.position.x=(i-1)*1.85;h.rotation.y=turn;scene.add(h);shadowForms.push(h);}
+ models.forEach((h,i)=>h.visible=!triple&&(!single||i===2));shadowForms.forEach(h=>h.visible=triple);$('gear').disabled=triple||checking;
+ if(triple){const distance=Math.max(6.1,5.5/(2*Math.tan(T.MathUtils.degToRad(camera.fov/2))*camera.aspect));camera.position.set(0,2.35,distance);camera.lookAt(0,.98,0);$('status').textContent='左：噬影掌 · 中：回魂影镰 · 右：悬影魔典';}
+ else{camera.position.set(x,single?2.1:4.3,single?4.6:13.7);camera.lookAt(x,single?.94:1.1,0);$('status').textContent=single?'影裔 / '+$('gear').selectedOptions[0].textContent:labels.join(' / ');}
+ camera.updateProjectionMatrix();
+}
 $('subject').onchange=frameSubject;frameSubject();
 $('gear').onchange=()=>{const previous=models[2],h=actor('wraith',$('gear').value);h.position.copy(previous.position);scene.remove(previous);disposeHero(previous);models[2]=h;scene.add(h);frameSubject();};
 $('turn').onclick=()=>turn+=Math.PI/2;
@@ -32,10 +39,10 @@ function pose(h,time,mode){
  animateActor(h,time,running?5.5:mode==='water'?2:0,casting?Math.max(0,.24-time%1):0);
 }
 function report(){return models.map((h,i)=>{let calls=0,triangles=0;h.traverse(o=>{if(o.isMesh){calls++;triangles+=(o.geometry.index?.count||o.geometry.attributes.position.count)/3;}});const bounds=new T.Box3().setFromObject(h,true);return{hero:labels[i],height:+(bounds.max.y-bounds.min.y).toFixed(2),meshes:calls,triangles};});}
-function frame(now){const dt=Math.min(.04,(now-last)/1000);last=now;t+=dt;if(!checking){for(const h of models){h.rotation.y=turn+.12;pose(h,t,$('pose').value);h.visible=$('subject').value==='all'||h.userData.kind==='wraith';}renderer.render(scene,camera);}requestAnimationFrame(frame);}requestAnimationFrame(frame);
-$('check').onclick=async()=>{checking=true;$('check').disabled=true;const results=[];try{
- for(const h of models)h.visible=false;
+function frame(now){const dt=Math.min(.04,(now-last)/1000);last=now;t+=dt;if(!checking){const triple=$('subject').value==='wraith-forms';for(const h of triple?shadowForms:models){if(!h.visible)continue;h.rotation.y=turn+(triple?0:.12);pose(h,t,$('pose').value);}renderer.render(scene,camera);}requestAnimationFrame(frame);}requestAnimationFrame(frame);
+$('check').onclick=async()=>{checking=true;$('check').disabled=true;for(const id of['subject','gear','pose','turn','save'])$(id).disabled=true;const results=[];try{
+ for(const h of [...models,...shadowForms])h.visible=false;
  for(const id of ids)for(const weapon of HERO_LOADOUTS[id]){const h=actor(id,weapon);scene.add(h);let finite=true;for(const [m,mode]of ['idle','run','attack','runattack','turn','startstop','water'].entries())for(let i=0;i<90;i++){h.rotation.y=.12;pose(h,10+m*1.5+i/60,mode);h.updateMatrixWorld(true);h.traverse(o=>{if(!o.matrixWorld.elements.every(Number.isFinite))finite=false;});if(i%30===0)renderer.render(scene,camera);}const gpu=renderer.getContext().getError();results.push({hero:id,weapon,pass:finite&&gpu===0&&renderer.info.programs.every(p=>p.diagnostics?.runnable!==false)});scene.remove(h);disposeHero(h);await new Promise(r=>setTimeout(r,0));}
-}catch(e){errors.push(e.message);}finally{frameSubject();$('report').textContent=JSON.stringify({results,models:report(),errors},null,2);$('status').textContent=results.length+' 种武器姿态检查 · '+(results.every(r=>r.pass)&&!errors.length?'通过':'有失败');checking=false;$('check').disabled=false;}};
+}catch(e){errors.push(e.message);}finally{checking=false;for(const id of['subject','gear','pose','turn','save'])$(id).disabled=false;frameSubject();$('report').textContent=JSON.stringify({results,models:report(),errors},null,2);$('status').textContent=results.length+' 种武器姿态检查 · '+(results.every(r=>r.pass)&&!errors.length?'通过':'有失败');$('check').disabled=false;}};
 $('report').textContent=JSON.stringify(report(),null,2);
 </script></html>

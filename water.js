@@ -1,10 +1,10 @@
-import{onIce,onFord}from'./map-tactics.js?v=111';
-import{onBridge}from'./coast.js?v=111';
-import{MAP_SCALE}from'./map-layout.js?v=111';
-import{coastLayout}from'./coast-layout.js?v=111';
-import{swimStroke,swimLimb,HERO_SWIM,heroSwimPose,swimTravel}from'./swim-motion.js?v=111';
-import{newHeroAttack}from'./new-hero-motion.js?v=111';
-import{naturalRockGeometry,environmentDetailTexture}from'./biome-scenery.js?v=111';
+import{onIce,onFord}from'./map-tactics.js?v=112';
+import{onBridge}from'./coast.js?v=112';
+import{MAP_SCALE}from'./map-layout.js?v=112';
+import{coastLayout}from'./coast-layout.js?v=112';
+import{swimStroke,swimLimb,HERO_SWIM,heroSwimPose,swimTravel}from'./swim-motion.js?v=112';
+import{newHeroAttack}from'./new-hero-motion.js?v=112';
+import{naturalRockGeometry,environmentDetailTexture}from'./biome-scenery.js?v=112';
 import * as T from './vendor/three.module.js';
 const clamp=T.MathUtils.clamp;
 const shore=a=>1+.07*Math.sin(a*3)+.045*Math.cos(a*5);
@@ -153,7 +153,7 @@ export function animateWaterPose(g,t,speed){
  d.swimTravelBank=ease(d.swimTravelBank||0,profile?travel.bank*moving*(1-aim):0,5);
  save(d.rig);d.rig.position.y-=depth*(profile?profile.sink+moving*.035:hero?.38+moving*.06:heavy?.22:.24);d.rig.position.y+=(pose?pose.bob:Math.sin(phase*2-.5)*.025)*depth;
  if(hero){
-  const held=d.hammer||d.gun||d.book||d.weapon,heldWorld=held?.getWorldQuaternion(new T.Quaternion()),shieldWorld=d.shield?.getWorldQuaternion(new T.Quaternion());
+  const held=d.hammer||d.gun||d.book||d.weapon,heldWorld=held?.getWorldQuaternion(new T.Quaternion()),shieldWorld=d.shield?.getWorldQuaternion(new T.Quaternion()),robeWorld=d.shadowRobe?.map(panel=>panel.getWorldQuaternion(new T.Quaternion()));
   const leanTarget=swim*(pose?pose.lean*travel.lean:.08+.82*moving)*(1-aim*.86);d.swimLean=ease(d.swimLean||0,leanTarget,8);const lean=profile||d.kind==='wraith'?d.swimLean:leanTarget;d.rig.rotation.x+=lean;d.rig.rotation.z+=swim*((pose?pose.bank:stroke*.045*moving)*(1-aim)+d.swimBank+d.swimTravelBank);
   const head=d.swimHead||d.head;if(head){save(head);head.rotateX(-lean*(profile?.72:.5));head.rotateZ(-d.swimBank*.6);}
   g.updateMatrixWorld(true);
@@ -176,5 +176,7 @@ export function animateWaterPose(g,t,speed){
   if(held&&heldWorld){save(held);g.updateMatrixWorld(true);const parent=held.parent.getWorldQuaternion(new T.Quaternion()).invert();if(d.gun&&!d.hammer){const carry=new T.Quaternion().setFromAxisAngle(new T.Vector3(0,1,0),g.rotation.y);if(profile)carry.multiply(new T.Quaternion().setFromEuler(new T.Euler(d.kind==='tide'?-.10:.10,0,-.12)));heldWorld.slerp(carry,swim*(1-aim));}held.quaternion.copy(parent.multiply(heldWorld));}
   if(shieldWorld){save(d.shield);g.updateMatrixWorld(true);d.shield.quaternion.copy(d.shield.parent.getWorldQuaternion(new T.Quaternion()).invert().multiply(shieldWorld));}
   if(d.cape){save(d.cape);d.cape.rotateX(-.20*swim+Math.sin(phase-.6)*.035*depth);d.cape.rotateZ(Math.sin(phase-.9)*.025*swim);}
+  // Long front cloth keeps its gravity after the swimming rig tilts; waist anchors still follow the body.
+  if(robeWorld){g.updateMatrixWorld(true);for(const [i,panel]of d.shadowRobe.entries()){save(panel);panel.quaternion.copy(panel.parent.getWorldQuaternion(new T.Quaternion()).invert().multiply(robeWorld[i]));}}
  }else if(!heavy){d.rig.rotation.x+=swim*.10*moving;for(const [i,l]of(d.legs||[]).entries()){const joint=l.joint||l;save(joint);joint.rotateX(Math.sin(phase+(l.phase??i*Math.PI/3))*.25*swim);}}
 }

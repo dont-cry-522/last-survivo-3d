@@ -24,7 +24,7 @@ function meshes(root){const out=[];root.traverse(o=>{if(o.isMesh)out.push(o);});
 function finite(root){root.updateMatrixWorld(true);root.traverse(o=>assert(o.matrixWorld.elements.every(Number.isFinite),o.name+' has an invalid pose'));}
 function checkRig(hero){
  const d=hero.userData;assert.equal(d.skinned,true);assert.equal(d.kind,'wraith');assert.equal(d.wraith,undefined);
- assert(d.shadowAura?.parent===hero,'shadow presence is missing from the real actor');assert(d.model.skeleton.bones.length>50);assert(d.gun);assert(!hero.getObjectByName('wraith-tailored-tunic'));
+ assert(d.shadowAura?.parent===(d.weaponId==='shade'?d.gun:hero),'shadow presence is missing from the real actor');assert(d.model.skeleton.bones.length>50);assert(d.gun);assert(!hero.getObjectByName('wraith-tailored-tunic'));
  for(const name of ['pelvis','spine_01','Head','upperarm_r','hand_r','thigh_l','calf_l','foot_l'])assert(d.model.skeleton.bones.some(b=>b.name===name),'missing '+name);
  assert(meshes(d.model).filter(m=>m.isSkinnedMesh).length>=3,'only an isolated body fragment is skinned');finite(hero);
 }
@@ -72,6 +72,7 @@ test('all shadow loadouts remain finite through movement, casts, dodges, swimmin
     if(weapon==='grimoire'){
      const up=new T.Vector3(0,1,0).applyQuaternion(d.gun.getWorldQuaternion(new T.Quaternion()));
      assert(up.y>.99,`book tips away from horizontal at ${fps} fps: ${up.y}`);
+     for(const panel of d.shadowRobe){const clothUp=new T.Vector3(0,1,0).applyQuaternion(panel.getWorldQuaternion(new T.Quaternion()));assert(clothUp.y>.96,`long cloth tilts away from gravity at ${fps} fps: ${clothUp.y}`);}
     }
    }
    assert(d.smoothedSpeed<.001,'gait fails to settle after stopping');
@@ -106,4 +107,20 @@ test('disposing shadow actors frees only owned rig resources and preserves anoth
   animateActor(b,1/60,6,.2,0);finite(b);
   for(const mesh of bMeshes.filter(m=>m.isSkinnedMesh))assert(mesh.getVertexPosition(0,new T.Vector3()).toArray().every(Number.isFinite));
  }finally{for(const resource of shared)resource.removeEventListener('dispose',onShared);if(!disposed)disposeHero(a);disposeHero(b);}
+});
+
+
+test('weapon forms have distinct cloth silhouettes without changing another actor',()=>{
+ const forms=['shade','shadowblade','grimoire'].map(weapon=>actor('wraith',weapon));
+ try{
+  const size=h=>{const g=h.userData.cape.geometry;g.computeBoundingBox();return g.boundingBox.getSize(new T.Vector3());};
+  const [traveller,assassin,mage]=forms.map(size);
+  assert(traveller.x<assassin.x*.5,'scarf became a broad cape');
+  assert(assassin.y<mage.y*.6,'short and long forms lost their silhouette difference');
+  assert.equal(forms[0].userData.shadowRobe,undefined);assert.equal(forms[1].userData.shadowRobe,undefined);
+  const panels=forms[2].userData.shadowRobe;assert.equal(panels.length,2);assert.equal(panels[0].parent,forms[2].userData.pelvis);assert.equal(panels[1].parent,forms[2].userData.pelvis);
+  let freed=0;for(const panel of panels)for(const resource of [panel.geometry,panel.material])resource.addEventListener('dispose',()=>freed++);
+  disposeHero(forms.pop());assert.equal(freed,4);
+  for(const h of forms){animateActor(h,1,5,.1,0);finite(h);}
+ }finally{forms.forEach(disposeHero);}
 });

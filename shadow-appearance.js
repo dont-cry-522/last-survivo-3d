@@ -1,5 +1,5 @@
 import * as T from './vendor/three.module.js';
-import {smoothSeams} from './hero-finish.js?v=111';
+import {smoothSeams} from './hero-finish.js?v=112';
 
 // Reuse the Ranger's authored cloth, UVs and skinning; each template owns its tints.
 export function shadowOutfit(root){
@@ -10,7 +10,7 @@ export function shadowOutfit(root){
   const tintMaterial=source=>{
    const m=source.clone();
    if(!source.name.includes('Ranger'))return m;
-   const leather=/Belt|Bracer|Feet/.test(o.name),color=/Feet/.test(o.name)?0x29343e:/Belt|Bracer/.test(o.name)?0x35424e:/Legs/.test(o.name)?0x3b4e63:/Arms/.test(o.name)?0x496179:/Head_Hood/.test(o.name)?0x52687d:0x516b82;
+   const leather=/Belt|Bracer|Feet/.test(o.name),color=/Feet/.test(o.name)?0x212a35:/Belt|Bracer/.test(o.name)?0x29313c:/Legs/.test(o.name)?0x2a3b51:/Arms/.test(o.name)?0x344962:/Head_Hood/.test(o.name)?0x3d536d:0x344c67;
    const tint=new T.Color(color).toArray().join(',');
    m.color.set(0xffffff);m.roughness=leather?.86:.94;m.metalness=.015;
    m.roughnessMap=null;m.metalnessMap=null;m.normalScale?.setScalar(leather?.24:.18);
@@ -28,44 +28,72 @@ export function shadowOutfit(root){
 
 const scarfMaterial=new T.MeshStandardMaterial({vertexColors:true,roughness:.96,metalness:0,side:T.DoubleSide});
 const claspMaterial=new T.MeshStandardMaterial({color:0x9da8b0,roughness:.70,metalness:.32});
-let scarfGeometry,claspGeometry;
+const scarves=new Map();
+let claspGeometry;
 
-function shortScarf(){
- if(scarfGeometry)return scarfGeometry;
- const positions=[],colors=[],indices=[],slices=40,rows=10;
- const cloth=new T.Color(0x6b8295),edge=new T.Color(0x9aafbd);
- for(let j=0;j<=rows;j++)for(let i=0;i<=slices;i++){
-  const v=j/rows,start=.50-v*.90,a=start+i/slices*(Math.PI*2-.85-start),s=Math.sin(a),c=Math.cos(a),left=Math.max(0,s),right=Math.max(0,-s),front=Math.max(0,c),spread=Math.sin(v*Math.PI/2);
-  // +X is the wearer's left: wrap that shoulder, then let the open front fall diagonally.
-  const wave=Math.cos(a*5+v*7),fold=Math.sin(v*Math.PI)*wave*.009;
-  const x=s*(.085+(.070+.145*left)*spread+fold);
-  const worn=(.006+.005*Math.sin(a*9))*Math.pow(v,9);
-  const drop=Math.pow(v,1+left*(1-front));
-  const y=1.557-drop*(.075+.115*left-.035*right+.185*front)+Math.sin(a*5+v*4)*.005*v+worn;
-  const z=-.035+c*(.090+.094*spread+fold)+front*(.012+.016*spread+.022*Math.sin(v*Math.PI));
-  positions.push(x,y,z);
-  const hem=j===rows&&((i>=2&&i<=3)||(i>=12&&i<=13))?.18:0;
-  const color=cloth.clone().lerp(edge,hem).multiplyScalar(.90+.10*wave);
-  colors.push(color.r,color.g,color.b);
-  if(j<rows&&i<slices){const n=j*(slices+1)+i;indices.push(n,n+slices+1,n+1,n+1,n+slices+1,n+slices+2);}
+function clothForm(weapon){
+ if(scarves.has(weapon))return scarves.get(weapon);
+ let panels,claspPanel,claspV;
+ if(weapon==='shadowblade'){
+  // Two thin lengths lie over the shoulders; neither wraps the upper arms.
+  panels=[1,-1].map(side=>(u,v)=>{
+   const bend=v*2-1,fold=Math.sin(u*Math.PI*3+v)*.004*Math.sin(v*Math.PI);
+   return[side*(.067+.166*u+.006*Math.sin(v*Math.PI)),1.566-.025*u-(bend<0?.080:.090)*bend*bend+fold,-.174+.278*v];
+  });
+  claspPanel=panels[0];claspV=.90;
+ }else if(weapon==='grimoire'){
+  // Open V-shaped cloth falls down the chest instead of filling it with a shell.
+  panels=[1,-1].map(side=>(u,v)=>{
+   const x=side*(.104-.088*v)+(u-.5)*(.056-.024*v);
+   return[x,1.528-.267*v,.095+.049*Math.sin(v*Math.PI/2)+Math.sin(u*Math.PI*2)*.004*Math.sin(v*Math.PI)];
+  });
+  claspPanel=panels[0];claspV=.90;
+ }else{
+  const neck=(u,v)=>{
+   const x=-.094+.196*u;
+   return[x,1.546-.041*v+.003*Math.sin(u*Math.PI),.095-.027*(x/.11)**2+.002*Math.sin(u*Math.PI*3)];
+  };
+  const sash=(u,v)=>{
+   const x=.083-.174*v+(u-.5)*(.058-.012*v);
+   return[x,1.526-.206*v+(u-.5)*.025,.094+.043*Math.sin(v*Math.PI/2)+Math.sin(u*Math.PI*2+v)*.004*Math.sin(v*Math.PI)];
+  };
+  panels=[neck,sash];claspPanel=sash;claspV=.18;
  }
- scarfGeometry=new T.BufferGeometry();
- scarfGeometry.setAttribute('position',new T.Float32BufferAttribute(positions,3));
- scarfGeometry.setAttribute('color',new T.Float32BufferAttribute(colors,3));
- scarfGeometry.setIndex(indices);scarfGeometry.computeVertexNormals();smoothSeams(scarfGeometry);
- return scarfGeometry;
+ const positions=[],colors=[],indices=[],slices=8,rows=14;
+ const cloth=new T.Color(0x46627f),edge=new T.Color(0x697f93);
+ for(const surface of panels){
+  const offset=positions.length/3;
+  for(let j=0;j<=rows;j++)for(let i=0;i<=slices;i++){
+   const u=i/slices,v=j/rows;
+   positions.push(...surface(u,v));
+   const color=cloth.clone().lerp(edge,(i===0||i===slices)?.10:0).multiplyScalar(.92+.08*Math.cos(u*Math.PI*3+v));
+   colors.push(color.r,color.g,color.b);
+   if(j<rows&&i<slices){const n=offset+j*(slices+1)+i;indices.push(n,n+slices+1,n+1,n+1,n+slices+1,n+slices+2);}
+  }
+ }
+ const geometry=new T.BufferGeometry();
+ geometry.setAttribute('position',new T.Float32BufferAttribute(positions,3));
+ geometry.setAttribute('color',new T.Float32BufferAttribute(colors,3));
+ geometry.setIndex(indices);geometry.computeVertexNormals();smoothSeams(geometry);
+ const claspPosition=new T.Vector3(...claspPanel(.5,claspV));
+ const across=new T.Vector3(...claspPanel(.51,claspV)).sub(claspPosition),down=new T.Vector3(...claspPanel(.5,claspV+.01)).sub(claspPosition);
+ const claspNormal=across.cross(down).normalize();if(claspNormal.z<0)claspNormal.negate();
+ claspPosition.addScaledVector(claspNormal,.005);
+ const form={geometry,claspPosition,claspNormal};scarves.set(weapon,form);return form;
 }
 
-export function shadowAccessories(){
+export function shadowAccessories(weapon='shade'){
+ if(weapon!=='shadowblade'&&weapon!=='grimoire')weapon='shade';
+ const form=clothForm(weapon);
  const chest=new T.Group();chest.name='Shadow_traveller_scarf';
- const scarf=new T.Mesh(shortScarf(),scarfMaterial);scarf.name='Shadow_short_scarf';chest.add(scarf);
+ const scarf=new T.Mesh(form.geometry,scarfMaterial);scarf.name='Shadow_short_scarf';chest.add(scarf);
  if(!claspGeometry){
   const upper=new T.Shape();upper.moveTo(-.013,.017);upper.lineTo(-.007,.020);upper.lineTo(.009,.004);upper.lineTo(.003,-.001);upper.closePath();
   const lower=new T.Shape();lower.moveTo(.007,-.006);lower.lineTo(.013,-.003);lower.lineTo(.016,-.012);lower.lineTo(.002,-.021);lower.lineTo(-.002,-.016);lower.lineTo(.009,-.011);lower.closePath();
   claspGeometry=new T.ExtrudeGeometry([upper,lower],{depth:.004,bevelEnabled:true,bevelThickness:.001,bevelSize:.001,bevelSegments:1,curveSegments:1});
  }
  const clasp=new T.Mesh(claspGeometry,claspMaterial);clasp.name='Shadow_broken_clasp';
- clasp.position.set(.085,1.478,.114);clasp.rotation.set(-.68,.17,.30);chest.add(clasp);
+ clasp.position.copy(form.claspPosition);clasp.quaternion.setFromUnitVectors(new T.Vector3(0,0,1),form.claspNormal);clasp.rotateZ(.30);chest.add(clasp);
  chest.traverse(o=>{if(o.isMesh)o.castShadow=o.receiveShadow=true;});
  // Coordinates are the source model's rest space; attachAtRest handles the chest bone.
  return{chest};
