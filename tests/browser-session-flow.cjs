@@ -12,7 +12,7 @@ const {chromium}=require(process.env.PLAYWRIGHT_MODULE||'playwright'),assert=req
    for(let i=0;i<boxes.length;i++)for(let j=i+1;j<boxes.length;j++){const a=boxes[i],b=boxes[j];assert(!(Math.min(a.x+a.width,b.x+b.width)>Math.max(a.x,b.x)&&Math.min(a.y+a.height,b.y+b.height)>Math.max(a.y,b.y)),'touch controls overlap '+width);}
   }
   if(process.env.OUTPUT_DIR&&width===320)await page.screenshot({path:process.env.OUTPUT_DIR+'/mobile-controls-v34-320.png'});
-  await page.evaluate(async()=>{const {experienceNeeded}=await import('./rules.js?v=107');game3d.grant([1,2,3].reduce((total,level)=>total+experienceNeeded(level),0));});let choices=0;
+  await page.evaluate(async()=>{const {experienceNeeded}=await import('./rules.js?v=108');game3d.grant([1,2,3].reduce((total,level)=>total+experienceNeeded(level),0));});let choices=0;
   while(await page.evaluate(()=>game3d.player.pending>0)){await page.evaluate(()=>document.querySelector('#upgrade-ready').click());await page.locator('[data-upgrade]').first().click();assert(++choices<8,'upgrade loop');}
   assert.equal(choices,3);assert.equal(await page.evaluate(()=>game3d.player.pending),0);
   const move=async()=>{

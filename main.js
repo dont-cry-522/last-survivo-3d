@@ -1,56 +1,56 @@
-import{lobbyLandscape}from'./lobby-landscape.js?v=107';
-import{installForestVista}from'./forest-vista.js?v=107';
-import{mapBrief}from'./expedition-brief.js?v=107';
-import{polishEnvironmentModels}from'./environment-props.js?v=107';
-import{EnvironmentLighting,installDistantLandscape}from'./environment-lighting.js?v=107';
-import{MirageCombat}from'./mirage-combat.js?v=107';
-import{MirageVFX}from'./mirage-vfx.js?v=107';
-import{mirageSound}from'./mirage-audio.js?v=107';
-import{PoisonCombat}from'./poison-combat.js?v=107';
-import{PoisonVFX}from'./poison-vfx.js?v=107';
-import{poisonSound}from'./poison-audio.js?v=107';
-import {HeroPreview} from './hero-preview.js?v=107';
-import {knownMapPoints,mapWaypoint,waypointHint} from './map-navigation.js?v=107';
-import {createExploration,EXPLORATION_SIZE} from './map-exploration.js?v=107';
-import{REGIONS,biomeAt,biomeWeights,biomeColor,CONFLUENCE_TEXT}from'./confluence.js?v=107';
-import{observePlayer}from'./target-awareness.js?v=107';
-import{TERRAIN_TIPS,onIce,iceMotion,damageTerrain,updateTactics,terrainMesh}from'./map-tactics.js?v=107';
-import{advanceRoaming,roamingHint,courierDirection}from'./roaming-events.js?v=107';
-import{SMALL_FINDS,advanceDiscovery,discoveryHint,animateDiscoveries}from'./map-discoveries.js?v=107';
-import{recordEnemyHit,EnemyDeaths}from'./enemy-feedback.js?v=107';
-import{sandWeather}from'./sand-weather.js?v=107';
-import{HERO_DODGES,HERO_ABILITY_TEXT,dodgeTravel}from'./hero-dodge.js?v=107';
-import{LINGYA_HOP_DURATION,lingyaHopScale,planLingyaHop,steerLingyaHop}from'./lingya-motion.js?v=107';
-import{BeastCompanion,PET_TIMING,sideHopTravel}from'./beast-companion.js?v=107';
-import{makeBadger,animateBadger}from'./beast-model.js?v=107';
-import{updateTide,harpoonHit,tideDashTravel,HARPOON_ATTACKS}from'./coast.js?v=107';
-import{tickBoss}from'./boss-combat.js?v=107';
-import{inMeleeArc,meleeDamageScale}from'./melee.js?v=107';
-import{discoverSite}from'./site-discovery.js?v=107';
-import{MAP_EVENTS,createMapEvent,advanceMapEvent,eventProgress}from'./map-events.js?v=107';
-import{MAP_HALF as DEFAULT_HALF}from'./map-layout.js?v=107';
-import{terrainAt}from'./water.js?v=107';
-import{crossedSwimPhase}from'./swim-motion.js?v=107';
-import{RELICS,relicChoices,equipRelic,relicEvent,incomingRelicDamage,readJournal,writeJournal,recordDiscovery,recordVictory}from'./expedition.js?v=107';
-import{EXPEDITION_BOSS_TIME,encounterPhase,enemyGrowth,encounterRole,HUNT_SQUAD,huntFormation,HUNT_BOONS,takeHuntBoon,enemyApproach,separation,attackSlotAvailable}from'./encounters.js?v=107';
-import{setupMobileDisplay}from'./mobile-display.js?v=107';
-import{weaponCuePhases,mirageShotDelay}from'./weapon-performance.js?v=107';
-import{ENEMY_VOICES}from'./enemy-audio.js?v=107';
-import{ENEMY_MOTION,gaitPace,advanceEnemyLocomotion}from'./enemy-motion.js?v=107';
-import{MAP_ROSTERS,REGIONAL_ENEMIES,regionalEnemy}from'./map-enemies.js?v=107';
-import{HeroSkills}from'./hero-skills.js?v=107';
-import{EXTRA_BY_ID,skillPairState,skillPairHint}from'./skill-catalog.js?v=107';
-import{SCOUT_ROLL_DURATION,rollTravel}from'./dodge-motion.js?v=107';
-import{renderPixelRatio,RenderBudget}from'./render-budget.js?v=107';
-import{groundCue,disposeCue}from'./ground-cues.js?v=107';
-import{weaponRouteEffect,WEAPON_ROUTE_LOOKS}from'./weapon-route-vfx.js?v=107';
-import{SkillVFX}from'./skill-vfx.js?v=107';
-import{loadHeroAssets,disposeHero}from'./skinned-hero.js?v=107';
-import{GameAudio,SFX_STYLES}from'./audio.js?v=107';
-import{ENEMY_GUIDE,CIRCLE_GUIDE}from'./battle-guide.js?v=107';
+import{lobbyLandscape}from'./lobby-landscape.js?v=108';
+import{installForestVista}from'./forest-vista.js?v=108';
+import{mapBrief}from'./expedition-brief.js?v=108';
+import{polishEnvironmentModels}from'./environment-props.js?v=108';
+import{EnvironmentLighting,installDistantLandscape}from'./environment-lighting.js?v=108';
+import{MirageCombat}from'./mirage-combat.js?v=108';
+import{MirageVFX}from'./mirage-vfx.js?v=108';
+import{mirageSound}from'./mirage-audio.js?v=108';
+import{PoisonCombat}from'./poison-combat.js?v=108';
+import{PoisonVFX}from'./poison-vfx.js?v=108';
+import{poisonSound}from'./poison-audio.js?v=108';
+import {HeroPreview} from './hero-preview.js?v=108';
+import {knownMapPoints,mapWaypoint,waypointHint} from './map-navigation.js?v=108';
+import {createExploration,EXPLORATION_SIZE} from './map-exploration.js?v=108';
+import{REGIONS,biomeAt,biomeWeights,biomeColor,CONFLUENCE_TEXT}from'./confluence.js?v=108';
+import{observePlayer}from'./target-awareness.js?v=108';
+import{TERRAIN_TIPS,onIce,iceMotion,damageTerrain,updateTactics,terrainMesh}from'./map-tactics.js?v=108';
+import{advanceRoaming,roamingHint,courierDirection}from'./roaming-events.js?v=108';
+import{SMALL_FINDS,advanceDiscovery,discoveryHint,animateDiscoveries}from'./map-discoveries.js?v=108';
+import{recordEnemyHit,EnemyDeaths}from'./enemy-feedback.js?v=108';
+import{sandWeather}from'./sand-weather.js?v=108';
+import{HERO_DODGES,HERO_ABILITY_TEXT,dodgeTravel}from'./hero-dodge.js?v=108';
+import{LINGYA_HOP_DURATION,lingyaHopScale,planLingyaHop,steerLingyaHop}from'./lingya-motion.js?v=108';
+import{BeastCompanion,PET_TIMING,sideHopTravel}from'./beast-companion.js?v=108';
+import{makeBadger,animateBadger}from'./beast-model.js?v=108';
+import{updateTide,harpoonHit,tideDashTravel,HARPOON_ATTACKS}from'./coast.js?v=108';
+import{tickBoss}from'./boss-combat.js?v=108';
+import{inMeleeArc,meleeDamageScale}from'./melee.js?v=108';
+import{discoverSite}from'./site-discovery.js?v=108';
+import{MAP_EVENTS,createMapEvent,advanceMapEvent,eventProgress}from'./map-events.js?v=108';
+import{MAP_HALF as DEFAULT_HALF}from'./map-layout.js?v=108';
+import{terrainAt}from'./water.js?v=108';
+import{crossedSwimPhase}from'./swim-motion.js?v=108';
+import{RELICS,relicChoices,equipRelic,relicEvent,incomingRelicDamage,readJournal,writeJournal,recordDiscovery,recordVictory}from'./expedition.js?v=108';
+import{EXPEDITION_BOSS_TIME,encounterPhase,enemyGrowth,encounterRole,HUNT_SQUAD,huntFormation,HUNT_BOONS,takeHuntBoon,enemyApproach,separation,attackSlotAvailable}from'./encounters.js?v=108';
+import{setupMobileDisplay}from'./mobile-display.js?v=108';
+import{weaponCuePhases,mirageShotDelay}from'./weapon-performance.js?v=108';
+import{ENEMY_VOICES}from'./enemy-audio.js?v=108';
+import{ENEMY_MOTION,gaitPace,advanceEnemyLocomotion}from'./enemy-motion.js?v=108';
+import{MAP_ROSTERS,REGIONAL_ENEMIES,regionalEnemy}from'./map-enemies.js?v=108';
+import{HeroSkills}from'./hero-skills.js?v=108';
+import{EXTRA_BY_ID,skillPairState,skillPairHint}from'./skill-catalog.js?v=108';
+import{SCOUT_ROLL_DURATION,rollTravel}from'./dodge-motion.js?v=108';
+import{renderPixelRatio,RenderBudget}from'./render-budget.js?v=108';
+import{groundCue,disposeCue}from'./ground-cues.js?v=108';
+import{weaponRouteEffect,WEAPON_ROUTE_LOOKS}from'./weapon-route-vfx.js?v=108';
+import{SkillVFX}from'./skill-vfx.js?v=108';
+import{loadHeroAssets,disposeHero}from'./skinned-hero.js?v=108';
+import{GameAudio,SFX_STYLES}from'./audio.js?v=108';
+import{ENEMY_GUIDE,CIRCLE_GUIDE}from'./battle-guide.js?v=108';
 import * as T from './vendor/three.module.js';
-import{MAPS,WEAPONS,ENEMIES,HERO_LOADOUTS,heroHealth,weaponFor,experienceNeeded,grantExperience,chooseUpgrades,takeUpgrade,weaponStats,weaponReachText,WEAPON_PATHS,segmentDistance,registerCrossbowHit,registerShadowHit,UPGRADES}from'./rules.js?v=107';
-import{actor,animateActor,animateWorld,buildWorld,clearAt,moveActor,mesh,mat}from'./world.js?v=107';
+import{MAPS,WEAPONS,ENEMIES,HERO_LOADOUTS,heroHealth,weaponFor,experienceNeeded,grantExperience,chooseUpgrades,takeUpgrade,weaponStats,weaponReachText,WEAPON_PATHS,segmentDistance,registerCrossbowHit,registerShadowHit,UPGRADES}from'./rules.js?v=108';
+import{actor,animateActor,animateWorld,buildWorld,clearAt,moveActor,mesh,mat}from'./world.js?v=108';
 const $=s=>document.querySelector(s),touch=matchMedia('(pointer:coarse)').matches;
 document.body.classList.toggle('touch',touch);if(touch)$('#map>small').textContent='点击查看地图';
 const canvas=$('#world');let renderer;
@@ -110,7 +110,7 @@ function showNextIntroduction(){
  const item=introductions.shift();if(!item)return;
  currentIntroduction=item;introduced.add(item.key);try{storage?.setItem('forest3d-known-notices',JSON.stringify([...introduced].slice(-256)));}catch{}
  const card=$('#encounter'),kind=item.key.startsWith('enemy:')?item.key.slice(6):null,info=ENEMY_GUIDE[kind],portrait=card.querySelector('img');portrait.hidden=!info;card.classList.toggle('has-portrait',!!info);
- if(info){portrait.src=info.image+'?v=107';portrait.alt=info.name+' · 游戏内外形';}else portrait.removeAttribute('src');
+ if(info){portrait.src=info.image+'?v=108';portrait.alt=info.name+' · 游戏内外形';}else portrait.removeAttribute('src');
  card.querySelector('strong').textContent=item.title;card.querySelector('span').textContent=info?info.tip:item.text;card.hidden=false;encounterTime=4;syncMobileNotices();
 }
 function introduce(key,title,text){if(introduced.has(key)||introductions.some(item=>item.key===key)||introductions.length>=3)return;introductions.push({key,title,text,queuedAt:time});}
@@ -146,7 +146,7 @@ function clearObjects(){mirage.reset();mirageVFX.clear();poison.reset();poisonVF
 function mapHalf(){return world?.half||DEFAULT_HALF;}
 function localBiome(x=player.x,z=player.z){return world?.regions?biomeAt(x,z):mapId;}
 function build(){renderer.shadowMap.needsUpdate=true;renderBudget.reset();clearObjects();if(world){scene.remove(world.group);world.group.traverse(o=>{if(o.isInstancedMesh)o.dispose();disposeCue(o);if(o.userData.ownedGeometry)o.geometry.dispose();});}if(hero){disposeHero(hero);scene.remove(hero);}world=buildWorld(mapId,Math.floor(Math.random()*1e8));polishEnvironmentModels(world);installForestVista(world,mapId);installDistantLandscape(world,mapId,biomeAt);world.exploration=createExploration(mapHalf(),mapVisibility);world.exploration.reveal(world.spawn.x,world.spawn.z);scene.add(world.group);scene.background=new T.Color(world.theme.fog);scene.fog=new T.FogExp2(world.theme.fog,.014);environmentLighting.update(mapId,world.regions?biomeWeights(world.spawn.x,world.spawn.z):null);hero=actor(heroId,weaponFor(heroId,weaponIndex).id);scene.add(hero);if(heroId==='mirage')animateActor(hero,0,0);player={...world.spawn,heroId,weaponId:weaponFor(heroId,weaponIndex).id,weaponPath:null,hp:heroHealth(heroId),maxHp:heroHealth(heroId),level:1,xp:0,pending:0,upgrades:{},attack:0,dash:0,dashTime:0,inv:0,hurt:0,hexSlow:0,angle:0,spell:{fire:3,ice:3,storm:3,veil:3,chain:3,rift:3},distance:0};if(state==='menu'){world.lobbyView=lobbyLandscape(world,mapId);player.x=world.lobbyView.x;player.z=world.lobbyView.z;heroPreview.landscapeYaw=world.lobbyView.yaw;}hero.position.set(player.x,0,player.z);camTarget.set(player.x,0,player.z);createCompanion();updateCamera(1);}
-function renderChoices(){renderJournalSummary();$('#selected-map-name').textContent=document.querySelector('[data-map='+mapId+']').textContent.replace(/^\d+\s*/, '').split(' · ')[0];$('#preview-map-name').textContent=$('#selected-map-name').textContent;$('#hero-preview').setAttribute('aria-label',document.querySelector('[data-hero='+heroId+']').childNodes[0].textContent+'的全身与武器');$('#hero-preview-description').textContent={scout:'灵活翻滚 · 枪械猎手',silver:'瞬移穿行 · 三连弩击',wraith:'影步潜行 · 暗影咒术',tide:'长叉破浪 · 潜潮伏击',lingya:'回旋骨镖 · 獾兽同行',wuling:'孢灯投毒 · 牵瘴转场',mirage:'幽紫毒团 · 蜕影诱敌'}[heroId];$('#map-description').textContent=MAPS[mapId].subtitle;const brief=mapBrief(mapId);$('#map-boss-name').textContent=brief.name;$('#map-boss-arrival').textContent=brief.arrival;$('#map-boss-threat').textContent=brief.threat;$('#map-win-condition').textContent=brief.goal;for(const b of document.querySelectorAll('[data-hero]'))b.classList.toggle('selected',b.dataset.hero===heroId);for(const b of document.querySelectorAll('[data-map]'))b.classList.toggle('selected',b.dataset.map===mapId);const box=$('#weapons');box.replaceChildren();for(let i=0;i<HERO_LOADOUTS[heroId].length;i++){const w=weaponFor(heroId,i),b=document.createElement('button');b.textContent=w.name;b.classList.toggle('selected',i===weaponIndex);b.onclick=()=>{weaponIndex=i;renderChoices();build();};box.append(b);}const selectedWeapon=weaponFor(heroId,weaponIndex),selected=selectedWeapon.id,identity={miasmalantern:'提灯蓄势放出大颗慢速毒团，击中、触碰障碍或到达射程尽头时破裂扩散，为周围敌人附毒；重复命中刷新而不叠层，障碍会挡住扩散。蜕影在原地留下当前生命的替身，自身遁形 0.85 秒，期间免伤且不能攻击；替身优先诱敌，撑满时间才绽放并留下小片毒雾，被击碎不会爆发。幻瘴强化诱敌布局，蚀影强化重新现身后的反击。',sporelantern:'投出毒囊，在落点留下固定毒雾，最多三片、重叠只取最强伤害；牵瘴步经过第一片主毒雾时将其搬到实际落点，保留剩余寿命。沉瘴在原地成熟，搬运会重置浓度；游瘴靠搬运留下毒带与宽毒幕。',boomerang:'骨镖去程与回程均能命中；獾兽会在附近游走、嗅探，优先扑击瞄准目标，超出活动范围再归队。普通移动和燕步不会打断伙伴作战，落后超过 18 米才优先归队；主动换位则会命令伙伴撤回。按住方向时优先向该方向燕步，途中可小幅转向；不按方向时向 4—9 米内的伙伴换位，伙伴侧向撤回起点。距离或通路不合适时使用普通燕步，冷却 3.6 秒。伙伴有独立生命，倒地 12 秒后复活。',harpoon:'基础生命 140，出手后 0.3 秒正面减伤 20%；直刺→近身横扫→回钩牵引，第三击牵引普通怪物并减速，保留安全身位；潜潮持续最多 2 秒，期间无敌、可移动但不能攻击，再按闪避或重新按攻击提前浮出；冷却 6.5 秒。',rifle:'细长高速枪弹，快速连续射击。',shotgun:'一枪多颗短弹，近距离扇面散射。',fire:'较大的火球，较慢飞行并留下火焰，命中爆燃。',crossbow:'细长箭杆与箭头，快速直射、三连命中击退。',shuriken:'旋转三刃飞镖，可穿过敌人。',dark:'较大的暗紫法球，缓慢飞行、命中散开暗雾。',shade:'掌心发射中型影脉，三次命中引爆刻印。',shadowblade:'投出宽弧影镰，飞回时可再次命中。',grimoire:'在瞄准方向撕开延迟裂口，不发射子弹。'};$('#weapon-preview').textContent=identity[selected]+weaponReachText(weaponStats({weaponId:selected}))+(selected==='boomerang'?' · 回收后再投掷，攻速同时提高往返速度 · ':' · 基础频率 '+selectedWeapon.rate+' 次/秒 · ')+(selectedWeapon.count>1?'每次 '+selectedWeapon.count+' 发 · ':'')+'成长路线：'+Object.values(WEAPON_PATHS).filter(p=>p.weapon===selected).map(p=>p.name).join(' / ')+' · 3 级起二选一'+({mirage:' · 专属技能：残蛊 / 诱葬 / 蜃衣',wuling:' · 专属技能：余毒未尽 / 败叶传染 / 苔衣护身',tide:' · 专属技能：破浪锋 / 盐蚀印记 / 潜潮余流',lingya:' · 专属技能：同猎追击 / 燕返藤绊 / 归镖抚慰'}[heroId]||'');$('.menu-caption span').textContent=heroId==='mirage'?'雾苓·蜃影 / VIOLET MIRAGE':heroId==='wuling'?'雾苓 / FOREST HERBALIST':heroId==='lingya'?'铃芽 / BEAST KEEPER':heroId==='tide'?'潮行者 / TIDE HUNTER':heroId==='wraith'?'影裔 / SHADOW WRAITH':heroId==='silver'?'霜影 / SILVER VEIL':'游侠 / WOODLAND RANGER';}
+function renderChoices(){renderJournalSummary();$('#selected-map-name').textContent=document.querySelector('[data-map='+mapId+']').textContent.replace(/^\d+\s*/, '').split(' · ')[0];$('#preview-map-name').textContent=$('#selected-map-name').textContent;$('#hero-preview').setAttribute('aria-label',document.querySelector('[data-hero='+heroId+']').childNodes[0].textContent+'的全身与武器');$('#hero-preview-description').textContent={scout:'灵活翻滚 · 枪械猎手',silver:'瞬移穿行 · 三连弩击',wraith:'影步潜行 · 暗影咒术',tide:'长叉破浪 · 潜潮伏击',lingya:'回旋骨镖 · 獾兽同行',wuling:'孢灯投毒 · 牵瘴转场',mirage:'幽紫毒团 · 蜕影诱敌'}[heroId];$('#map-description').textContent=MAPS[mapId].subtitle;const brief=mapBrief(mapId);$('#map-boss-name').textContent=brief.name;$('#map-boss-arrival').textContent=brief.arrival;$('#map-boss-threat').textContent=brief.threat;$('#map-win-condition').textContent=brief.goal;for(const b of document.querySelectorAll('[data-hero]'))b.classList.toggle('selected',b.dataset.hero===heroId);for(const b of document.querySelectorAll('[data-map]'))b.classList.toggle('selected',b.dataset.map===mapId);const box=$('#weapons');box.replaceChildren();for(let i=0;i<HERO_LOADOUTS[heroId].length;i++){const w=weaponFor(heroId,i),b=document.createElement('button');b.textContent=w.name;b.classList.toggle('selected',i===weaponIndex);b.onclick=()=>{weaponIndex=i;renderChoices();build();};box.append(b);}const selectedWeapon=weaponFor(heroId,weaponIndex),selected=selectedWeapon.id,identity={miasmalantern:'提灯蓄势放出大颗慢速毒团，击中、触碰障碍或到达射程尽头时破裂扩散，为周围敌人附毒；重复命中刷新而不叠层，障碍会挡住扩散。蜕影在原地留下当前生命的替身，自身遁形 0.85 秒，期间免伤且不能攻击；替身优先诱敌，撑满时间才绽放并留下小片毒雾，被击碎不会爆发。幻瘴强化诱敌布局，蚀影强化重新现身后的反击。',sporelantern:'投出毒囊，在落点留下固定毒雾，最多三片、重叠只取最强伤害；牵瘴步经过第一片主毒雾时将其搬到实际落点，保留剩余寿命。沉瘴在原地成熟，搬运会重置浓度；游瘴靠搬运留下毒带与宽毒幕。',boomerang:'骨镖去程与回程均能命中；獾兽会在附近游走、嗅探，优先扑击瞄准目标，超出活动范围再归队。普通移动和燕步不会打断伙伴作战，落后超过 18 米才优先归队；主动换位则会命令伙伴撤回。按住方向时优先向该方向燕步，途中可小幅转向；不按方向时向 4—9 米内的伙伴换位，伙伴侧向撤回起点。距离或通路不合适时使用普通燕步，冷却 3.6 秒。伙伴有独立生命，倒地 12 秒后复活。',harpoon:'基础生命 140，出手后 0.3 秒正面减伤 20%；直刺→近身横扫→回钩牵引，第三击牵引普通怪物并减速，保留安全身位；潜潮持续最多 2 秒，期间无敌、可移动但不能攻击，再按闪避或重新按攻击提前浮出；冷却 6.5 秒。',rifle:'细长高速枪弹，快速连续射击。',shotgun:'一枪多颗短弹，近距离扇面散射。',fire:'较大的火球，较慢飞行并留下火焰，命中爆燃。',crossbow:'细长箭杆与箭头，快速直射、三连命中击退。',shuriken:'旋转三刃飞镖，可穿过敌人。',dark:'较大的暗紫法球，缓慢飞行、命中散开暗雾。',shade:'掌心发射中型影脉，三次命中引爆刻印。',shadowblade:'投出宽弧影镰，飞回时可再次命中。',grimoire:'在瞄准方向撕开延迟裂口，不发射子弹。'};$('#weapon-preview').textContent=identity[selected]+weaponReachText(weaponStats({weaponId:selected}))+(selected==='boomerang'?' · 回收后再投掷，攻速同时提高往返速度 · ':' · 基础频率 '+selectedWeapon.rate+' 次/秒 · ')+(selectedWeapon.count>1?'每次 '+selectedWeapon.count+' 发 · ':'')+'成长路线：'+Object.values(WEAPON_PATHS).filter(p=>p.weapon===selected).map(p=>p.name).join(' / ')+' · 3 级起二选一'+({mirage:' · 专属技能：残蛊 / 诱葬 / 蜃衣',wuling:' · 专属技能：余毒未尽 / 败叶传染 / 苔衣护身',tide:' · 专属技能：破浪锋 / 盐蚀印记 / 潜潮余流',lingya:' · 专属技能：同猎追击 / 燕返藤绊 / 归镖抚慰'}[heroId]||'');$('.menu-caption span').textContent=heroId==='mirage'?'雾苓·蜃影 / VIOLET MIRAGE':heroId==='wuling'?'雾苓 / FOREST HERBALIST':heroId==='lingya'?'铃芽 / BEAST KEEPER':heroId==='tide'?'潮行者 / TIDE HUNTER':heroId==='wraith'?'影裔 / TWILIGHT MAGE':heroId==='silver'?'霜影 / SILVER VEIL':'游侠 / WOODLAND RANGER';}
 function setMapVisibility(mode){
  if(!['explore','visible'].includes(mode)||state!=='menu')return;
  mapVisibility=mode;
@@ -187,7 +187,7 @@ function resume(){state='playing';$('#dialog').close();keys.clear();releaseStick
 function menu(){renderChoices();sound.stopWeapons();sound.stopCreatures();state='menu';$('#dialog').close();$('#menu').hidden=false;$('#hud').hidden=true;$('#touch').hidden=true;$('#encounter').hidden=true;introductions.length=0;encounterTime=0;toastTimer=0;$('#toast').style.opacity=0;syncMobileNotices();document.body.classList.remove('playing');keys.clear();releaseStick();clearAttack();build();}
 $('#pause').onclick=pause;$('#dialog').addEventListener('cancel',e=>{e.preventDefault();if(state==='paused')resume();});
 $('#battle-guide').onclick=()=>{const playing=state==='playing';if(!playing&&state!=='menu')return;if(playing){sound.stopWeapons();sound.stopCreatures();state='paused';keys.clear();releaseStick();clearAttack();}dialog('战场说明','图片使用实战模型；首领实际体型更大。新发现只在战斗空档简短提示；已读内容跨局记住，可在这里随时查看完整介绍。',[[playing?'继续远征':'返回准备',playing?resume:()=>$('#dialog').close()]]);
- const panel=document.createElement('section');panel.className='guide-content';const renderGuide=selected=>{const id=selected==='confluence'?localBiome():selected;panel.innerHTML=(selected==='confluence'?'<h3>五境大远征</h3><p>'+CONFLUENCE_TEXT+'</p>':'')+'<div class=guide-biomes>'+Object.entries(MAPS).map(([key,m])=>`<button data-guide-map="${key}" aria-pressed="${key===selected}">${m.name}</button>`).join('')+'</div><h3>怪物图鉴 · 图片与实战一致</h3><small>图片按展示空间缩放，首领在实战中远大于普通怪物。</small>'+Object.values(MAP_ROSTERS[id]).map(kind=>{const info=ENEMY_GUIDE[kind];return `<article class=enemy-entry data-enemy="${kind}"><img src="${info.image}?v=107" alt="${info.name}的游戏模型" width=112 height=112><div><h4>${info.name}${kind===MAP_ROSTERS[id].boss?'<small>首领</small>':''}</h4><dl><dt>识别与特点</dt><dd>${info.traits}</dd><dt>攻击方式</dt><dd>${info.attack}</dd><dt>应对方法</dt><dd>${info.tip}</dd></dl></div></article>`;}).join('')+'<h3>地形互动</h3><p>幽潮遗港由曲折水湾、支流与干燥岛地组成，水湾朝向和岸线每局会有变化；仓储码头、沉船岸与古灯塔分布在不同方向。长短栈桥供涨潮时绕行，退潮浅滩提供另一条近路。每 28 秒涨落一次潮水：涨潮前提前 3 秒提示，潮水扩大；栈桥上不受水阻，潮行者涉水移速至少 72%。修复灯塔需清除守卫，并在退潮时累计停留 8 秒。青色水爆会伤害并减速，预告后侧移。</p><p>幽林与雪地有蓝绿色水池，小地图同色标出。浅水涉行、深水划水；越深越慢，池心移速约为陆地 48%。地面怪物也减速，重型怪物水阻较小，浮霜晶核不受水阻。游侠水中闪避变成短距离划水，瞬移仍可穿越水池；水中可继续攻击，没有溺水惩罚。赤烬荒原保留地火与灰烬地形。</p><h3>地图专属事件</h3>'+Object.values(MAP_EVENTS).map(e=>'<p><b>'+e.name+'</b><br>'+e.tip+'</p>').join('')+'<p>开局不标出全部事件。先沿附近小径探索，走到约 16 米内才会发现可用地点，并将名称记在小地图上；已发现的地点不会因离开而消失。技能事件约半分钟后出现，伏击约一分钟后出现，远处祭坛约一分半后出现，具体时间每局略有变化。靠近已发现事件会显示玩法和实时进度。事件完成后仍需靠近中心领取原有技能或治疗奖励；撤退保留已完成进度，暂停时事件与危险一起暂停。</p><h3>利用地形战斗</h3><p>'+TERRAIN_TIPS[id]+'</p><h3>随机小遭遇</h3><p>金色宝袋标出携宝猎物：靠近 8 米或先命中后开始追击，18 秒内击败，再靠近掉落的宝袋领取 30 经验。它不会攻击，也可以不追。补给营地靠近 6 米才惊动三名守卫；清理后靠近领取 40 经验和 18% 治疗。营地有不同守卫组合，可绕行离开，奖励每局一次。首领出现后不再触发新遭遇。</p><h3>沿途小发现 · '+MAPS[id].name+'</h3><p><b>'+SMALL_FINDS[id].name+'</b> · +'+SMALL_FINDS[id].xp+' 经验'+(SMALL_FINDS[id].heal?' / 恢复 '+Math.round(SMALL_FINDS[id].heal*100)+'% 生命':'')+'<br>'+SMALL_FINDS[id].tip+'</p><p>独立地图每局五处，约 10 / 45 / 80 / 115 / 150 秒后可发现；五境大远征每区保留三处；进入附近 9 米才会显露。浅黄色小方点是已发现且未领取的小补给，靠近会提示做法。奖励每处只能领取一次，领取后保留景物；附近有敌人时暂停采集，不需要额外按键。</p><h3>探索与遗物</h3><p>独立地图约 192 × 192，五境大远征约 280 × 280。出生区域附近仍有遗物遗迹，外围还会逐步出现补给和技能祭坛，发现后才显示小地图标记。</p><p>地图金色“遗物”标记是一处随机位置的遗迹。靠近唤醒四名守卫，清理后从三件遗物中选择一件；选择时战斗暂停，不消耗升级。遗物只在本局生效，发现记录保留在远征手册。武器每次发射算一次攻击，霰弹与多枚飞镖不重复计数；点击技能栏的遗物可查看具体效果。</p><h3>战斗节奏与经验</h3><p>首轮精锐围猎约 31 秒开始，提前 5 秒预告；独立地图约 2 分钟后出现首领，五境大远征按地标进度唤醒守卫。金色晶冠标出领队。狼群绕两侧，重甲正面推进，远程怪借它掩护。清理整队获得额外经验与 8% 治疗，随后有短暂喘息。林地会交替出现岩甲护送与獠牙穿插小队；首次清队可选择追猎纹章或林卫护符，仅本局生效。喘息期暂停增援，已有怪物仍会攻击。</p><p>升级次数保留在血条下方「选择成长」，可随时主动点开；自动选卡等待安全空档，选完或延后后至少间隔 18 秒。「稍后选择」保留原卡片，连续升级不会马上逐个打断战斗。已经展示的新介绍跨局记住，完整内容在本图鉴中查阅。</p><p>越后期的怪物掉落越多经验。灵光靠近即拾取；附近灵光停留 12 秒、远处灵光停留 24 秒后自动回收，喘息时统一回收。手动和自动攻击使用相同经验与怪物强度。</p><h3>地面提示代表什么</h3>'+CIRCLE_GUIDE.map(info=>`<p><b>${info.color} · ${info.name}</b><br><small>${info.meaning}</small></p>`).join('')+'<h3>素材鸣谢</h3><p>铃芽的头部改编自 <a href="https://studio.blender.org/characters/rain/v3/" target="_blank" rel="noopener">Rain Rig (CC) Blender Foundation | studio.blender.org</a>，按 <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">CC BY 4.0</a> 使用。调整了比例、五官、肤色、眨眼和骨骼适配。服装与基础动作来自 Quaternius（CC0）。<a href="THIRD_PARTY_ASSETS.md" target="_blank" rel="noopener">完整素材说明</a></p>';};renderGuide(mapId);panel.onclick=e=>{const id=e.target.closest('[data-guide-map]')?.dataset.guideMap;if(MAPS[id])renderGuide(id);};$('#dialog-content').insertBefore(panel,$('#dialog-content .dialog-actions'));};
+ const panel=document.createElement('section');panel.className='guide-content';const renderGuide=selected=>{const id=selected==='confluence'?localBiome():selected;panel.innerHTML=(selected==='confluence'?'<h3>五境大远征</h3><p>'+CONFLUENCE_TEXT+'</p>':'')+'<div class=guide-biomes>'+Object.entries(MAPS).map(([key,m])=>`<button data-guide-map="${key}" aria-pressed="${key===selected}">${m.name}</button>`).join('')+'</div><h3>怪物图鉴 · 图片与实战一致</h3><small>图片按展示空间缩放，首领在实战中远大于普通怪物。</small>'+Object.values(MAP_ROSTERS[id]).map(kind=>{const info=ENEMY_GUIDE[kind];return `<article class=enemy-entry data-enemy="${kind}"><img src="${info.image}?v=108" alt="${info.name}的游戏模型" width=112 height=112><div><h4>${info.name}${kind===MAP_ROSTERS[id].boss?'<small>首领</small>':''}</h4><dl><dt>识别与特点</dt><dd>${info.traits}</dd><dt>攻击方式</dt><dd>${info.attack}</dd><dt>应对方法</dt><dd>${info.tip}</dd></dl></div></article>`;}).join('')+'<h3>地形互动</h3><p>幽潮遗港由曲折水湾、支流与干燥岛地组成，水湾朝向和岸线每局会有变化；仓储码头、沉船岸与古灯塔分布在不同方向。长短栈桥供涨潮时绕行，退潮浅滩提供另一条近路。每 28 秒涨落一次潮水：涨潮前提前 3 秒提示，潮水扩大；栈桥上不受水阻，潮行者涉水移速至少 72%。修复灯塔需清除守卫，并在退潮时累计停留 8 秒。青色水爆会伤害并减速，预告后侧移。</p><p>幽林与雪地有蓝绿色水池，小地图同色标出。浅水涉行、深水划水；越深越慢，池心移速约为陆地 48%。地面怪物也减速，重型怪物水阻较小，浮霜晶核不受水阻。游侠水中闪避变成短距离划水，瞬移仍可穿越水池；水中可继续攻击，没有溺水惩罚。赤烬荒原保留地火与灰烬地形。</p><h3>地图专属事件</h3>'+Object.values(MAP_EVENTS).map(e=>'<p><b>'+e.name+'</b><br>'+e.tip+'</p>').join('')+'<p>开局不标出全部事件。先沿附近小径探索，走到约 16 米内才会发现可用地点，并将名称记在小地图上；已发现的地点不会因离开而消失。技能事件约半分钟后出现，伏击约一分钟后出现，远处祭坛约一分半后出现，具体时间每局略有变化。靠近已发现事件会显示玩法和实时进度。事件完成后仍需靠近中心领取原有技能或治疗奖励；撤退保留已完成进度，暂停时事件与危险一起暂停。</p><h3>利用地形战斗</h3><p>'+TERRAIN_TIPS[id]+'</p><h3>随机小遭遇</h3><p>金色宝袋标出携宝猎物：靠近 8 米或先命中后开始追击，18 秒内击败，再靠近掉落的宝袋领取 30 经验。它不会攻击，也可以不追。补给营地靠近 6 米才惊动三名守卫；清理后靠近领取 40 经验和 18% 治疗。营地有不同守卫组合，可绕行离开，奖励每局一次。首领出现后不再触发新遭遇。</p><h3>沿途小发现 · '+MAPS[id].name+'</h3><p><b>'+SMALL_FINDS[id].name+'</b> · +'+SMALL_FINDS[id].xp+' 经验'+(SMALL_FINDS[id].heal?' / 恢复 '+Math.round(SMALL_FINDS[id].heal*100)+'% 生命':'')+'<br>'+SMALL_FINDS[id].tip+'</p><p>独立地图每局五处，约 10 / 45 / 80 / 115 / 150 秒后可发现；五境大远征每区保留三处；进入附近 9 米才会显露。浅黄色小方点是已发现且未领取的小补给，靠近会提示做法。奖励每处只能领取一次，领取后保留景物；附近有敌人时暂停采集，不需要额外按键。</p><h3>探索与遗物</h3><p>独立地图约 192 × 192，五境大远征约 280 × 280。出生区域附近仍有遗物遗迹，外围还会逐步出现补给和技能祭坛，发现后才显示小地图标记。</p><p>地图金色“遗物”标记是一处随机位置的遗迹。靠近唤醒四名守卫，清理后从三件遗物中选择一件；选择时战斗暂停，不消耗升级。遗物只在本局生效，发现记录保留在远征手册。武器每次发射算一次攻击，霰弹与多枚飞镖不重复计数；点击技能栏的遗物可查看具体效果。</p><h3>战斗节奏与经验</h3><p>首轮精锐围猎约 31 秒开始，提前 5 秒预告；独立地图约 2 分钟后出现首领，五境大远征按地标进度唤醒守卫。金色晶冠标出领队。狼群绕两侧，重甲正面推进，远程怪借它掩护。清理整队获得额外经验与 8% 治疗，随后有短暂喘息。林地会交替出现岩甲护送与獠牙穿插小队；首次清队可选择追猎纹章或林卫护符，仅本局生效。喘息期暂停增援，已有怪物仍会攻击。</p><p>升级次数保留在血条下方「选择成长」，可随时主动点开；自动选卡等待安全空档，选完或延后后至少间隔 18 秒。「稍后选择」保留原卡片，连续升级不会马上逐个打断战斗。已经展示的新介绍跨局记住，完整内容在本图鉴中查阅。</p><p>越后期的怪物掉落越多经验。灵光靠近即拾取；附近灵光停留 12 秒、远处灵光停留 24 秒后自动回收，喘息时统一回收。手动和自动攻击使用相同经验与怪物强度。</p><h3>地面提示代表什么</h3>'+CIRCLE_GUIDE.map(info=>`<p><b>${info.color} · ${info.name}</b><br><small>${info.meaning}</small></p>`).join('')+'<h3>素材鸣谢</h3><p>铃芽的头部改编自 <a href="https://studio.blender.org/characters/rain/v3/" target="_blank" rel="noopener">Rain Rig (CC) Blender Foundation | studio.blender.org</a>，按 <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">CC BY 4.0</a> 使用。调整了比例、五官、肤色、眨眼和骨骼适配。服装与基础动作来自 Quaternius（CC0）。<a href="THIRD_PARTY_ASSETS.md" target="_blank" rel="noopener">完整素材说明</a></p>';};renderGuide(mapId);panel.onclick=e=>{const id=e.target.closest('[data-guide-map]')?.dataset.guideMap;if(MAPS[id])renderGuide(id);};$('#dialog-content').insertBefore(panel,$('#dialog-content .dialog-actions'));};
 $('#sound').onclick=()=>{if(sound.ctx?.state==='running')sound.setMuted(!sound.muted);else sound.setMuted(false);unlockAudio();syncAudioUI();};
 function upgrade(force=false){if(player.pending<=0||state!=='playing')return;
  if(!force&&(time<nextUpgradeAt||boss?.alive||nearbyHazard()||['warning','assault'].includes(battlePhase.mode)||enemies.some(e=>e.alive&&(e.wind>0||e.pounce>0||Math.hypot(e.x-player.x,e.z-player.z)<7))))return;

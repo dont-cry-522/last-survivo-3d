@@ -12,6 +12,8 @@ The following free Standard editions were downloaded from the artist's official 
 
 Local adaptations: mesh selection, head/neck and leg cropping, facial/waist adjustments, skin/hair/costume material changes, boots/shorts material regions, custom cloth face mask and cape, weapon attachment, animation retargeting and layered aiming. Textures were resized and encoded as WebP for delivery; duplicate textures were consolidated. The underlying character meshes and source animations are by Quaternius, not original project artwork.
 
+In v108, Wraith reuses the existing Male Ranger outfit, male base character, simple parted hair, and retargeted animation library as a visible-faced twilight traveller. Local adaptations hide the original pauldron and hood, tint the cloth and leather, recolor the short hair silver-gray, and add a project-generated short scarf, moon clasp, cape, and shadow weapon displays. The former procedural `wraith-model.js` character was replaced by the shared skinned-character system. No new external assets or dependencies were introduced for this replacement.
+
 The hashed delivery GLBs use lossless gzip compression. Baked animation tracks preserve every retargeted Float32 sample. Original source assets and an uncompressed compatibility path are retained.
 
 The game does not contain extracted models, textures or audio from Ori, NieR, Chainsaw Man, Rozen Maiden, or other commercial reference works.

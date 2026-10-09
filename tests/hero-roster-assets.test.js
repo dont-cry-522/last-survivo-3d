@@ -3,8 +3,9 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import {fileURLToPath} from 'node:url';
 import {CHARACTER_ASSETS as assets} from '../character-assets.js';
-import {loadHeroAssets,createSkinnedHero,animateSkinnedHero} from '../skinned-hero.js';
 import {actor,animateActor} from '../world.js';
+const worldURL=new URL('../world.js',import.meta.url),entry=fs.readFileSync(worldURL,'utf8').match(/from['"](.\/skinned-hero\.js[^'"]*)['"]/)[1];
+const {loadHeroAssets,createSkinnedHero,animateSkinnedHero,disposeHero}=await import(new URL(entry,worldURL));
 
 test('remaining heroes load and animate without guardian models while retaining shared textures and bosses',async()=>{
  const dir=new URL('../assets/characters/',import.meta.url),textures=new Set();
@@ -22,13 +23,13 @@ test('remaining heroes load and animate without guardian models while retaining 
   globalThis.fetch=async input=>{const url=typeof input==='string'?input:input.url;requests.push(url);return url.startsWith('file:')?new Response(fs.readFileSync(fileURLToPath(url))):original.fetch(input);};
   await loadHeroAssets();
   const checkModel=model=>{let meshes=0;model.updateMatrixWorld(true);model.traverse(o=>{assert(o.matrixWorld.elements.every(Number.isFinite));if(o.isMesh)meshes++;});assert(meshes>0);};
-  for(const [kind,weapon]of [['silver','crossbow'],['scout','rifle'],['tide','harpoon'],['lingya','boomerang']]){
-   const hero=createSkinnedHero(kind,weapon);assert.equal(hero.userData.kind,kind);assert(hero.userData.gun);assert(hero.userData.model.skeleton.bones.length>50);
+  for(const [kind,weapon]of [['silver','crossbow'],['scout','rifle'],['wraith','shade'],['tide','harpoon'],['lingya','boomerang'],['wuling','sporelantern'],['mirage','miasmalantern']]){
+   const hero=createSkinnedHero(kind,weapon);assert.equal(hero.userData.kind,kind);assert(hero.userData.skinned);assert.equal(hero.userData.wraith,undefined);assert(hero.userData.gun);assert(hero.userData.model.skeleton.bones.length>50);
    for(let frame=0;frame<12;frame++)animateSkinnedHero(hero,frame/60,3,0,0);
-   checkModel(hero);
+   checkModel(hero);disposeHero(hero);
   }
   for(const [kind,weapon]of [['wraith','shade'],['boss'],['dunescorpion']]){
-   const model=actor(kind,weapon);for(let frame=0;frame<12;frame++)animateActor(model,frame/60,2);checkModel(model);
+   const model=actor(kind,weapon);if(kind==='wraith'){assert.equal(model.userData.skinned,true);assert.equal(model.userData.kind,'wraith');assert.equal(model.userData.wraith,undefined);}for(let frame=0;frame<12;frame++)animateActor(model,frame/60,2);checkModel(model);disposeHero(model);
   }
   assert(!requests.some(url=>url.includes('guardian-')),'removed hero assets still requested');
  }finally{

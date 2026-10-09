@@ -1,5 +1,6 @@
-import{weaponGesture,shotStarted}from'./weapon-performance.js?v=107';
-import{miasmaLantern}from'./mirage-appearance.js?v=107';
+import {shadowFocus} from './shadow-gear.js?v=108';
+import{weaponGesture,shotStarted}from'./weapon-performance.js?v=108';
+import{miasmaLantern}from'./mirage-appearance.js?v=108';
 import * as T from './vendor/three.module.js';
 // Shared smooth geometry: detail is concentrated on the two heroes, not multiplied across the forest.
 const geometries=new Map(),materials=new Map();
@@ -13,6 +14,7 @@ function tailored(p,c,profile,pos){const key='tailor'+JSON.stringify(profile);if
 function cloth(p,color,width,length,z){const key=`cloth:${width}:${length}:${z}`;if(!geometries.has(key)){const vertices=[],indices=[];for(let y=0;y<=6;y++)for(let x=0;x<=6;x++){const u=x/6,v=y/6;vertices.push((u-.5)*width*(.62+.38*v),-length*v,z-Math.sin(v*Math.PI/2)*.18+Math.cos(u*Math.PI*4)*.035*v);}for(let y=0;y<6;y++)for(let x=0;x<6;x++){const a=y*7+x;indices.push(a,a+7,a+1,a+1,a+7,a+8);}const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute(vertices,3));g.setIndex(indices);g.computeVertexNormals();geometries.set(key,g);}const mat=material(color);mat.side=T.DoubleSide;const m=new T.Mesh(geometries.get(key),mat);m.castShadow=m.receiveShadow=true;p.add(m);return m;}
 function lock(p,color,x,y,z,length,bend=.12){const key=`lock:${length}:${bend}`;if(!geometries.has(key)){const v=[],ix=[];for(let i=0;i<=10;i++){const f=i/10,r=.069*Math.sin(Math.min(1,f*8)*Math.PI/2)*(1-f)+.001;for(let j=0;j<10;j++){const a=j*Math.PI/5;v.push(Math.cos(a)*r,-f*length,bend*f*f+Math.sin(a)*r*.58);}}for(let i=0;i<10;i++)for(let j=0;j<10;j++){const a=i*10+j,b=i*10+(j+1)%10;ix.push(a,b,a+10,b,b+10,a+10);}const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute(v,3));g.setIndex(ix);g.computeVertexNormals();geometries.set(key,g);}const m=new T.Mesh(geometries.get(key),material(color));m.position.set(x,y,z);m.castShadow=true;p.add(m);return m;}
 export function makeHero(kind,weapon){
+  if(kind==='wraith'){const g=makeHero('scout','dark'),d=g.userData;d.weapon.clear();d.weapon.add(shadowFocus(weapon));d.weaponId=weapon;d.kind=kind;return g;}
   if(kind==='mirage'){
     // Loading fallback uses the existing articulated woman, never a rifle-bearing scout.
     const g=makeHero('silver','dark'),d=g.userData;

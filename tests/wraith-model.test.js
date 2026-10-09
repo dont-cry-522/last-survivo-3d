@@ -1,197 +1,108 @@
-import {test} from 'node:test';
+import {before,test} from 'node:test';
 import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import {fileURLToPath} from 'node:url';
 import * as T from '../vendor/three.module.js';
-import {makeWraith,animateWraith} from '../wraith-model.js';
-import {disposeHero} from '../skinned-hero.js';
+import {actor,animateActor} from '../world.js';
 
-test('shadow hero has a compact human silhouette and articulated body parts',()=>{
- const hero=makeWraith('shade'),box=new T.Box3().setFromObject(hero);
- assert(hero.userData.wraith);
- assert(box.max.y-box.min.y<1.68);
- assert(box.max.y-box.min.y>1.52);
- for(const name of ['head','leftArm','rightArm','leftLeg','rightLeg','cape','weapon'])assert(hero.userData[name],name);
- for(const t of [0,.1,.2,.5,1])animateWraith(hero,t,5,.3,.1);
- hero.traverse(o=>{assert(Number.isFinite(o.position.x));assert(Number.isFinite(o.rotation.x));});
-});
-
-test('stocky shadow silhouette retains distinct shoulders and naturally resting wrists',()=>{
- const hero=makeWraith('shade'),d=hero.userData;
- hero.updateMatrixWorld(true);
- const body=new T.Box3().setFromObject(hero,true),head=new T.Box3().setFromObject(d.head,true);
- const height=body.max.y-body.min.y,headHeight=head.max.y-head.min.y;
- assert(headHeight/height<.245,`hood occupies ${(headHeight/height).toFixed(3)} of the full height`);
- const hipY=d.hips.getWorldPosition(new T.Vector3()).y;
- for(const side of ['left','right']){
-  const wristY=d[side+'Hand'].getWorldPosition(new T.Vector3()).y,kneeY=d[side+'Knee'].getWorldPosition(new T.Vector3()).y;
-  assert(wristY<hipY,`${side} resting wrist is above the hip`);
-  assert(wristY>kneeY,`${side} resting wrist extends below the knee`);
- }
- // Guard the actual dressed silhouette, not the hidden shoulder joint spacing.
- hero.traverse(o=>o.rotation.set(0,0,0));hero.updateMatrixWorld(true);
- const shoulders=new T.Box3(),tunic=hero.getObjectByName('wraith-tailored-tunic'),points=[],p=tunic.geometry.attributes.position;
- hero.traverse(o=>{if(o.name==='wraith-cloth-sleeve')shoulders.union(new T.Box3().setFromObject(o,true));});
- for(let i=0;i<p.count;i++)if(p.getY(i)<.075)points.push(new T.Vector3().fromBufferAttribute(p,i).applyMatrix4(tunic.matrixWorld));
- const hips=new T.Box3().setFromPoints(points),ratio=(shoulders.max.x-shoulders.min.x)/(hips.max.x-hips.min.x);
- assert(ratio>1.25&&ratio<1.65,`sleeves overwhelm the hip silhouette: ${ratio.toFixed(3)}`);
-});
-
-test('rounded cloth hood overlaps its collar and the back cape is one connected drape',()=>{
- const h=makeWraith(),d=h.userData,hood=h.getObjectByName('wraith-hood'),mantle=h.getObjectByName('wraith-draped-mantle');
- const p=hood.geometry.attributes.position,top=Math.max(...Array.from({length:p.count},(_,i)=>p.getY(i))),crown=[];
- for(let i=0;i<p.count;i++)if(p.getY(i)>top-.03)crown.push([p.getX(i),p.getZ(i)]);
- assert(Math.max(...crown.map(v=>v[0]))-Math.min(...crown.map(v=>v[0]))>.14,'hood has a narrow pointed crown');
- assert(Math.min(...crown.map(v=>v[1]))<.12,'crown must curve back over the skull, not peak at the front lip');
- h.updateMatrixWorld(true);const headBox=new T.Box3().setFromObject(hood,true),collarBox=new T.Box3().setFromObject(mantle,true);
- assert(headBox.min.y<collarBox.max.y,'hood floats above the collar');
- const capes=d.panels.filter(m=>!m.userData.front);assert.equal(capes.length,1,'back cape is split into separate hanging strips');
- const cloth=capes[0].geometry.attributes.position,edge=[];for(let i=0;i<cloth.count;i++)if(cloth.getY(i)>-.001)edge.push(new T.Vector3().fromBufferAttribute(cloth,i));
- assert(edge.some(v=>Math.abs(v.x)<.001),'cape top has a central gap');
- assert(edge[0].z>edge[Math.floor(edge.length/2)].z+.02,'cape edges do not wrap toward the shoulders');
- for(const target of capes[0].geometry.morphAttributes.position)for(let i=0;i<cloth.count;i++)if(cloth.getY(i)>-.001){
-  assert(new T.Vector3().fromBufferAttribute(cloth,i).distanceTo(new T.Vector3().fromBufferAttribute(target,i))<1e-6,'cloth movement unsews its neckline');
- }
- for(let i=1;i<=120;i++){d.turnRate=5;animateWraith(h,i/60,6,.15);assert(Math.abs(d.cape.rotation.x)+Math.abs(d.cape.rotation.y)+Math.abs(d.cape.rotation.z)<1e-6,'cape group pulls its neckline off the shoulders');}
-});
-
-test('all shadow loadouts reuse bounded shared surfaces with only three lights on the face',()=>{
- for(const weapon of ['shade','shadowblade','grimoire']){
-  const a=makeWraith(weapon),b=makeWraith(weapon),meshes=[],copies=[];
-  a.traverse(o=>{if(o.isMesh)meshes.push(o);});b.traverse(o=>{if(o.isMesh)copies.push(o);});
-  assert.equal(meshes.length,copies.length);assert(meshes.length<=72,'shadow model exceeds its mesh budget');
-  assert(meshes.reduce((n,m)=>n+(m.geometry.index?.count??m.geometry.attributes.position.count)/3,0)<33000,'shadow model exceeds its triangle budget');
-  meshes.forEach((m,i)=>{assert.equal(m.geometry,copies[i].geometry,'repeated previews must reuse geometry');assert.equal(m.material,copies[i].material,'repeated previews must reuse materials');});
-  const face=a.userData.head.children.filter(o=>o.material?.isMeshBasicMaterial);
-  assert.equal(face.length,3);assert(face.every(o=>o.name==='wraith-face-slit'));
-  for(const geometry of new Set(meshes.map(m=>m.geometry))){assert([...geometry.attributes.position.array].every(Number.isFinite));assert([...geometry.attributes.normal.array].every(Number.isFinite));}
- }
-});
-
-test('the cloth chest bends above a stable waist without sharing its pose with another actor',()=>{
- const a=makeWraith(),b=makeWraith(),body=a.userData.tunic,copy=b.userData.tunic;
- assert(body.isSkinnedMesh);assert.equal(body.geometry,copy.geometry);assert.equal(body.material,copy.material);
- assert.notEqual(body.skeleton,copy.skeleton);
- body.skeleton.bones.forEach((bone,i)=>assert.notEqual(bone,copy.skeleton.bones[i]));
- const p=body.geometry.attributes.position,weights=body.geometry.attributes.skinWeight,indices=body.geometry.attributes.skinIndex;
- assert.equal(weights.count,p.count);assert.equal(indices.count,p.count);let blended=0;
- for(let i=0;i<p.count;i++){
-  let sum=0,active=0;
-  for(let j=0;j<4;j++){
-   const weight=weights.getComponent(i,j),bone=indices.getComponent(i,j);
-   assert(Number.isFinite(weight)&&weight>=0&&weight<=1);
-   assert(Number.isInteger(bone)&&bone>=0&&bone<body.skeleton.bones.length);
-   sum+=weight;if(weight>0)active++;
-  }
-  assert(Math.abs(sum-1)<1e-6,'cloth weights must preserve the surface instead of shrinking it');
-  if(active>1)blended++;
- }
- assert(blended>0,'the waist-to-chest transition must blend rather than hinge as a rigid plate');
- a.updateMatrixWorld(true);b.updateMatrixWorld(true);
- const before=Array.from({length:p.count},(_,i)=>body.getVertexPosition(i,new T.Vector3()));
- const otherBefore=Array.from({length:p.count},(_,i)=>copy.getVertexPosition(i,new T.Vector3()));
- a.userData.chest.rotation.x+=.08;a.userData.chest.rotation.y+=.22;a.updateMatrixWorld(true);
- let waistCount=0,chestMotion=0,chestCount=0;
- for(let i=0;i<p.count;i++){
-  const moved=body.getVertexPosition(i,new T.Vector3()).distanceTo(before[i]);
-  if(p.getY(i)<0){assert(moved<1e-6,'chest motion drags the waist out of its leg connection');waistCount++;}
-  if(p.getY(i)>.44){chestMotion+=moved;chestCount++;}
-  assert(copy.getVertexPosition(i,new T.Vector3()).distanceTo(otherBefore[i])<1e-6,'one actor changes another actor\'s cloth pose');
- }
- assert(waistCount>0&&chestCount>0);assert(chestMotion/chestCount>.025,'chest motion must visibly deform the tunic');
-});
-
-test('running shoulders, hips, elbows and wrists move as separate parts of the gait',()=>{
- const h=makeWraith(),d=h.userData,frames=[],point=new T.Vector3(),other=new T.Vector3();
- const span=values=>Math.max(...values)-Math.min(...values);
- const yaw=(left,right)=>{right.getWorldPosition(point);left.getWorldPosition(other);point.sub(other);return Math.atan2(point.z,point.x);};
- for(let f=1;f<=300;f++){
-  animateWraith(h,f/60,6.5,0,0);if(f<120)continue;h.updateMatrixWorld(true);
-  const hips=yaw(d.leftLeg,d.rightLeg),shoulders=yaw(d.leftArm,d.rightArm);
-  frames.push({hips,shoulders,twist:shoulders-hips,leftElbow:d.leftElbow.rotation.x,rightElbow:d.rightElbow.rotation.x,leftWrist:d.leftHand.rotation.z,rightWrist:d.rightHand.rotation.z});
- }
- assert(span(frames.map(p=>p.hips))>.08,'hips have no visible stride rotation');
- assert(span(frames.map(p=>p.shoulders))>.025,'shoulders remain locked while the hips move');
- assert(span(frames.map(p=>p.twist))>.05,'shoulders and hips move as one rigid block');
- for(const side of ['left','right']){
-  assert(span(frames.map(p=>p[side+'Elbow']))>.08,`${side} elbow remains locked during running`);
-  assert(span(frames.map(p=>p[side+'Wrist']))>.035,`${side} wrist remains locked during running`);
- }
- const leftMean=frames.reduce((n,p)=>n+p.leftElbow,0)/frames.length,rightMean=frames.reduce((n,p)=>n+p.rightElbow,0)/frames.length;
- assert(frames.reduce((n,p)=>n+(p.leftElbow-leftMean)*(p.rightElbow-rightMean),0)<0,'both elbows pump in the same phase');
-});
-
-test('disposing a shadow actor releases its bone texture while preserving shared clothing resources',()=>{
- const a=makeWraith(),b=makeWraith(),body=a.userData.tunic,copy=b.userData.tunic;
- body.skeleton.computeBoneTexture();copy.skeleton.computeBoneTexture();
- const texture=body.skeleton.boneTexture,otherTexture=copy.skeleton.boneTexture;
- let bonesDisposed=0,otherDisposed=0,geometryDisposed=0,materialDisposed=0;
- const onGeometry=()=>geometryDisposed++,onMaterial=()=>materialDisposed++;
- texture.addEventListener('dispose',()=>bonesDisposed++);otherTexture.addEventListener('dispose',()=>otherDisposed++);
- body.geometry.addEventListener('dispose',onGeometry);body.material.addEventListener('dispose',onMaterial);
+// Load the same versioned module instance used by the real actor entry point.
+const worldURL=new URL('../world.js',import.meta.url);
+const entry=fs.readFileSync(worldURL,'utf8').match(/from['"](.\/skinned-hero\.js[^'"]*)['"]/)[1];
+const {loadHeroAssets,createSkinnedHero,animateSkinnedHero,disposeHero}=await import(new URL(entry,worldURL));
+before(async()=>{
+ const original=Object.fromEntries(['fetch','self','ProgressEvent','createImageBitmap'].map(key=>[key,globalThis[key]]));
  try{
-  disposeHero(a);
-  assert.equal(bonesDisposed,1);assert.equal(otherDisposed,0);assert.equal(copy.skeleton.boneTexture,otherTexture);
-  assert.equal(geometryDisposed,0);assert.equal(materialDisposed,0);
-  animateWraith(b,1/60,6,0,0);b.updateMatrixWorld(true);
-  assert(copy.getVertexPosition(0,new T.Vector3()).toArray().every(Number.isFinite));
- }finally{
-  body.geometry.removeEventListener('dispose',onGeometry);body.material.removeEventListener('dispose',onMaterial);disposeHero(b);
- }
+  globalThis.self=globalThis;
+  globalThis.ProgressEvent=class{constructor(type,data){Object.assign(this,data);}};
+  globalThis.createImageBitmap=async()=>({width:512,height:512,close(){}});
+  globalThis.fetch=async input=>{const url=typeof input==='string'?input:input.url;return url.startsWith('file:')?new Response(fs.readFileSync(fileURLToPath(url))):original.fetch(input);};
+  await loadHeroAssets();
+ }finally{for(const [key,value]of Object.entries(original))if(value===undefined)delete globalThis[key];else globalThis[key]=value;}
 });
 
-test('book stays level through running casts and cloth settles at mobile and desktop frame rates',()=>{
- for(const fps of [20,30,60,120]){
-  const actor=makeWraith('grimoire'),d=actor.userData,up=new T.Vector3(),q=new T.Quaternion();
-  for(let f=1;f<=fps*4;f++){
-   const t=f/fps,moving=t<2;actor.rotation.y=moving?Math.sin(t*2):Math.sin(4);d.turnRate=moving?2*Math.cos(t*2):0;d.travelAngle=actor.rotation.y;
-   animateWraith(actor,t,moving?6.5:0,moving?Math.max(0,.32-t%1.25):0,0);
-   d.book.getWorldQuaternion(q);up.set(0,1,0).applyQuaternion(q);assert(up.y>.985,'floating book tipped while the body turned');
-   assert(d.panels.every(p=>p.morphTargetInfluences.every(Number.isFinite)));
+function meshes(root){const out=[];root.traverse(o=>{if(o.isMesh)out.push(o);});return out;}
+function finite(root){root.updateMatrixWorld(true);root.traverse(o=>assert(o.matrixWorld.elements.every(Number.isFinite),o.name+' has an invalid pose'));}
+function checkRig(hero){
+ const d=hero.userData;assert.equal(d.skinned,true);assert.equal(d.kind,'wraith');assert.equal(d.wraith,undefined);
+ assert(d.model.skeleton.bones.length>50);assert(d.gun);assert(!hero.getObjectByName('wraith-tailored-tunic'));
+ for(const name of ['pelvis','spine_01','Head','upperarm_r','hand_r','thigh_l','calf_l','foot_l'])assert(d.model.skeleton.bones.some(b=>b.name===name),'missing '+name);
+ assert(meshes(d.model).filter(m=>m.isSkinnedMesh).length>=3,'only an isolated body fragment is skinned');finite(hero);
+}
+
+test('shadow hero uses the complete Ranger skeleton through both construction entry points',()=>{
+ for(const weapon of ['shade','shadowblade','grimoire'])for(const create of [createSkinnedHero,actor]){
+  const hero=create('wraith',weapon);try{checkRig(hero);assert.equal(hero.userData.weaponId,weapon);}finally{disposeHero(hero);}
+ }
+ const hero=createSkinnedHero('wraith','shade'),scout=createSkinnedHero('scout','rifle');
+ try{
+  const height=root=>{root.updateMatrixWorld(true);const box=new T.Box3().setFromObject(root.userData.model,true);return box.max.y-box.min.y;};
+  const ratio=height(hero)/height(scout);assert(ratio>.9&&ratio<1.1,'shadow proportions do not match the full-sized Ranger');
+  assert(height(hero)>1.75,'old short procedural silhouette returned');
+ }finally{disposeHero(hero);disposeHero(scout);}
+});
+
+test('shadow skin weights remain normalized and actors retain independent poses',()=>{
+ const a=createSkinnedHero('wraith','shade'),b=createSkinnedHero('wraith','shade');
+ try{
+  for(const body of meshes(a.userData.model).filter(m=>m.isSkinnedMesh)){
+   const weights=body.geometry.attributes.skinWeight,indices=body.geometry.attributes.skinIndex;
+   assert.equal(weights.count,body.geometry.attributes.position.count);assert.equal(indices.count,weights.count);
+   for(let i=0;i<weights.count;i++){
+    let sum=0;for(let j=0;j<4;j++){const weight=weights.getComponent(i,j),bone=indices.getComponent(i,j);assert(Number.isFinite(weight)&&weight>=0&&weight<=1);assert(Number.isInteger(bone)&&bone>=0&&bone<body.skeleton.bones.length);sum+=weight;}
+    assert(Math.abs(sum-1)<1e-5,'skin weight changes the model scale');
+   }
   }
-  assert(Math.abs(d.clothTrail.x-.08)<.02,'cape failed to settle after stopping');
-  assert(Math.abs(d.clothSide.x)<.02,'cape turn inertia failed to settle');
-  for(const panel of d.panels.filter(p=>p.userData.front))assert(Math.abs(panel.morphTargetInfluences[0])<.001,'front coat remains folded in the stopped stride phase');
+  const aBones=a.userData.model.skeleton.bones,bBones=b.userData.model.skeleton.bones;
+  aBones.forEach((bone,i)=>assert.notEqual(bone,bBones[i]));const before=bBones.map(bone=>bone.quaternion.toArray());
+  for(let f=1;f<=90;f++)animateSkinnedHero(a,f/60,6,.15,0);
+  assert(aBones.some((bone,i)=>bone.quaternion.angleTo(new T.Quaternion().fromArray(before[i]))>.1),'authored locomotion did not move the rig');
+  assert.deepEqual(bBones.map(bone=>bone.quaternion.toArray()),before,'animation leaked into another actor');finite(a);finite(b);
+ }finally{disposeHero(a);disposeHero(b);}
+});
+
+test('all shadow loadouts remain finite through movement, casts, dodges, swimming and settling',()=>{
+ for(const weapon of ['shade','shadowblade','grimoire'])for(const fps of[20,60,120]){
+  const hero=actor('wraith',weapon),d=hero.userData;checkRig(hero);
+  try{
+   for(let frame=1;frame<=fps*3;frame++){
+    const t=frame/fps,moving=t<2;hero.rotation.y=moving?Math.sin(t*2):Math.sin(4);d.travelAngle=hero.rotation.y+(moving?.35:0);d.turnRate=moving?Math.cos(t*2)*2:0;
+    d.waterDepth=moving&&t>1?.88:0;d.dashTime=t>.45&&t<.63?.63-t:0;
+    d.aimActive=moving;d.reloadDuration=.8;d.reloadPhase=moving?(t%.8)/.8:1;d.shotSerial=moving?Math.floor(t/.8)+1:d.shotSerial;
+    animateActor(hero,t,moving?6:0,moving?Math.max(0,.3-t%.8):0,0);finite(hero);
+    if(weapon==='grimoire'){
+     const up=new T.Vector3(0,1,0).applyQuaternion(d.gun.getWorldQuaternion(new T.Quaternion()));
+     assert(up.y>.99,`book tips away from horizontal at ${fps} fps: ${up.y}`);
+    }
+   }
+   assert(d.smoothedSpeed<.001,'gait fails to settle after stopping');
+   assert.equal(d.waterBlend,0,'water pose fails to clear after returning to land');
+  }finally{disposeHero(hero);}
  }
 });
 
-test('cloth and articulated casts animate independently without changing shared geometry',()=>{
- for(const weapon of ['shade','shadowblade','grimoire']){
-  const actor=makeWraith(weapon),idle=makeWraith(weapon),d=actor.userData;
-  const rest=Array.from(d.panels[0].geometry.attributes.position.array),idleWeights=[...idle.userData.panels[0].morphTargetInfluences];
-  d.turnRate=6;d.travelAngle=.4;
-  for(let f=1;f<=120;f++)animateWraith(actor,f/60,6.5,.15,0);
-  assert(d.rightHand.getWorldPosition(new T.Vector3()).distanceTo(idle.userData.rightHand.getWorldPosition(new T.Vector3()))>.1,'casting hand must leave its resting pose');
-  assert.notDeepEqual(d.panels[0].morphTargetInfluences,idleWeights);
-  assert.deepEqual(idle.userData.panels[0].morphTargetInfluences,idleWeights);
-  assert.deepEqual(Array.from(d.panels[0].geometry.attributes.position.array),rest);
-  for(let f=121;f<=240;f++)animateWraith(actor,f/60,0,0,0);
-  assert(Math.abs(d.rightElbow.rotation.x-idle.userData.rightElbow.rotation.x)<.001);
-  actor.updateMatrixWorld(true);actor.traverse(o=>assert(o.matrixWorld.elements.every(Number.isFinite)));
-  if(d.focus)assert(d.focus.scale.length()<.22,'focus must retain its authored size');
- }
+test('shadow outfit materials do not recolor the existing scout or share its palette shader',()=>{
+ const scout=createSkinnedHero('scout','rifle'),before=meshes(scout.userData.model).map(m=>({material:m.material,color:m.material.color.toArray(),roughness:m.material.roughness,key:m.material.customProgramCacheKey()}));
+ const shadow=createSkinnedHero('wraith','shade');
+ try{
+  const shadowMaterials=new Set(meshes(shadow.userData.model).filter(m=>m.isSkinnedMesh).map(m=>m.material));
+  for(const entry of before){assert(!entry.key.includes('shadow-ranger'),'shadow palette leaked into the scout during asset loading');assert.deepEqual(entry.material.color.toArray(),entry.color);assert.equal(entry.material.roughness,entry.roughness);assert.equal(entry.material.customProgramCacheKey(),entry.key);assert(!shadowMaterials.has(entry.material),'shadow outfit mutates a scout material');}
+  const scoutCloth=new Set(before.filter(e=>e.material.name.includes('Ranger')).map(e=>e.key));
+  assert([...shadowMaterials].some(m=>m.name.includes('Ranger')&&!scoutCloth.has(m.customProgramCacheKey())),'shadow outfit lost its independent palette');
+ }finally{disposeHero(scout);disposeHero(shadow);}
 });
 
-
-test('repeated shadow attacks have bounded recoil and settle at different frame rates',()=>{
- for(const fps of [20,30,60,120])for(const weapon of ['shade','shadowblade','grimoire']){
-  const h=makeWraith(weapon),d=h.userData,duration=weapon==='grimoire'?.32:weapon==='shade'?.20:.16;
-  const restZ=d.weapon.position.z;let peak=0;
-  for(let f=1;f<=fps*4;f++){
-   const t=f/fps;animateWraith(h,t,t<2?6:0,t<2?Math.max(0,duration-t%.4):0,0);
-   assert(Number.isFinite(d.recoil.x));peak=Math.max(peak,Math.abs(d.recoil.x));assert(Math.abs(d.recoil.x)<.5);
-  }
-  assert(peak>.01);assert(Math.abs(d.recoil.x)<.001);assert(Math.abs(d.weapon.position.z-restZ)<.001);
- }
-});
-
-
-test('a running shadow hero keeps a supporting foot near the ground',()=>{
- for(const direction of [0,Math.PI/2,Math.PI,-Math.PI/2]){
- const h=makeWraith(),p=new T.Vector3();h.userData.travelAngle=direction;let low=Infinity,high=-Infinity;
- for(let f=1;f<=360;f++){
-  animateWraith(h,f/60,6,0,0);if(f<60)continue;
-  const ankle=Math.min(...['left','right'].map(side=>h.userData[side+'Foot'].getWorldPosition(p).y));
-  low=Math.min(low,ankle);high=Math.max(high,ankle);
- }
- assert(high-low<.055,`supporting foot bobs ${high-low}`);assert(low>.055,'feet sink through the ground');
- }
+test('disposing shadow actors frees only owned rig resources and preserves another actor',()=>{
+ const a=createSkinnedHero('wraith','grimoire'),b=createSkinnedHero('wraith','grimoire');let disposed=false;
+ const aMeshes=meshes(a),bMeshes=meshes(b),skeletons=new Set(aMeshes.filter(m=>m.isSkinnedMesh).map(m=>m.skeleton)),others=new Set(bMeshes.filter(m=>m.isSkinnedMesh).map(m=>m.skeleton));
+ const shared=new Set(aMeshes.flatMap(m=>[m.geometry,m.material]).filter(resource=>bMeshes.some(m=>m.geometry===resource||m.material===resource)));let boneDisposals=0,otherDisposals=0,sharedDisposals=0;
+ const onShared=()=>sharedDisposals++;
+ for(const skeleton of skeletons){skeleton.computeBoneTexture();skeleton.boneTexture.addEventListener('dispose',()=>boneDisposals++);}
+ for(const skeleton of others){skeleton.computeBoneTexture();skeleton.boneTexture.addEventListener('dispose',()=>otherDisposals++);assert(!skeletons.has(skeleton));}
+ for(const resource of shared)resource.addEventListener('dispose',onShared);
+ try{
+  assert(shared.size>0,'templates are copied instead of reusing surfaces');disposeHero(a);disposed=true;
+  assert.equal(boneDisposals,skeletons.size);assert.equal(otherDisposals,0);assert.equal(sharedDisposals,0);
+  animateActor(b,1/60,6,.2,0);finite(b);
+  for(const mesh of bMeshes.filter(m=>m.isSkinnedMesh))assert(mesh.getVertexPosition(0,new T.Vector3()).toArray().every(Number.isFinite));
+ }finally{for(const resource of shared)resource.removeEventListener('dispose',onShared);if(!disposed)disposeHero(a);disposeHero(b);}
 });

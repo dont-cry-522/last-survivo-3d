@@ -1,10 +1,10 @@
-import{onIce,onFord}from'./map-tactics.js?v=107';
-import{onBridge}from'./coast.js?v=107';
-import{MAP_SCALE}from'./map-layout.js?v=107';
-import{coastLayout}from'./coast-layout.js?v=107';
-import{swimStroke,swimLimb,HERO_SWIM,heroSwimPose,swimTravel}from'./swim-motion.js?v=107';
-import{newHeroAttack}from'./new-hero-motion.js?v=107';
-import{naturalRockGeometry,environmentDetailTexture}from'./biome-scenery.js?v=107';
+import{onIce,onFord}from'./map-tactics.js?v=108';
+import{onBridge}from'./coast.js?v=108';
+import{MAP_SCALE}from'./map-layout.js?v=108';
+import{coastLayout}from'./coast-layout.js?v=108';
+import{swimStroke,swimLimb,HERO_SWIM,heroSwimPose,swimTravel}from'./swim-motion.js?v=108';
+import{newHeroAttack}from'./new-hero-motion.js?v=108';
+import{naturalRockGeometry,environmentDetailTexture}from'./biome-scenery.js?v=108';
 import * as T from './vendor/three.module.js';
 const clamp=T.MathUtils.clamp;
 const shore=a=>1+.07*Math.sin(a*3)+.045*Math.cos(a*5);
@@ -140,7 +140,7 @@ export function animateWaterPose(g,t,speed){
  if(!d.waterDepth&&d.waterBlend<.002){d.waterBlend=0;d.swimJoints?.clear();}
  const depth=d.waterBlend;if(depth<.001||d.waterFloating||!d.rig)return;
  const save=node=>{if(node&&!d.waterPose.some(p=>p.node===node))d.waterPose.push({node,q:node.quaternion.clone(),p:node.position.clone()});};
- const hero=d.skinned||d.wraith||d.leftKnee,profile=d.skinned&&HERO_SWIM[d.kind],heavy=['golem','boss','reefturtle','wreckwarden'].includes(d.kind),swim=T.MathUtils.smoothstep(depth,.42,.85);
+ const hero=d.skinned||d.leftKnee,profile=d.skinned&&HERO_SWIM[d.kind],heavy=['golem','boss','reefturtle','wreckwarden'].includes(d.kind),swim=T.MathUtils.smoothstep(depth,.42,.85);
  const ease=(a,b,k)=>a+(b-a)*(1-Math.exp(-dt*k));
  d.swimMove=ease(d.swimMove||0,clamp(speed/2.8,0,1),6);
  const attack=profile&&d.shotSerial?(d.kind==='guardian'?T.MathUtils.smoothstep(d.reloadPhase??1,0,.12)*(1-T.MathUtils.smoothstep(d.reloadPhase??1,.76,1)):newHeroAttack(d.kind,d.reloadDuration?(d.reloadPhase??1)*d.reloadDuration:d.attackAge,d.reloadDuration||1).weight):0;
@@ -154,12 +154,12 @@ export function animateWaterPose(g,t,speed){
  save(d.rig);d.rig.position.y-=depth*(profile?profile.sink+moving*.035:hero?.38+moving*.06:heavy?.22:.24);d.rig.position.y+=(pose?pose.bob:Math.sin(phase*2-.5)*.025)*depth;
  if(hero){
   const held=d.hammer||d.gun||d.book||d.weapon,heldWorld=held?.getWorldQuaternion(new T.Quaternion()),shieldWorld=d.shield?.getWorldQuaternion(new T.Quaternion());
-  const leanTarget=swim*(pose?pose.lean*travel.lean:.08+.82*moving)*(1-aim*.86);d.swimLean=ease(d.swimLean||0,leanTarget,8);const lean=profile||d.wraith?d.swimLean:leanTarget;d.rig.rotation.x+=lean;d.rig.rotation.z+=swim*((pose?pose.bank:stroke*.045*moving)*(1-aim)+d.swimBank+d.swimTravelBank);
+  const leanTarget=swim*(pose?pose.lean*travel.lean:.08+.82*moving)*(1-aim*.86);d.swimLean=ease(d.swimLean||0,leanTarget,8);const lean=profile||d.kind==='wraith'?d.swimLean:leanTarget;d.rig.rotation.x+=lean;d.rig.rotation.z+=swim*((pose?pose.bank:stroke*.045*moving)*(1-aim)+d.swimBank+d.swimTravelBank);
   const head=d.swimHead||d.head;if(head){save(head);head.rotateX(-lean*(profile?.72:.5));head.rotateZ(-d.swimBank*.6);}
   g.updateMatrixWorld(true);
   const left=d.skinned?[d.offArm,d.offForearm,d.support?.hand]:[d.leftArm,d.leftElbow,d.leftHand];
   const right=d.skinned?[d.aimArm,d.firingForearm,d.support?.rightHand]:[d.rightArm,d.rightElbow,d.rightHand||d.weapon];
-  const book=d.weaponId==='grimoire',free=book?right:left,grip=book?left:right,side=book?-1:1;
+  const book=d.weaponId==='grimoire'&&!d.skinned,free=book?right:left,grip=book?left:right,side=book?-1:1;
   const reach=swimStroke(d.swimPhase),idle={x:.40+stroke*.12,y:-.60,z:.20+Math.cos(phase)*.14};
   const target=pose?pose.left:{x:side*T.MathUtils.lerp(idle.x,reach.x,moving),y:T.MathUtils.lerp(idle.y,reach.y,moving),z:T.MathUtils.lerp(idle.z,reach.z,moving)};
   swimLimb(g,...free,target,[side,-.25,-.45],swim*(1-aim),save);

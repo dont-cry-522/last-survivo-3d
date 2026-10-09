@@ -2,7 +2,6 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import * as T from '../vendor/three.module.js';
 import {smoothSeams,finishHeroSurface} from '../hero-finish.js';
-import {makeWraith} from '../wraith-model.js';
 
 test('surface finishing preserves skin attributes, custom shaders and independent materials',()=>{
  const root=new T.Group(),geometry=new T.BoxGeometry(1,1,1),m=new T.MeshStandardMaterial({normalScale:new T.Vector2(.4,.4)});
@@ -12,11 +11,6 @@ test('surface finishing preserves skin attributes, custom shaders and independen
  finishHeroSurface(root,'silver');assert.notEqual(actor.material,m);assert.notEqual(actor.geometry,geometry);assert.equal(actor.material.onBeforeCompile,compile);assert.equal(actor.material.customProgramCacheKey,key);assert.deepEqual(Array.from(actor.geometry.attributes.position.array),p);assert.deepEqual(Array.from(actor.geometry.attributes.skinWeight.array),w);assert.equal(m.normalScale.x,.4);
  smoothSeams(actor.geometry);assert(Array.from(actor.geometry.attributes.normal.array).every(Number.isFinite));
 });
-test('wraith hood closes continuously at its side seam',()=>{
- const h=makeWraith().userData.head.children[0],p=h.geometry.attributes.position;
- for(let row=0;row<=18;row++){const a=new T.Vector3().fromBufferAttribute(p,row*49),b=new T.Vector3().fromBufferAttribute(p,row*49+48);assert(a.distanceTo(b)<1e-6,'open hood side seam');}
-});
-
 test('garment finishing retains texture masks and earlier palette shaders without changing the rig',()=>{
  const root=new T.Group(),texture=new T.Texture(),material=new T.MeshStandardMaterial({map:texture,metalnessMap:texture});
  material.name='Ranger';material.onBeforeCompile=s=>{s.fragmentShader+='\n// authored palette';};material.customProgramCacheKey=()=> 'violet-palette';
