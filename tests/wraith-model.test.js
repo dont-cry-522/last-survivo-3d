@@ -2,6 +2,7 @@ import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import * as T from '../vendor/three.module.js';
 import {makeWraith,animateWraith} from '../wraith-model.js';
+import {disposeHero} from '../skinned-hero.js';
 
 test('shadow hero has a compact human silhouette and articulated body parts',()=>{
  const hero=makeWraith('shade'),box=new T.Box3().setFromObject(hero);
@@ -65,6 +66,78 @@ test('all shadow loadouts reuse bounded shared surfaces with only three lights o
  }
 });
 
+test('the cloth chest bends above a stable waist without sharing its pose with another actor',()=>{
+ const a=makeWraith(),b=makeWraith(),body=a.userData.tunic,copy=b.userData.tunic;
+ assert(body.isSkinnedMesh);assert.equal(body.geometry,copy.geometry);assert.equal(body.material,copy.material);
+ assert.notEqual(body.skeleton,copy.skeleton);
+ body.skeleton.bones.forEach((bone,i)=>assert.notEqual(bone,copy.skeleton.bones[i]));
+ const p=body.geometry.attributes.position,weights=body.geometry.attributes.skinWeight,indices=body.geometry.attributes.skinIndex;
+ assert.equal(weights.count,p.count);assert.equal(indices.count,p.count);let blended=0;
+ for(let i=0;i<p.count;i++){
+  let sum=0,active=0;
+  for(let j=0;j<4;j++){
+   const weight=weights.getComponent(i,j),bone=indices.getComponent(i,j);
+   assert(Number.isFinite(weight)&&weight>=0&&weight<=1);
+   assert(Number.isInteger(bone)&&bone>=0&&bone<body.skeleton.bones.length);
+   sum+=weight;if(weight>0)active++;
+  }
+  assert(Math.abs(sum-1)<1e-6,'cloth weights must preserve the surface instead of shrinking it');
+  if(active>1)blended++;
+ }
+ assert(blended>0,'the waist-to-chest transition must blend rather than hinge as a rigid plate');
+ a.updateMatrixWorld(true);b.updateMatrixWorld(true);
+ const before=Array.from({length:p.count},(_,i)=>body.getVertexPosition(i,new T.Vector3()));
+ const otherBefore=Array.from({length:p.count},(_,i)=>copy.getVertexPosition(i,new T.Vector3()));
+ a.userData.chest.rotation.x+=.08;a.userData.chest.rotation.y+=.22;a.updateMatrixWorld(true);
+ let waistCount=0,chestMotion=0,chestCount=0;
+ for(let i=0;i<p.count;i++){
+  const moved=body.getVertexPosition(i,new T.Vector3()).distanceTo(before[i]);
+  if(p.getY(i)<0){assert(moved<1e-6,'chest motion drags the waist out of its leg connection');waistCount++;}
+  if(p.getY(i)>.44){chestMotion+=moved;chestCount++;}
+  assert(copy.getVertexPosition(i,new T.Vector3()).distanceTo(otherBefore[i])<1e-6,'one actor changes another actor\'s cloth pose');
+ }
+ assert(waistCount>0&&chestCount>0);assert(chestMotion/chestCount>.025,'chest motion must visibly deform the tunic');
+});
+
+test('running shoulders, hips, elbows and wrists move as separate parts of the gait',()=>{
+ const h=makeWraith(),d=h.userData,frames=[],point=new T.Vector3(),other=new T.Vector3();
+ const span=values=>Math.max(...values)-Math.min(...values);
+ const yaw=(left,right)=>{right.getWorldPosition(point);left.getWorldPosition(other);point.sub(other);return Math.atan2(point.z,point.x);};
+ for(let f=1;f<=300;f++){
+  animateWraith(h,f/60,6.5,0,0);if(f<120)continue;h.updateMatrixWorld(true);
+  const hips=yaw(d.leftLeg,d.rightLeg),shoulders=yaw(d.leftArm,d.rightArm);
+  frames.push({hips,shoulders,twist:shoulders-hips,leftElbow:d.leftElbow.rotation.x,rightElbow:d.rightElbow.rotation.x,leftWrist:d.leftHand.rotation.z,rightWrist:d.rightHand.rotation.z});
+ }
+ assert(span(frames.map(p=>p.hips))>.08,'hips have no visible stride rotation');
+ assert(span(frames.map(p=>p.shoulders))>.025,'shoulders remain locked while the hips move');
+ assert(span(frames.map(p=>p.twist))>.05,'shoulders and hips move as one rigid block');
+ for(const side of ['left','right']){
+  assert(span(frames.map(p=>p[side+'Elbow']))>.08,`${side} elbow remains locked during running`);
+  assert(span(frames.map(p=>p[side+'Wrist']))>.035,`${side} wrist remains locked during running`);
+ }
+ const leftMean=frames.reduce((n,p)=>n+p.leftElbow,0)/frames.length,rightMean=frames.reduce((n,p)=>n+p.rightElbow,0)/frames.length;
+ assert(frames.reduce((n,p)=>n+(p.leftElbow-leftMean)*(p.rightElbow-rightMean),0)<0,'both elbows pump in the same phase');
+});
+
+test('disposing a shadow actor releases its bone texture while preserving shared clothing resources',()=>{
+ const a=makeWraith(),b=makeWraith(),body=a.userData.tunic,copy=b.userData.tunic;
+ body.skeleton.computeBoneTexture();copy.skeleton.computeBoneTexture();
+ const texture=body.skeleton.boneTexture,otherTexture=copy.skeleton.boneTexture;
+ let bonesDisposed=0,otherDisposed=0,geometryDisposed=0,materialDisposed=0;
+ const onGeometry=()=>geometryDisposed++,onMaterial=()=>materialDisposed++;
+ texture.addEventListener('dispose',()=>bonesDisposed++);otherTexture.addEventListener('dispose',()=>otherDisposed++);
+ body.geometry.addEventListener('dispose',onGeometry);body.material.addEventListener('dispose',onMaterial);
+ try{
+  disposeHero(a);
+  assert.equal(bonesDisposed,1);assert.equal(otherDisposed,0);assert.equal(copy.skeleton.boneTexture,otherTexture);
+  assert.equal(geometryDisposed,0);assert.equal(materialDisposed,0);
+  animateWraith(b,1/60,6,0,0);b.updateMatrixWorld(true);
+  assert(copy.getVertexPosition(0,new T.Vector3()).toArray().every(Number.isFinite));
+ }finally{
+  body.geometry.removeEventListener('dispose',onGeometry);body.material.removeEventListener('dispose',onMaterial);disposeHero(b);
+ }
+});
+
 test('book stays level through running casts and cloth settles at mobile and desktop frame rates',()=>{
  for(const fps of [20,30,60,120]){
   const actor=makeWraith('grimoire'),d=actor.userData,up=new T.Vector3(),q=new T.Quaternion();
@@ -76,6 +149,7 @@ test('book stays level through running casts and cloth settles at mobile and des
   }
   assert(Math.abs(d.clothTrail.x-.08)<.02,'cape failed to settle after stopping');
   assert(Math.abs(d.clothSide.x)<.02,'cape turn inertia failed to settle');
+  for(const panel of d.panels.filter(p=>p.userData.front))assert(Math.abs(panel.morphTargetInfluences[0])<.001,'front coat remains folded in the stopped stride phase');
  }
 });
 

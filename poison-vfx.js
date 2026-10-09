@@ -1,5 +1,5 @@
 import * as T from './vendor/three.module.js';
-import {POISON} from './poison-config.js?v=106';
+import {POISON} from './poison-config.js?v=107';
 const UP=new T.Vector3(0,1,0);
 const clamp=x=>Math.max(0,Math.min(1,x));
 const fogVertex=`varying vec2 fieldUv;varying float fieldAspect;uniform float aspect;

@@ -1,21 +1,21 @@
-import {GRIP_POINTS,primaryGripFrame,fitWeaponToPalm,createHandGrips,restoreGripWrists,captureGripWrists,aimGrip,supportGripTarget,aimSupportGrip,poseGripFingers} from './weapon-grips.js?v=106';
-import {refineLingyaHead,lingyaHeadY} from './lingya-face.js?v=106';
-import {finishHeroSurface,smoothSeams} from './hero-finish.js?v=106';
-import{tideHarness}from'./tide-appearance.js?v=106';
-import{WULING_PALETTE,wulingOutfit,wulingAccessories,wulingMask,sporeLantern,sporeSatchel,sporePod}from'./wuling-appearance.js?v=106';
-import{MIRAGE_PALETTE,mirageOutfit,mirageHair,prepareMirageHair,animateMirageHair,mirageMask,mirageAccessories,miragePetalTails,miasmaLantern}from'./mirage-appearance.js?v=106';
-import{newHeroAttack,heroCarryPose,committedWeaponYaw}from'./new-hero-motion.js?v=106';
-import{heroDodgePose}from'./hero-dodge.js?v=106';
-import{lingyaHopPose}from'./lingya-motion.js?v=106';
-import{lingyaOutfit,lingyaAccessories,lingyaLegs}from'./lingya-appearance.js?v=106';
-import{boneBoomerang}from'./beast-model.js?v=106';
-import{makeHarpoon}from'./coast-models.js?v=106';
-import{weaponGesture,shotStarted}from'./weapon-performance.js?v=106';
-import{rollProgress,rollWeight}from'./dodge-motion.js?v=106';
+import {GRIP_POINTS,primaryGripFrame,fitWeaponToPalm,createHandGrips,restoreGripWrists,captureGripWrists,aimGrip,supportGripTarget,aimSupportGrip,poseGripFingers} from './weapon-grips.js?v=107';
+import {refineLingyaHead,lingyaHeadY} from './lingya-face.js?v=107';
+import {finishHeroSurface,smoothSeams} from './hero-finish.js?v=107';
+import{tideHarness}from'./tide-appearance.js?v=107';
+import{WULING_PALETTE,wulingOutfit,wulingAccessories,wulingMask,sporeLantern,sporeSatchel,sporePod}from'./wuling-appearance.js?v=107';
+import{MIRAGE_PALETTE,mirageOutfit,mirageHair,prepareMirageHair,animateMirageHair,mirageMask,mirageAccessories,miragePetalTails,miasmaLantern}from'./mirage-appearance.js?v=107';
+import{newHeroAttack,heroCarryPose,committedWeaponYaw}from'./new-hero-motion.js?v=107';
+import{heroDodgePose}from'./hero-dodge.js?v=107';
+import{lingyaHopPose}from'./lingya-motion.js?v=107';
+import{lingyaOutfit,lingyaAccessories,lingyaLegs}from'./lingya-appearance.js?v=107';
+import{boneBoomerang}from'./beast-model.js?v=107';
+import{makeHarpoon}from'./coast-models.js?v=107';
+import{weaponGesture,shotStarted}from'./weapon-performance.js?v=107';
+import{rollProgress,rollWeight}from'./dodge-motion.js?v=107';
 import * as T from './vendor/three.module.js';
 import {clone} from './vendor/SkeletonUtils.js';
-import {loadCharacterData} from './character-loader.js?v=106';
-import {makeHero as makePrototype} from './hero-model.js?v=106';
+import {loadCharacterData} from './character-loader.js?v=107';
+import {makeHero as makePrototype} from './hero-model.js?v=107';
 
 const templates=new Map(),clips=new Map();
 let lingyaFace;
@@ -413,6 +413,7 @@ export function animateSkinnedHero(g,t,speed,attack,hurt){
   g.visible=!(hurt>0&&Math.floor(hurt*28)%2===0)&&!(d.kind==='tide'&&dodge.depth>.985);
 }
 export function disposeHero(g){
+  if(g?.userData.wraith){g.userData.tunic.skeleton.dispose();return;}
   if(!g?.userData.skinned)return;const d=g.userData,skeletons=new Set();d.mixer.stopAllAction();d.mixer.uncacheRoot(d.model);
   g.traverse(o=>{if(o.isSkinnedMesh)skeletons.add(o.skeleton);});for(const s of skeletons)s.dispose();for(const o of d.owned){o.geometry.dispose();o.material.dispose();}for(const material of d.mirageOwnedMaterials||[])material.dispose();
 }
